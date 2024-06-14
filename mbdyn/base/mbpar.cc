@@ -1280,6 +1280,15 @@ MBDynParser::ModuleLoad_int(void)
       		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
    	}
 
+	if (!pDM) {
+		silent_cerr("ModuleLoad_int: module_init() "
+						"of module <" << module_name
+				<< "> failed at line " << GetLineData()
+				<< "\nbecause the \"module load\" directive"
+				"\nwas issued before the end of the control data section"
+				<< std::endl);
+		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+	}
 	if ((*sym)(module_name.c_str(), (void *)pDM, (void *)this)) {
 		silent_cerr("ModuleLoad_int: module_init() "
 				"of module <" << module_name
