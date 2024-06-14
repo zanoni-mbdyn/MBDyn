@@ -30,7 +30,6 @@
 
 # Author: Matteo Fancello
 
-module load: "libmodule-cont-contact";
 
 begin: data;
 	problem: initial value;
@@ -75,6 +74,8 @@ begin: control data;
 	gravity;
 	default orientation: orientation vector;
 end: control data;
+
+module load: "libmodule-cont-contact";
 
 set: const integer GROUND = 0;
 set: const integer HUB = 100;

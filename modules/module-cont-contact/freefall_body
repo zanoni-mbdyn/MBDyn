@@ -33,7 +33,6 @@
 #
 # Author: Matteo Fancello
 
-module load: "libmodule-cont-contact";
 
 begin: data;
    problem: initial value;
@@ -61,6 +60,7 @@ begin: control data;
    # output results: netcdf, no text;
 end: control data;
 
+module load: "libmodule-cont-contact";
 
 #-----------------------------------------------------------------------------
 # 	Design Variables
