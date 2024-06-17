@@ -2668,32 +2668,33 @@ ReadAerodynamicBeam(DataManager* pDM,
 	std::ostream& out = pDM->GetLogFile();
 	out << "aero3: " << uLabel;
 
-	Vec3 ra1 = Ra1.GetVec(1);
-	Vec3 ra3 = Ra1.GetVec(3);
 	doublereal dC = pChord->dGet(-1.);
 	doublereal dP = pForce->dGet(-1.);
+	doublereal dT = pTwist->dGet(-1.);
+	Vec3 rat = Ra1*Vec3(std::cos(dT), std::sin(dT), 0.);
+
 	out
 		<< " " << pNode1->GetLabel()
-		<< " ", (f1 + ra1*(dP - dC*3./4.)).Write(out, " ")
-		<< " ", (f1 + ra1*(dP + dC/4.)).Write(out, " ");
+		<< " ", (f1 + rat*(dP - dC*3./4.)).Write(out, " ")
+		<< " ", (f1 + rat*(dP + dC/4.)).Write(out, " ");
 
-	ra1 = Ra2.GetVec(1);
-	ra3 = Ra2.GetVec(3);
 	dC = pChord->dGet(0.);
 	dP = pForce->dGet(0.);
+	dT = pTwist->dGet(0.);
+	rat = Ra2*Vec3(std::cos(dT), std::sin(dT), 0.);
 	out
 		<< " " << pNode2->GetLabel()
-		<< " ", (f2 + ra1*(dP - dC*3./4.)).Write(out, " ")
-		<< " ", (f2 + ra1*(dP + dC/4.)).Write(out, " ");
+		<< " ", (f2 + rat*(dP - dC*3./4.)).Write(out, " ")
+		<< " ", (f2 + rat*(dP + dC/4.)).Write(out, " ");
 
-	ra1 = Ra3.GetVec(1);
-	ra3 = Ra3.GetVec(3);
 	dC = pChord->dGet(1.);
 	dP = pForce->dGet(1.);
+	dT = pTwist->dGet(1.);
+	rat = Ra3*Vec3(std::cos(dT), std::sin(dT), 0.);
 	out
 		<< " " << pNode3->GetLabel()
-		<< " ", (f3 + ra1*(dP - dC*3./4.)).Write(out, " ")
-		<< " ", (f3 + ra1*(dP + dC/4.)).Write(out, " ")
+		<< " ", (f3 + rat*(dP - dC*3./4.)).Write(out, " ")
+		<< " ", (f3 + rat*(dP + dC/4.)).Write(out, " ")
 		<< std::endl;
 
 	return pEl;
@@ -3648,23 +3649,24 @@ ReadAerodynamicBeam2(DataManager* pDM,
 	std::ostream& out = pDM->GetLogFile();
 	out << "aero2: " << uLabel;
 
-	Vec3 ra1 = Ra1.GetVec(1);
-	Vec3 ra3 = Ra1.GetVec(3);
 	doublereal dC = pChord->dGet(-1.);
 	doublereal dP = pForce->dGet(-1.);
+	doublereal dT = pTwist->dGet(-1.);
+	Vec3 rat = Ra1*Vec3(std::cos(dT), std::sin(dT), 0.);
+
 	out
 		<< " " << pNode1->GetLabel()
-		<< " ", (f1 + ra1*(dP - dC*3./4.)).Write(out, " ")
-		<< " ", (f1 + ra1*(dP + dC/4.)).Write(out, " ");
+		<< " ", (f1 + rat*(dP - dC*3./4.)).Write(out, " ")
+		<< " ", (f1 + rat*(dP + dC/4.)).Write(out, " ");
 
-	ra1 = Ra2.GetVec(1);
-	ra3 = Ra2.GetVec(3);
 	dC = pChord->dGet(1.);
 	dP = pForce->dGet(1.);
+	dT = pTwist->dGet(1.);
+	rat = Ra1*Vec3(std::cos(dT), std::sin(dT), 0.);
 	out
 		<< " " << pNode2->GetLabel()
-		<< " ", (f2 + ra1*(dP - dC*3./4.)).Write(out, " ")
-		<< " ", (f2 + ra1*(dP + dC/4.)).Write(out, " ")
+		<< " ", (f2 + rat*(dP - dC*3./4.)).Write(out, " ")
+		<< " ", (f2 + rat*(dP + dC/4.)).Write(out, " ")
 		<< std::endl;
 
 	return pEl;
