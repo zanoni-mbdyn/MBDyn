@@ -603,17 +603,13 @@ ass_res(LoadableElem* pEl,
 		 */
 		WorkVec.Resize(0);
 
-		/*
-
 		if (p->fSlip) {
 			WorkVec.ResizeReset(pEl->iGetNumDof());
 			for (unsigned int i = 1; i <= pEl->iGetNumDof(); i++) {
 				WorkVec.PutRowIndex(i, iFirstReactionIndex + i);
 			}
-			WorkVec.Add(1, zeta);
+			WorkVec.IncCoef(1, zeta);
 		}
-		
-		*/
 		
 		return WorkVec;
 	}
