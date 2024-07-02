@@ -2037,7 +2037,7 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Ass
                }
           }
 
-          ASSERT(frbk.iGetMaxSize() <= iNumDof);
+          ASSERT(frbk.iGetMaxSize() <= oDofMap.iGetLocalSize());
 
           for (index_type i = 1; i <= iNumNodes; ++i) {
                for (index_type j = 1; j <= 3; ++j) {

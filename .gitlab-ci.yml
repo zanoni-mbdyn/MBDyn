@@ -58,6 +58,7 @@ variables:
   ## Local installation directory for MBDyn:
   MBD_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/mbdyn
   MBD_INSTALL_PREFIX_GCOV: $TESTSUITE_PREFIX_CACHE/mbdyn-gcov
+  MBD_INSTALL_PREFIX_DEBUG: $TESTSUITE_PREFIX_CACHE/mbdyn-debug
   MBD_PROFILE_DIR: $TESTSUITE_PREFIX_CACHE/mbdyn-profile
   MBD_TEST_COVERAGE_DIR: $TESTSUITE_PREFIX_CACHE/mbdyn-coverage
 
@@ -67,6 +68,7 @@ variables:
   ## Local installation directory for fem_pre_mesh_size
   ## This program is needed to calculate the mesh size for Gmsh only for a very specific test case.
   OCT_PKG_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/share/octave
+  OCT_PKG_INSTALL_PREFIX_DEBUG: $TESTSUITE_PREFIX_CACHE/share/octave-debug
   OCT_PKG_INSTALL_PREFIX_GCOV: $TESTSUITE_PREFIX_CACHE/share/octave-gcov
 
   ## Local installation directory for Intel oneMKL
@@ -97,6 +99,7 @@ variables:
   ## and select "Clear runner caches"!
   MBD_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/mbdyn
   MBD_BUILD_DIR_GCOV: $TESTSUITE_PREFIX_BUILD/mbdyn-gcov
+  MBD_BUILD_DIR_DEBUG: $TESTSUITE_PREFIX_BUILD/mbdyn-debug
   MBD_BUILD_DIR_MANUALS: $TESTSUITE_PREFIX_BUILD/mbdyn-manuals
 
   SICONOS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/siconos
@@ -145,6 +148,13 @@ variables:
       - "no"
     description: "Generate a test coverage report"
 
+  MBD_DEBUG_ENABLED:
+    value: "no"
+    options:
+      - "yes"
+      - "no"
+    description: "Run all the tests with assertions enabled"
+
   MBDYN_EXEC:
     value: "mbdyn"
     options:
@@ -163,6 +173,10 @@ variables:
 
   ## NOTE: We should compile without any optimization in order to get accurate profile information
   MBD_COMPILER_FLAGS_GCOV: "-Og -Wall -march=native -mtune=native -Wno-unused-variable"
+
+  ## NOTE: This option is not intended for debugging, but just to see if any assertion will fail.
+  ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan() 
+  MBD_COMPILER_FLAGS_DEBUG: "-O3 -Wall -march=native -mtune=native -Wno-unused-variable"
 
   JUNIT_XML_KEEP_ALL_OUTPUT:
     value: "none"
@@ -410,14 +424,19 @@ variables:
   ## Paths must be relative to CI_PROJECT_PATH
   TESTSUITE_PREFIX_TESTS: $TESTSUITE_PREFIX_TMP/tests
   MBD_TEST_PROGS_OUTPUT_DIR: $TESTSUITE_PREFIX_TESTS/mbdyn-test-progs
+  MBD_TEST_PROGS_OUTPUT_DIR_GCOV: $TESTSUITE_PREFIX_TESTS/mbdyn-test-progs-gcov
+  MBD_TEST_PROGS_OUTPUT_DIR_DEBUG: $TESTSUITE_PREFIX_TESTS/mbdyn-test-progs-debug
   OCT_PKG_TEST_OUTPUT_DIR: $TESTSUITE_PREFIX_TESTS/octave-pkg-testjob
   OCT_PKG_TEST_OUTPUT_DIR_GCOV: $TESTSUITE_PREFIX_TESTS/octave-pkg-testjob-gcov
   MBD_MODULE_TESTS_OUTPUT_DIR: $TESTSUITE_PREFIX_TESTS/mbdyn-modules-testjob
   MBD_MODULE_TESTS_OUTPUT_DIR_GCOV: $TESTSUITE_PREFIX_TESTS/mbdyn-modules-testjob-gcov
+  MBD_MODULE_TESTS_OUTPUT_DIR_DEBUG: $TESTSUITE_PREFIX_TESTS/mbdyn-modules-testjob-debug
   MBD_TESTS_PUBLIC_OUTPUT_DIR: $TESTSUITE_PREFIX_TESTS/mbdyn-tests-public-testjob
   MBD_TESTS_PUBLIC_OUTPUT_DIR_GCOV: $TESTSUITE_PREFIX_TESTS/mbdyn-tests-public-testjob-gcov
+  MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG: $TESTSUITE_PREFIX_TESTS/mbdyn-tests-public-testjob-debug
   MBD_TESTS_PRIVATE_OUTPUT_DIR: $TESTSUITE_PREFIX_TESTS/mbdyn-tests-private-testjob
   MBD_TESTS_PRIVATE_OUTPUT_DIR_GCOV: $TESTSUITE_PREFIX_TESTS/mbdyn-tests-private-testjob-gcov
+  MBD_TESTS_PRIVATE_OUTPUT_DIR_DEBUG: $TESTSUITE_PREFIX_TESTS/mbdyn-tests-private-testjob-debug
 
   ## MKL pkg-config file without extension (e.g. use "${MKL_PKG_CONFIG}.pc")
   ## Needed by several jobs which link against MKL

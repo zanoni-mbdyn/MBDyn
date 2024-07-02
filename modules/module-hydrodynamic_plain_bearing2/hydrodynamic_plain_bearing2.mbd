@@ -808,3 +808,9 @@ begin: elements;
         element, (7001), loadable, string, "meanT", direct,
         output trace, yes;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

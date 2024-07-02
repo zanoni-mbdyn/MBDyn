@@ -77,11 +77,71 @@ Uso:
 #include <iostream>
 #include <except.h>
 
-#ifdef USE_GTEST
-#include <gtest/gtest.h>
-#endif
-
 #define NO_OP do {} while(0)
+
+#ifdef USE_GTEST
+
+#include <gtest/gtest.h>
+
+#define MBDYN_ADD_FAILURE_AT(file, line) ADD_FAILURE_AT(file, line)
+#define MBDYN_TESTSUITE_ASSERT(expr) \
+     do { \
+          if (!(expr)) {                                                \
+               MBDYN_ADD_FAILURE_AT(__FILE__, __LINE__) << #expr << '\n'; \
+          }                                                             \
+     } while (0)
+
+#define MBDYN_TESTSUITE_SCOPED_TRACE(msg) SCOPED_TRACE(msg)
+#define MBDYN_TESTSUITE_TEST(testsuitename, testname) TEST(testsuitename, testname)
+#define MBDYN_TESTSUITE_INIT(pargc, argv)  testing::InitGoogleTest(pargc, argv)
+#define MBDYN_RUN_ALL_TESTS() RUN_ALL_TESTS()
+
+#else
+
+#define MBDYN_ADD_FAILURE_AT(file, line) (std::cerr)
+#define MBDYN_TESTSUITE_ASSERT(expr) \
+     do { \
+       if (!(expr)) { \
+            throw MBDynUnitTestEntry::Failure(__FILE__, __LINE__, #expr); \
+       } \
+     } while (0)
+
+#define MBDYN_TESTSUITE_SCOPED_TRACE(msg) static_cast<void>(0)
+#define MBDYN_TESTSUITE_TEST(testsuitename, testname) \
+     void testsuitename ## testname();            \
+     const MBDynUnitTestEntry testsuitename ## testname ##_entry(__FILE__, __LINE__, #testsuitename, #testname, &testsuitename ## testname); \
+     void testsuitename ## testname()
+#define MBDYN_TESTSUITE_INIT(pargc, argv) static_cast<void>(0)
+#define MBDYN_RUN_ALL_TESTS() MBDynUnitTestEntry::RunAllTests()
+
+class MBDynUnitTestEntry {
+public:
+     class Failure: public std::exception {
+     public:
+          Failure(const char* file, int line, const char* expr);
+          virtual const char* what() const noexcept override;
+
+     private:
+          std::string msg;
+     };
+
+     typedef void testFunctionType();
+
+     static int InsertTest(const char* file, int line, const char* testsuitename, const char* testname, testFunctionType* function);
+     static int RunAllTests();
+
+     explicit MBDynUnitTestEntry(const char* file, int line, const char* testsuitename, const char* testname, testFunctionType* function);
+private:
+     const char* const file;
+     const int line;
+     const char* const testsuitename;
+     const char* const testname;
+     testFunctionType* const function;
+     const MBDynUnitTestEntry* const pNext;
+     static const MBDynUnitTestEntry* pHead;
+     static size_t nSize;
+};
+#endif
 
 #if defined(USE_MULTITHREAD) && defined(__cplusplus)
 extern std::mutex mbdyn_lock_cout;

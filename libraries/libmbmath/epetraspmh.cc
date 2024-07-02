@@ -291,8 +291,7 @@ idx_type EpetraSparseMatrixHandler::MakeCompressedColumnFormTpl(doublereal *cons
 
 #ifdef DEBUG
      constexpr idx_type iInvalidIndex = -1;
-     constexpr doublereal dInvalidValue = std::numeric_limits<doublereal>::infinity();
-
+     constexpr doublereal dInvalidValue = -123456789.;
      std::fill(Ai, Ai + iNumNz, iInvalidIndex);
      std::fill(Ax, Ax + iNumNz, dInvalidValue);
 #endif

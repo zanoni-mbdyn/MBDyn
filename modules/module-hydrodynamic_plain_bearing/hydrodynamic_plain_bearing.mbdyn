@@ -490,3 +490,9 @@ begin: elements;
         gravity: -1., 0., 0.,
                 string, "( 1 - exp( -(Time - initial_time) / gravity_tau ) ) * gravity_g";
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

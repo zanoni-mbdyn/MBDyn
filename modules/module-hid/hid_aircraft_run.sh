@@ -31,6 +31,7 @@
 
 echo "warning: hid_aircraft requires user interaction and cannot be executed by MBDyn's testsuite!"
 
+MBDYN_EXEC=${MBDYN_EXEC:-mbdyn}
 input_file=hid_aircraft
 output_file=hid_aircraft
 
@@ -49,4 +50,4 @@ while ! test -z "$1"; do
 done
 
 rm -f aircraft.sock
-exec mbdyn -f "${input_file}" -o "${output_file}"
+exec ${MBDYN_EXEC} ${GTEST_MBDYN_ARGS} -f "${input_file}" -o "${output_file}"

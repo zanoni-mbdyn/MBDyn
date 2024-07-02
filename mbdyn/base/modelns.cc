@@ -1150,7 +1150,7 @@ model_elem(const MathParser::MathArgs& args)
 static int
 model_curr(const MathParser::MathArgs& args)
 {
-	ASSERT(args.size() == 1 + 1 + 2);
+	ASSERT(args.size() >= 3);
 
 	ASSERT(args[0]->Type() == MathParser::AT_REAL);
 	MathParser::MathArgReal_t *out = dynamic_cast<MathParser::MathArgReal_t *>(args[0]);

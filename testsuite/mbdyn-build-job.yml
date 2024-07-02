@@ -37,10 +37,10 @@
 variables:
   ## Force no rebuild of MBDyn; The default must be "no", but it could be overridden manually when the pipeline is started!
   MBD_SKIP_BUILD: "no"
-
+  MBD_FORCE_CONFIGURE: "no"
   ## Run MBDyn's configure with the following modules enabled.
   ## In order to enable additional modules, it would be necessary also to install their dependencies.
-  MBD_WITH_MODULE: "fabricate damper-gandhi pid hfelem fab-electric template2 cont-contact wheel4 mds indvel mcp_test1 scalarfunc muscles minmaxdrive drive-test loadinc cudatest randdrive imu convtest md autodiff_test rotor-loose-coupling namespace drive controller constlaw fab-sbearings rotor_disc hunt-crossley diff damper-hydraulic cyclocopter fab-motion flightgear hid ns damper-graall"
+  MBD_WITH_MODULE: "fabricate damper-gandhi pid hfelem fab-electric template2 cont-contact wheel4 mds indvel mcp_test1 scalarfunc muscles minmaxdrive drive-test loadinc cudatest randdrive imu convtest md autodiff_test rotor-loose-coupling namespace drive controller constlaw fab-sbearings rotor_disc hunt-crossley diff damper-hydraulic cyclocopter fab-motion flightgear hid ns damper-graall nonsmooth-node"
 
 mbdyn-build-job:       # This job runs in the build stage, which runs first.
   stage: build
@@ -68,6 +68,10 @@ mbdyn-build-job:       # This job runs in the build stage, which runs first.
     - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
     - export MBD_COMPILER_FLAGS=${MBD_COMPILER_FLAGS}
     - export MBD_TEST_PROGS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TEST_PROGS_OUTPUT_DIR}
+    - export CI_PROJECT_DIR
+    - export MBD_WITH_MODULE
+    - export MBD_FORCE_CONFIGURE
+    - export MBD_SKIP_BUILD
     - testsuite/mbdyn_build_job.sh
   artifacts:
    expire_in: 24h
@@ -164,9 +168,13 @@ mbdyn-build-job-gcov:       # This job runs in the build stage, which runs first
     - export MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_GCOV}
     - export MBD_BUILD_DIR=${CI_PROJECT_DIR}/${MBD_BUILD_DIR_GCOV}
     - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_GCOV}
-    - export MBD_TEST_PROGS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TEST_PROGS_OUTPUT_DIR}
+    - export MBD_TEST_PROGS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TEST_PROGS_OUTPUT_DIR_GCOV}
     - export MBD_COMPILER_FLAGS="${MBD_COMPILER_FLAGS_GCOV} --coverage"
     - export LDFLAGS="--coverage"
+    - export CI_PROJECT_DIR
+    - export MBD_WITH_MODULE
+    - export MBD_FORCE_CONFIGURE
+    - export MBD_SKIP_BUILD
     ## Cleanup any profile data from previous builds in order to get a correct coverage report.
     - |
       if test -d "${MBD_BUILD_DIR}"; then
@@ -187,14 +195,14 @@ mbdyn-build-job-gcov:       # This job runs in the build stage, which runs first
     - $MBD_BUILD_DIR_GCOV/**/*.gcda ## Needed for gcovr
     - $MBD_BUILD_DIR_GCOV/**/*.gcno ## Needed for gcovr
     - $MBD_INSTALL_PREFIX_GCOV
-    - $MBD_TEST_PROGS_OUTPUT_DIR/**/*.xml
+    - $MBD_TEST_PROGS_OUTPUT_DIR_GCOV/**/*.xml
     - $OCT_PKG_INSTALL_PREFIX_GCOV ## Because mbdyn_util_oct will be installed there!
    exclude:
     - $MBD_BUILD_DIR_GCOV/**/*conftest.gcda
     - $MBD_BUILD_DIR_GCOV/**/*conftest.gcno
    when: always
    reports:
-     junit: $MBD_TEST_PROGS_OUTPUT_DIR/**/*.xml
+     junit: $MBD_TEST_PROGS_OUTPUT_DIR_GCOV/**/*.xml
   cache:
    key: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
    when: always
@@ -312,6 +320,108 @@ mbdyn-build-job-manuals:       # This job runs in the build stage, which runs fi
    key: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
    when: always
    paths:
+    - Makefile.in
+    - aclocal.m4
+    - autom4te.cache/
+    - build/Makefile.in
+    - build/compile
+    - build/config.guess
+    - build/config.sub
+    - build/depcomp
+    - build/install-sh
+    - build/ltmain.sh
+    - build/missing
+    - configure
+    - contrib/n2m/Makefile.in
+    - contrib/n2m/aclocal.m4
+    - contrib/n2m/autom4te.cache/
+    - contrib/n2m/compile
+    - contrib/n2m/config.guess
+    - contrib/n2m/config.h.in
+    - contrib/n2m/config.sub
+    - contrib/n2m/configure
+    - contrib/n2m/depcomp
+    - contrib/n2m/install-sh
+    - contrib/n2m/ltmain.sh
+    - contrib/n2m/missing
+    - etc/Makefile.in
+    - etc/modal.d/Makefile.in
+    - etc/pam.d/Makefile.in
+    - include/Makefile.in
+    - include/ac/Makefile.in
+    - include/mbconfig.h.in
+    - libraries/Makefile.in
+    - libraries/libann/Makefile.in
+    - libraries/libcolamd/Makefile.in
+    - libraries/libmbc/Makefile.in
+    - libraries/libmbmath/Makefile.in
+    - libraries/libmbutil/Makefile.in
+    - libraries/libmbwrap/Makefile.in
+    - libraries/libnaive/Makefile.in
+    - libraries/libobjs/Makefile.in
+    - libraries/liby12/Makefile.in
+    - manual/Makefile.in
+    - mbdyn/Makefile.in
+    - mbdyn/aero/Makefile.in
+    - mbdyn/base/Makefile.in
+    - mbdyn/elec/Makefile.in
+    - mbdyn/hydr/Makefile.in
+    - mbdyn/struct/Makefile.in
+    - mbdyn/thermo/Makefile.in
+    - modules/Makefile.in
+    - testsuite/var/
+    - utils/Makefile.in
+    - var/Makefile.in
+
+mbdyn-build-job-debug:       # This job runs in the build stage, which runs first.
+  stage: build
+  needs:
+    - job: siconos-build-job
+      artifacts: true
+    - job: netcdf-c-build-job
+      artifacts: true
+    - job: netcdf-cxx4-build-job
+      artifacts: true
+    - job: mkl-build-job
+      artifacts: true
+    - job: gtest-build-job
+      artifacts: true
+    - job: mbdyn-checkout-job
+  rules:
+    - if: $MBD_DEBUG_ENABLED == "yes"
+  script:
+    - export MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_DEBUG}
+    - export SICONOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${SICONOS_INSTALL_PREFIX}
+    - export NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
+    - export NC_CXX4_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_CXX4_INSTALL_PREFIX}
+    - export NL_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NL_INSTALL_PREFIX}
+    - export GTEST_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GTEST_INSTALL_PREFIX}
+    - export MKL_INSTALL_PREFIX=${HOME}/${MKL_INSTALL_PREFIX}
+    - export MBD_BUILD_DIR=${CI_PROJECT_DIR}/${MBD_BUILD_DIR_DEBUG}
+    - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_DEBUG}
+    - export MBD_COMPILER_FLAGS="${MBD_COMPILER_FLAGS_DEBUG} -Wno-error=array-bounds" ## FIXME: No idea why this error appears only with --enable-debug
+    - export MBD_TEST_PROGS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TEST_PROGS_OUTPUT_DIR_DEBUG}
+    - export CI_PROJECT_DIR
+    - export MBD_WITH_MODULE
+    - export MBD_FORCE_CONFIGURE
+    - export MBD_SKIP_BUILD
+    - testsuite/mbdyn_build_job.sh --configure-flags-add --enable-debug ## --configure-flags-add --with-debug-mode=mem
+  artifacts:
+   expire_in: 24h
+   name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+   paths:
+    - $MBD_INSTALL_PREFIX_DEBUG
+    - $MBD_BUILD_DIR/**/config.log
+    - $MBD_TEST_PROGS_OUTPUT_DIR_DEBUG/**/*.xml
+    - $OCT_PKG_INSTALL_PREFIX ## Because mbdyn_util_oct will be installed there!
+   when: always
+   reports:
+     junit: $MBD_TEST_PROGS_OUTPUT_DIR_DEBUG/**/*.xml
+  cache:
+   key: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+   when: always
+   paths:
+    - $MBD_BUILD_DIR
     - Makefile.in
     - aclocal.m4
     - autom4te.cache/

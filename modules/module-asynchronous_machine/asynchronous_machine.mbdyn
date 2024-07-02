@@ -229,3 +229,9 @@ begin: elements;
 	bind: elem_id_motor, user defined, node_id_motor_omega_derivative, string, "omegaP";
 	#~ bind: elem_id_motor, user defined, node_id_motor_omega_derivative, index, 5;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

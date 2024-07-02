@@ -59,7 +59,7 @@ bool FGNetCtrlsWordSet::IsWord(const std::string& s) const{
 }
 
 StreamContent* FlightGearStreamOutputReader::Read(DataManager* pDM, MBDynParser& HP){
-	StreamContent* pSC;
+	StreamContent* pSC = nullptr;
 
 	FieldsDescriptionFG *fieldsDescriptionFGInUse;
 	int totChannels;

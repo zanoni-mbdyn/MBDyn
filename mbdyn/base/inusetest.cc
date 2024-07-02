@@ -34,14 +34,16 @@
 #include <stdlib.h>
 #include <iostream>
 #include <cstring>
-#include "ac/getopt.h"
+#include <vector>
+
+#include "myassert.h"
+#include "mynewmem.h"
 
 #ifdef USE_MULTITHREAD
 
 #include <unistd.h>
 #include "ac/pthread.h"		/* includes POSIX semaphores */
 
-#include "mbconfig.h"
 #include "veciter.h"
 #include "filename.h"
 #include "mbsleep.h"
@@ -129,71 +131,8 @@ f(void *p)
 	return NULL;
 }
 
-int
-main(int argc, char* argv[])
+void inusetest(const unsigned size, const unsigned nt)
 {
-	unsigned size = 1000;
-	unsigned nt = 1;
-	//unsigned loops = 1;
-
-	if (argc == 1) {
-usage:;
-		char *s = std::strrchr(argv[0], DIR_SEP);
-
-		if (s) {
-			s++;
-		} else {
-			s = argv[0];
-		}
-
-		std::cout << "usage: " << s << " [lnsSt]" << std::endl
-			//<< "\t-l <loops>" << std::endl
-			<< "\t-n <size>" << std::endl
-			<< "\t-s <sleeptime>" << std::endl
-			<< "\t-S <random sleeptime>" << std::endl
-			<< "\t-t <threads number>" << std::endl;
-		exit(EXIT_SUCCESS);
-	}
-
-	while (true) {
-		char	*next;
-		//int	opt = getopt(argc, argv, "l:n:s:S:t:");
-		int	opt = getopt(argc, argv, "n:s:S:t:");
-
-		if (opt == EOF) {
-			break;
-		}
-
-		switch (opt) {
-// 		case 'l':
-// 			loops = strtoul(optarg, &next, 10);
-// 			break;
-// 
-		case 'n':
-			size = strtoul(optarg, &next, 10);
-			break;
-
-		case 's':
-			dst = strtoul(optarg, &next, 10);
-			break;
-
-		case 'S':
-			rst = strtoul(optarg, &next, 10);
-			break;
-
-		case 't':
-			nt = strtoul(optarg, &next, 10);
-			break;
-
-		default:
-			goto usage;
-		}
-	}
-
-	if (nt < 1) {
-		nt = 1;
-	}
-
 	Arg *arg = NULL;
 	arg = new Arg[nt];
 	unsigned c;
@@ -266,18 +205,25 @@ usage:;
 	}
 
 	delete[] arg;
-
-	return 0;
 }
 
-#else /* ! USE_MULTITHREAD */
-
-int
-main(void)
+MBDYN_TESTSUITE_TEST(inusetest, inusetest_1000_2)
 {
-	std::cerr << "need --enable-multithread" << std::endl;
-	exit(EXIT_FAILURE);
+     inusetest(1000, 2);
+}
+
+MBDYN_TESTSUITE_TEST(inusetest, inusetest_2000_4)
+{
+     inusetest(2000, 4);
 }
 
 #endif /* ! USE_MULTITHREAD */
 
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
+
+int main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+
+     return MBDYN_RUN_ALL_TESTS();
+}

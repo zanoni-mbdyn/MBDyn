@@ -34,6 +34,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "myassert.h"
+#include "mynewmem.h"
 #include "fullmh.h"
 #include "spmapmh.h"
 #include "ccmh.h"
@@ -63,7 +65,7 @@ check_mat(MatrixHandler& mh)
         for (int r = 0; r < 5; r++) {
                 for (int c = 0; c < 5; c++) {
                         if (mat[r][c] != mh(r + 1, c + 1)) {
-                                ASSERT(0);
+                                MBDYN_TESTSUITE_ASSERT(0);
                                 return -1;
                         }
                 }
@@ -78,7 +80,7 @@ check_mat_transpose(MatrixHandler& mh)
         for (int r = 0; r < 5; r++) {
                 for (int c = 0; c < 5; c++) {
                         if (mat[c][r] != mh(r + 1, c + 1)) {
-                                ASSERT(0);
+                                MBDYN_TESTSUITE_ASSERT(0);
                                 return -1;
                         }
                 }
@@ -93,7 +95,7 @@ check_vec(VectorHandler& vh, unsigned c)
         c--;
         for (int r = 0; r < 5; r++) {
                 if (mat[r][c] != vh(r + 1)) {
-                        ASSERT(0);
+                        MBDYN_TESTSUITE_ASSERT(0);
                         return -1;
                 }
         }
@@ -107,7 +109,7 @@ check_vec_transpose(VectorHandler& vh, unsigned r)
         r--;
         for (int c = 0; c < 5; c++) {
                 if (mat[r][c] != vh(c + 1)) {
-                        ASSERT(0);
+                        MBDYN_TESTSUITE_ASSERT(0);
                         return -1;
                 }
         }
@@ -115,8 +117,7 @@ check_vec_transpose(VectorHandler& vh, unsigned r)
         return 0;
 }
 
-int
-main(void)
+MBDYN_TESTSUITE_TEST(matmultest, matmultest1)
 {
         std::vector<integer> perm(5), invperm(5);
         perm[0] = 4;
@@ -646,6 +647,13 @@ main(void)
         if (check_mat_transpose(fmout)) {
                 std::cerr << "*** failed!" << std::endl;
         }
+}
 
-        return 0;
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
+
+int main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+     
+     return MBDYN_RUN_ALL_TESTS();
 }

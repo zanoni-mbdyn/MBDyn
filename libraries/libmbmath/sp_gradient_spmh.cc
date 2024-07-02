@@ -331,8 +331,7 @@ idx_type SpGradientSparseMatrixHandler::MakeCompressedColumnFormTpl(doublereal *
 
 #ifdef SP_GRAD_DEBUG
      constexpr idx_type iInvalidIndex = -1;
-     constexpr doublereal dInvalidValue = std::numeric_limits<doublereal>::infinity();
-
+     constexpr doublereal dInvalidValue = -123456789.;     
      std::fill(Ai, Ai + Nz(), iInvalidIndex);
      std::fill(Ax, Ax + Nz(), dInvalidValue);
 #endif
@@ -472,8 +471,7 @@ idx_type SpGradientSparseMatrixHandler::MakeIndexFormTpl(doublereal *const Ax,
 
 #ifdef SP_GRAD_DEBUG
      constexpr idx_type iInvalidIndex = -1;
-     constexpr doublereal dInvalidValue = std::numeric_limits<doublereal>::infinity();
-
+     constexpr doublereal dInvalidValue = -123456789.;     
      std::fill(Arow, Arow + Nz(), iInvalidIndex);
      std::fill(Acol, Acol + Nz(), iInvalidIndex);
      std::fill(Ax, Ax + Nz(), dInvalidValue);
