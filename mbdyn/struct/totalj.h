@@ -120,64 +120,64 @@ public:
 	~TotalJoint(void);
 
 	/* Contributo al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
 	/* Tipo di Joint */
 	virtual Joint::Type
-	GetJointType(void) const {
+	GetJointType(void) const override {
 		return Joint::TOTALJOINT;
-	};
+	}
 
 	virtual unsigned int
-	iGetNumDof(void) const {
+	iGetNumDof(void) const override {
 		return nConstraints;
-	};
+	}
 
 	virtual std::ostream&
 	DescribeDof(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void
 	DescribeDof(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	virtual std::ostream&
 	DescribeEq(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void
 	DescribeEq(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	DofOrder::Order
-	GetDofType(unsigned int i) const {
+	GetDofType(unsigned int i) const override {
 		ASSERT(i >= 0 && i < nConstraints);
 		return DofOrder::ALGEBRAIC;
-	};
+	}
 
 	virtual void
 	SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	virtual Hint *
-	ParseHint(DataManager *pDM, const char *s) const;
+	ParseHint(DataManager *pDM, const char *s) const override;
 
 	virtual void
 	AfterConvergence(const VectorHandler& X,
-		const VectorHandler& XP);
+		const VectorHandler& XP) override;
 
 	/* Inverse Dynamics: */
 	virtual void
 	AfterConvergence(const VectorHandler& X,
-		const VectorHandler& XP, const VectorHandler& XPP);
+		const VectorHandler& XP, const VectorHandler& XPP) override;
 
 	void
-	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12 + nConstraints ;
                 *piNumCols = *piNumRows;
 	}
@@ -186,21 +186,21 @@ public:
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
      
 	/* inverse dynamics capable element */
-	virtual bool bInverseDynamics(void) const;
+	virtual bool bInverseDynamics(void) const override;
 
 	/* Inverse Dynamics Jacobian matrix assembly */
 	VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 	/* Inverse Dynamics residual assembly */
 	SubVectorHandler&
@@ -208,55 +208,56 @@ public:
 		const VectorHandler& XCurr,
 		const VectorHandler&  XPrimeCurr,
 		const VectorHandler&  XPrimePrimeCurr,
-		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	/* Inverse Dynamics update */
-	void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+	void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 	
-	DofOrder::Order GetEqType(unsigned int i) const;
+	DofOrder::Order GetEqType(unsigned int i) const override;
 
-	void OutputPrepare(OutputHandler &OH);
-	void Output(OutputHandler& OH) const;
+	void OutputPrepare(OutputHandler &OH) override;
+	void Output(OutputHandler& OH) const override;
 
 	/* funzioni usate nell'assemblaggio iniziale */
 
 	virtual unsigned int
-	iGetInitialNumDof(void) const {
+	iGetInitialNumDof(void) const override {
 		return  2*nConstraints;
-	};
+	}
+     
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumCols = *piNumRows = 24 + 2*nConstraints;
-	};
+	}
 
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
-	VariableSubMatrixHandler&
+	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+                      const VectorHandler& XCurr) override;
 
 	/* Contributo al residuo durante l'assemblaggio iniziale */
-	SubVectorHandler&
+	virtual SubVectorHandler&
 	InitialAssRes(SubVectorHandler& WorkVec,
-		const VectorHandler& XCurr);
+                      const VectorHandler& XCurr) override;
 
 	/* Dati privati */
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
 	virtual void
-	GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(2);
 		connectedNodes[0] = pNode1;
 		connectedNodes[1] = pNode2;
-	};
+	}
 	/* ************************************************ */
 
 	/* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* TotalJoint - end */
@@ -337,63 +338,63 @@ public:
 	~TotalPinJoint(void);
 
 	/* Contributo al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
 	/* Tipo di Joint */
 	virtual Joint::Type
-	GetJointType(void) const {
+	GetJointType(void) const override {
 		return Joint::TOTALPINJOINT;
-	};
+	}
 
 	virtual unsigned int
-	iGetNumDof(void) const {
+	iGetNumDof(void) const override {
 		return nConstraints;
-	};
+	}
 
 	virtual std::ostream&
 	DescribeDof(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void
 	DescribeDof(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	virtual std::ostream&
 	DescribeEq(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void
 	DescribeEq(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	DofOrder::Order
-	GetDofType(unsigned int i) const {
+	GetDofType(unsigned int i) const override {
 		ASSERT(i >= 0 && i < nConstraints);
 		return DofOrder::ALGEBRAIC;
-	};
+	}
 
 	virtual void
 	SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	virtual Hint *
-	ParseHint(DataManager *pDM, const char *s) const;
+	ParseHint(DataManager *pDM, const char *s) const override;
 
 	virtual void
 	AfterConvergence(const VectorHandler& X,
-		const VectorHandler& XP);
+                         const VectorHandler& XP) override;
 	
 	virtual void
 	AfterConvergence(const VectorHandler& X,
-		const VectorHandler& XP, const VectorHandler& XPP);
+                         const VectorHandler& XP, const VectorHandler& XPP) override;
 
 	void
-	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 6 + nConstraints ;
                 *piNumCols = *piNumRows;
 	}
@@ -402,21 +403,21 @@ public:
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
                 
 	SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
      
 	/* inverse dynamics capable element */
-	virtual bool bInverseDynamics(void) const;
+	virtual bool bInverseDynamics(void) const override;
 
 	/* inverse dynamics Jacobian matrix assembly */
 	VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+               const VectorHandler& XCurr) override;
 
 	/* inverse dynamics residual assembly */
 	SubVectorHandler&
@@ -424,56 +425,56 @@ public:
 		const VectorHandler& XCurr,
 		const VectorHandler&  XPrimeCurr,
 		const VectorHandler&  XPrimePrimeCurr,
-		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	/* Inverse Dynamics update */
 	virtual void Update(const VectorHandler& XCurr,
-		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+                            InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	
-	DofOrder::Order GetEqType(unsigned int i) const;
+	DofOrder::Order GetEqType(unsigned int i) const override;
 
-	void OutputPrepare(OutputHandler &OH);
-	void Output(OutputHandler& OH) const;
+	void OutputPrepare(OutputHandler &OH) override;
+	void Output(OutputHandler& OH) const override;
 
 	/* funzioni usate nell'assemblaggio iniziale */
 
 	virtual unsigned int
-	iGetInitialNumDof(void) const {
+	iGetInitialNumDof(void) const override {
 		return  2*nConstraints;
-	};
+	}
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumCols = *piNumRows = 12 + 2*nConstraints;
-	};
+	}
 
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
-	VariableSubMatrixHandler&
+	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+                      const VectorHandler& XCurr) override;
 
 	/* Contributo al residuo durante l'assemblaggio iniziale */
-	SubVectorHandler&
+	virtual SubVectorHandler&
 	InitialAssRes(SubVectorHandler& WorkVec,
-		const VectorHandler& XCurr);
+                      const VectorHandler& XCurr) override;
 
 	/* Dati privati */
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
 	virtual void
-	GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(1);
 		connectedNodes[0] = pNode;
-	};
+	}
 	/* ************************************************ */
 
 	/* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* TotalPinJoint - end */
@@ -520,53 +521,54 @@ public:
 	
 	~TotalForce(void) {
 		NO_OP;
-	};
+	}
 
 	/* Force Type */
-	virtual Force::Type GetForceType(void) const {
+	virtual Force::Type GetForceType(void) const override {
 		return Force::TOTALINTERNALFORCE;
-	};
+	}
 
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
-	void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
-		*piNumCols = 6;
-	};
+		*piNumCols = 12;
+	}
 
-	VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
+	virtual VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
-	SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
+	virtual SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* inverse dynamics capable element */
-	virtual bool bInverseDynamics(void) const;
+	virtual bool bInverseDynamics(void) const override;
 
 	/* Inverse Dynamics*/
-	SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
+	virtual SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 			const VectorHandler& /* XCurr */ ,
 			const VectorHandler& /* XPrimeCurr */ ,
 			const VectorHandler& /* XPrimePrimeCurr */ ,
-			InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+			InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
-	virtual void Output(OutputHandler& OH) const;
+	virtual void Output(OutputHandler& OH) const override;
 
-	virtual void InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	virtual void InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 24;
-		*piNumCols = 12;
-	};
+		*piNumCols = 24;
+	}
+     
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 	
 	virtual SubVectorHandler&
 	InitialAssRes(SubVectorHandler& WorkVec, 
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 };
 
 /* Total Force: end */

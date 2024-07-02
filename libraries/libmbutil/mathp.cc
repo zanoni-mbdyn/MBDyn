@@ -78,7 +78,7 @@ template <class Tin, class Tout, mp_f2_f F>
 static int
 mp_func_2(const MathParser::MathArgs& args)
 {
-	ASSERT(args.size() == 1 + 1);
+	ASSERT(args.size() == 3);
 	ASSERT(args[0]->Type() == MathParser::AT_REAL);
 	ASSERT(args[1]->Type() == MathParser::AT_REAL);
 	ASSERT(args[2]->Type() == MathParser::AT_REAL);

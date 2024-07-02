@@ -1103,10 +1103,10 @@ public:
                         silent_cerr("An error occurred during the execution of MBDyn (" << e.what() << "); aborting...\n");
 
                         // Record the location in the source code. So, it may be displayed in GitLab CI.
-                        ADD_FAILURE_AT(e.GetFile(), e.GetLine())
+                        MBDYN_ADD_FAILURE_AT(e.GetFile(), e.GetLine())
                              << "An error occurred during the execution of MBDyn (" << e.GetFunction() << "); aborting...\n";
 
-                        // RUN_ALL_TESTS will return a nonzero exit status if we call ADD_FAILURE_AT
+                        // MBDYN_RUN_ALL_TESTS will return a nonzero exit status if we call ADD_FAILURE_AT
                 }
         }
 private:
@@ -1131,7 +1131,7 @@ int
 main(int argc, char* argv[])
 {
 #ifdef USE_GTEST
-	testing::InitGoogleTest(&argc, argv);
+        MBDYN_TESTSUITE_INIT(&argc, argv);
 #endif
 	int	rc = EXIT_SUCCESS;
 
@@ -1275,7 +1275,7 @@ main(int argc, char* argv[])
                                       __FILE__,
                                       __LINE__,
                                       [=]() -> MBDynProgramGTest* { return new MBDynProgramGTest(argc, argv, pmbp); });
-                rc = RUN_ALL_TESTS();
+                rc = MBDYN_RUN_ALL_TESTS();
 #endif
         } else {
 	    	/* The program is a big try block */

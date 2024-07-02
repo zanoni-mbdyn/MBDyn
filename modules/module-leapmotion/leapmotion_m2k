@@ -98,3 +98,9 @@ begin: elements;
 	joint: 20, rod, 1, 2, from nodes, linear viscoelastic generic, 1e3, 2e1;
 end: elements;
 
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 1
+##############################################################################################################

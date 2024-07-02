@@ -41,42 +41,13 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
+#include <array>
 
 #include "mbconfig.h"           /* This goes first in every *.c,*.cc file */
 
-#include <array>
+#include "myassert.h"
+#include "mynewmem.h"
 #include "solidcsl_impl.h"
-
-#ifdef USE_GTEST
-#include <gtest/gtest.h>
-#define TESTSUITE_ASSERT(expr) EXPECT_TRUE(expr)
-#define TESTSUITE_SCOPED_TRACE(msg) SCOPED_TRACE(msg)
-#define TESTSUITE_TEST(testname) TEST(solidcsltest, testname)
-#else
-#include <list>
-struct Test {
-     typedef void testFunctionType();
-     Test(testFunctionType* f) {
-          testFunctions.push_back(f);
-     }
-     static void RunAllTests() {
-          for (auto f: testFunctions) {
-               f();
-          }
-     }
-private:
-     static std::list<testFunctionType*> testFunctions;
-};
-
-std::list<Test::testFunctionType*> Test::testFunctions;
-
-#define TESTSUITE_ASSERT(expr) assert(expr)
-#define TESTSUITE_SCOPED_TRACE(msg) static_cast<void>(0)
-#define TESTSUITE_TEST(testname) \
-     void testname();            \
-     const Test testname ##_register(&testname);    \
-     void testname()
-#endif
 
 #ifdef USE_MPI
 #include "mbcomm.h"
@@ -259,7 +230,7 @@ struct IsotropicElasticityHelper<ConstitutiveLaw9D> {
 template <typename ConstitutiveLawType>
 void CheckConstitutiveLaw(ConstitutiveLawType& oMaterial, const typename ConstitutiveLawType::StressDerStrainType& Kref, const doublereal beta, const doublereal dTol)
 {
-     TESTSUITE_SCOPED_TRACE(oMaterial.GetName());
+     MBDYN_TESTSUITE_SCOPED_TRACE(oMaterial.GetName());
 
      typedef typename ConstitutiveLawType::StrainType StrainType;
 
@@ -371,8 +342,8 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
      std::cout.precision(precision);
 
      for (integer i = 1; i <= iNumSteps; ++i) {
-          TESTSUITE_ASSERT(std::fabs(M[i] / Mref[i] - 1.) < dTol);
-          TESTSUITE_ASSERT(std::fabs(N[i] / Nref[i] - 1.) < dTol);
+          MBDYN_TESTSUITE_ASSERT(std::fabs(M[i] / Mref[i] - 1.) < dTol);
+          MBDYN_TESTSUITE_ASSERT(std::fabs(N[i] / Nref[i] - 1.) < dTol);
      }
 
      typedef ConstitutiveLaw<TStress, TStressDerStrain, TStrain> ConstLawType;
@@ -384,7 +355,7 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
      CheckConstitutiveLaw(oCSL, Href, 0., dTolTangentOperator);
 }
 
-TESTSUITE_TEST(SedlanTestMooneyRivlin6D)
+MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestMooneyRivlin6D)
 {
      typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
@@ -404,7 +375,7 @@ TESTSUITE_TEST(SedlanTestMooneyRivlin6D)
      SedlanConstLawTest(oMooneyRivlin6D, C1, C2, kappa);
 }
 
-TESTSUITE_TEST(SedlanTestMooneyRivlin9D)
+MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestMooneyRivlin9D)
 {
      typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
@@ -425,7 +396,7 @@ TESTSUITE_TEST(SedlanTestMooneyRivlin9D)
 }
 
 #ifdef USE_MFRONT
-TESTSUITE_TEST(SedlanTestSignorini9D)
+MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestSignorini9D)
 {
      constexpr doublereal E = 100e6;
      constexpr doublereal nu = 0.3;
@@ -459,7 +430,7 @@ TESTSUITE_TEST(SedlanTestSignorini9D)
 }
 #endif
 
-TESTSUITE_TEST(SedlanTestNeoHookean6D)
+MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestNeoHookean6D)
 {
      typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
@@ -506,8 +477,8 @@ void CheckTangentOperator(ConstitutiveLawType& oMaterial, typename ConstitutiveL
 
      for (integer i = 1; i <= K.iGetNumRows(); ++i) {
           for (integer j = 1; j <= K.iGetNumCols(); ++j) {
-               TESTSUITE_ASSERT(fabs(K(i, j) - Kref(i, j)) < dTol);
-               TESTSUITE_ASSERT(fabs(D(i, j) - beta * Kref(i, j)) < dTol);
+               MBDYN_TESTSUITE_ASSERT(fabs(K(i, j) - Kref(i, j)) < dTol);
+               MBDYN_TESTSUITE_ASSERT(fabs(D(i, j) - beta * Kref(i, j)) < dTol);
           }
      }
 
@@ -520,7 +491,7 @@ void CheckTangentOperator(ConstitutiveLawType& oMaterial, typename ConstitutiveL
           const auto F = oMaterial.GetF();
 
           for (integer i = 1; i <= F.iGetNumRows(); ++i) {
-               TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEps * Kref(i, j)) < dTol);
+               MBDYN_TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEps * Kref(i, j)) < dTol);
           }
 
           Eps(j) = dEps0;
@@ -534,7 +505,7 @@ void CheckTangentOperator(ConstitutiveLawType& oMaterial, typename ConstitutiveL
           const auto F = oMaterial.GetF();
 
           for (integer i = 1; i <= F.iGetNumRows(); ++i) {
-               TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEpsP * beta * Kref(i, j)) < dTol);
+               MBDYN_TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEpsP * beta * Kref(i, j)) < dTol);
           }
 
           EpsP(j) = 0.;
@@ -543,7 +514,7 @@ void CheckTangentOperator(ConstitutiveLawType& oMaterial, typename ConstitutiveL
      oMaterial.Update(Eps, EpsP);
 }
 
-TESTSUITE_TEST(SmallStrainTest)
+MBDYN_TESTSUITE_TEST(solidcsltest, SmallStrainTest)
 {
      constexpr doublereal E = 210000e6;
      constexpr doublereal nu = 0.3;
@@ -614,14 +585,11 @@ TESTSUITE_TEST(SmallStrainTest)
      CheckConstitutiveLaw(oBilinearIsotropicHardening6D, Kref, 0., dTol);
 }
 
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
+
 int main(int argc, char* argv[])
 {
-#ifdef USE_GTEST
-     testing::InitGoogleTest(&argc, argv);
+     MBDYN_TESTSUITE_INIT(&argc, argv);
 
-     return RUN_ALL_TESTS();
-#else
-     Test::RunAllTests();
-     return 0;
-#endif
+     return MBDYN_RUN_ALL_TESTS();
 }

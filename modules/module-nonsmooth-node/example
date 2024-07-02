@@ -39,9 +39,6 @@
 #
 # Author contact: matteo.fancello@gmail.com
 
-
-module load: "libmodule-nonsmooth-node.so";
-
 begin: data;
    problem: initial value;
 end: data;
@@ -122,6 +119,7 @@ begin: control data;
 
 end: control data;
 
+module load: "libmodule-nonsmooth-node.la";
 
 #-----------------------------------------------------------------------------
 # Constitutive law example
@@ -207,3 +205,9 @@ begin: elements;
    		cosine, 0., pi/.1, 9.81/2, half, 0.;
 end: elements;
 
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

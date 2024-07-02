@@ -45,6 +45,8 @@ extern "C" {
 #include <iostream>
 #include <fstream>
 
+#include "myassert.h"
+#include "mynewmem.h"
 #include "solman.h"
 #include "submat.h"
 #include "spmapmh.h"
@@ -396,10 +398,16 @@ enum {
         MMDATA_PREORD
 };
 
-int
-main(int argc, char *argv[])
+namespace wraptest {
+     int argc;
+     char** argv;
+}
+
+MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 {
-        try {
+     using wraptest::argc;
+     using wraptest::argv;
+     
         SolutionManager *pSM = NULL;
         const char *solver =
 #if defined(USE_UMFPACK)
@@ -1049,14 +1057,16 @@ main(int argc, char *argv[])
 
 
                 SAFEDELETE(pSM);
+}
 
-        return 0;
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
 
-        } catch (const std::exception& err) {
-                std::cerr << "wraptest: an exception occured (" << err.what() << ")" << std::endl;
-                exit(EXIT_FAILURE);
-        } catch (...) {
-                std::cerr << "wraptest: an unexpected exception occured" << std::endl;
-                exit(EXIT_FAILURE);
-        }
+int main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+
+     wraptest::argc = argc;
+     wraptest::argv = argv;
+     
+     return MBDYN_RUN_ALL_TESTS();
 }

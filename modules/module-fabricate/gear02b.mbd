@@ -15,7 +15,7 @@ begin: initial value;
 	tolerance: 1.e-6;
 	max iterations: 20;
 
-	derivatives coefficient: 1.e-12;
+	derivatives coefficient: 1.e-6, auto;
 	derivatives tolerance: 1.e-3;
 	derivatives max iterations: 5;
 
@@ -132,3 +132,9 @@ begin: elements;
 
 end: elements;
 
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

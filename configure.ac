@@ -3277,6 +3277,8 @@ if test "$ol_with_sasl2" != "no" ; then
         fi
 fi
 
+AM_CONDITIONAL([USE_SASL2], [test "$ol_with_sasl2" = yes])
+
 dnl ----------------------------------------------------------------
 dnl
 dnl Check for GoogleTest

@@ -39,6 +39,8 @@
 #include "ac/f2c.h"
 #include "ac/arpack.h"
 
+#include "myassert.h"
+#include "except.h"
 #include "solman.h"
 #include "naivewrap.h"
 
@@ -738,8 +740,7 @@ c\SCCS Information: @(#)
 c FILE: neupd.F   SID: 2.7   DATE OF SID: 09/20/00   RELEASE: 2 
  */
 
-int
-main(void)
+MBDYN_TESTSUITE_TEST(arptest, arptest1)
 {
 	// matrix
 	NaiveMatrixHandler mh(5);
@@ -909,9 +910,10 @@ main(void)
 		cnt++;
 	} while (IDO == 1 || IDO == -1);
 
+        MBDYN_TESTSUITE_ASSERT(INFO >= 0);
+
 	if (INFO < 0) {
-		std::cerr << "error" << std::endl;
-		return 1;
+             throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
 	logical RVEC = true;
@@ -981,6 +983,11 @@ main(void)
 			}
 		}
 	}
-	
-	return 0;
+}
+
+int main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+     
+     return MBDYN_RUN_ALL_TESTS();
 }

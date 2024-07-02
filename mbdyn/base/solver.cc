@@ -2705,7 +2705,7 @@ Solver::Restart(std::ostream& out,DataManager::eRestart type) const
 		out << ", test, minmax" ;
 		break;
 	case NonlinearSolverTest::NONE:
-		NO_OP;
+                break;
 	default:
 		ASSERT(0);
 	}

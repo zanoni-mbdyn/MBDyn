@@ -31,11 +31,12 @@
 
 #include "mbconfig.h"
 
+#include "myassert.h"
+#include "mynewmem.h"
 #include "submat.h"
 #include "spmapmh.h"
 
-int
-main(void)
+MBDYN_TESTSUITE_TEST(subtest, subtest1)
 {
 	FullMatrixHandler FMH(4);
 	SpMapMatrixHandler SMH(4);
@@ -95,6 +96,13 @@ main(void)
 	FSMH.SubFromT(SMH);
 
 	std::cout << "SMH = -FSMH^T: " << std::endl << SMH << std::endl;
+}
 
-	return 0;
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
+
+int main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+     
+     return MBDYN_RUN_ALL_TESTS();
 }
