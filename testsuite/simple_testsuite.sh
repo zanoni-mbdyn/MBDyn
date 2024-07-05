@@ -49,8 +49,11 @@ mbdyn_verbose_output="no"
 mbdyn_keep_output="unexpected"
 mbdyn_print_res="no"
 mbdyn_patch_input="no"
+mbdyn_abort_after_step=""
 mbdyn_exec_gen="yes"
 mbdyn_exec_solver="yes"
+update_reference_test_status="no"
+use_reference_test_status="no"
 declare -i mbdyn_exclude_inverse_dynamics=0
 declare -i mbdyn_exclude_initial_value=0
 mbdyn_suppressed_errors=""
@@ -59,6 +62,7 @@ declare -i mbd_exit_status_mask=0 ## Define the errors codes which should not ca
 MBDYN_EXEC="${MBDYN_EXEC:-mbdyn}"
 MBDYN_ARGS_ADD="${MBDYN_ARGS_ADD:--CGF}"
 OCTAVE_EXEC="${OCTAVE_EXEC:-octave}"
+PYTHON_EXEC="${PYTHON_EXEC:-python3}"
 TESTSUITE_TIME_CMD="${TESTSUITE_TIME_CMD:-/usr/bin/time --verbose}"
 JUNIT_XML_KEEP_ALL_OUTPUT="${JUNIT_XML_KEEP_ALL_OUTPUT:-none}"
 program_dir=$(realpath $(dirname "${program_name}"))
@@ -74,10 +78,13 @@ else
     mbdyn_sed_prefix=""
 fi
 
+mbdyn_patch_input_sed_expression="${mbdyn_sed_prefix}mbdyn_testsuite_patch.sed"
+mbdyn_patch_input_sed_args='-E -f'
 ## Disable multithreaded BLAS by default
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
+export PYTHONPATH="${PYTHONPATH}:${program_dir}/libraries/libmbc"
 ## Might be used for Octave scripts (e.g. via mboct-mbdyn-pkg)
 
 MBD_NUM_TASKS=${MBD_NUM_TASKS:-$(( $(lscpu | awk '/^Socket\(s\)/{ print $2 }') * $(lscpu | awk '/^Core\(s\) per socket/{ print $4 }') ))}
@@ -95,6 +102,14 @@ while ! test -z "$1"; do
             ;;
         --timeout)
             mbdyn_testsuite_timeout="$2"
+            shift
+            ;;
+        --update-reference-test-status)
+            update_reference_test_status="$2"
+            shift
+            ;;
+        --use-reference-test-status)
+            use_reference_test_status="$2"
             shift
             ;;
         --regex-filter-include|--regex-filter-exclude)
@@ -140,7 +155,22 @@ while ! test -z "$1"; do
             shift
             ;;
         --patch-input)
+            if ! test -z "${mbdyn_abort_after_step}"; then
+                echo "--patch-input must not be used in combination with --abort-after-step"
+                exit 1
+            fi
             mbdyn_patch_input="$2"
+            shift
+            ;;
+        --abort-after-step)
+            if test "${mbdyn_patch_input}" = "yes"; then
+                echo "--abort-after must not be used in combination with --patch-input"
+                exit 1
+            fi
+            mbdyn_patch_input="yes"
+            mbdyn_abort_after_step="$2"
+            mbdyn_patch_input_sed_expression=`printf '/^[[:space:]]*\<end\>:[[:space:]]*initial[[:space:]]*value[[:space:]]*;[[:space:]]*$/i abort after: regular step, %d;' "${mbdyn_abort_after_step}"`
+            mbdyn_patch_input_sed_args='-E'
             shift
             ;;
         --mbdyn-exec)
@@ -248,6 +278,9 @@ timeout_tests=""
 modules_not_found=""
 suppressed_failures=""
 unexpected_faults=""
+regressions=""
+fixed_failures=""
+known_failures=""
 
 if ! test -z "${mbdyn_input_filter}"; then
     mbdyn_input_filter="-and ${mbdyn_input_filter}"
@@ -337,15 +370,36 @@ function simple_testsuite_run_test()
         mbd_time_file="${mbdyn_testsuite_prefix_output}/${mbd_basename}_mbdyn_output_time_$((idx_test)).log"
         mbd_output_file="${mbdyn_testsuite_prefix_output}/${mbd_basename}_mbdyn_output_$((idx_test))"
         junit_xml_report_file="${mbdyn_testsuite_prefix_output}/junit_xml_report_${mbd_basename}_$((idx_test)).xml"
+
+        export GTEST_MBDYN_ARGS="--gtest_output=xml:${junit_xml_report_file}"
+
+        ## Needed for all GNU-Octave scripts which are using mboct-mbdyn-pkg (e.g. "triangular_contact_run.m")
+        export MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND="${MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND:-${MBDYN_EXEC} ${GTEST_MBDYN_ARGS} --gtest_output=xml:${junit_xml_report_file}}"
+
+        case "${OCTAVE_EXEC}" in
+            gtest-*)
+                ## Note: It should be safe to use the same name, since gtest will add an index if the file already exists
+                GTEST_OCTAVE_ARGS="${GTEST_MBDYN_ARGS}"
+                ;;
+            *)
+                GTEST_OCTAVE_ARGS=""
+                ;;
+        esac
+
+        ## Make sure that we can use ${GTEST_OCTAVE_ARGS} in *_run.sh and *_gen.sh,
+        ## since we do not know if ${OCTAVE_EXEC} will be called from those scripts.
+        export GTEST_OCTAVE_ARGS
+
         mbd_log_file="${mbd_output_file}.stdout"
 
         mbd_script_name=`basename ${mbd_filename}`
         mbd_script_name=`basename -s .mbd ${mbd_script_name}`
         mbd_script_name=`basename -s .mbdyn ${mbd_script_name}`
         mbd_dir_name=`dirname "${mbd_filename}"`
-        mbd_script_name_sh="${mbd_dir_name}/${mbd_script_name}_run.sh"
-        mbd_script_name_m1="${mbd_dir_name}/${mbd_script_name}_run.m"
-        mbd_script_name_m2="${mbd_dir_name}/${mbd_script_name}_gen.m"
+        mbd_script_name_run_sh="${mbd_dir_name}/${mbd_script_name}_run.sh"
+        mbd_script_name_gen_sh="${mbd_dir_name}/${mbd_script_name}_gen.sh"
+        mbd_script_name_run_m="${mbd_dir_name}/${mbd_script_name}_run.m"
+        mbd_script_name_gen_m="${mbd_dir_name}/${mbd_script_name}_gen.m"
         mbd_command=""
 
         if test "${mbdyn_patch_input}" != "no"; then
@@ -355,11 +409,11 @@ function simple_testsuite_run_test()
             mbd_filename_patched=$(mktemp -p "${mbd_dir_name}" "${mbd_basename}_XXXXXXXXXX_patched_$((idx_test)).mbd")
             mbd_filename_patched_copy="${mbdyn_testsuite_prefix_output}/${mbd_basename}_mbdyn_input_file_patched_$((idx_test)).mbd"
 
-            if ! sed -E -f "${mbdyn_sed_prefix}mbdyn_testsuite_patch.sed" "${mbd_filename}" | tee "${mbd_filename_patched}" > "${mbd_filename_patched_copy}"; then
+            if ! sed ${mbdyn_patch_input_sed_args} "${mbdyn_patch_input_sed_expression}" "${mbd_filename}" | tee "${mbd_filename_patched}" > "${mbd_filename_patched_copy}"; then
                 rm -f "${mbd_filename_patched}"
                 rm -f "${mbd_filename_patched_copy}"
                 echo "Failed to patch input file \"${mbd_filename}\""
-                return 0x80
+                return 1
             fi
         else
             mbd_filename_patched="${mbd_filename}"
@@ -367,30 +421,36 @@ function simple_testsuite_run_test()
 
         mbd_allow_patch="yes"
 
-        for mbd_script_name in "${mbd_script_name_m2}" "${mbd_script_name_m1}" "${mbd_script_name_sh}"; do
+        for mbd_script_name in "${mbd_script_name_run_m}" "${mbd_script_name_gen_m}" "${mbd_script_name_run_sh}" "${mbd_script_name_gen_sh}"; do
             if ! test -z "${mbd_command}"; then
                 break
             fi
             if test -f "${mbd_script_name}"; then
                 echo "A custom test script ${mbd_script_name} was found for input file ${mbd_filename}; It will be used to run the model"
                 case "${mbd_script_name}" in
-                    *_gen.m)
+                    *_gen.m|*_gen.sh)
                         ## It seems that all the Octave scripts from mbdyn-tests-public need to be executed only once, and their output may be reused for all patched tests.
                         if test "${mbd_exec_gen_script}" != "no"; then
-                            mbd_command="${OCTAVE_EXEC} -q -f ${mbd_script_name} -f ${mbd_filename} -o ${mbd_output_file}"
+                            mbd_command="${mbd_script_name} -f ${mbd_filename} -o ${mbd_output_file}"
+
+                            case "${mbd_script_name}" in
+                                *.m)
+                                    mbd_command="${OCTAVE_EXEC} ${GTEST_OCTAVE_ARGS} -qf ${mbd_command}"
+                                    ;;
+                            esac
 
                             if test "${mbd_exec_solver}" != "yes"; then
                                 ## Generate the input
                                 mbd_exec_solver="yes"
                             else
                                 ## Generate the input and execute MBDyn
-                                mbd_command="${mbd_command}; ${MBDYN_EXEC} ${MBDYN_ARGS_ADD} -f ${mbd_filename} -o ${mbd_output_file}"
+                                mbd_command="${mbd_command}; ${MBDYN_EXEC} ${MBDYN_ARGS_ADD} -f ${mbd_filename} -o ${mbd_output_file} ${GTEST_MBDYN_ARGS}"
                             fi
                         fi
                         ;;
                     *_run.m)
                         if test "${mbd_exec_run_script}" != "no"; then
-                            mbd_command="${OCTAVE_EXEC} -q -f ${mbd_script_name} -f ${mbd_filename} -o ${mbd_output_file}"
+                            mbd_command="${OCTAVE_EXEC} ${GTEST_OCTAVE_ARGS} -q -f ${mbd_script_name} -f ${mbd_filename} -o ${mbd_output_file}"
                         else
                             mbd_allow_patch="no"
                         fi
@@ -407,6 +467,14 @@ function simple_testsuite_run_test()
             fi
         done
 
+        mbd_exclude_test=`awk -f mbdyn_testsuite_exclude_test.awk "${mbd_filename}"`
+
+        case "${mbd_exclude_test}" in
+             excluded*)
+                mbd_exec_solver="no"
+                ;;
+        esac
+
         if test "${mbdyn_patch_input}" != "no" && test "${mbd_allow_patch}" != "yes"; then
             echo "Cannot execute test \"${mbd_filename}\""
             mbd_exec_solver="no"
@@ -414,7 +482,7 @@ function simple_testsuite_run_test()
 
         if test -z "${mbd_command}"; then
             echo "No custom test script was found for input file ${mbd_filename}; The default command will be used to run the model"
-            mbd_command="${MBDYN_EXEC} ${MBDYN_ARGS_ADD} -f ${mbd_filename_patched} -o ${mbd_output_file} --gtest_output=xml:${junit_xml_report_file}"
+            mbd_command="${MBDYN_EXEC} ${MBDYN_ARGS_ADD} -f ${mbd_filename_patched} -o ${mbd_output_file} ${GTEST_MBDYN_ARGS}"
         fi
 
         case "${mbdyn_print_res}" in
@@ -651,7 +719,64 @@ function simple_testsuite_run_test()
             ;;
     esac
 
-    printf "%s(%d)\n" "${status}" ${rc} > "${mbd_status_file}"
+    expected_test_status=`awk -F '=' 'BEGIN{ status = -1; } /^[[:space:]]*##[[:space:]]*@MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@[[:space:]]*=[[:space:]]*[0-9]*[[:space:]]*$/ { status = ($2 != 0); } END{ printf("%d\n", status); }' "${mbd_filename}"`
+
+    if test $((exit_status)) -eq 0; then
+        ((test_status=0))
+    else
+        ((test_status=1))
+    fi
+
+    if ! test "${update_reference_test_status}" = "no"; then
+        if test "${expected_test_status}" -eq -1; then
+            printf '\n##############################################################################################################\n' >> "${mbd_filename}"
+            printf '## Variables to be updated by simple_testsuite.sh --update-reference-test-status\n' >> "${mbd_filename}"
+            printf '## Warning, do not edit!!!\n' >> "${mbd_filename}"
+            printf '## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = %d\n' $((exit_status)) >> "${mbd_filename}"
+            printf '##############################################################################################################\n' >> "${mbd_filename}"
+        else
+            do_update_file="no"
+
+            case "${update_reference_test_status}" in
+                failed)
+                    if test $((test_status)) -ne 0; then
+                        do_update_file="yes"
+                    fi
+                    ;;
+                passed)
+                    if test $((test_status)) -eq 0; then
+                        do_update_file="yes"
+                    fi
+                    ;;
+                all|yes)
+                    do_update_file="yes"
+                    ;;
+            esac
+
+            if test "${do_update_file}" = "yes"; then
+                sed -i "s/^[[:space:]]*\#\#[[:space:]]*@MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@[[:space:]]*=[[:space:]]*[0-9]*[[:space:]]*$/\#\# @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = $((test_status))/g;" "${mbd_filename}"
+            fi
+        fi
+
+        expected_test_status=$((test_status))
+    fi
+
+    if test "${use_reference_test_status}" = "yes"; then
+        if test $((test_status)) -eq $((expected_test_status)); then
+            if test $((test_status)) -ne 0; then
+                status="known-failure-${status}"
+                ((exit_status=0x0))
+            fi
+        else
+            if test $((test_status)) -ne 0; then
+                status="regression-${status}"
+            else
+                status="fixed-failure"
+            fi
+        fi
+    fi
+
+    printf "%s(%d:%d:%d)\n" "${status}" ${rc} $((exit_status)) $((expected_test_status)) > "${mbd_status_file}"
 
     return $((exit_status))
 }
@@ -671,21 +796,33 @@ for mbd_filename in ${MBD_INPUT_FILES_FOUND}; do
     rm -f "${mbd_status_file}"
 done
 
+## Ensure that we can use those variables within all *_run.sh, *_gen.sh, *_run.m and *_gen.m scripts
+export MBDYN_EXEC
+export OCTAVE_EXEC
+export PYTHON_EXEC
+
 if test $((idx_test)) -le 1 || test "${MBD_NUM_TASKS}" -le 1; then
     ## Sequential execution
-    ((idx_test=0))
-    for mbd_filename in ${MBD_INPUT_FILES_FOUND}; do
-        ((++idx_test))
-        mbd_status_file=`printf "${mbd_status_file_format}" $((idx_test))`
+    if test "${mbdyn_exec_gen}" != "no"; then
+        ## Sequential execution of *_gen.m scripts
+        ## Note: Make sure that all the *_gen.m scripts were executed before any model is executed!
+        ## Note: That's because some models have only one *_gen.m script but multiple models are using the output from the same *_gen.m script.
+        ((idx_test=0))
+        for mbd_filename in ${MBD_INPUT_FILES_FOUND}; do
+            ((++idx_test))
+            mbd_status_file=`printf "${mbd_status_file_format}" $((idx_test))`
+            simple_testsuite_run_test --status "${mbd_status_file}" --input "${mbd_filename}" --index "${idx_test}" --exec-solver no
+        done
+    fi
 
-        simple_testsuite_args="--status ${mbd_status_file} --input ${mbd_filename} --index ${idx_test}"
-
-        if test "${mbdyn_verbose_output}" = "disabled"; then
-            simple_testsuite_run_test ${simple_testsuite_args} >& /dev/null
-        else
-            simple_testsuite_run_test ${simple_testsuite_args}
-        fi
-    done
+    if test "${mbdyn_exec_solver}" != "no"; then
+        ((idx_test=0))
+        for mbd_filename in ${MBD_INPUT_FILES_FOUND}; do
+            ((++idx_test))
+            mbd_status_file=`printf "${mbd_status_file_format}" $((idx_test))`
+            simple_testsuite_run_test --status "${mbd_status_file}" --input "${mbd_filename}" --index "${idx_test}" --exec-gen no
+        done
+    fi
 else
     ## Parallel execution
     export mbdyn_testsuite_prefix_output
@@ -696,13 +833,15 @@ else
     export mbdyn_keep_output
     export mbdyn_print_res
     export mbdyn_suppressed_errors
+    export update_reference_test_status
+    export use_reference_test_status
     export MBDYN_EXEC
     export MBDYN_ARGS_ADD
     export MBD_NUM_THREADS
-    export MBDYN_EXEC
-    export OCTAVE_EXEC
     export JUNIT_XML_KEEP_ALL_OUTPUT
     export -f simple_testsuite_run_test
+    export mbdyn_patch_input_sed_expression
+    export mbdyn_patch_input_sed_args
 
     if test "${mbdyn_exec_gen}" != "no"; then
         ## Sequential execution of *_gen.m scripts
@@ -757,6 +896,15 @@ for mbd_filename in ${MBD_INPUT_FILES_FOUND}; do
         failed*)
             failed_tests="${failed_tests} ${mbd_filename}:${status}"
             ;;
+        regression*)
+            regressions="${regressions} ${mbd_filename}:${status}"
+            ;;
+        known-failure*)
+            known_failures="${known_failures} ${mbd_filename}:${status}"
+            ;;
+        fixed-failure*)
+            fixed_failures="${fixed_failures} ${mbd_filename}:${status}"
+            ;;
         *)
             unexpected_faults="${unexpected_faults} ${mbd_filename}:${status}"
             ;;
@@ -778,54 +926,56 @@ function print_files()
     done
 }
 
+function report_tests()
+{
+    if test -z "$1"; then
+        echo "$2"
+        return 1
+    else
+        print_files "$3" $1
+    fi
+}
+
 printf "@BEGIN_SIMPLE_TESTSUITE_REPORT@\n"
 
-if test -z "${passed_tests}"; then
-    echo "No tests passed"
+if ! report_tests "${passed_tests}" "No tests passed" "PASSED:The following %d tests passed with zero exit status:\n"; then
     ((exit_status|=0x1))
-else
-    print_files "PASSED:The following %d tests passed with zero exit status:\n" ${passed_tests}
 fi
 
-if test -z "${skipped_tests}"; then
-    echo "No tests were skipped"
-else
-    print_files "SKIPPED:The following %d tests were skipped:\n" ${skipped_tests}
-fi
-
-if test -z "${timeout_tests}"; then
-    echo "No tests were killed because of timeout"
-else
-    print_files "TIMEOUT:The following %d tests were killed because of timeout:\n" ${timeout_tests}
+if report_tests "${timeout_tests}" "No tests were killed because of timeout" "TIMEOUT:The following %d tests were killed because of timeout:\n"; then
     ((exit_status|=0x2))
 fi
 
-if test -z "${modules_not_found}"; then
-    echo "All modules were found"
-else
-    print_files "FAILED-MODULE:The following %d tests failed because a loadable module was not found:\n" ${modules_not_found}
+if report_tests "${modules_not_found}" "All modules were found" "FAILED-MODULE:The following %d tests failed because a loadable module was not found:\n"; then
     ((exit_status|=0x4))
 fi
 
-if test -z "${suppressed_failures}"; then
-    echo "There were no suppressed failures"
-else
-    print_files "FAILED-SUPPRESSED:The following %d failures were suppressed:\n" ${suppressed_failures}
+if report_tests "${suppressed_failures}" "There were no suppressed failures" "FAILED-SUPPRESSED:The following %d failures were suppressed:\n"; then
     ((exit_status|=0x8))
 fi
 
-if test -z "${failed_tests}"; then
-    echo "No tests failed with status 1"
-else
-    print_files "FAILED:The following %d tests failed with status 1:\n" ${failed_tests}
-    ((exit_status|=0x10))
+if report_tests "${failed_tests}" "No tests failed with status 1" "FAILED:The following %d tests failed with status 1:\n"; then
+   ((exit_status|=0x10))
 fi
 
-if test -z "${unexpected_faults}"; then
-    echo "No tests returned with unexpected exit status"
-else
-    print_files "FAILED-UNEXPECTED:The following %d tests failed with unexpected exit status:\n" ${unexpected_faults}
+if report_tests "${regressions}" "No regressions" "REGRESSIONS:The following %d tests observed a regression:\n"; then
+   ((exit_status|=0x20))
+fi
+
+if report_tests "${unexpected_faults}" "No tests returned with unexpected exit status" "FAILED-UNEXPECTED:The following %d tests failed with unexpected exit status:\n"; then
     ((exit_status|=0x40))
+fi
+
+if report_tests "${fixed_failures}" "No failures were fixed" "FIXED-FAILURES:The following %d tests were fixed:\n"; then
+   ((exit_status|=0x80))
+fi
+
+if report_tests "${known_failures}" "There were no known failures" "KNOWN-FAILURES:There were %d known failures:\n"; then
+    ((exit_status|=0x100))
+fi
+
+if report_tests "${skipped_tests}" "No tests were skipped" "SKIPPED:The following %d tests were skipped:\n"; then
+    ((exit_status|=0x200))
 fi
 
 if test $((exit_status&~mbd_exit_status_mask)) == 0 && test $((exit_status)) != 0; then

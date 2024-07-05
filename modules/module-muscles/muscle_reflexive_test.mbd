@@ -130,3 +130,9 @@ begin: elements;
 		0., 1., 0.,
 			sine, .1, pi/.1, .01, one, 0.;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

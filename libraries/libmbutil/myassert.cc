@@ -51,12 +51,69 @@ se msg e' definito, viene aggiunto in coda al messaggio di default
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
+#include <sstream>
 
 #include "myassert.h"
 
 /* flag di silent run (no output su stdout) */
 int fSilent = 0;
 int fPedantic = 0;
+
+#ifndef USE_GTEST
+MBDynUnitTestEntry::MBDynUnitTestEntry(const char* file, int line, const char* testsuitename, const char* testname, testFunctionType* function)
+     :file(file), line(line), testsuitename(testsuitename), testname(testname), function(function), pNext(pHead)
+{
+     pHead = this;
+     ++nSize;
+}
+
+int MBDynUnitTestEntry::RunAllTests()
+{
+     size_t passed = 0;
+     size_t failed = 0;
+     size_t idx = 0;
+
+     for (auto pCurr = pHead; pCurr; pCurr = pCurr->pNext) {
+          ++idx;
+
+          try {
+               std::cerr << "TEST " << idx << "/" << nSize << ':' << pCurr->testsuitename << ':' << pCurr->testname << '\n';
+               pCurr->function();
+               ++passed;
+               std::cerr << "TEST " << idx << "/" << nSize << " PASSED:" << pCurr->testsuitename << ':' << pCurr->testname << '\n';
+          } catch(const std::exception& err) {
+               ++failed;
+               std::cerr << "TEST " << idx << "/" << nSize <<  " FAILED:" << pCurr->testsuitename << ':' << pCurr->testname << ':' << err.what() << '\n';
+          }
+     }
+
+     int status = ((failed == 0) && (passed == nSize)) ? 0 : 1;
+
+     if (status == 0) {
+          std::cerr << "All tests passed\n";
+     }
+
+     return status;
+}
+
+const MBDynUnitTestEntry* MBDynUnitTestEntry::pHead = nullptr;
+
+size_t MBDynUnitTestEntry::nSize = 0;
+
+MBDynUnitTestEntry::Failure::Failure(const char* file, int line, const char* expr)
+{
+     std::ostringstream os;
+
+     os << file << ':' << line << ':' << expr << std::ends;
+
+     msg = os.str();
+}
+
+const char* MBDynUnitTestEntry::Failure::what() const noexcept
+{
+     return msg.c_str();
+}
+#endif
 
 #ifdef USE_MULTITHREAD
 std::mutex mbdyn_lock_cout;
@@ -69,7 +126,7 @@ long int debug_level = DEFAULT_DEBUG_LEVEL;
 void _Assert(const char* file, const int line, const char* expr, const char* msg)
 {
 #ifdef USE_GTEST
-   ADD_FAILURE_AT(file, line) << ':' << expr << ':' << (msg ? msg : "") << '\n';
+   MBDYN_ADD_FAILURE_AT(file, line) << expr << ':' << (msg ? msg : "") << '\n';
 #else
    std::cout.flush();
 
@@ -86,11 +143,7 @@ void _Assert(const char* file, const int line, const char* expr, const char* msg
    }
 
    if (::debug_level & MYDEBUG_ABORT) {
-#ifdef USE_GTEST
-      FAIL();
-#else
       abort();
-#endif
    }
    return;
 }

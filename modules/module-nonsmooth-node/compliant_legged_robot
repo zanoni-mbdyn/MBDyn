@@ -33,8 +33,6 @@
 # The online version of this article can be found at:
 # http://pik.sagepub.com/content/226/2/85
 
-module load: "libmodule-nonsmooth-node";
-
 begin: data;
 	problem: initial value;
 end: data;
@@ -86,6 +84,8 @@ begin: control data;
 
 	output meter: meter, 0., forever, steps, 100;
 end: control data;
+
+module load: "libmodule-nonsmooth-node.la";
 
 set: const integer BODY = 100;
 set: const integer BEAM = 200;
@@ -353,3 +353,9 @@ begin: elements;
                 # LCP solver, newton_FB,
 		output, yes;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

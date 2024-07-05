@@ -42,17 +42,10 @@
 #include <iostream>
 
 #include "mbconfig.h"           /* This goes first in every *.c,*.cc file */
+
+#include "myassert.h"
 #include "solidshape.h"
 #include "demangle.h"
-
-#ifdef USE_GTEST
-#include <gtest/gtest.h>
-#define TESTSUITE_ASSERT(expr) EXPECT_TRUE(expr)
-#define TESTSUITE_SCOPED_TRACE(msg) SCOPED_TRACE(msg)
-#else
-#define TESTSUITE_ASSERT(expr) assert(expr)
-#define TESTSUITE_SCOPED_TRACE(msg) static_cast<void>(0)
-#endif
 
 template <typename ElementType, sp_grad::index_type iDim>
 bool bCheckShapeFunction()
@@ -123,45 +116,99 @@ bool bCheckShapeFunctionUPC()
      return bRes;
 }
 
-#ifdef USE_GTEST
-TEST(solidshapetest, bCheckShapeFunction)
-#else
-void RunAllTests()
-#endif
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ4)
 {
-     TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle4, 2>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle8, 2>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle9, 2>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle8r, 2>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Triangle6h, 2>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8p, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron20u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron27u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Hexahedron20upc, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron20ur, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Hexahedron20upcr, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron6u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron15u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Pentahedron15upc, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron4u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron10u, 3>()));
-     TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Tetrahedron10upc, 3>()));
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle4, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ8)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle8, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ9)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle9, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ8r)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle8r, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT6h)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Triangle6h, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH8u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH8p)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8p, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron20u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH27u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron27u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20upc)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Hexahedron20upc, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20ur)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron20ur, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20upcr)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Hexahedron20upcr, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP6u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron6u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP15u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron15u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP15upc)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Pentahedron15upc, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT4u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron4u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron10u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10upc)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Tetrahedron10upc, 3>()));
 }
 
 int main(int argc, char* argv[])
 {
-#ifdef USE_GTEST
-     testing::InitGoogleTest(&argc, argv);
-#endif
+     MBDYN_TESTSUITE_INIT(&argc, argv);
 
-#ifdef USE_GTEST
-     return RUN_ALL_TESTS();
-#else
-     RunAllTests();
-
-     std::cout << argv[0] << ": all tests passed\n";
-
-     return 0;
-#endif
+     return MBDYN_RUN_ALL_TESTS();
 }

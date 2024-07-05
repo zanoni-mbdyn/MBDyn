@@ -166,3 +166,9 @@ scalar function: "penalty", multilinear,
         drive caller: drive_id_Wkin, element, body_id_sphere, body, string, "E", direct, output, yes;
         drive caller: drive_id_Wpot, element, body_id_sphere, body, string, "V", direct, output, yes;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

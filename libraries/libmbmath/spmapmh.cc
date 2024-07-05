@@ -144,8 +144,7 @@ idx_type SpMapMatrixHandler::MakeCompressedRowFormTpl(doublereal *const Ax,
 
 #ifdef DEBUG
 	constexpr idx_type iInvalidIndex = -1;
-	constexpr doublereal dInvalidValue = std::numeric_limits<doublereal>::infinity();
-     
+        constexpr doublereal dInvalidValue = -123456789.;        
 	std::fill(Ai, Ai + Nz(), iInvalidIndex);
 	std::fill(Ax, Ax + Nz(), dInvalidValue);
 #endif	

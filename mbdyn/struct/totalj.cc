@@ -235,7 +235,7 @@ TotalJoint::DescribeDof(std::ostream& out,
 				"reaction force(s) derivative(s) [";
 
 			for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-				if (bPosActive[i]) {
+				if (bPosActive[i] || bVelActive[i]) {
 					cnt++;
 					if (cnt > 1) {
 						out << ",";
@@ -256,7 +256,7 @@ TotalJoint::DescribeDof(std::ostream& out,
 				"reaction couple(s) derivative(s) [";
 
 			for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-				if (bRotActive[i]) {
+				if (bRotActive[i] || bAgvActive[i]) {
 					cnt++;
 					if (cnt > 1) {
 						out << ",";
@@ -320,7 +320,7 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
 		if (bInitial) {
 			if (nPosConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bPosActive[i]) {
+					if (bPosActive[i] || bVelActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": dof(" << cnt + 1 << ") FP" << idx2xyz[i];
@@ -332,7 +332,7 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
 
 			if (nRotConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bRotActive[i]) {
+					if (bRotActive[i] || bAgvActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": dof(" << cnt + 1 << ") MP" << idx2xyz[i];
@@ -343,7 +343,7 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
 			}
 		}
 
-		ASSERT(cnt == static_cast<unsigned>(ndof));
+		ASSERT(cnt == (bInitial ? iGetInitialNumDof() : iGetNumDof()));
 
 	} else {
 		os << ": dof(" << i + 1 << ")";
@@ -366,6 +366,8 @@ TotalJoint::DescribeEq(std::ostream& out,
 			"position/velocity constraint(s) [";
 
 		for (unsigned int i = 0, cnt = 0; i < 3; i++) {
+                        ASSERT(!(bPosActive[i] && bVelActive[i]));
+
 			if (bPosActive[i] || bVelActive[i]) {
 				cnt++;
 				if (cnt > 1) {
@@ -392,6 +394,8 @@ TotalJoint::DescribeEq(std::ostream& out,
 			"orientation/angular velocity constraint(s) [";
 
 		for (unsigned int i = 0, cnt = 0; i < 3; i++) {
+                        ASSERT(!(bRotActive[i] && bAgvActive[i]));
+
 			if (bRotActive[i] || bAgvActive[i]) {
 				cnt++;
 				if (cnt > 1) {
@@ -421,7 +425,7 @@ TotalJoint::DescribeEq(std::ostream& out,
 				"velocity constraint(s) [";
 
 			for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-				if (bPosActive[i]) {
+				if (bPosActive[i] || bVelActive[i]) {
 					cnt++;
 					if (cnt > 1) {
 						out << ",";
@@ -442,7 +446,7 @@ TotalJoint::DescribeEq(std::ostream& out,
 				"angular velocity constraint(s) [";
 
 			for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-				if (bRotActive[i]) {
+				if (bRotActive[i] || bAgvActive[i]) {
 					cnt++;
 					if (cnt > 1) {
 						out << ",";
@@ -482,7 +486,9 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 
 		if (nPosConstraints > 0 || nVelConstraints > 0) {
 			for (unsigned int i = 0; i < 3; i++) {
-				if (bPosActive[i]) {
+                                ASSERT(!(bPosActive[i] && bVelActive[i]));
+
+                                if (bPosActive[i]) {
 					os.str(name);
 					os.seekp(0, std::ios_base::end);
 					os << ": equation(" << cnt + 1 << ") P" << idx2xyz[i] << "1=P" << idx2xyz[i] << "2";
@@ -500,7 +506,8 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 		}
 
 		if (nRotConstraints > 0 || nAgvConstraints > 0) {
-			for (unsigned int i = 0; i < 3; i++) {
+                        ASSERT(!(bRotActive[i] && bAgvActive[i]));
+                        for (unsigned int i = 0; i < 3; i++) {
 				if (bRotActive[i]) {
 					os.str(name);
 					os.seekp(0, std::ios_base::end);
@@ -521,7 +528,7 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 		if (bInitial) {
 			if (nPosConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bPosActive[i]) {
+					if (bPosActive[i] || bVelActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": equation(" << cnt + 1 << ") v" << idx2xyz[i] << "1=v" << idx2xyz[i] << "2";
@@ -533,7 +540,7 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 
 			if (nRotConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bRotActive[i]) {
+					if (bRotActive[i] || bAgvActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": equation(" << cnt + 1 << ") w" << idx2xyz[i] << "1=w" << idx2xyz[i] << "2";
@@ -544,8 +551,7 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 			}
 		}
 
-		ASSERT(cnt == static_cast<unsigned>(ndof));
-
+		ASSERT(cnt == (bInitial ? iGetInitialNumDof() : iGetNumDof()));
 	} else {
 		os << ": equation(" << i + 1 << ")";
 		desc[0] = os.str();
@@ -2326,7 +2332,7 @@ TotalPinJoint::DescribeDof(std::ostream& out,
 		out << "reaction force(s) derivative(s) [";
 
 		for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-			if (bPosActive[i]) {
+			if (bPosActive[i] || bVelActive[i]) {
 				cnt++;
 				if (cnt > 1) {
 					out << ",";
@@ -2347,7 +2353,7 @@ TotalPinJoint::DescribeDof(std::ostream& out,
 		out << "reaction couple(s) derivative(s) [";
 
 		for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-			if (bRotActive[i]) {
+			if (bRotActive[i] || bAgvActive[i]) {
 				cnt++;
 				if (cnt > 1) {
 					out << ",";
@@ -2385,6 +2391,7 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
 
 		if (nPosConstraints > 0 || nVelConstraints > 0) {
 			for (unsigned int i = 0; i < 3; i++) {
+                             ASSERT(!(bPosActive[i] && bVelActive[i]));
 				if (bPosActive[i] || bVelActive[i]) {
 					os.str(name);
 					os.seekp(0, std::ios_base::end);
@@ -2397,6 +2404,7 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
 
 		if (nRotConstraints > 0 || nAgvConstraints > 0) {
 			for (unsigned int i = 0; i < 3; i++) {
+                             ASSERT(!(bRotActive[i] && bAgvActive[i]));
 				if (bRotActive[i] || bAgvActive[i]) {
 					os.str(name);
 					os.seekp(0, std::ios_base::end);
@@ -2410,7 +2418,7 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
 		if (bInitial) {
 			if (nPosConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bPosActive[i]) {
+					if (bPosActive[i] || bVelActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": dof(" << cnt + 1 << ") FP" << idx2xyz[i];
@@ -2422,7 +2430,7 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
 
 			if (nRotConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bRotActive[i]) {
+					if (bRotActive[i] || bAgvActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": dof(" << cnt + 1 << ") MP" << idx2xyz[i];
@@ -2509,7 +2517,7 @@ TotalPinJoint::DescribeEq(std::ostream& out,
 				"velocity constraint(s) [";
 
 			for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-				if (bPosActive[i]) {
+				if (bPosActive[i] || bVelActive[i]) {
 					cnt++;
 					if (cnt > 1) {
 						out << ",";
@@ -2530,7 +2538,7 @@ TotalPinJoint::DescribeEq(std::ostream& out,
 				"angular velocity constraint(s) [";
 
 			for (unsigned int i = 0, cnt = 0; i < 3; i++) {
-				if (bRotActive[i]) {
+				if (bRotActive[i] || bAgvActive[i]) {
 					cnt++;
 					if (cnt > 1) {
 						out << ",";
@@ -2609,7 +2617,7 @@ TotalPinJoint::DescribeEq(std::vector<std::string>& desc,
 		if (bInitial) {
 			if (nPosConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bPosActive[i]) {
+					if (bPosActive[i] || bVelActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": equation(" << cnt + 1 << ") v" << idx2xyz[i] << "1=v" << idx2xyz[i] << "2";
@@ -2621,7 +2629,7 @@ TotalPinJoint::DescribeEq(std::vector<std::string>& desc,
 
 			if (nRotConstraints > 0) {
 				for (unsigned int i = 0; i < 3; i++) {
-					if (bRotActive[i]) {
+					if (bRotActive[i] || bAgvActive[i]) {
 						os.str(name);
 						os.seekp(0, std::ios_base::end);
 						os << ": equation(" << cnt + 1 << ") w" << idx2xyz[i] << "1=w" << idx2xyz[i] << "2";

@@ -55,7 +55,7 @@ mbdyn_linear_solvers="naive umfpack klu pardiso pardiso_64 y12 qr lapack siconos
 mbdyn_matrix_handlers="map cc dir grad"
 mbdyn_matrix_scale_methods="rowmaxcolumnmax iterative lapack rowmax columnmax rowsum columnsum"
 mbdyn_matrix_scale_when="never always once"
-mbdyn_nonlinear_solvers="newtonraphson linesearch linesearch-modified nox nox-newton-krylov nox-direct nox-broyden-linesearch nox-broyden-trust-region nox-broyden-inexact-trust-region mcpnewtonminfb mcpnewtonfb bfgs siconosmcpnewtonminfb siconosmcpnewtonfb"
+mbdyn_nonlinear_solvers="newtonraphson linesearch linesearch-modified nox nox-newton-krylov nox-direct nox-broyden2 nox-broyden3 nox-broyden1 mcpnewtonminfb mcpnewtonfb bfgs siconosmcpnewtonminfb siconosmcpnewtonfb"
 mbdyn_autodiff_options="autodiff noautodiff"
 mbdyn_method="impliciteuler cranknicolson ms2,0.6 ms3,0.6 ms4,0.6 ss2,0.6 ss3,0.6 ss4,0.6 hope,0.6 Bathe,0.6 msstc3,0.6 msstc4,0.6 msstc5,0.6 mssth3,0.6 mssth4,0.6 mssth5,0.6 DIRK33 DIRK43 DIRK54 hybrid,ms,0.6"
 mbdyn_output="netcdf-text"
@@ -134,7 +134,7 @@ while ! test -z "$1"; do
             printf "  --matrix-handlers \"{map|cc|dir|grad} {...}\"\n"
             printf "  --scale-methods \"{rowmaxcolumnmax|iterative|lapack|rowmax|columnmax|rowsum|columnsum} {...}\"\n"
             printf "  --scale-when \"{never|always|once} {...}\"\n"
-            printf "  --nonlinear-solvers \"{newtonraphson|linesearch|linesearch-modified|nox|nox-newton-krylov|nox-direct|nox-broyden-linesearch|nox-broyden-trust-region|nox-broyden-inexact-trust-region|mcpnewtonminfb|mcpnewtonfb|bfgs} {...}\"\n"
+            printf "  --nonlinear-solvers \"{newtonraphson|linesearch|linesearch-modified|nox|nox-newton-krylov|nox-direct|nox-broyden2|nox-broyden3|nox-broyden1|mcpnewtonminfb|mcpnewtonfb|bfgs} {...}\"\n"
             printf "  --autodiff {autodiff|noautodiff}\n"
             printf "  --method \"{impliciteuler|cranknicolson|ms2,0.6|ms3,0.6|ms4,0.6|ss2,0.6|ss3,0.6|ss4,0.6|hope,0.6|Bathe,0.6|msstc3,0.6|msstc4,0.6|msstc5,0.6|mssth3,0.6|mssth4,0.6|mssth5,0.6|DIRK33|DIRK43|DIRK54|hybrid,ms,0.6} {...}\"\n"
             printf "  --timeout <timeout_seconds>\n"
@@ -309,9 +309,13 @@ for mbd_linear_solver in ${mbdyn_linear_solvers}; do
                                 mbd_linear_solver_flags_pre=""
                                 mbd_linear_solver_flags_post=", tolerance, 1e-8, max iterations, 100, preconditioner, klu,verbose,3"
                                 ;;
-                            umfpack|pardiso|pardiso_64)
+                            umfpack)
                                 mbd_linear_solver_flags_pre=""
                                 mbd_linear_solver_flags_post=",max iterations, 10"
+                                ;;
+                            pardiso|pardiso_64)
+                                mbd_linear_solver_flags_pre=", pivot factor, 1e-4" ## Need to change the default value from 1e-13 to 1e-6 in order to work with multibarmech
+                                mbd_linear_solver_flags_post=",max iterations, 100"
                                 ;;
                             *)
                                 mbd_linear_solver_flags_pre=""
@@ -329,29 +333,32 @@ for mbd_linear_solver in ${mbdyn_linear_solvers}; do
                             nox-direct)
                                 mbd_nonlin_solver_flags="nox, use preconditioner as solver, yes, minimum step, 1e-12, recovery step, 1e-12"
                                 ;;
-                            nox-broyden-linesearch)
+                            nox-broyden2)
                                 mbd_nonlin_solver_flags="nox, modified, 10, direction, broyden, minimum step, 1e-12, recovery step, 1e-12"
                                 ;;
-                            nox-broyden-trust-region)
+                            nox-broyden3)
                                 mbd_nonlin_solver_flags="nox, modified, 10, solver, trust region based, direction, broyden, minimum step, 1e-12, recovery step, 1e-12"
                                 ;;
-                            nox-broyden-inexact-trust-region)
+                            nox-broyden1)
                                 mbd_nonlin_solver_flags="nox, modified, 10, solver, inexact trust region based, direction, broyden, minimum step, 1e-12, recovery step, 1e-12"
                                 ;;
                             nox-broyden-tensor)
                                 mbd_nonlin_solver_flags="nox, modified, 10, solver, tensor based, direction, broyden, minimum step, 1e-12, recovery step, 1e-12"
                                 ;;
                             linesearch)
-                                mbd_nonlin_solver_flags="linesearch, default solver options, heavy nonlinear, divergence check, no, lambda min, 1, print convergence info, yes, verbose, yes"
+                                mbd_nonlin_solver_flags="linesearch, default solver options, heavy nonlinear, divergence check, no, lambda min, 1, print convergence info, yes, verbose, yes, abort at lambda min, no"
                                 ;;
                             linesearch-heavy-nonlinear)
-                                mbd_nonlin_solver_flags="linesearch, default solver options, heavy nonlinear, divergence check, no, lambda min, 1e-12, print convergence info, yes, verbose, yes"
+                                mbd_nonlin_solver_flags="linesearch, default solver options, heavy nonlinear, divergence check, no, lambda min, 1e-12, print convergence info, yes, verbose, yes, abort at lambda min, no"
                                 ;;
                             linesearch-modified)
-                                mbd_nonlin_solver_flags="linesearch, modified, 0, default solver options, heavy nonlinear, divergence check, no, lambda min, 1, print convergence info, yes, verbose, yes"
+                                mbd_nonlin_solver_flags="linesearch, modified, 0, default solver options, heavy nonlinear, divergence check, no, lambda min, 1, print convergence info, yes, verbose, yes, abort at lambda min, no"
                                 ;;
                             linesearch-modified-heavy-nonlinear)
-                                mbd_nonlin_solver_flags="linesearch, modified, 0, default solver options, heavy nonlinear, divergence check, no, lambda min, 1e-12, print convergence info, yes, verbose, yes"
+                                mbd_nonlin_solver_flags="linesearch, modified, 0, default solver options, heavy nonlinear, divergence check, no, lambda min, 1e-12, print convergence info, yes, verbose, yes, abort at lambda min, no"
+                                ;;
+                            bfgs)
+                                mbd_nonlin_solver_flags="bfgs, modified, 10, default solver options, heavy nonlinear, divergence check, no, lambda min, 1e-12, print convergence info, yes, verbose, yes, abort at lambda min, no"
                                 ;;
                             *)
                                 mbd_nonlin_solver_flags="${mbd_nonlin_solver}"
@@ -513,38 +520,67 @@ for mbd_linear_solver in ${mbdyn_linear_solvers}; do
                                                 regularstep,*)
                                                     case "${mbd_nonlin_solver}" in
                                                         newtonraphson)
-                                                        ;;
-
+                                                            ;;
                                                         *)
-                                                            continue
+                                                            case "${mbd_method}" in
+                                                                ms2*)
+                                                                    ;;
+                                                                *)
+                                                                    continue
+                                                                    ;;
+                                                            esac
                                                             ;;
                                                     esac
                                                     case "${mbd_linear_solver}" in
                                                         umfpack)
                                                         ;;
                                                         *)
-                                                            continue
+                                                            case "${mbd_method}" in
+                                                                ms2*)
+                                                                    ;;
+                                                                *)
+                                                                    continue
+                                                                    ;;
+                                                            esac
                                                             ;;
                                                     esac
                                                     case "${mbd_mh_type}" in
                                                         map)
                                                         ;;
                                                         *)
-                                                            continue
+                                                            case "${mbd_method}" in
+                                                                ms2*)
+                                                                    ;;
+                                                                *)
+                                                                    continue
+                                                                    ;;
+                                                            esac
                                                             ;;
                                                     esac
                                                     case "${mbd_mat_scale}" in
                                                         rowmaxcolumnmax)
-                                                        ;;
+                                                            ;;
                                                         *)
-                                                            continue
+                                                            case "${mbd_method}" in
+                                                                ms2*)
+                                                                    ;;
+                                                                *)
+                                                                    continue
+                                                                    ;;
+                                                            esac
                                                             ;;
                                                     esac
                                                     case "${mbd_mat_scale_when}" in
                                                         never)
-                                                        ;;
+                                                            ;;
                                                         *)
-                                                            continue
+                                                            case "${mbd_method}" in
+                                                                ms2*)
+                                                                    ;;
+                                                                *)
+                                                                    continue
+                                                                    ;;
+                                                            esac
                                                             ;;
                                                     esac
                                                     ;;

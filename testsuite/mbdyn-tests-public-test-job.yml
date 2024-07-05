@@ -35,11 +35,19 @@
 # in the GNU Public License version 2.1
 
 variables:
-  ## Error codes which should not cause the pipeline to fail:
-  ## - timeout                    (0x2)
-  ## - module not found           (0x4)
-  ## - suppressed errors          (0x8)
-  MBD_TESTS_PUBLIC_EXIT_STATUS_MASK: "0x0"
+  ## Error codes which should not cause the pipeline to fail (see simple_testsuite.sh):
+  ## - no tests were executed     (0x001)
+  ## - timeout                    (0x002)
+  ## - module not found           (0x004)
+  ## - suppressed failures        (0x008)
+  ## - test failed with status 1  (0x010)
+  ## - regressions                (0x020)
+  ## - unexpected faults          (0x040)
+  ## - failures were fixed        (0x080)
+  ## - known failures             (0x100)
+  ## - skipped tests              (0x200)
+  MBD_TESTS_PUBLIC_EXIT_STATUS_MASK: "0x380"
+  MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS: "yes"
   ## Timeout per model (by default in minutes, "s" for seconds, "m" for minutes "h" for hours)
   ## Timeout value should not be "unlimited" if we are testing models which are using sockets, because this might block our pipeline forever!
   MBD_TESTS_PUBLIC_TIMEOUT: "unlimited"
@@ -62,38 +70,31 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       artifacts: true
     - job: mbdyn-build-job
       artifacts: true
+    - job: octave-pkg-build-job ## needed for gtest-octave-cli
+      artifacts: true
   script:
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX}
       - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR}
-      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_INPUT_DIR}
+      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
       - echo "mbdyn-tests-public test job"
       - export PATH=${MBD_INSTALL_PREFIX}/bin:${GMSH_INSTALL_PREFIX}/bin:${OCT_PKG_INSTALL_PREFIX}/bin:${PATH}
       - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
       - export TESTSUITE_TIME_CMD
       - export JUNIT_XML_KEEP_ALL_OUTPUT
       - export MBDYN_EXEC
+      - export OCTAVE_EXEC="${GTEST_OCTAVE_EXEC}"
+      - export CI_PROJECT_DIR
       - export MBDYN_ARGS_ADD
-      - |
-        if ! test -d ${MBD_TESTS_PUBLIC_INPUT_DIR}; then
-          if ! git clone -b ${MBD_TESTS_PUBLIC_GITLAB_BRANCH} ${MBD_TESTS_PUBLIC_GITLAB} ${MBD_TESTS_PUBLIC_INPUT_DIR}; then
-            echo "Failed to clone ${MBD_TESTS_PUBLIC_GITLAB}"
-            exit 1
-          fi
-        fi
-      - test -d ${MBD_TESTS_PUBLIC_INPUT_DIR}
-      - cd ${MBD_TESTS_PUBLIC_INPUT_DIR}
-      - git pull --force
-      - cd ${CI_PROJECT_DIR}
-      - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml
-      - chmod +x testsuite/simple_testsuite.sh
       - mkdir -p ${MBD_TESTS_PUBLIC_OUTPUT_DIR} ## needed for realpath
+      - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml >& /dev/null
+      - chmod +x testsuite/simple_testsuite.sh
       - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
       - echo "-------------- ORIGINAL TESTS --------------------" | tee -a "${log_file}"
-      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
       - echo "-------------- PATCHED TESTS --------------------" | tee -a "${log_file}"
-      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
@@ -122,6 +123,8 @@ mbdyn-tests-public-test-job-gcov:   # This job runs in the test stage.
       artifacts: true
     - job: mbdyn-build-job-gcov
       artifacts: true
+    - job: octave-pkg-build-job-gcov ## needed for gtest-octave-cli
+      artifacts: true
   rules:
     - if: $MBD_TEST_COVERAGE_ENABLED == "yes"
   script:
@@ -129,31 +132,22 @@ mbdyn-tests-public-test-job-gcov:   # This job runs in the test stage.
       - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_GCOV}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR_GCOV}
-      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_INPUT_DIR}
+      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
       - echo "mbdyn-tests-public-test-job-gcov"
       - export PATH=${MBD_INSTALL_PREFIX}/bin:${GMSH_INSTALL_PREFIX}/bin:${OCT_PKG_INSTALL_PREFIX}/bin:${PATH}
       - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
       - export TESTSUITE_TIME_CMD
       - export JUNIT_XML_KEEP_ALL_OUTPUT
       - export MBDYN_EXEC
+      - export OCTAVE_EXEC="${GTEST_OCTAVE_EXEC}"
+      - export CI_PROJECT_DIR
       - export MBDYN_ARGS_ADD
-      - |
-        if ! test -d ${MBD_TESTS_PUBLIC_INPUT_DIR}; then
-          if ! git clone -b ${MBD_TESTS_PUBLIC_GITLAB_BRANCH} ${MBD_TESTS_PUBLIC_GITLAB} ${MBD_TESTS_PUBLIC_INPUT_DIR}; then
-            echo "Failed to clone ${MBD_TESTS_PUBLIC_GITLAB}"
-            exit 1
-          fi
-        fi
-      - test -d ${MBD_TESTS_PUBLIC_INPUT_DIR}
-      - cd ${MBD_TESTS_PUBLIC_INPUT_DIR}
-      - git pull --force
-      - cd ${CI_PROJECT_DIR}
-      - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml
-      - chmod +x testsuite/simple_testsuite.sh
       - mkdir -p ${MBD_TESTS_PUBLIC_OUTPUT_DIR} ## needed for realpath
+      - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml >& /dev/null
+      - chmod +x testsuite/simple_testsuite.sh
       - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
       - echo "-------------- PATCHED TESTS --------------------" | tee "${log_file}"
-      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --scale-when "always" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --scale-when "always" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
@@ -165,3 +159,58 @@ mbdyn-tests-public-test-job-gcov:   # This job runs in the test stage.
     when: always
     reports:
       junit: $MBD_TESTS_PUBLIC_OUTPUT_DIR_GCOV/**/junit_xml_report_*.xml
+
+mbdyn-tests-public-test-job-debug:   # This job runs in the test stage.
+  variables:
+    MBD_TESTS_PUBLIC_LOG_FILE: "mbdyn-tests-public-test-job-debug.log"
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  needs:
+    - job: siconos-build-job
+      artifacts: true
+    - job: netcdf-c-build-job
+      artifacts: true
+    - job: netcdf-cxx4-build-job
+      artifacts: true
+    - job: mkl-build-job
+      artifacts: true
+    - job: gtest-build-job
+      artifacts: true
+    - job: mbdyn-build-job-debug
+      artifacts: true
+    - job: octave-pkg-build-job ## needed for gtest-octave-cli
+      artifacts: true
+  rules:
+    - if: $MBD_DEBUG_ENABLED == "yes"
+  script:
+      - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_DEBUG}
+      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
+      - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
+      - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG}
+      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
+      - echo "mbdyn-tests-public test job"
+      - export PATH=${MBD_INSTALL_PREFIX}/bin:${GMSH_INSTALL_PREFIX}/bin:${OCT_PKG_INSTALL_PREFIX}/bin:${PATH}
+      - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
+      - export TESTSUITE_TIME_CMD
+      - export JUNIT_XML_KEEP_ALL_OUTPUT
+      - export MBDYN_EXEC
+      - export OCTAVE_EXEC="${GTEST_OCTAVE_EXEC}"
+      - export CI_PROJECT_DIR
+      - export MBDYN_ARGS_ADD="${MBDYN_ARGS_ADD} --debug none:stop" ## FIXME: Reduce the amount of output
+      - mkdir -p ${MBD_TESTS_PUBLIC_OUTPUT_DIR} ## needed for realpath
+      - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml >& /dev/null
+      - chmod +x testsuite/simple_testsuite.sh
+      - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
+      - echo "-------------- ORIGINAL TESTS --------------------" | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
+      - echo "-------------- PATCHED TESTS --------------------" | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
+  artifacts:
+    name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+    expire_in: 24h
+    paths:
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG/$MBD_TESTS_PUBLIC_LOG_FILE
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG/**/*.stdout
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG/**/junit_xml_report_*.xml
+    when: always
+    reports:
+      junit: $MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG/**/junit_xml_report_*.xml

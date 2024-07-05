@@ -47,6 +47,7 @@
 #include <cmath>
 #include <cstring>
 #include <ctime>
+#include <type_traits>
 
 #ifdef HAVE_CONFIG_H
 #include "mbconfig.h"           /* This goes first in every *.c,*.cc file */
@@ -129,7 +130,8 @@ private:
      const StructNodeAd* pNode1;
      doublereal R;
      doublereal k;
-     SpMatrixA<doublereal, 2, 2> Mk, Mk2, inv_Mk, inv_Mk_sigma0, Ms, Ms2, sigma0, sigma1;
+     typedef SpMatrixA<doublereal, 2, 2> Mat2x2;
+     Mat2x2 Mk, Mk2, inv_Mk, inv_Mk_sigma0, Ms, Ms2, sigma0, sigma1;
      doublereal gamma, vs, beta;
      doublereal dStictionStateEquScale;
      doublereal dStictionStateDofScale;
@@ -289,19 +291,19 @@ BallBearingContact::BallBearingContact(
 
      washers.resize(N);
 
-     for (std::vector<Washer>::iterator i = washers.begin(); i != washers.end(); ++i) {
-          i->pNode2 = pDM->ReadNode<const StructNodeAd, Node::STRUCTURAL>(HP);
+     for (auto& w: washers) {
+          w.pNode2 = pDM->ReadNode<const StructNodeAd, Node::STRUCTURAL>(HP);
 
           if ( HP.IsKeyWord("offset") ) {
-               i->o2 = HP.GetPosRel(ReferenceFrame(i->pNode2));
+               w.o2 = HP.GetPosRel(ReferenceFrame(w.pNode2));
           } else {
-               i->o2 = Zero3;
+               w.o2 = Zero3;
           }
 
           if (HP.IsKeyWord("orientation")) {
-               i->Rt2 = HP.GetRotRel(ReferenceFrame(i->pNode2));
+               w.Rt2 = HP.GetRotRel(ReferenceFrame(w.pNode2));
           } else {
-               i->Rt2 = Eye3;
+               w.Rt2 = Eye3;
           }
      }
 
@@ -457,7 +459,7 @@ BallBearingContact::BallBearingContact(
           sigma1(1, 1) = sigma1x;
           sigma1(2, 2) = sigma1y;
 
-          sigma1 = sigma1 * Inv(sigma0);
+          sigma1 = Mat2x2(sigma1 * Inv(sigma0));
 
           inv_Mk_sigma0 = inv_Mk * sigma0;
 
@@ -587,14 +589,14 @@ inline void BallBearingContact::AssRes(SpGradientAssVec<T>& WorkVec,
      pNode1->GetVCurr(X1P, dCoef, func);
      pNode1->GetWCurr(omega1, dCoef, func);
      
-     for (std::vector<Washer>::iterator i = washers.begin(); i != washers.end(); ++i) {
-          i->pNode2->GetXCurr(X2, dCoef, func);
-          i->pNode2->GetVCurr(X2P, dCoef, func);
-          i->pNode2->GetRCurr(R2, dCoef, func);
-          i->pNode2->GetWCurr(omega2, dCoef, func);
+     for (auto& w: washers) {
+          w.pNode2->GetXCurr(X2, dCoef, func);
+          w.pNode2->GetVCurr(X2P, dCoef, func);
+          w.pNode2->GetRCurr(R2, dCoef, func);
+          w.pNode2->GetWCurr(omega2, dCoef, func);
 
           if (bEnableFriction) {
-               offset = 2 * (i - washers.begin());
+               offset = 2 * (&w - &washers.front());
 
                for (index_type j = 1; j <= 2; ++j) {
                     XCurr.dGetCoef(iFirstIndex + j + offset, z(j), dCoef);
@@ -605,20 +607,20 @@ inline void BallBearingContact::AssRes(SpGradientAssVec<T>& WorkVec,
                zP *= dStictionStateDofScale;
 
                for (index_type j = 1; j <= 2; ++j) {
-                    i->z(j) = SpGradientTraits<T>::dGetValue(z(j));
-                    i->zP(j) = SpGradientTraits<T>::dGetValue(zP(j));
+                    w.z(j) = SpGradientTraits<T>::dGetValue(z(j));
+                    w.zP(j) = SpGradientTraits<T>::dGetValue(zP(j));
                }
           }
 
           const SpColVector<T, 3> dX = X1 - X2;
 
-          SpColVector<T, 3> v = Transpose(i->Rt2) * (Transpose(R2) * dX - i->o2);
+          SpColVector<T, 3> v = Transpose(w.Rt2) * (Transpose(R2) * dX - w.o2);
 
           const T n = v(3);
 
           SpGradientTraits<T>::ResizeReset(v(3), 0., 0);
 
-          const T dn_dt = Dot(R2 * i->Rt2.GetCol(3), X1P - X2P - Cross(omega2, dX));
+          const T dn_dt = Dot(R2 * w.Rt2.GetCol(3), X1P - X2P - Cross(omega2, dX));
           const T d = R - n;
 
           if (R > n) {
@@ -631,25 +633,25 @@ inline void BallBearingContact::AssRes(SpGradientAssVec<T>& WorkVec,
                SpGradientTraits<T>::ResizeReset(norm_Fn, 0., 0);
           }
 
-          CheckTimeStep(*i, norm_Fn, d, dn_dt);
+          CheckTimeStep(w, norm_Fn, d, dn_dt);
 
           if (bEnableFriction) {
-               const SpColVector<T, 3> c1P = X1P - Cross(omega1, R2 * (i->Rt2.GetCol(3) * R));
-               const SpColVector<T, 3> c2P = X2P + Cross(omega2, R2 * (i->o2 + i->Rt2 * v));
+               const SpColVector<T, 3> c1P = X1P - Cross(omega1, R2 * (w.Rt2.GetCol(3) * R));
+               const SpColVector<T, 3> c2P = X2P + Cross(omega2, R2 * (w.o2 + w.Rt2 * v));
 
                SpColVector<T, 3> l = v;
                SpGradientTraits<T>::ResizeReset(l(3), R, 0);
                
-               const SpColVector<T, 3> Deltac = X1 - X2 - R2 * (i->o2 + i->Rt2 * l);
+               const SpColVector<T, 3> Deltac = X1 - X2 - R2 * (w.o2 + w.Rt2 * l);
 
-               const SpColVector<T, 2> uP = Transpose(SubMatrix<1, 1, 3, 1, 1, 2>(i->Rt2)) * (Transpose(R2) * (c1P - c2P - Cross(omega2, Deltac)));
+               const SpColVector<T, 2> uP = Transpose(SubMatrix<1, 1, 3, 1, 1, 2>(w.Rt2)) * (Transpose(R2) * (c1P - c2P - Cross(omega2, Deltac)));
 
                tau = Mk * (z + sigma1 * zP) * norm_Fn;
 
-               if (typeid(T) == typeid(doublereal)) {
+               if constexpr (std::is_same<T, doublereal>::value) {
                     for (int j = 1; j <= 2; ++j) {
-                         i->uP(j) = SpGradientTraits<T>::dGetValue(uP(j));
-                         i->tau(j) = SpGradientTraits<T>::dGetValue(tau(j));
+                         w.uP(j) = SpGradientTraits<T>::dGetValue(uP(j));
+                         w.tau(j) = SpGradientTraits<T>::dGetValue(tau(j));
                     }
                }
 
@@ -668,14 +670,14 @@ inline void BallBearingContact::AssRes(SpGradientAssVec<T>& WorkVec,
                Phi = (inv_Mk_sigma0 * (uP - inv_Mk * z * kappa) - zP) * dStictionStateEquScale;
           }
 
-          const SpColVector<T, 3> R2_Rt2_e3_n = R2 * (i->Rt2.GetCol(3) * n);
+          const SpColVector<T, 3> R2_Rt2_e3_n = R2 * (w.Rt2.GetCol(3) * n);
 
-          const SpColVector<T, 3> F1 = R2 * (i->Rt2 * SpColVector<T, 3>{-tau(1), -tau(2), norm_Fn});
+          const SpColVector<T, 3> F1 = R2 * (w.Rt2 * SpColVector<T, 3>{-tau(1), -tau(2), norm_Fn});
           const SpColVector<T, 3> M1 = -Cross(R2_Rt2_e3_n, F1);
           const SpColVector<T, 3> F2 = -F1;
           const SpColVector<T, 3> M2 = Cross((dX - R2_Rt2_e3_n), F2);
 
-          const integer iFirstMomIndexNode2 = i->pNode2->iGetFirstMomentumIndex();
+          const integer iFirstMomIndexNode2 = w.pNode2->iGetFirstMomentumIndex();
 
           WorkVec.AddItem(iFirstMomIndexNode1 + 1, F1);
           WorkVec.AddItem(iFirstMomIndexNode1 + 4, M1);
@@ -751,10 +753,10 @@ void BallBearingContact::AfterConvergence(const VectorHandler& X,
 {
      tPrev = tCurr;
 
-     for (std::vector<Washer>::iterator i = washers.begin(); i != washers.end(); ++i) {
-          i->dPrev = i->dCurr;
-          i->dd_dtPrev = i->dd_dtCurr;
-          i->FnPrev = i->FnCurr;
+     for (auto& w: washers) {
+          w.dPrev = w.dCurr;
+          w.dd_dtPrev = w.dd_dtCurr;
+          w.FnPrev = w.FnCurr;
      }
 }
 
@@ -849,8 +851,8 @@ BallBearingContact::GetConnectedNodes(std::vector<const Node *>& connectedNodes)
      connectedNodes.clear();
      connectedNodes.push_back(pNode1);
 
-     for (std::vector<Washer>::const_iterator i = washers.begin(); i != washers.end(); ++i) {
-          connectedNodes.push_back(i->pNode2);
+     for (const auto& w: washers) {
+          connectedNodes.push_back(w.pNode2);
      }
 }
 

@@ -119,43 +119,48 @@ if USE_GTEST
 MBD_TEST_PROGS_GTEST_FLAGS=--gtest_output=xml:$(MBD_TEST_PROGS_OUTPUT_DIR)/
 endif
 
+MBDYN_MALLOC_FILL=1
+
 test: all
 	$(MKDIR_P) $(MBD_TEST_PROGS_OUTPUT_DIR)
 	for cmd in "libraries/libmbmath/sp_gradient_test ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"libraries/libmbmath/dgeequtest" \
-		"libraries/libmbmath/itertest" \
-		"libraries/libmbmath/matmultest" \
-		"libraries/libmbmath/subtest" \
-		"libraries/libmbwrap/arptest" \
-		"libraries/libmbwrap/cctest -m umfpack" \
-		"libraries/libmbwrap/cctest -m y12" \
-		"libraries/libmbwrap/wraptest -m umfpack" \
-		"libraries/libmbwrap/wraptest -m naive" \
-		"libraries/libmbwrap/wraptest -m lapack" \
-		"libraries/libmbwrap/wraptest -m qr" \
+		"libraries/libmbmath/dgeequtest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbmath/itertest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbmath/matmultest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbmath/subtest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbwrap/arptest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbwrap/cctest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m umfpack" \
+		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m naive" \
+		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m lapack" \
+		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m qr" \
 		"libraries/liby12/y12test" \
 		"mbdyn/struct/solidshapetest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-                "mbdyn/solidcsltest ${MBD_TEST_PROGS_GTEST_FLAGS}" ; do \
+		"mbdyn/solidcsltest ${MBD_TEST_PROGS_GTEST_FLAGS}" ; do \
 		printf "running command: \"%s\"\n" "$${cmd}" ; \
-		MBDYN_MALLOC_FILL=1 $${cmd} ; \
+		MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} $${cmd} ; \
 		rc=$$? ; \
 		printf "status: %d\n" $${rc} ; \
 		if test $${rc} -ne 0; then exit 1; fi ; \
 	done
 ## tests for optional features
 if USE_SUITESPARSE_QR
-	libraries/libmbwrap/wraptest -m spqr
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m spqr
 endif
 
 if USE_PARDISO
-	libraries/libmbwrap/wraptest -m pardiso
-	libraries/libmbwrap/wraptest -m pardiso_64
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m pardiso
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m pardiso_64
 endif
 
 if USE_PASTIX
-	libraries/libmbwrap/wraptest -m pastix
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m pastix
 endif
 
 if USE_MULTITHREAD
-	mbdyn/base/inusetest -n 100 -t 4
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} mbdyn/base/inusetest ${MBD_TEST_PROGS_GTEST_FLAGS}
+endif
+
+if USE_SASL2
+	${MBDYN_TEST_VALGRIND} libraries/libmbutil/mbsasltest
 endif

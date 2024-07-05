@@ -37,6 +37,8 @@
 #include <typeinfo>
 #include <random>
 
+#include "myassert.h"
+#include "mynewmem.h"
 #include "dgeequ.h"
 
 #include "spmapmh.h"
@@ -88,7 +90,7 @@ void ScaleMatrix(const char* title, MatrixScale<T>& matScale, T& mh, const Vecto
 
      std::cout << "norm(bo) = " << bo.Norm() << std::endl;
 
-     assert(bo.Norm() < dTol);
+     MBDYN_TESTSUITE_ASSERT(bo.Norm() < dTol);
 
      doublereal cond[2];
 
@@ -150,28 +152,17 @@ void ScaleMatrix(const char* title, MatrixScale<T>& matScale, T& mh, const Vecto
      bs -= b;
 
      std::cout << "norm(bs) = " << bs.Norm() << std::endl;
-     assert(bs.Norm() < dTol);
+     MBDYN_TESTSUITE_ASSERT(bs.Norm() < dTol);
 }
 
-int
-main(int argc, char* argv[])
+MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
 {
      SolutionManager::ScaleOpt scale;
      scale.uFlags |= SolutionManager::SCALEF_VERBOSE | SolutionManager::SCALEF_WARN;
-     scale.iMaxIter = argc >= 2 ? atoi(argv[1]) : 100;
-     scale.dTol = argc >= 3 ? atof(argv[2]) : sqrt(std::numeric_limits<doublereal>::epsilon());
-     bool bRand = false;
-     int iCount = 1;
-
-     for (int i = 1; i < argc; ++i) {
-          if (0 == strcmp(argv[i], "-r")) {
-               bRand = true;
-          }
-
-          if (0 == strcmp(argv[i], "-c") && argc > i + 1) {
-               iCount = atoi(argv[i + 1]);
-          }
-     }
+     scale.iMaxIter = 100;
+     scale.dTol = sqrt(std::numeric_limits<doublereal>::epsilon());
+     const bool bRand = true;
+     const int iCount = 10;
 
      std::mt19937 e1;
      std::uniform_real_distribution<doublereal> uniform_dist(-1e3, 1e3);
@@ -441,8 +432,6 @@ main(int argc, char* argv[])
 #endif
           }
      }
-
-     return 0;
 }
 
 void ReportMatScale(const char* title, bool fOK, const MatrixScaleBase& matScale, const MatrixHandler& mh, const double cond[2]) {
@@ -470,6 +459,16 @@ void ReportMatScale(const char* title, bool fOK, const MatrixScaleBase& matScale
      mh.Print(std::cout, MatrixHandler::MAT_PRINT_TRIPLET);
 
      std::cout << "\n------------------------------------------------------------\n";
+}
+
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
+
+int
+main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+     
+     return MBDYN_RUN_ALL_TESTS();
 }
 
 template

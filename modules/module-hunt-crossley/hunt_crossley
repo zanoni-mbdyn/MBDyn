@@ -98,3 +98,9 @@ begin: elements;
 		LREF,
 		hunt crossley, alpha, 4e-2, kappa, 1e6, exp, 1.5;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 1
+##############################################################################################################

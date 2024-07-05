@@ -34,6 +34,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "myassert.h"
+#include "mynewmem.h"
 #include "fullmh.h"
 #include "spmapmh.h"
 #include "ccmh.h"
@@ -56,8 +58,7 @@ static constexpr doublereal mat[5][5] = {
         { 51.,  0., 53.,  0., 55. }
 };
 
-int
-main(void)
+MBDYN_TESTSUITE_TEST(itertest, itertest1)
 {
         std::vector<integer> perm(5), invperm(5);
         perm[0] = 4;
@@ -215,7 +216,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -228,7 +229,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -240,7 +241,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -252,7 +253,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -264,7 +265,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -276,7 +277,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -288,7 +289,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -300,7 +301,7 @@ main(void)
                 std::cout << "(" << i->iRow << ", " << i->iCol << ", " << i->dCoef << ")" << std::endl;
                 if (mat[i->iRow][i->iCol] != i->dCoef) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -313,7 +314,7 @@ main(void)
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iRow][i.iCol] != i.dCoef || cspgmh(i.iRow + 1, i.iCol + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -324,7 +325,7 @@ main(void)
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iRow][i.iCol] != i.dCoef || csc0(i.iRow + 1, i.iCol + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -335,7 +336,7 @@ main(void)
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iRow][i.iCol] != i.dCoef || csc1(i.iRow + 1, i.iCol + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -346,7 +347,7 @@ main(void)
                 std::cout << "(" << i.iCol << ", " << i.iRow << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iCol][i.iRow] != i.dCoef || csc0T(i.iCol + 1, i.iRow + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -358,7 +359,7 @@ main(void)
                 std::cout << "(" << i.iCol << ", " << i.iRow << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iCol][i.iRow] != i.dCoef || csc1T(i.iCol + 1, i.iRow + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 #ifdef USE_TRILINOS
@@ -372,7 +373,7 @@ main(void)
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iRow][i.iCol] != i.dCoef || cepmh(i.iRow + 1, i.iCol + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);
+                        MBDYN_TESTSUITE_ASSERT(0);
                 }
         }
 
@@ -383,7 +384,7 @@ main(void)
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iRow][i.iCol] != i.dCoef || epc0(i.iRow + 1, i.iCol + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -394,7 +395,7 @@ main(void)
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iRow][i.iCol] != i.dCoef || epc1(i.iRow + 1, i.iCol + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -405,7 +406,7 @@ main(void)
                 std::cout << "(" << i.iCol << ", " << i.iRow << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iCol][i.iRow] != i.dCoef || epc0T(i.iCol + 1, i.iRow + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 
@@ -417,9 +418,17 @@ main(void)
                 std::cout << "(" << i.iCol << ", " << i.iRow << ", " << i.dCoef << ")" << std::endl;
                 if (mat[i.iCol][i.iRow] != i.dCoef || epc1T(i.iCol + 1, i.iRow + 1) != mat[i.iRow][i.iCol]) {
                         std::cout << "==> failed!" << std::endl;
-                        ASSERT(0);                        
+                        MBDYN_TESTSUITE_ASSERT(0);                        
                 }
         }
 #endif
-        return 0;
+}
+
+MBDYN_DEFINE_OPERATOR_NEW_DELETE
+
+int main(int argc, char* argv[])
+{
+     MBDYN_TESTSUITE_INIT(&argc, argv);
+     
+     return MBDYN_RUN_ALL_TESTS();
 }
