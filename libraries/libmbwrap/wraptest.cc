@@ -347,52 +347,6 @@ static inline unsigned long long rd_CPU_ts(void)
         return time;
 }
 
-static void
-usage(int err)
-{
-        std::cerr << "usage: wraptest "
-                "[-c] "
-                "[-d] "
-                "[-f <filename>] "
-                "[-m <solver>] "
-                << std::endl << "\t\t"
-                "[-o] "
-                "[-O <option>[=<value>]] "
-                "[-p <pivot>] "
-                << std::endl << "\t\t"
-                "[-r[<size>[:<halfband>[:<activcol>[:<sprfct>]]]]] "
-                << std::endl << "\t\t"
-                "[-s] "
-                "[-t <nthreads>] "
-                "[-T] "
-                "[-w <filename>] "
-                << std::endl;
-        std::cerr << "  -c :  if possible, use compressed column matrix format" << std::endl;
-        std::cerr << "\tfor the naive solver: use colamd" << std::endl;
-        std::cerr << "  -d :  if possible, use dir matrix format" << std::endl;
-        std::cerr << "  -f <filename> : load the matrix from <filename>" << std::endl;
-        std::cerr << "\tIf the matrix is loaded from file the solution should be [0 0 .... 1]" << std::endl;
-        std::cerr << "\tThe file format is: size row col x row col x etc..." << std::endl;
-        std::cerr << "  -m <solver> : {" << solvers[0];
-        for (int i = 1; solvers[i]; i++) {
-                std::cerr << "|" << solvers[i];
-        }
-        std::cerr << "}" << std::endl;
-        std::cerr << "  -o :  output of the solution" << std::endl;
-        std::cerr << "  -O <option[=<value>]>" << std::endl
-                << "\tblocksize=<blocksize> (umfpack only)" << std::endl;
-        std::cerr << "  -p <pivot> : if meaningful, use <pivot> threshold" << std::endl;
-        std::cerr << "  -r[<size>[:<halfband>[:<activcol>[:<sprfct>]]]] :" << std::endl;
-        std::cerr << "\tgenerate a random matrix with <size>, <halfband>, <activcol>" << std::endl;
-        std::cerr << "\tand <sprfct> (prompts for values not provided)" << std::endl;
-        std::cerr << "  -s :  (singular) with the 3x3 matrix, do not set the element (3,3)" << std::endl;
-        std::cerr << "  -t :  with multithreaded solvers, use <nthreads> threads" << std::endl;
-        std::cerr << "  -T :  solve A^T x = b" << std::endl;
-        std::cerr << "  -w :  write the random matrix to <filename>" << std::endl;
-        exit(err);
-}
-
-
 enum {
         COLAMD_PREORD,
         MMDATA_PREORD
@@ -568,7 +522,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 
 
                 default:
-                        usage(EXIT_FAILURE);
+                        exit(EXIT_FAILURE);
                 }
         }
 
@@ -626,7 +580,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_TAUCS */
                 std::cerr << "need --with-taucs to use Taucs library sparse solver"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_LAPACK */
 
         } else if (strcasecmp(solver, "lapack") == 0) {
@@ -637,7 +591,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_LAPACK */
                 std::cerr << "need --with-lapack to use Lapack library dense solver"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_LAPACK */
 
         } else if (strcasecmp(solver, "superlu") == 0) {
@@ -699,7 +653,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_SUPERLU */
                 std::cerr << "need --with-superlu to use SuperLU library"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_SUPERLU */
 
         } else if (strcasecmp(solver, "y12") == 0) {
@@ -723,7 +677,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_Y12 */
                 std::cerr << "need --with-y12 to use y12m library"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_Y12 */
 
         } else if (strcasecmp(solver, "harwell") == 0) {
@@ -734,7 +688,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_HARWELL */
                 std::cerr << "need --with-harwell to use HSL library"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_HARWELL */
 
         } else if (strcasecmp(solver, "umfpack") == 0
@@ -764,7 +718,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_UMFPACK */
                 std::cerr << "need --with-umfpack to use Umfpack library"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_UMFPACK */
 
         } else if (strcasecmp(solver, "wsmp") == 0) {
@@ -793,7 +747,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_WSMP */
                 std::cerr << "need --with-wsmp to use Wsmp library"
                         << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
 #endif /* !USE_WSMP */
         } else if (strcasecmp(solver, "pardiso") == 0) {
 #ifdef USE_PARDISO
@@ -814,7 +768,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_PARDISO */
                         std::cerr << "need --with-pardiso to use Pardiso library"
                                 << std::endl;
-                        usage(EXIT_FAILURE);
+                        exit(EXIT_FAILURE);
 #endif /* !USE_PARDISO */
 
 
@@ -836,7 +790,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_PARDISO */
                         std::cerr << "need --with-pardiso to use Pardiso library"
                                 << std::endl;
-                        usage(EXIT_FAILURE);
+                        exit(EXIT_FAILURE);
 #endif /* !USE_PARDISO */                        
                 } else if (strcasecmp(solver, "pastix") == 0) {
 #ifdef USE_PASTIX
@@ -854,7 +808,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
 #else /* !USE_PASTIX */
                         std::cerr << "need --with-pastix to use Pastix library"
                                 << std::endl;
-                        usage(EXIT_FAILURE);
+                        exit(EXIT_FAILURE);
 #endif /* !USE_PASTIX */
                 } else if (strcasecmp(solver, "qr") == 0) {
                         std::cerr << "qr solver" << std::endl;
@@ -927,7 +881,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
                 std::cerr << " using " << nt << " threads " << std::endl;
         } else {
                 std::cerr << "unknown solver '" << solver << "'" << std::endl;
-                usage(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
         }
 
                 // NOTE: SetupSystem should be called only once since it uses files and random numbers
