@@ -17,6 +17,7 @@ begin: control data;
 	output elements: 1;
 end: control data;
 
+# module load: "libmodule-cosim-output.la";
 module load: ".libs/libmodule-cosim-output.so";
 
 reference: 99,
