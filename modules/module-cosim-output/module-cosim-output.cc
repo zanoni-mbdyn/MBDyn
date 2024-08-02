@@ -82,6 +82,8 @@ StreamContentCosim::~StreamContentCosim(void)
 void
 StreamContentCosim::Prepare(void)
 {
+	// NOTE: what about prediction?
+
 	doublereal *dbuf = (doublereal *)&buf[0];
 
 	// position
@@ -119,6 +121,20 @@ StreamContentCosim::GetNumChannels(void) const
 struct CosimStreamOutputReader : public StreamOutputContentTypeReader {
 	virtual StreamContent* Read(DataManager* pDM, MBDynParser& HP);
 };
+
+StreamContent*
+CosimStreamOutputReader::Read(DataManager* pDM, MBDynParser& HP)
+{
+	StreamContent* pSC(0);
+
+	const StructNode* pNode = pDM->ReadNode<const StructNode, Node::STRUCTURAL>(HP);
+
+	StreamContent::Modifier *pMod(0);
+
+	SAFENEWWITHCONSTRUCTOR(pSC, StreamContentCosim, StreamContentCosim(pNode, pMod));
+
+	return pSC;
+}
 
 extern "C"
 int module_init(const char *module_name, void *pdm, void *php){
