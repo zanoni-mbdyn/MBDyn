@@ -89,19 +89,20 @@ StreamContentCosim::Prepare(void)
 	// position
 	const Vec3& X = pNode->GetXCurr();
 
-	// TODO
+	// current position; TODO
 	dbuf[0] = X(1);
 	dbuf[1] = X(2);
 	dbuf[2] = X(3);
 
 	// orientation
-	dbuf += 3*sizeof(doublereal);
 
 	const Mat3x3& R = pNode->GetRCurr();
+	Vec3 Theta(RotManip::VecRot(R));
 
-	dbuf[0] = R(1, 1);
-	dbuf[1] = R(1, 2);
-	dbuf[2] = R(1, 3);
+	// current orientation; TODO
+	dbuf[3 + 0] = Theta(1);
+	dbuf[3 + 1] = Theta(2);
+	dbuf[3 + 2] = Theta(3);
 
 	m_pMod->Modify();
 
