@@ -435,6 +435,12 @@ if ! make install; then
     exit 1
 fi
 
+printf "Build mbdyn-*.tar.gz"
+if ! make dist; then
+    echo "make dist failed"
+    exit 1
+fi
+
 echo "MBDyn version:"
 if ! ${MBD_INSTALL_PREFIX}/bin/mbdyn --version; then
     echo "MBDyn's binary is not executable"
