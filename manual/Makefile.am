@@ -57,7 +57,6 @@ tecman/invdyn.tex \
 tecman/tecman-aero.tex \
 tecman/tecman-modal.tex \
 tecman/tecman-vb.tex \
-s11044-021-09806-9.pdf \
 tecman/shellPic.eps \
 tecman/tecman-aero-unsteady.tex \
 tecman/Screw_sketch_2D.eps \
