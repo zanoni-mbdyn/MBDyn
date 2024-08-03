@@ -51,13 +51,13 @@
 
 class StreamContentCosim : public StreamContent {
 protected:
+	const DataManager *m_pDM;
 	const StructNode *m_pNode;
 	doublereal m_h;
 	doublereal m_dRho;
-	bool m_bFirst;
 
 public:
-	StreamContentCosim(const StructNode *pNode,
+	StreamContentCosim(const DataManager *pDM, const StructNode *pNode,
 		doublereal h, doublereal rho,
 		StreamContent::Modifier *pMod /* not needed */ );
 	virtual ~StreamContentCosim(void);
@@ -68,10 +68,11 @@ public:
 
 // #include "geomdata.h"
 
-StreamContentCosim::StreamContentCosim(const StructNode * pNode,
+StreamContentCosim::StreamContentCosim(const DataManager *pDM,
+	const StructNode * pNode,
 	doublereal h, doublereal rho,
 	StreamContent::Modifier *pMod)
-: StreamContent(0, pMod), m_pNode(pNode), m_h(h), m_dRho(rho), m_bFirst(true)
+: StreamContent(0, pMod), m_pDM(pDM), m_pNode(pNode), m_h(h), m_dRho(rho)
 {
 	unsigned int size = sizeof(doublereal)*6;
 
@@ -91,8 +92,16 @@ StreamContentCosim::~StreamContentCosim(void)
 void
 StreamContentCosim::Prepare(void)
 {
-	if (m_bFirst) {
-		// at the beginning, nothing is known about the previous step
+	doublereal h = m_h;
+	if (h == -1.) {
+		// NOTE: this is the current time step, not the next one;
+		// we are assuming the problem is integrated with constant time step
+		h = m_pDM->pGetDrvHdl()->dGetTimeStep();
+	}
+
+	integer iStep = m_pDM->pGetDrvHdl()->iGetStep();
+	if (iStep == 0) {
+		// first step: nothing is known about the previous step
 		// use Crank Nicolson, extrapolating constant velocity (explicit Euler)
 
 		doublereal *dbuf = (doublereal *)&buf[0];
@@ -101,14 +110,14 @@ StreamContentCosim::Prepare(void)
 		const Vec3& X(m_pNode->GetXCurr());
 		const Vec3& V(m_pNode->GetVCurr());
 
-		dbuf[0] = X(1) + V(1)*m_h;
-		dbuf[1] = X(2) + V(2)*m_h;
-		dbuf[2] = X(3) + V(3)*m_h;
+		dbuf[0] = X(1) + V(1)*h;
+		dbuf[1] = X(2) + V(2)*h;
+		dbuf[2] = X(3) + V(3)*h;
 
 		// predicted orientation
 		const Mat3x3& R = m_pNode->GetRCurr();
 		const Vec3& Omega = m_pNode->GetWCurr();
-		Vec3 g_p1(Omega*m_h);
+		Vec3 g_p1(Omega*h);
 		Mat3x3 RDelta = Mat3x3(CGR_Rot::MatR, g_p1);
 		Vec3 Theta(RotManip::VecRot(RDelta*R));
 
@@ -116,12 +125,10 @@ StreamContentCosim::Prepare(void)
 		dbuf[3 + 1] = Theta(2);
 		dbuf[3 + 2] = Theta(3);
 
-		// reset flag
-		m_bFirst = false;
+	} else if (iStep > 0) {
+		// for subsequent steps, the state at the previous steps is available
 
-	} else {
-
-		// Prediction (using fixed step m_h and linear two-step method with tunable algorithmic dissipation
+		// Prediction (using fixed step h and linear two-step method with tunable algorithmic dissipation
 		doublereal dAlpha = 1.;
 		doublereal dDen = 2.*(1. + dAlpha) - (1. - m_dRho)*(1. - m_dRho);
 		doublereal dBeta = dAlpha*((1. - m_dRho)*(1. - m_dRho)*(2. + dAlpha)
@@ -137,12 +144,12 @@ StreamContentCosim::Prepare(void)
 
 		m_a[StepNIntegrator::IDX_A1] = 1. - dBeta;
 		m_a[StepNIntegrator::IDX_A2] = dBeta;
-		m_b[StepNIntegrator::IDX_B0] = m_h*(dDelta/dAlpha + dAlpha/2.);
-		m_b[StepNIntegrator::IDX_B1] = m_h*(dBeta/2. + dAlpha/2. - dDelta/dAlpha*(1. + dAlpha));
-		m_b[StepNIntegrator::IDX_B2] = m_h*(dBeta/2. + dDelta);
+		m_b[StepNIntegrator::IDX_B0] = h*(dDelta/dAlpha + dAlpha/2.);
+		m_b[StepNIntegrator::IDX_B1] = h*(dBeta/2. + dAlpha/2. - dDelta/dAlpha*(1. + dAlpha));
+		m_b[StepNIntegrator::IDX_B2] = h*(dBeta/2. + dDelta);
 
-		m_mp[0] /= m_h;
-		m_mp[1] /= m_h;
+		m_mp[0] /= h;
+		m_mp[1] /= h;
 
 		doublereal *dbuf = (doublereal *)&buf[0];
 
@@ -218,16 +225,47 @@ CosimStreamOutputReader::Read(DataManager* pDM, MBDynParser& HP)
 {
 	StreamContent* pSC(0);
 
+	/*
+	   Syntax:
+
+	   cosimulation,
+	       <node_label>,
+	       time step, { <time_step> | from solver }
+	       [ , rho, <rho> ]
+
+	   when "from solver" is used, the time step is obtained from the DataManager;
+	   NOTE: this corresponds to the *current* time step, not the one
+           that will be used by the solver for the actual prediction.
+	   Otherwise, the time step must be greater than zero;
+	   it is the user's responsibility to make sure it matches the time step used
+	   by the solver
+
+	   If rho is not given, it defaults to zero (second-order BDF); otherwise, it
+	   must be between 0 and 1
+
+	 */
+
 	const StructNode* pNode = pDM->ReadNode<const StructNode, Node::STRUCTURAL>(HP);
 
+	// -1 means that it will be taken from the solver!
 	doublereal h(-1.);
 	if (HP.IsKeyWord("time" "step")) {
-		try {
-			h = HP.GetReal(0., HighParser::range_gt<doublereal>(0.));
+		if (HP.IsKeyWord("from" "solver")) {
+			silent_cout("CosimStreamOutput: the time step will be taken from the simulation at line " << HP.GetLineData() << "; "
+				"note that the time step of the current step will be used, not that of the subsequent step; "
+				"thus, this only works when the time step is constant." << std::endl);
 
-		} catch (HighParser::ErrValueOutOfRange<doublereal>& e) {
-			silent_cerr("error: invalid reference time step" << e.Get() << " (must be positive) [" << e.what() << "] for CosimStreamOutput at line " << HP.GetLineData() << std::endl);
-			throw e;
+		} else {
+			try {
+				h = HP.GetReal(0., HighParser::range_gt<doublereal>(0.));
+
+			} catch (HighParser::ErrValueOutOfRange<doublereal>& e) {
+				silent_cerr("error: invalid reference time step" << e.Get() << " (must be positive) [" << e.what() << "] for CosimStreamOutput at line " << HP.GetLineData() << std::endl);
+				throw e;
+			}
+
+			silent_cout("CosimStreamOutput: a constant time step h=" << h << " will be used at line " << HP.GetLineData() << "; "
+				"make sure it matches the time step used in the simulation." << std::endl);
 		}
 
 	} else {
@@ -245,17 +283,17 @@ CosimStreamOutputReader::Read(DataManager* pDM, MBDynParser& HP)
 			rho = HP.GetReal(0., HighParser::range_ge_le<doublereal>(0., 1.));
 
 		} catch (HighParser::ErrValueOutOfRange<doublereal>& e) {
-			silent_cerr("error: invalid reference asymptotic spectral radius " << e.Get() << " (must be greater than or equal to zero and lower than or equal to one) [" << e.what() << "] for CosimStreamOutput at line " << HP.GetLineData() << std::endl);
+			silent_cerr("error: invalid reference asymptotic spectral radius rho=" << e.Get() << " (must be greater than or equal to zero and lower than or equal to one) [" << e.what() << "] for CosimStreamOutput at line " << HP.GetLineData() << std::endl);
 			throw e;
 		}
 
 	} else {
-		silent_cout("Warning, no spectral radius (rho) provided; using 0 (BDF2) at line " << HP.GetLineData() << std::endl);
+		silent_cout("Warning, no spectral radius provided; using rho=0 (BDF2) at line " << HP.GetLineData() << std::endl);
 	}
 
 	StreamContent::Modifier *pMod(0);
 
-	SAFENEWWITHCONSTRUCTOR(pSC, StreamContentCosim, StreamContentCosim(pNode, h, rho, pMod));
+	SAFENEWWITHCONSTRUCTOR(pSC, StreamContentCosim, StreamContentCosim(pDM, pNode, h, rho, pMod));
 
 	return pSC;
 }
