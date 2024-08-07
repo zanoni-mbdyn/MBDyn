@@ -113,6 +113,8 @@ variables:
 
   GMSH_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/gmsh
 
+  MBDYN_WEB_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/MBDyn-web
+
   OCT_PKG_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/octave-pkg
   OCT_PKG_BUILD_DIR_GCOV: $TESTSUITE_PREFIX_BUILD/octave-pkg-gcov
 
@@ -175,7 +177,7 @@ variables:
   MBD_COMPILER_FLAGS_GCOV: "-Og -Wall -march=native -mtune=native -Wno-unused-variable"
 
   ## NOTE: This option is not intended for debugging, but just to see if any assertion will fail.
-  ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan() 
+  ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan()
   MBD_COMPILER_FLAGS_DEBUG: "-O3 -Wall -march=native -mtune=native -Wno-unused-variable"
 
   JUNIT_XML_KEEP_ALL_OUTPUT:
