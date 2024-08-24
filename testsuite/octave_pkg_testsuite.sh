@@ -54,6 +54,7 @@ OCT_PKG_TEST_MODE="${OCT_PKG_TEST_MODE:-pkg}"
 OCT_PKG_INSTALL_PREFIX="${OCT_PKG_INSTALL_PREFIX:-}"
 OCTAVE_CMD_ARGS="${OCTAVE_CMD_ARGS:--qfH}"
 OCT_PKG_FUNCTION_FILTER='/.+\.(tst|m)\>/'
+JUNIT_XML_KEEP_ALL_OUTPUT="${JUNIT_XML_KEEP_ALL_OUTPUT:-none}"
 ## Do not print any output from Octave which does not pass through this filter, even if "--verbose yes" is used!
 ## This is strictly required because the amount of output is limited to 4194304 bytes by GitLab
 OCT_GREP_FILTER_EXPR='^command: "mbdyn|^!!!!! test failed$|/^PASSES\>/|[[:alnum:]]+/[[:alnum:]]+/[[:alnum:]]+\.m\>|\<PASS\>|\<FAIL\>|\<pass\>|\<fail\>|^Summary|^Integrated test scripts|\.m files have no tests\.$'
@@ -107,6 +108,10 @@ while ! test -z "$1"; do
             if ! test -z "$2"; then
                 OCT_PKG_FUNCTION_FILTER="$2"
             fi
+            shift
+            ;;
+        --keep-output-junit-xml)
+            JUNIT_XML_KEEP_ALL_OUTPUT="$2"
             shift
             ;;
         --tasks)
@@ -262,7 +267,7 @@ function octave_pkg_testsuite_run()
     junit_xml_report_file_octave_assert="${TMPDIR}/junit_xml_report_octave_$$_assert.xml"
 
     case "${OCTAVE_EXEC}" in
-        gtest-*)
+        *gtest-octave*)
             octave_pkg_gtest_flags=`printf ' --test-suite-name "%s" --test-name "%s" --gtest_output=xml:%s' "${octave_pkg_name}" "${octave_code_cmd}" "${junit_xml_report_file_octave_assert}"`
             ;;
         *)
@@ -311,19 +316,19 @@ function octave_pkg_testsuite_run()
 
     export MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND="${MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND:-${MBDYN_EXEC} ${MBDYN_ARGS_ADD} --gtest_output=xml:${junit_xml_report_file}}"
 
+    ${OCTAVE_CMD} >& "${pkg_test_output_file}"
+    rc=$?
+
     case "${OCT_PKG_TESTS_VERBOSE}" in
         yes)
             echo "Verbose output enabled:"
-            ## If grep returns a nonzero status, this is not considered as an error!
-            ${OCTAVE_CMD} 2>&1 | tee "${pkg_test_output_file}" | (grep -i -E "${OCT_GREP_FILTER_EXPR}" || true)
-            rc=$?
+            grep -i -E "${OCT_GREP_FILTER_EXPR}" "${pkg_test_output_file}"
             ;;
         *)
             echo "Verbose output disabled:"
-            ${OCTAVE_CMD} >& "${pkg_test_output_file}"
-            rc=$?
             ;;
     esac
+
 
     if ! cd "${curr_dir}"; then
         return 1
@@ -331,8 +336,31 @@ function octave_pkg_testsuite_run()
 
     case ${rc} in
         0)
-            ## Make sure that octave is calling exit(1) on failures
-            curr_test_status="passed"
+            ## Let's check also the output files and do not rely just on a zero exit status!
+            curr_test_status="failed"
+
+            if test -f "${junit_xml_report_file_octave_assert}"; then
+                if awk -f parse_test_suite_status.awk "${junit_xml_report_file_octave_assert}" >& /dev/null; then
+                    curr_test_status="passed"
+                fi
+            else
+                case "${OCTAVE_EXEC}" in
+                    *gtest-octave*)
+                        ## If we are using gtest-octave-cli, then the xml file must exist!
+                        ;;
+                    *)
+                        ## FIXME: Need to ensure that octave is really calling exit(1) on failures
+                        curr_test_status="passed"
+                        ;;
+                esac
+            fi
+
+            for oct_pkg_report_file in `find "${TMPDIR}" '(' -name 'fntests.out' -or -name 'fntests.log' -or -name "junit_xml_report_octave_$$_*.xml" ')'`; do
+                if ! awk -f parse_test_suite_status.awk "${oct_pkg_report_file}" >& /dev/null; then
+                    printf 'failed test report found: "%s"\n' "${oct_pkg_report_file}"
+                    curr_test_status="failed"
+                fi
+            done
             ;;
         124)
             curr_test_status="timeout"
@@ -361,8 +389,14 @@ function octave_pkg_testsuite_run()
     case "${curr_test_status}" in
         passed)
             printf "octave testsuite for package \"%s\" passed\n" "${octave_pkg_name}"
-            ## FIXME: JUnit xml files should not be deleted, but there are too many files to be displayed by GitLab-CI
-            find "${TMPDIR}" '(' -name 'fntests.log' -or -name "fntests.out" -or -name "junit_xml_report_octave_$$_*.xml" ')' -print0 | xargs -0 awk -f parse_test_suite_status.awk | xargs -0 rm -f
+            case "${JUNIT_XML_KEEP_ALL_OUTPUT}" in
+                always)
+                    ;;
+                *)
+                    ## FIXME: JUnit xml files should not be deleted, but there are too many files to be displayed by GitLab-CI
+                    find "${TMPDIR}" '(' -name 'fntests.log' -or -name "fntests.out" -or -name "junit_xml_report_octave_$$_*.xml" ')' -print0 | xargs -0 awk -f parse_test_suite_status.awk | xargs -0 rm -f
+                    ;;
+            esac
             find "${TMPDIR}" '(' -name 'octave_pkg_testsuite_test_*' ')' -delete
             ;;
         *)
@@ -470,6 +504,7 @@ for pkgname_and_flags in ${OCT_PKG_LIST}; do
         export OCT_GREP_FILTER_EXPR
         export OCT_PKG_TEST_MODE
         export OCT_PKG_TESTS_VERBOSE
+        export JUNIT_XML_KEEP_ALL_OUTPUT
         export MBDYN_ARGS_ADD
         export MBDYN_EXEC
         export -f octave_pkg_testsuite_run

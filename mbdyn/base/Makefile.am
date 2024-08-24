@@ -288,4 +288,8 @@ inusetest_SOURCES = inusetest.cc
 inusetest_LDADD = @ATOMIC_OPS_LIBS@ \
 ../../libraries/libmbutil/libmbutil.la
 
+if INSTALL_TEST_PROGRAMS
+bin_PROGRAMS = $(noinst_PROGRAMS)
+endif
+
 include $(top_srcdir)/build/bot.mk
