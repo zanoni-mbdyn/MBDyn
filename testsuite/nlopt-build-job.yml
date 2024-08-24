@@ -55,9 +55,10 @@ nlopt-build-job:       # This job runs in the build stage, which runs first.
         fi
       - |
         if ! test -d ${NL_BUILD_DIR}; then
-          git clone -b master https://github.com/stevengj/nlopt.git ${NL_BUILD_DIR}
+          git clone -b ${NLOPT_BRANCH} ${NLOPT_REPOSITORY} ${NL_BUILD_DIR}
         fi
       - cd ${NL_BUILD_DIR}
+      - git checkout ${NLOPT_BRANCH}
       - |
         if ! test -d build_dir; then
           mkdir build_dir

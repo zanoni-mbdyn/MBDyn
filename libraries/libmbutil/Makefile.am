@@ -82,4 +82,8 @@ testexcept_SOURCES = testexcept.cc
 testexcept_LDADD =  \
 libmbutil.la
 
+if INSTALL_TEST_PROGRAMS
+bin_PROGRAMS = $(noinst_PROGRAMS)
+endif
+
 include $(top_srcdir)/build/bot.mk

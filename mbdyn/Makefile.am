@@ -98,4 +98,8 @@ noinst_PROGRAMS = solidcsltest
 solidcsltest_SOURCES = struct/solidcsltest.cc
 solidcsltest_LDADD = $(mbdyn_LDADD)
 
+if INSTALL_TEST_PROGRAMS
+bin_PROGRAMS += $(noinst_PROGRAMS)
+endif
+
 include $(top_srcdir)/build/bot.mk
