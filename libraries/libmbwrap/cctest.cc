@@ -107,9 +107,7 @@ void cctest(const char* const solver, const bool dir, const unsigned nt, const i
                         SAFENEWWITHCONSTRUCTOR(pSM, CCMH, CCMH(size));
                 }
 #else /* !USE_Y12 */
-                std::cerr << "need --with-y12 to use y12m library"
-                        << std::endl;
-                usage();
+                throw ErrGeneric(MBDYN_EXCEPT_ARGS, "need --with-y12 to use y12m library");
 #endif /* !USE_Y12 */
 
         } else if (strcasecmp(solver, "umfpack") == 0
@@ -124,9 +122,7 @@ void cctest(const char* const solver, const bool dir, const unsigned nt, const i
                         SAFENEWWITHCONSTRUCTOR(pSM, CCMH, CCMH(size));
                 }
 #else /* !USE_UMFPACK */
-                std::cerr << "need --with-umfpack to use Umfpack library"
-                        << std::endl;
-                usage();
+                throw ErrGeneric(MBDYN_EXCEPT_ARGS, "need --with-umfpack to use Umfpack library");
 #endif /* !USE_UMFPACK */
 
         } else {
