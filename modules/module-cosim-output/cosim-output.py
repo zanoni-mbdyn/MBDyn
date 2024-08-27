@@ -38,7 +38,7 @@ tmpdir = tempfile.mkdtemp('', '.mbdyn_');
 path_out = tmpdir + '/mbdyn_out.sock';
 
 os.environ['MBSKOU'] = path_out;
-os.system('./mbdyn.sh -f cosim-output.mbd -o output -N 1 > output.txt 2>&1 &');
+os.system(os.environ['MBDYN_EXEC'] + ' -f cosim-output.mbd -o output -N 1 > output.txt 2>&1 &');
 
 # wait for MBDyn to start and create sockets...
 time.sleep(2);
