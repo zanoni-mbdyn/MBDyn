@@ -1,6 +1,9 @@
 ## ebrowse - class hierarchy database
 BROWSE
 
+## etags - generate tag file for Emacs, vi
+TAGS
+
 ## GNU Octave workspace
 octave-workspace
 

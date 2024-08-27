@@ -31,7 +31,6 @@ matvec3n.cc \
 matvec3n.h \
 matvec6.cc \
 matvec6.h \
-matvecass.h \
 matvecexp.cc \
 matvecexp.h \
 mbcomm.h \
@@ -98,12 +97,6 @@ endif
 
 libmbmath_la_LIBADD = @LIBS@ @FCLIBS@ @ANN_LIBS@ @TRILINOS_LIBS@ @SICONOS_LIBS@
 libmbmath_la_LDFLAGS =
-
-if INSTALL_TEST_PROGRAMS
-if USE_GTEST
-bin_PROGRAMS = sp_gradient_test
-endif
-endif
 
 noinst_PROGRAMS = matmultest itertest dgeequtest subtest sp_gradient_test
 
@@ -217,6 +210,10 @@ libmbmath.la \
 @TRILINOS_LIBS@ \
 @RT_LIBS@ \
 @GTEST_LIBS@
+
+if INSTALL_TEST_PROGRAMS
+bin_PROGRAMS = $(noinst_PROGRAMS)
+endif
 
 AM_CPPFLAGS = \
 -I../../include \

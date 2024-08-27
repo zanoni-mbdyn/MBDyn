@@ -29,6 +29,10 @@ noinst_PROGRAMS = y12test
 y12test_SOURCES = test.c
 y12test_LDADD = ./liby12.la
 
+if INSTALL_TEST_PROGRAMS
+bin_PROGRAMS = $(noinst_PROGRAMS)
+endif
+
 AM_CPPFLAGS = \
 -I../../include \
 -I$(srcdir)/../../include \

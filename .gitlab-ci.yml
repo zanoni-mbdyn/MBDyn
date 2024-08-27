@@ -113,6 +113,8 @@ variables:
 
   GMSH_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/gmsh
 
+  MBDYN_WEB_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/MBDyn-web
+
   OCT_PKG_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/octave-pkg
   OCT_PKG_BUILD_DIR_GCOV: $TESTSUITE_PREFIX_BUILD/octave-pkg-gcov
 
@@ -175,7 +177,7 @@ variables:
   MBD_COMPILER_FLAGS_GCOV: "-Og -Wall -march=native -mtune=native -Wno-unused-variable"
 
   ## NOTE: This option is not intended for debugging, but just to see if any assertion will fail.
-  ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan() 
+  ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan()
   MBD_COMPILER_FLAGS_DEBUG: "-O3 -Wall -march=native -mtune=native -Wno-unused-variable"
 
   JUNIT_XML_KEEP_ALL_OUTPUT:
@@ -403,13 +405,37 @@ variables:
       - "gtest-octave-cli"
     description: "GNU/Octave interpreter"
 
+  GTEST_REPOSITORY:
+    value: "https://github.com/google/googletest.git"
+    description: "Repository of the GoogleTest library (https://google.github.io/googletest/) to be cloned"
+
+  GTEST_BRANCH:
+    value: "main"
+    description: "Branch of the GoogleTest library (https://google.github.io/googletest/) to be pulled"
+
+  NETCDF_C_REPOSITORY:
+    value: "https://github.com/Unidata/netcdf-c.git"
+    description: "Repository of the NetCDF library (https://www.unidata.ucar.edu/software/netcdf) to be cloned"
+
+  NETCDF_C_BRANCH:
+    value: "v4.9.0"
+    description: "Branch of the NetCDF library (https://www.unidata.ucar.edu/software/netcdf) to be pulled"
+
+  NETCDF_CXX4_REPOSITORY:
+    value: "https://github.com/Unidata/netcdf-cxx4.git"
+    description: "Repository of the NetCDF C++ library (https://www.unidata.ucar.edu/software/netcdf) to be cloned"
+
+  NETCDF_CXX4_BRANCH:
+    value: "master"
+    description: "Branch of the NetCDF C++ library (https://www.unidata.ucar.edu/software/netcdf) to be pulled"
+
   SICONOS_REPOSITORY:
     value: "https://github.com/siconos/siconos.git" ## FIXME: Should be changed to the main repository
     options:
       - "https://github.com/siconos/siconos.git" ## Main repository
       - "https://github.com/octave-user/siconos.git" ## Forked from https://github.com/siconos/siconos.git
       - "https://gricad-gitlab.univ-grenoble-alpes.fr/nonsmooth/siconos.git" ## Development repository
-    description: "Repository of the Siconos library (http://siconos.gforge.inria.fr) which should be cloned"
+    description: "Repository of the Siconos library (http://siconos.gforge.inria.fr) to be cloned"
 
   SICONOS_BRANCH:
     value: "master"
@@ -417,7 +443,15 @@ variables:
       - "master" ## This branch is tracking the main repository, but must be synchronized manually
       - "mbdyn"  ## This branch is intended to be used for MBDyn's testsuite
       - "4.4.0"
-    description: "Branch of the Siconos library (http://siconos.gforge.inria.fr) which should be cloned"
+    description: "Branch of the Siconos library (http://siconos.gforge.inria.fr) to be pulled"
+
+  NLOPT_REPOSITORY:
+    value: "https://github.com/stevengj/nlopt.git"
+    description: "Repository of the NLopt library (https://nlopt.readthedocs.io) to be cloned"
+
+  NLOPT_BRANCH:
+    value: "master"
+    description: "Branch of the NLopt library (https://nlopt.readthedocs.io) to be pulled"
 
   ## Temorary directory for all Octave package tests (e.g. TMPDIR will be redirected)
   ## This makes it easier to clean up temporary files and ther is no need to use /tmp which may reside in memory on some systems.
