@@ -418,7 +418,7 @@ variables:
     description: "Repository of the NetCDF library (https://www.unidata.ucar.edu/software/netcdf) to be cloned"
 
   NETCDF_C_BRANCH:
-    value: "v4.9.0"
+    value: "v4.9.2"
     description: "Branch of the NetCDF library (https://www.unidata.ucar.edu/software/netcdf) to be pulled"
 
   NETCDF_CXX4_REPOSITORY:
