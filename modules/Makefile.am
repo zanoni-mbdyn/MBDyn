@@ -174,7 +174,6 @@ module-autodiff_test/examples/deformable_joint_ad.nod \
 module-autodiff_test/examples/deformable_joint_ad.ref \
 module-autodiff_test/examples/deformable_joint_ad.set \
 module-autodiff_test/examples/deformable_joint_ad_f77.mbdyn \
-module-autodiff_test/examples/deformable_joint_ad_tmp.mbdyn \
 module-autodiff_test/examples/deformable_joint_ad_trad.mbdyn \
 module-autodiff_test/examples/inline_joint_ad.mbdyn \
 module-autodiff_test/examples/inline_joint_ad_2.mbdyn \
@@ -386,7 +385,6 @@ module-multi_step_drive/module-multi_step_drive.h \
 module-multi_step_drive/multi_step.mbdyn
 
 EXTRA_DIST += \
-module-muscles/muscle_test \
 module-muscles/module-muscles.cc
 
 EXTRA_DIST += \

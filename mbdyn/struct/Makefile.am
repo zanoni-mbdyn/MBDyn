@@ -211,6 +211,10 @@ solidshapetest_LDADD = \
 ../../libraries/libmbmath/libmbmath.la \
 libstruct.la
 
+if INSTALL_TEST_PROGRAMS
+bin_PROGRAMS = $(noinst_PROGRAMS)
+endif
+
 AM_CPPFLAGS = \
 -I../../include \
 -I$(srcdir)/../../include \

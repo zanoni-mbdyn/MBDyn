@@ -44,3 +44,24 @@ mbdyn-deploy-job:      # This job runs in the deploy stage.
     - job: octave-pkg-test-job
   script:
     - echo "Deployment not enabled yet!"
+
+mbdyn-upload-manuals-job:      # This job runs in the deploy stage.
+  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+  environment: production
+  needs:
+    - job: mbdyn-build-job-manuals
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+  script:
+    - |
+      MBD_BUILD_DIR_MANUALS="${CI_PROJECT_DIR}/${MBD_BUILD_DIR_MANUALS}"
+      MBDYN_WEB_MANUALS_BUILD_DIR="${CI_PROJECT_DIR}/${MBDYN_WEB_MANUALS_BUILD_DIR}"
+      git clone `printf "${MBD_MBDYN_WEB_GITHUB_REPO}" "${MBD_MBDYN_WEB_GITHUB_TOKEN}"` "${MBDYN_WEB_MANUALS_BUILD_DIR}"
+      cp manual/input/mbdyn-input-*.pdf "${MBDYN_WEB_MANUALS_BUILD_DIR}/userfiles/documents/mbdyn-input.pdf"
+      cp manual/tecman/mbdyn-tecman-*.pdf "${MBDYN_WEB_MANUALS_BUILD_DIR}/userfiles/documents/tecman.pdf"
+      cp manual/install/mbdyn-install-*.pdf "${MBDYN_WEB_MANUALS_BUILD_DIR}/userfiles/documents/mbdyn-install.pdf"
+      cd "${MBDYN_WEB_MANUALS_BUILD_DIR}/userfiles/documents/"
+      git add mbdyn-input.pdf tecman.pdf mbdyn-install.pdf
+      git commit -m "Automatic update of manuals via GitLAB CI/CD: ${CI_COMMIT_AUTHOR} ${CI_COMMIT_REF_NAME} ${CI_COMMIT_SHA} ${CI_COMMIT_DESCRIPTION}"
+      git push origin

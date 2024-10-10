@@ -375,10 +375,10 @@ for pkgname_and_flags in ${OCT_PKG_LIST}; do
                         exit 1
                     fi
 
-                    if ! test -x configure; then
+                    #if ! test -x configure; then
                         chmod u+x bootstrap
                         ./bootstrap
-                    fi
+                    #fi
 
                     if ! test -f Makefile; then
                         if ! ./configure CXXFLAGS="${MBD_COMPILER_FLAGS}" --prefix="${INSTALL_PREFIX_FEM_PRE_MESH_SIZE}"; then

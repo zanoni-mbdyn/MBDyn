@@ -557,7 +557,13 @@ function simple_testsuite_run_test()
                 ;;
             0)
                 num_steps=`awk 'BEGIN{num_steps=0}/^End of simulation at time [0-9.-]+ after [0-9]+ steps;$/{num_steps=$8} END{print num_steps}' "${mbd_log_file}"`
-                status=$(printf 'passed{Steps=%d}' "${num_steps}")
+
+                ## Let's check also the output files and do not rely just on a zero exit status!
+                status="failed"
+
+                if test -f "${junit_xml_report_file}" && awk -f parse_test_suite_status.awk "${junit_xml_report_file}" >& /dev/null; then
+                    status=$(printf 'passed{Steps=%d}' "${num_steps}")
+                fi
                 ;;
             1)
                 mbd_error_info=`awk -v suppressed_errors="${mbdyn_suppressed_errors}" -f parse_mbdyn_error_message.awk "${mbd_log_file}"`
@@ -674,12 +680,16 @@ function simple_testsuite_run_test()
             esac
 
             if test "${junit_xml_keep_output}" != "yes"; then
-                echo "File ${junit_xml_report_file} will be removed (status=${status}, JUNIT_XML_KEEP_ALL_OUTPUT=${JUNIT_XML_KEEP_ALL_OUTPUT})"
-                rm -f "${junit_xml_report_file}"
+                if test -f "${junit_xml_report_file}"; then
+                    echo "File ${junit_xml_report_file} will be removed (status=${status}, JUNIT_XML_KEEP_ALL_OUTPUT=${JUNIT_XML_KEEP_ALL_OUTPUT})"
+                    if awk -f parse_test_suite_status.awk "${junit_xml_report_file}" > /dev/null; then
+                        rm -f "${junit_xml_report_file}"
+                    fi
+                fi
             fi
 
             if test "${mbdyn_patch_input}" != "no"; then
-                if ! test -f ${mbd_filename_patched_copy}; then
+                if ! test -f "${mbd_filename_patched_copy}"; then
                     echo "File not found: \"${mbd_filename_patched_copy}\""
                 fi
                 rm -f "${mbd_filename_patched_copy}"
