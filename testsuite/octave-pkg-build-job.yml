@@ -38,6 +38,8 @@ octave-pkg-build-job:       # This job runs in the build stage, which runs first
   stage: build
   needs:
       - job: mkl-build-job
+      - job: hdf5-build-job
+        artifacts: true
       - job: netcdf-c-build-job
         artifacts: true
       - job: netcdf-cxx4-build-job
@@ -51,6 +53,7 @@ octave-pkg-build-job:       # This job runs in the build stage, which runs first
   script:
         - export MKL_INSTALL_PREFIX=${HOME}/${MKL_INSTALL_PREFIX}
         - export MKL_PKG_CONFIG
+        - export HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
         - export NL_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NL_INSTALL_PREFIX}
         - export NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
         - export OCT_PKG_BUILD_DIR=${CI_PROJECT_DIR}/${OCT_PKG_BUILD_DIR}
@@ -78,6 +81,8 @@ octave-pkg-build-job-gcov:       # This job runs in the build stage, which runs 
       - job: siconos-build-job
         artifacts: true
       - job: mkl-build-job
+      - job: hdf5-build-job
+        artifacts: true
       - job: netcdf-c-build-job
         artifacts: true
       - job: netcdf-cxx4-build-job
@@ -93,6 +98,7 @@ octave-pkg-build-job-gcov:       # This job runs in the build stage, which runs 
   script:
         - export MKL_INSTALL_PREFIX=${HOME}/${MKL_INSTALL_PREFIX}
         - export MKL_PKG_CONFIG
+        - export HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
         - export NL_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NL_INSTALL_PREFIX}
         - export NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
         - export OCT_PKG_BUILD_DIR=${CI_PROJECT_DIR}/${OCT_PKG_BUILD_DIR_GCOV}

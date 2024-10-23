@@ -60,6 +60,8 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
   needs:
     - job: siconos-build-job
       artifacts: true
+    - job: hdf5-build-job
+      artifacts: true
     - job: netcdf-c-build-job
       artifacts: true
     - job: netcdf-cxx4-build-job

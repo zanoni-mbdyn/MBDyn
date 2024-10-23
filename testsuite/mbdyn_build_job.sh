@@ -54,6 +54,7 @@ MBD_BUILD_DIR="${MBD_BUILD_DIR:-${program_dir}/var/tmp/build/mbdyn}"
 MBD_TEST_PROGS_OUTPUT_DIR="${MBD_TEST_PROGS_OUTPUT_DIR:-${program_dir}/var/tmp/tests/mbdyn-test-progs}"
 MBD_COMPILER_FLAGS="${MBD_COMPILER_FLAGS:--Ofast -Wall -march=native -mtune=native -Wno-unused-variable}"
 SICONOS_INSTALL_PREFIX="${SICONOS_INSTALL_PREFIX:-${program_dir}/var/cache/siconos}"
+HDF5_INSTALL_PREFIX="${HDF5_INSTALL_PREFIX:-${program_dir}/var/cache/hdf5}"
 NC_INSTALL_PREFIX="${NC_INSTALL_PREFIX:-${program_dir}/var/cache/netcdf}"
 NC_CXX4_INSTALL_PREFIX="${NC_CXX4_INSTALL_PREFIX:-${program_dir}/var/cache/netcdf-cxx4}"
 GTEST_INSTALL_PREFIX="${GTEST_INSTALL_PREFIX:-${program_dir}/var/cache/gtest}"
@@ -62,7 +63,7 @@ MKL_PKG_CONFIG="${MKL_PKG_CONFIG:-mkl-dynamic-lp64-gomp}"
 OCT_PKG_INSTALL_PREFIX="${OCT_PKG_INSTALL_PREFIX:-${program_dir}/var/cache/share/octave}"
 MBD_WITH_MODULE="${MBD_WITH_MODULE:-fabricate damper-gandhi pid hfelem fab-electric template2 cont-contact wheel4 mds indvel mcp_test1 scalarfunc muscles minmaxdrive drive-test loadinc cudatest randdrive imu convtest md autodiff_test rotor-loose-coupling namespace drive controller constlaw fab-sbearings rotor_disc hunt-crossley diff damper-hydraulic cyclocopter fab-motion flightgear hid ns damper-graall nonsmooth-node cosim-output}"
 MBD_NUM_BUILD_JOBS="${MBD_NUM_BUILD_JOBS:-$(($(lscpu | awk '/^Socket\(s\)/{ print $2 }') * $(lscpu | awk '/^Core\(s\) per socket/{ print $4 }')))}"
-MBD_CONFIGURE_FLAGS="${MBD_CONFIGURE_FLAGS:---enable-python --enable-octave --enable-install_test_progs --enable-netcdf --with-lapack --with-arpack --with-umfpack --with-klu --with-suitesparseqr --with-static-modules --without-mpi --enable-runtime-loading --enable-Werror --with-trilinos --with-siconos --with-gtest --enable-override-operator-new}"
+MBD_CONFIGURE_FLAGS="${MBD_CONFIGURE_FLAGS:---enable-python --enable-octave --enable-octave-utils --enable-install_test_progs --enable-netcdf --with-lapack --with-arpack --with-umfpack --with-klu --with-suitesparseqr --with-static-modules --without-mpi --enable-runtime-loading --enable-Werror --with-trilinos --with-siconos --with-gtest --enable-override-operator-new}"
 OCTAVE_MKOCTFILE="${MKOCTFILE:-mkoctfile}"
 OCTAVE_CLI="${OCTAVE_CLI:-octave-cli}"
 TRILINOS_INSTALL_PREFIX="${TRILINOS_INSTALL_PREFIX:-/usr}"
@@ -278,7 +279,7 @@ fi
 
 cd "${MBD_BUILD_DIR}"
 
-export PATH="${NC_INSTALL_PREFIX}/bin:${NC_CXX4_INSTALL_PREFIX}/bin:${PATH}"
+export PATH="${NC_INSTALL_PREFIX}/bin:${NC_CXX4_INSTALL_PREFIX}/bin:${HDF5_INSTALL_PREFIX}/bin:${PATH}"
 
 if test -d "${SUITESPARSE_INC_DIR}"; then
     CPPFLAGS="-I${SUITESPARSE_INC_DIR} ${CPPFLAGS}"
@@ -309,6 +310,16 @@ if test -d "${SICONOS_INSTALL_PREFIX}"; then
     if ! test -z "${SICONOS_LIB_DIR}"; then
         LDFLAGS="-L${SICONOS_LIB_DIR} -Wl,-rpath=${SICONOS_LIB_DIR} ${LDFLAGS}"
     fi
+fi
+
+echo "Detecting HDF5 ..."
+if `which h5cc >& /dev/null`; then
+    HDF5_INCDIR=${HDF5_INSTALL_PREFIX}/include
+    HDF5_LIBDIR=${HDF5_INSTALL_PREFIX}/lib64
+    CPPFLAGS="${CPPFLAGS} -I${HDF5_INCDIR}"
+    LDFLAGS="-L${HDF5_LIBDIR} -Wl,-rpath=${HDF5_LIBDIR} ${LDFLAGS}"
+else
+    echo "Warning: hdf5 was not found in ${HDF5_INSTALL_PREFIX}!"
 fi
 
 echo "Detecting NetCDF ..."

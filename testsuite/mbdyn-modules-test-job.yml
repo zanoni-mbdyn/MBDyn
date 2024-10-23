@@ -65,6 +65,8 @@ mbdyn-modules-test-job:   # This job runs in the test stage.
       - job: mkl-build-job
       - job: siconos-build-job
         artifacts: true
+      - job: hdf5-build-job
+        artifacts: true
       - job: netcdf-c-build-job
         artifacts: true
       - job: netcdf-cxx4-build-job
