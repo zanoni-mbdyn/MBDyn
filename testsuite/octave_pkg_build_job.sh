@@ -408,7 +408,7 @@ for pkgname_and_flags in ${OCT_PKG_LIST}; do
             case "${pkgname}" in
                 netcdf)
                     LDFLAGS_SAVE="${LDFLAGS}"
-                    export LDFLAGS="-Wl,-rpath=`${NC_INSTALL_PREFIX}/bin/nc-config --libdir` ${LDFLAGS}"
+                    export LDFLAGS="-Wl,-rpath=`${NC_INSTALL_PREFIX}/bin/nc-config --libdir` -Wl,-rpath=`${HDF5_INSTALL_PREFIX}/lib64` ${LDFLAGS}"
                     ;;
             esac
 
@@ -426,7 +426,7 @@ for pkgname_and_flags in ${OCT_PKG_LIST}; do
             ;;
     esac
 
-    OCTAVE_CMD=`printf '%spkg("list");pkg("load","%s");' "${OCTAVE_LOCAL_LIST}" "${pkgname}"`
+    OCTAVE_CMD=`printf '%spkg("list");pkg("load","%s");pkg("list");' "${OCTAVE_LOCAL_LIST}" "${pkgname}"`
 
     echo ${OCTAVE_EXEC} -qfH --eval "${OCTAVE_CMD}"
 

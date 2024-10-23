@@ -113,6 +113,8 @@ begin: control data;
     print: all, to file;
 end: control data;
 
+# module load: "libmodule-journal_bearing";
+
 reference: ref_id_slider,
     position, reference, global, X0, Y0, Z0,
     orientation, reference, global, matr, 	cos(theta_y) * cos(theta_z),	-sin(theta_z),	sin(theta_y) * cos(theta_z),

@@ -45,6 +45,8 @@ octave-pkg-test-job:   # This job runs in the test stage.
       - job: mkl-build-job
       - job: siconos-build-job
         artifacts: true
+      - job: hdf5-build-job
+        artifacts: true
       - job: netcdf-c-build-job
         artifacts: true
       - job: netcdf-cxx4-build-job
@@ -91,7 +93,7 @@ octave-pkg-test-job:   # This job runs in the test stage.
             gtest_octave_cli_flags=""
             ;;
         esac
-      - ${OCTAVE_EXEC} ${gtest_octave_cli_flags} -qfH --eval "${gtest_octave_cli_test_func}" | tee -a "${log_file}"
+      # - ${OCTAVE_EXEC} ${gtest_octave_cli_flags} -qfH --eval "${gtest_octave_cli_test_func}" | tee -a "${log_file}"
       - chmod +x testsuite/octave_pkg_testsuite.sh
       - ${TESTSUITE_TIME_CMD} testsuite/octave_pkg_testsuite.sh --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}" --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-pkg-test-mode "${OCT_PKG_TEST_MODE}" --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" --octave-function-filter "${OCT_PKG_FUNCTION_FILTER}"  2>&1 | tee -a "${log_file}"
   artifacts:

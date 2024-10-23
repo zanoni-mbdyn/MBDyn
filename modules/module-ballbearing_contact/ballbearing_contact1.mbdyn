@@ -230,7 +230,7 @@ begin: elements;
 
 
     user defined: elem_id_contact, octave, "BallBearingContact", 
-        octave search path, "../../mbdyn/modules/module-ballbearing_contact",
+        octave search path, "../../modules/module-ballbearing_contact",
         ball radius, R,
         elastic modulus ball, E1,
         poisson ratio ball, nu1,

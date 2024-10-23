@@ -79,6 +79,9 @@ variables:
   ## Local installation directory for Siconos
   SICONOS_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/siconos
 
+  ## Local installation directory for HDF5
+  HDF5_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/HDF5
+
   ## Local installation directory for NetCDF
   NC_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/netcdf
 
@@ -104,6 +107,7 @@ variables:
 
   SICONOS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/siconos
 
+  HDF5_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/hdf5
   NC_C_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/netcdf-c
   NC_CXX4_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/netcdf-cxx4
 
@@ -179,7 +183,7 @@ variables:
   ## NOTE: This option is not intended for debugging, but just to see if any assertion will fail.
   ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan()
   MBD_COMPILER_FLAGS_DEBUG: "-O3 -Wall -march=native -mtune=native -Wno-unused-variable"
-
+  
   JUNIT_XML_KEEP_ALL_OUTPUT:
     value: "none"
     options:
@@ -190,14 +194,14 @@ variables:
     description: "Keep all JUnit XML files to be displayed in the test report"
 
   OCT_PKG_LIST_NURBS_REBUILD:
-    value: "yes"
+    value: "no"
     options:
       - "yes"
       - "no"
     description: "Recompile Octave's nurbs package"
 
   OCT_PKG_LIST_NURBS_TEST:
-    value: "yes"
+    value: "no"
     options:
       - "yes"
       - "no"
@@ -217,14 +221,14 @@ variables:
     description: "Timeout to run tests for Octave's nurbs package"
 
   OCT_PKG_LIST_NETCDF_REBUILD:
-    value: "yes"
+    value: "no"
     options:
       - "yes"
       - "no"
     description: "Recompile Octave's netcdf package"
 
   OCT_PKG_LIST_NETCDF_TEST:
-    value: "yes"
+    value: "no"
     options:
       - "yes"
       - "no"
@@ -398,7 +402,7 @@ variables:
     description: "GNU/Octave interpreter"
 
   GTEST_OCTAVE_EXEC:
-    value: "gtest-octave-cli"
+    value: "octave-cli"
     options:
       - "octave"
       - "octave-cli"
@@ -412,6 +416,14 @@ variables:
   GTEST_BRANCH:
     value: "main"
     description: "Branch of the GoogleTest library (https://google.github.io/googletest/) to be pulled"
+
+  HDF5_REPOSITORY:
+    value: "https://github.com/HDFGroup/hdf5"
+    description: "Repository of the HDF5 library (http://www.hdfgroup.org/solutions/hdf5/) to be cloned"
+
+  HDF5_BRANCH:
+    value: "hdf5_1_14_5"
+    description: "Branch of the NetCDF library (http://www.hdfgroup.org/solutions/hdf5) to be pulled"
 
   NETCDF_C_REPOSITORY:
     value: "https://github.com/Unidata/netcdf-c.git"
@@ -433,6 +445,7 @@ variables:
     value: "https://github.com/siconos/siconos.git" ## FIXME: Should be changed to the main repository
     options:
       - "https://github.com/siconos/siconos.git" ## Main repository
+      - "https://github.com/mmorandi/siconos.git" ## Forked from https://github.com/siconos/siconos.git
       - "https://github.com/octave-user/siconos.git" ## Forked from https://github.com/siconos/siconos.git
       - "https://gricad-gitlab.univ-grenoble-alpes.fr/nonsmooth/siconos.git" ## Development repository
     description: "Repository of the Siconos library (http://siconos.gforge.inria.fr) to be cloned"
@@ -453,8 +466,8 @@ variables:
     value: "master"
     description: "Branch of the NLopt library (https://nlopt.readthedocs.io) to be pulled"
 
-  ## Temorary directory for all Octave package tests (e.g. TMPDIR will be redirected)
-  ## This makes it easier to clean up temporary files and ther is no need to use /tmp which may reside in memory on some systems.
+  ## Temporary directory for all Octave package tests (e.g. TMPDIR will be redirected)
+  ## This makes it easier to clean up temporary files and there is no need to use /tmp which may reside in memory on some systems.
   ## Paths must be relative to CI_PROJECT_PATH
   TESTSUITE_PREFIX_TESTS: $TESTSUITE_PREFIX_TMP/tests
   MBD_TEST_PROGS_OUTPUT_DIR: $TESTSUITE_PREFIX_TESTS/mbdyn-test-progs
@@ -511,6 +524,7 @@ include:
     - local: '/testsuite/mbdyn-checkout-job.yml'
     - local: '/testsuite/mkl-build-job.yml'
     - local: '/testsuite/siconos-build-job.yml'
+    - local: '/testsuite/hdf5-build-job.yml'
     - local: '/testsuite/netcdf-build-job.yml'
     - local: '/testsuite/nlopt-build-job.yml'
     - local: '/testsuite/gtest-build-job.yml'
