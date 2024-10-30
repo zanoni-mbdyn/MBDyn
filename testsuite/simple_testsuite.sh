@@ -58,14 +58,25 @@ declare -i mbdyn_exclude_inverse_dynamics=0
 declare -i mbdyn_exclude_initial_value=0
 mbdyn_suppressed_errors=""
 
+program_dir=$(realpath $(dirname "${program_name}"))
+
 declare -i mbd_exit_status_mask=0 ## Define the errors codes which should not cause the pipeline to fail
 MBDYN_EXEC="${MBDYN_EXEC:-mbdyn}"
 MBDYN_ARGS_ADD="${MBDYN_ARGS_ADD:--CGF}"
+OCT_PKG_INSTALL_PREFIX="${OCT_PKG_INSTALL_PREFIX:-${program_dir}/var/cache/share/octave}"
+if ! test -z "${OCT_PKG_INSTALL_PREFIX}"; then
+    OCTAVE_LOCAL_LIST=`printf '%s;' "${OCT_PKG_INSTALL_PREFIX}/octave_packages"`
+else
+    OCTAVE_LOCAL_LIST=""
+fi
 OCTAVE_EXEC="${OCTAVE_EXEC:-octave}"
+temp_octaverc=$(mktemp "${TMPDIR:-/tmp/}$(basename $0).XXXXXXXXXXXX")
+OCTAVE_LOCAL_LIST=$OCTAVE_LOCAL_LIST awk 'BEGIN {DONE=0} {if ($4=="%CI_LOCAL_LIST") {print "pkg local_list ",ENVIRON["OCTAVE_LOCAL_LIST"]," %CI_LOCAL_LIST"; DONE=1} else {print $0}} END {if (DONE==0) {print "pkg local_list ",ENVIRON["OCTAVE_LOCAL_LIST"]," %CI_LOCAL_LIST";}}' $HOME/.octaverc > $temp_octaverc
+mv $temp_octaverc $HOME/.octaverc
 PYTHON_EXEC="${PYTHON_EXEC:-python3}"
 TESTSUITE_TIME_CMD="${TESTSUITE_TIME_CMD:-/usr/bin/time --verbose}"
 JUNIT_XML_KEEP_ALL_OUTPUT="${JUNIT_XML_KEEP_ALL_OUTPUT:-none}"
-program_dir=$(realpath $(dirname "${program_name}"))
+
 
 if ! test -f "${program_dir}/mbdyn_input_file_format.awk"; then
     program_dir=$(realpath $(which "${program_name}"))

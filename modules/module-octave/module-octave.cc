@@ -856,12 +856,18 @@ pHP(pHP)
         pOctaveInterface = this;
 
 #if OCTAVE_MAJOR_VERSION >= 5
+        interpreter.initialize ();
+        if (! interpreter.is_initialized ()) {
+                silent_cerr("module-octave: initializing embedded Octave interpreter failed!" << std::endl);
+          throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+        }
+        
         int status = interpreter.execute ();
-
         if (status != 0) {
                 silent_cerr("module-octave: creating embedded Octave interpreter failed!" << std::endl);
                 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
         }
+        interpreter.source_file("~/.octaverc");
 
 #else
         const int nmax_args = 4;

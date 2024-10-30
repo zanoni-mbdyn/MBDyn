@@ -38,8 +38,11 @@ netcdf-c-build-job:       # This job runs in the build stage, which runs first.
   stage: build
   needs:
       - job: mbdyn-cleanup-job
+      - job: hdf5-build-job
+        artifacts: true
   script:
       - echo "netcdf-c installation job"
+      - HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
       - NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
       - NC_C_BUILD_DIR=${CI_PROJECT_DIR}/${NC_C_BUILD_DIR}
       - |
@@ -68,7 +71,7 @@ netcdf-c-build-job:       # This job runs in the build stage, which runs first.
       - cd build_dir
       - |
         if ! test -f Makefile; then
-          cmake .. -DENABLE_NETCDF_4=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${NC_INSTALL_PREFIX}"
+          cmake .. -DENABLE_NETCDF_4=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${NC_INSTALL_PREFIX}" -DCMAKE_PREFIX_PATH="${HDF5_INSTALL_PREFIX}"
         fi
       - make -j${MBD_NUM_BUILD_JOBS}
       - rm -rf "${NC_INSTALL_PREFIX}"
@@ -86,10 +89,13 @@ netcdf-c-build-job:       # This job runs in the build stage, which runs first.
 netcdf-cxx4-build-job:       # This job runs in the build stage, which runs first.
   stage: build
   needs:
+    - job: hdf5-build-job
+      artifacts: true
     - job: netcdf-c-build-job
       artifacts: true
   script:
       - echo "netcdf-cxx4 installation job"
+      - HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
       - NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
       - NC_CXX4_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_CXX4_INSTALL_PREFIX}
       - NC_CXX4_BUILD_DIR=${CI_PROJECT_DIR}/${NC_CXX4_BUILD_DIR}
@@ -119,11 +125,10 @@ netcdf-cxx4-build-job:       # This job runs in the build stage, which runs firs
       - cd build_dir
       - |
         if ! test -f Makefile; then
-          cmake .. -DENABLE_NETCDF_4=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${NC_CXX4_INSTALL_PREFIX}" -DnetCDF_DIR="${NC_INSTALL_PREFIX}/lib/cmake/netCDF"
+          cmake .. -DENABLE_NETCDF_4=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${NC_CXX4_INSTALL_PREFIX}" -DnetCDF_DIR="${NC_INSTALL_PREFIX}/lib/cmake/netCDF" -DCMAKE_PREFIX_PATH="${HDF5_INSTALL_PREFIX};${NC_INSTALL_PREFIX}"
         fi
-      - make -j${MBD_NUM_BUILD_JOBS}
       - rm -rf "${NC_CXX4_INSTALL_PREFIX}"
-      - make install
+      - make -j${MBD_NUM_BUILD_JOBS} install
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
