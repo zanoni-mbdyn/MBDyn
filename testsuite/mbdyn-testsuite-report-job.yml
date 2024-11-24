@@ -52,6 +52,8 @@ mbdyn-testsuite-report-job-coverage:
   needs:
     - job: siconos-build-job
       artifacts: true
+    - job: trilinos-build-job
+      artifacts: true
     - job: netcdf-c-build-job
       artifacts: true
     - job: netcdf-cxx4-build-job

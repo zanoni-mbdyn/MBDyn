@@ -857,11 +857,13 @@ pHP(pHP)
 
 #if OCTAVE_MAJOR_VERSION >= 5
         interpreter.initialize ();
+
+#if OCTAVE_MAJOR_VERSION < 9
         if (! interpreter.is_initialized ()) {
                 silent_cerr("module-octave: initializing embedded Octave interpreter failed!" << std::endl);
           throw ErrGeneric(MBDYN_EXCEPT_ARGS);
         }
-        
+#endif
         int status = interpreter.execute ();
         if (status != 0) {
                 silent_cerr("module-octave: creating embedded Octave interpreter failed!" << std::endl);

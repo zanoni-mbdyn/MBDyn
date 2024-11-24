@@ -45,6 +45,8 @@ octave-pkg-test-job:   # This job runs in the test stage.
       - job: mkl-build-job
       - job: siconos-build-job
         artifacts: true
+      - job: trilinos-build-job
+        artifacts: true
       - job: hdf5-build-job
         artifacts: true
       - job: netcdf-c-build-job
@@ -66,6 +68,7 @@ octave-pkg-test-job:   # This job runs in the test stage.
       - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - OCT_PKG_TEST_OUTPUT_DIR=${CI_PROJECT_DIR}/${OCT_PKG_TEST_OUTPUT_DIR}
+      - OCT_PKG_TESTSUITE_SCRIPT="${CI_PROJECT_DIR}/testsuite/octave_pkg_testsuite.m"
       - export PATH=${MBD_INSTALL_PREFIX}/bin:${GMSH_INSTALL_PREFIX}/bin:${OCT_PKG_INSTALL_PREFIX}/bin:${PATH}
       - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
       - export TESTSUITE_TIME_CMD
@@ -83,7 +86,6 @@ octave-pkg-test-job:   # This job runs in the test stage.
       - which gmsh | tee -a "${log_file}"
       - gmsh --version | tee -a "${log_file}"
       - which octave | tee -a "${log_file}"
-      - gtest_octave_cli_test_func='__run_test_suite__'
       - |
         case "${OCTAVE_EXEC}" in
           gtest-*)
@@ -93,9 +95,12 @@ octave-pkg-test-job:   # This job runs in the test stage.
             gtest_octave_cli_flags=""
             ;;
         esac
-      # - ${OCTAVE_EXEC} ${gtest_octave_cli_flags} -qfH --eval "${gtest_octave_cli_test_func}" | tee -a "${log_file}"
-      - chmod +x testsuite/octave_pkg_testsuite.sh
-      - ${TESTSUITE_TIME_CMD} testsuite/octave_pkg_testsuite.sh --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}" --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-pkg-test-mode "${OCT_PKG_TEST_MODE}" --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" --octave-function-filter "${OCT_PKG_FUNCTION_FILTER}"  2>&1 | tee -a "${log_file}"
+      - ${GTEST_OCTAVE_EXEC} -q ${OCT_PKG_TESTSUITE_SCRIPT} --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-exec "${GTEST_OCTAVE_EXEC}" --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}"
+
+      ## FIXME: remove legacy code ...
+      # - chmod +x testsuite/octave_pkg_testsuite.sh
+      # - ${TESTSUITE_TIME_CMD} testsuite/octave_pkg_testsuite.sh --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}" --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-pkg-test-mode "${OCT_PKG_TEST_MODE}" --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" --octave-function-filter "${OCT_PKG_FUNCTION_FILTER}"  2>&1 | tee -a "${log_file}"
+
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}
     expire_in: 2 days
