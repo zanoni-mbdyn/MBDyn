@@ -47,6 +47,7 @@ test_data.octave_pkg_test_dir = "";
 test_data.mbdyn_exec = "mbdyn";
 test_data.mbdyn_args_add ="-CGF";
 test_data.octave_pkg_prefix = [];
+thread_data.number_of_threads = 1;
 
 try
   [prog_dir, prog_name, prog_ext] = fileparts(__FILE__);
@@ -65,6 +66,11 @@ try
   opts.reuse_subprocess = false;
   opts.verbose = false;
   opts.user_hook_func = @octave_pkg_testsuite_hook;
+
+  ## FIXME: We should use semaphores instead of polling!
+  ## FIXME: However this apprears to be less robust,
+  ## FIXME: just in case that one of our jobs terminates without releasing the semaphore.
+  opts.waitpid_polling_period = 100e-3; ## Higher values will reduce the CPU time which is wasted inside the main loop!
 
   while (++idx < numel(args))
     switch(args{idx})
@@ -96,6 +102,12 @@ try
         test_data.octave_pkg_prefix = args{++idx};
       case {"--tasks", "-t"}
         [opts.number_of_processors, cnt, msg] = sscanf(args{++idx}, "%d", "C");
+
+        if (cnt ~= 1)
+          error("invalid argument %s \"%s\": %s", args{idx - 1}, args{idx}, msg);
+        endif
+      case "--threads"
+        [thread_data.number_of_threads, cnt, msg] = sscanf(args{++idx}, "%d", "C");
 
         if (cnt ~= 1)
           error("invalid argument %s \"%s\": %s", args{idx - 1}, args{idx}, msg);
@@ -143,6 +155,8 @@ try
   opts.number_of_parameters = numel(test_data.pkg_functions);
   opts.gtest_output_junit_xml = fullfile(test_data.octave_pkg_test_dir, '%d', 'junit_xml_report_octave_assert.xml');
   opts.redirect_stdout = fullfile(test_data.octave_pkg_test_dir, '%d', 'fntests.out');
+
+  putenv("MBD_NUM_THREADS", sprintf("%d", thread_data.number_of_threads));
 
   status = run_parallel(opts, @octave_pkg_testsuite_exec, test_data);
 

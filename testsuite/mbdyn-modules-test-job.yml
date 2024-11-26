@@ -180,6 +180,10 @@ mbdyn-modules-test-job-gcov:   # This job runs in the test stage.
       # --octave-pkg-test-mode "${OCT_PKG_TEST_MODE}"
       # --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" ##
       # --octave-function-filter "${OCT_PKG_FUNCTION_FILTER}"  2>&1 | tee -a "${log_file}"
+      ## Disable multithreaded BLAS/LAPACK
+      - export OMP_NUM_THREADS=1
+      - export MKL_NUM_THREADS=1
+      - export OPENBLAS_NUM_THREADS=1
       - ${TESTSUITE_TIME_CMD} ${GTEST_OCTAVE_EXEC} -q ${OCT_PKG_TESTSUITE_SCRIPT} --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-exec "${GTEST_OCTAVE_EXEC}" --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}" 2>&1 | tee -a "${log_file}"
   artifacts:
      expire_in: 2 days
