@@ -2095,8 +2095,9 @@ struct LinearViscoelasticMaxwellNRead: ConstitutiveLawRead<T, Tder> {
 template <typename Tstress, typename Tder, typename Tstrain = Tstress>
 class MFrontGenericInterfaceCSL: public ConstitutiveLaw<Tstress, Tder, Tstrain> {
 public:
-     using ConstitutiveLaw<Tstress, Tder, Tstrain>:: F;
-     using ConstitutiveLaw<Tstress, Tder, Tstrain>:: FDE;
+     using ConstitutiveLaw<Tstress, Tder, Tstrain>::F;
+     using ConstitutiveLaw<Tstress, Tder, Tstrain>::FDE;
+     using ConstitutiveLaw<Tstress, Tder, Tstrain>::Update;
 
      explicit MFrontGenericInterfaceCSL(const mgis::behaviour::Behaviour& oBehaviourTmp, DriveCaller* pTimeStepDrv)
           :oBehaviour(oBehaviourTmp),
@@ -2110,7 +2111,7 @@ public:
      virtual ~MFrontGenericInterfaceCSL() {
      }
 
-     void setMaterialProperty(const mgis::string_view& strName, const doublereal dValue) {
+     void setMaterialProperty(const std::string_view& strName, const doublereal dValue) {
          mgis::behaviour::setMaterialProperty(oData.s0, strName, dValue);
          mgis::behaviour::setMaterialProperty(oData.s1, strName, dValue);
      }
