@@ -34,7 +34,7 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
 \item cylindrical bearings with small imperfections (e.g. barrel shape, cone shape, ellipse shape, grooves $\hdots$)
 \item arbitrary lubrication grooves and boundary conditions (e.g. pressure, density or filling ratio)
 \item optional coupling with hydraulic networks
-\item deformable bearing journal and bearing shell surfaces (e.g. two way fluid structure interaction)
+\item deformable shaft and bearing surfaces (e.g. two way fluid structure interaction)
 \end{itemize}
 
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -42,7 +42,7 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
 
     \bnt{arglist} ::=
             \kw{hydraulic fluid},
-                \kw{hydraulic fluid}, (\hty{HydraulicFluid}) \bnt{hydraulic_fluid},
+                (\hty{HydraulicFluid}) \bnt{hydraulic_fluid},
             \kw{mesh}, \{ \kw{linear finite difference} | \kw{quadratic finite element} \},
                 \kw{enable mcp}, (\ty{bool}) \bnt{mixed_complementarity_problem}
             \kw{geometry}, \kw{cylindrical},
@@ -76,11 +76,17 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
             [ , \kw{pressure dof scale}, (\ty{real}) \bnt{pressure_dof_scale} ]
             [ , \kw{equation scale}, (\ty{real}) \bnt{equation_scale} ]
             [ , \kw{output pressure}, \{ \kw{yes} | \kw{no} \} ]
+            [ , \kw{output contact pressure}, \{ \kw{yes} | \kw{no} \} ]
+            [ , \kw{output density}, \{ \kw{yes} | \kw{no} \} ]
+            [ , \kw{output friction loss}, \{ \kw{yes} | \kw{no} \} ]
             [ , \kw{output clearance}, \{ \kw{yes} | \kw{no} \} ]
             [ , \kw{output clearance derivative}, \{ \kw{yes} | \kw{no} \} ]
             [ , \kw{output velocity}, \{ \kw{yes} | \kw{no} \} ]
             [ , \kw{output stress}, \{ \kw{yes} | \kw{no} \} ]
             [ , \kw{output reaction force}, \{ \kw{yes} | \kw{no} \} ]
+            [ , \kw{output total deformation}, \{ \kw{yes} | \kw{no} \} ]
+            [ , \kw{output deformation bearing}, \{ \kw{yes} | \kw{no} \} ]
+            [ , \kw{output deformation shaft}, \{ \kw{yes} | \kw{no} \} ]
             [ , \kw{output mesh, yes}, \{ \kw{yes} | \kw{no} \} ]
 
 \end{Verbatim}
@@ -238,7 +244,7 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
 \paragraph{Compliance model}
 \begin{Verbatim}[commandchars=\\\{\}]
      \bnt{compliance_model} :: =
-      \{ \bnt{compliance_mod_nodal} | \bnt{compliance_mod_modal} | \bnt{compliance_mod_double_nodal} \}
+      \{ \bnt{compliance_mod_nodal} | \bnt{compliance_mod_double_nodal} \}
 
      \bnt{compliance_mod_nodal} :: =
          \kw{matrix}, 1, \bnt{compliance_matrix_data},
@@ -264,3 +270,43 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
      [ , \kw{nu1}, (\ty{real}) \bnt{nu1} ]
      [ , \kw{modal element}, (\hty{ModalJoint}) \bnt{elem_id_modal_joint} ]
 \end{Verbatim}
+
+\subsubsection{Mass conserving versus non-mass conserving cavitation}
+In order to use a mass conserving cavitation model, a \kw{linear compressible} hydraulic fluid must be selected. In that case the fluid density at the surface of the bearing may vary between zero and the liquid density, which is equal to the reference density of the hydraulic fluid, during the simulation. Otherwise, an \kw{incompressible} hydraulic fluid should be used, and the density of the fluid will remain constant during the simulation.
+\subsubsection{Finite Difference versus Finite Element discretization}
+Mass conserving cavitation models are not yet supported by the Finite Element discretization.
+\subsubsection{MCP based solution}
+This option may be used if, and only if a mass conserving cavitation model is used and a proper nonlinear solver has been selected. See also section~\ref{sec:problems:nonlin:mcp}.
+\subsubsection{Bearing geometry}
+Currently only bearings with cylindrical surfaces are supported. The main dimensions are \bnt{diameter\_shaft}, \bnt{diameter\_bearing} and \bnt{bearing\_widht} and the so called relative clearance $\Psi$ is:
+\begin{equation}
+\Psi=\frac{\bnt{diameter\_bearing} - \bnt{diameter\_shaft}}{\bnt{diameter\_shaft}}
+\end{equation}
+Small deviations from a perfectly cylindrical bearing (e.g. barrel shape, cone shape) may be specified by means of \bnt{pockets}. See also the technical manual for details.
+\subsubsection{Structural nodes}
+It is possible to specify an arbitrary offset and orientation between the center of the bearing and the related structural node. Actually, the bearing and shaft axes are aligned to the z-axis of of the orientation matrices \bnt{orientation\_shaft\_node} and \bnt{orientation\_bearing\_node}.
+\subsubsection{Computational grid}
+Regarding the mesh- or grid-size, it is possible to define either a fixed number of nodes or a fixed number of elements in axial or ``z''-direction and in circumferential or ``Phi''-direction. Also a non-constant grid size is supported.
+\subsubsection{Boundary conditions, lubrication grooves and coupling conditions}
+Boundary conditions at the edges of the bearing may be specified by means of drive callers or hydraulic nodes.
+\subsubsection{Contact model}
+The contact model is based on Greenwood and Tripp\cite{Greenwood-1970}. Input parameters are Young's modulus and Poisson's ratio of both surfaces and also the combined spectral moments of the surface roughness profiles. See the technical manual for further details.
+\subsubsection{Friction model}
+In case of solid contact inside the bearing, dry friction may be considered by means of a Coulomb or 2D-LuGre friction model\cite{LuGre2D}. Actually, the transition between sticking and sliding can be considered only by means of the LuGre model. See also the technical manual for further details.
+\subsubsection{Compliance model}
+If the deformation of the shaft and/or bearing surfaces should be considered (e.g. two way fluid structure interaction), a compliance model must be used. The following options are supported:
+\begin{itemize}
+\item{Nodal compliance model:} Only the bearing surface at the body attached to the mesh is considered as flexible. If a second matrix is provided, the values are just summed up. However, this is valid only if the component which is not attached to the mesh is axisymmetric. So, the actual relative orientation between shaft and bearing surface does not affect the flexibility.
+\item{Double nodal compliance model:} Both surfaces (e.g. shaft and bearing) are considered as flexible without any restrictions. In this case the pressure distribution and deformation will be interpolated between the shaft and bearing surface as required.
+\end{itemize}
+\paragraph{Elastic half space}
+Based on the assumption of a semi-infinite body, the compliance matrix can be computed automatically without any additional data.
+\paragraph{Compliance matrix from file}
+In most situations, all the compliance matrices should be computed by \htmladdnormallink{\texttt{mboct-fem-pkg}}{https://github.com/octave-user/mboct-fem-pkg} and stored in a file \bnt{compliance\_matrix\_file}. The related function is called ``fem\_ehd\_pre\_comp\_mat\_unstruct'' and the following options are available:
+\begin{itemize}
+\item{Quasi static nodal compliance model (matrix type ``nodal'')}
+\item{Fully dynamic compliance model coupled to the mode shapes of a modal joint (matrix type ``modal substruct total''):} In this case the related modal joint (e.g. \bnt{elem\_id\_modal\_joint}) must be provided in the input file. In addition to that, the related structural node (e.g. \bnt{shaft\_node\_id} or \bnt{bearing\_node\_id}) should be attached to the ``modal node'' of the same modal joint. See also \ref{sec:EL:STRUCT:JOINT:MODAL}.
+\end{itemize}
+
+\subsubsection{Output}
+Actually, the data structure of all the output is quite complex. So, it is recommended to use \htmladdnormallink{\texttt{mboct-mbdyn-pkg}}{https://github.com/octave-user/mboct-mbdyn-pkg} in order to load and display the output. See also the documentation of ``mbdyn\_post\_ehd\_load\_output''.
