@@ -188,7 +188,10 @@ $(srcdir)/../../modules/module-ballbearing_contact/module-ballbearing_contact.h 
 $(srcdir)/../../modules/module-ballbearing_contact/module-ballbearing_contact.cc \
 \
 $(srcdir)/../../modules/module-triangular_contact/module-triangular_contact.h \
-$(srcdir)/../../modules/module-triangular_contact/module-triangular_contact.cc
+$(srcdir)/../../modules/module-triangular_contact/module-triangular_contact.cc \
+\
+$(srcdir)/../../modules/module-mpc/module-mpc.h \
+$(srcdir)/../../modules/module-mpc/module-mpc.cc
 
 # add more...
 endif
