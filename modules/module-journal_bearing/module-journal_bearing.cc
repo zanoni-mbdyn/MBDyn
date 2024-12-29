@@ -175,7 +175,7 @@ JournalBearing::JournalBearing(
         if (HP.IsKeyWord("help")) {
                 silent_cout(
                         "\n"
-                        "Module:        InlineAD\n"
+                        "Module:        journal bearing\n"
                         "\n"
                         "	This element implements a journal bearing with lugre friction\n"
                         "\n"
