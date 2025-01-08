@@ -39,6 +39,9 @@
 
 /* SphericalHingeJoint - begin */
 
+const unsigned int SphericalHingeJoint::NumSelfDof(3);
+const unsigned int SphericalHingeJoint::NumDof(15);
+
 /* Costruttore non banale */
 SphericalHingeJoint::SphericalHingeJoint(unsigned int uL, const DofOwner* pDO,
 					 const StructNode* pN1, 
@@ -46,12 +49,17 @@ SphericalHingeJoint::SphericalHingeJoint(unsigned int uL, const DofOwner* pDO,
 					 const Vec3& dTmp1, const Mat3x3& RTmp1h,
 					 const Vec3& dTmp2, const Mat3x3& RTmp2h,
 					 const OrientationDescription& od,
-					 flag fOut)
+					 flag fOut,
+                     const doublereal rr,
+                     const doublereal pref,
+                     BasicShapeCoefficient *const sh,
+                     BasicFriction *const f)
 : Joint(uL, pDO, fOut),
 pNode1(pN1), pNode2(pN2), 
 d1(dTmp1), R1h(RTmp1h),
 d2(dTmp2), R2h(RTmp2h), 
 F(Zero3),
+Sh_c(sh), fc(f), preF(pref), r(rr),
 od(od)
 {
    NO_OP;
@@ -61,8 +69,236 @@ od(od)
 /* Distruttore banale */
 SphericalHingeJoint::~SphericalHingeJoint(void)
 {
-   NO_OP;
+	if (Sh_c) {
+		delete Sh_c;
+	}
+
+	if (fc) {
+		delete fc;
+	}
 };
+
+std::ostream&
+SphericalHingeJoint::DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const
+{
+	integer iIndex = iGetFirstIndex();
+
+	out
+		<< prefix << iIndex + 1 << "->" << iIndex + 3 << ": "
+			"reaction forces [Fx,Fy,Fz]" << std::endl;
+
+	if (bInitial) {
+		iIndex += NumSelfDof;
+		out
+			<< prefix << iIndex + 1 << "->" << iIndex + 3 << ": "
+				"reaction force derivatives [FPx,FPy,FPz]" << std::endl;
+	}
+
+	iIndex += NumSelfDof;
+	if (fc) {
+		integer iFCDofs = fc->iGetNumDof();
+		if (iFCDofs > 0) {
+			out << prefix << iIndex + 1;
+			if (iFCDofs > 1) {
+				out << "->" << iIndex + iFCDofs;
+			}
+			out << ": friction dof(s)" << std::endl
+				<< "        ", fc->DescribeDof(out, prefix, bInitial);
+		}
+	}
+
+	return out;
+}
+
+static const char xyz[] = "xyz";
+
+void
+SphericalHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, int i) const
+{
+	std::ostringstream os;
+	os << "SphericalHingeJoint(" << GetLabel() << ")";
+
+	unsigned short nself = NumSelfDof;
+	if (bInitial) {
+		nself *= 2;
+	}
+	if (fc && (i == -1 || i >= nself)) {
+		fc->DescribeDof(desc, bInitial, i - nself);
+		if (i != -1) {
+			desc[0] = os.str() + ": " + desc[0];
+			return;
+		}
+	}
+
+	if (i == -1) {
+		// move fc desc to the end
+		unsigned short nfc = 0;
+		if (fc) {
+			nfc = desc.size();
+		}
+		desc.resize(nfc + nself);
+		for (unsigned i = nfc; i-- > 0; ) {
+			desc[nself + i] = os.str() + ": " + desc[nfc];
+		}
+
+		std::string name = os.str();
+
+		for (unsigned i = 0; i < 3; i++) {
+			os.str(name);
+			os.seekp(0, std::ios_base::end);
+			os << ": reaction force f" << xyz[i];
+			desc[i] = os.str();
+		}
+
+		if (bInitial) {
+			for (unsigned i = 0; i < 3; i++) {
+				os.str(name);
+				os.seekp(0, std::ios_base::end);
+				os << ": reaction force derivative fP" << xyz[i];
+				desc[3 + 2 + i] = os.str();
+			}
+		}
+
+	} else {
+		if (i < -1) {
+			// error
+			throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+		}
+
+		if (i >= nself) {
+			// error
+			throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+		}
+
+		desc.resize(1);
+
+		switch (i) {
+		case 0:
+		case 1:
+		case 2:
+			os << ": reaction force f" << xyz[i];
+			break;
+
+		case 3:
+		case 4:
+		case 5:
+			os << ": reaction force derivative fP" << xyz[i - 3];
+			break;
+		}
+		desc[0] = os.str();
+	}
+}
+
+std::ostream&
+SphericalHingeJoint::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const
+{
+	integer iIndex = iGetFirstIndex();
+
+	out
+		<< prefix << iIndex + 1 << "->" << iIndex + 3 << ": "
+			"position constraints [Px1=Px2,Py1=Py2,Pz1=Pz2]" << std::endl;
+
+	if (bInitial) {
+		iIndex += NumSelfDof;
+		out
+			<< prefix << iIndex + 1 << "->" << iIndex + 3 << ": "
+				"velocity constraints [vx1=vx2,vy1=vy2,vz1=vz2]" << std::endl;
+	}
+
+	iIndex += NumSelfDof;
+	if (fc) {
+		integer iFCDofs = fc->iGetNumDof();
+		if (iFCDofs > 0) {
+			out << prefix << iIndex + 1;
+			if (iFCDofs > 1) {
+				out << "->" << iIndex + iFCDofs;
+			}
+			out << ": friction equation(s)" << std::endl
+				<< "        ", fc->DescribeEq(out, prefix, bInitial);
+		}
+	}
+
+	return out;
+}
+
+void
+SphericalHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i) const
+{
+	std::ostringstream os;
+	os << "SphericalHingeJoint(" << GetLabel() << ")";
+
+	unsigned short nself = NumSelfDof;
+	if (bInitial) {
+		nself *= 2;
+	}
+	if (fc && (i == -1 || i >= nself)) {
+		fc->DescribeEq(desc, bInitial, i - nself);
+		if (i != -1) {
+			desc[0] = os.str() + ": " + desc[0];
+			return;
+		}
+	}
+
+	if (i == -1) {
+		// move fc desc to the end
+		unsigned short nfc = 0;
+		if (fc) {
+			nfc = desc.size();
+		}
+		desc.resize(nfc + nself);
+		for (unsigned i = nfc; i-- > 0; ) {
+			desc[nself + i] = os.str() + ": " + desc[nfc];
+		}
+
+		std::string name = os.str();
+
+		for (unsigned i = 0; i < 3; i++) {
+			os.str(name);
+			os.seekp(0, std::ios_base::end);
+			os << ": position constraint P" << xyz[i];
+			desc[i] = os.str();
+		}
+
+		if (bInitial) {
+			for (unsigned i = 0; i < 3; i++) {
+				os.str(name);
+				os.seekp(0, std::ios_base::end);
+				os << ": position constraint derivative v" << xyz[i];
+				desc[3 + i] = os.str();
+			}
+
+		}
+
+	} else {
+		if (i < -1) {
+			// error
+			throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+		}
+
+		if (i >= nself) {
+			// error
+			throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+		}
+
+		desc.resize(1);
+
+		switch (i) {
+		case 0:
+		case 1:
+		case 2:
+			os << ": position constraint P" << xyz[i];
+			break;
+
+		case 3:
+		case 4:
+		case 5:
+			os << ": position constraint derivative v" << xyz[i - 3];
+			break;
+
+		}
+		desc[0] = os.str();
+	}
+}
 
 
 /* Contributo al file di restart */
@@ -211,7 +447,11 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 DofOrder::Order SphericalHingeJoint::GetEqType(unsigned int i) const {
 	ASSERTMSGBREAK(i >=0 and i < iGetNumDof(), 
 		"INDEX ERROR in SphericalHingeJoint::GetEqType");
-	return DofOrder::ALGEBRAIC;
+	if (i<NumSelfDof) {
+		return DofOrder::ALGEBRAIC;
+	} else {
+		return fc->GetEqType(i-NumSelfDof);
+	}
 }
 
 void
@@ -224,6 +464,28 @@ SphericalHingeJoint::OutputPrepare(OutputHandler& OH)
 
 			Var_Phi = OH.CreateRotationVar(m_sOutputNameBase, "", od, 
 				"relative orientation, in joint reference frame");
+			if (fc) {
+				Var_MFR = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "MFR",
+						OutputHandler::Dimensions::Moment,
+						"friciton moment ");
+
+				Var_t1 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "n",
+						OutputHandler::Dimensions::Length,
+						"direction n ");
+				Var_t1 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "t1",
+						OutputHandler::Dimensions::Length,
+						"direction t1 ");
+				Var_t2 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "t2",
+						OutputHandler::Dimensions::Length,
+						"direction t2 ");
+
+				Var_fc1 = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "fc1",
+						OutputHandler::Dimensions::Dimensionless,
+						"friction model specific data: friction coefficient in direction t1");
+				Var_fc2 = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "fc1",
+						OutputHandler::Dimensions::Dimensionless,
+						"friction model specific data: friction coefficient in direction t2");
+			}
 		}
 #endif // USE_NETCDF
 	}
@@ -341,6 +603,9 @@ SphericalHingeJoint::SetValue(DataManager *pDM,
 			}
 		}
 	}
+	if (fc) {
+		fc->SetValue(pDM, X, XP, ph, iGetFirstIndex() + NumSelfDof);
+	}
 }
 
 Hint *
@@ -360,6 +625,8 @@ SphericalHingeJoint::ParseHint(DataManager *pDM, const char *s) const
 		case '2':
 			return new Joint::OffsetHint<2>;
 		}
+	} else if (fc) {
+		return fc->ParseHint(pDM, s);
 	}
 
 	return 0;
@@ -577,22 +844,22 @@ SphericalHingeJoint::GetEquationDimension(integer index) const {
       case 3:
 			dimension = OutputHandler::Dimensions::Length;
 			break;
+	  default:
+			if (fc) {
+				index -= NumSelfDof;
+				integer iFCDofs = fc->iGetNumDof();
+				if (iFCDofs > 0) {
+					/* TODO */
+					/* not sure this is handled correctly */
+					dimension = fc->GetEquationDimension(index);
+				}
+			} else {
+				dimension = OutputHandler::Dimensions::UnknownDimension;
+			}
+			break;
 	}
 
 	return dimension;
-}
-
-std::ostream&
-SphericalHingeJoint::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const
-{
-
-	integer iIndex = iGetFirstIndex();
-
-	out
-		<< prefix << iIndex + 1 << "->" << iIndex + 3 << ": " <<
-			"relative position constraints" << std::endl;
-
-	return out;
 }
 
 /* SphericalHingeJoint - end */
