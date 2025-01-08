@@ -369,6 +369,7 @@ class AxialRotationJoint : public Joint, public DriveOwner {
    Mat3x3 R2h;
    Vec3 F;
    Vec3 M;
+   Vec3 Ffrict;
    mutable int NTheta;
    mutable doublereal dTheta, dThetaWrapped;
 
