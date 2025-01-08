@@ -59,6 +59,7 @@ class PlaneHingeJoint : public Joint {
    Mat3x3 R2h;
    Vec3 F;
    Vec3 M;
+   Vec3 Ffrict;
 #ifdef USE_NETCDF
 	MBDynNcVar Var_Phi;
 	MBDynNcVar Var_Omega;

@@ -169,7 +169,7 @@ void ExpandableRowVector::Sub(SubVectorHandler& WorkVec, const doublereal c) con
 		}
 	}
 }
-void ExpandableRowVector::Add(FullSubMatrixHandler& WM, 
+void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
 	const integer eq,
 	const doublereal c) const {
 	for (std::vector<ExpandableRowElement>::size_type i = 0; i < v.size(); i++) {
@@ -188,7 +188,7 @@ void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
 		}
 	}
 }
-void ExpandableRowVector::Add(FullSubMatrixHandler& WM, 
+void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
 	const std::vector<integer>& eq,
 	const std::vector<doublereal>& cc,
 	const doublereal c) const
@@ -230,7 +230,7 @@ void ExpandableRowVector::Sub(FullSubMatrixHandler& WM,
 		}
 	}
 }
-void ExpandableRowVector::Sub(FullSubMatrixHandler& WM, 
+void ExpandableRowVector::Sub(FullSubMatrixHandler& WM,
 	const std::vector<integer>& eq,
 	const std::vector<doublereal>& cc,
 	const doublereal c) const
@@ -350,7 +350,7 @@ void ExpandableMatrix::Link(const integer i, const ExpandableRowVector*const xp)
 	ASSERTMSGBREAK(std::vector<ExpandableColBlock>::size_type(i) <= v.size(), "ExpandableMatrix::Link() overflow");
 	//FIXME
 	//ASSERTMSGBREAK(v[i - 1].idx == 0, "ExpandableMatrix::Link() fatal error");
-	ASSERTMSGBREAK(v[i - 1].GetBlockNCols() == 1, 
+	ASSERTMSGBREAK(v[i - 1].GetBlockNCols() == 1,
 		"ExpandableMatrix::Link() dimension mismatch");
 	v[i - 1].Link(xp);
 }

@@ -62,7 +62,7 @@ begin: elements;
 			modlugre, 2000, 2.8,0.,0.71, "constfriction", 
 			#discrete coulomb, "test", const, 1.,
 			simple
-#			simple plane hinge, 0.1
+#			simple plane hinge
 	;
 	bind: 2, joint, 1, string, "rz";
 	bind: 2, joint, 2, string, "wz";

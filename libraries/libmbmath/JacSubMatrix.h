@@ -112,13 +112,13 @@ public:
 		void ReDim(const integer nrows) {
 			rows.resize(nrows);
 		};
-		void SetBlockDim(const integer nrows, const integer ncols) {
-			for (std::vector<ExpandableRowVector>::iterator i = rows.begin();
-				i != rows.end(); ++i)
-			{
-				i->ReDim(ncols);
-			}
-		};
+		// void SetBlockDim(const integer nrows, const integer ncols) {
+		// 	for (std::vector<ExpandableRowVector>::iterator i = rows.begin();
+		// 		i != rows.end(); ++i)
+		// 	{
+		// 		i->ReDim(ncols);
+		// 	}
+		// };
 		integer GetBlockNRows() const {
 			return rows.size();
 		};
@@ -172,7 +172,7 @@ public:
 			}
 		};
 		void SetColIdx(integer iidx) {
-// 			std::cerr << "\tBloc::SetColIdx" << std::endl;
+// 			std::cerr << "\tBloc::SetColIdx ncols = " << GetBlockNCols() << std::endl;
 			for (integer col = 1; col <= GetBlockNCols(); col++, iidx++) {
 // 				std::cerr << "\t\tcol " << col << " iidx " << iidx << std::endl;
 				for (std::vector<ExpandableRowVector>::size_type eq = 0; eq < rows.size(); eq++) {

@@ -493,7 +493,7 @@ PlaneHingeJoint::AfterConvergence(const VectorHandler& X,
 		//relative velocity
 		doublereal v = (Omega1-Omega2).Dot(e3a)*r;
 		//reaction norm
-		doublereal modF = std::max(F.Norm(), preF);;
+		doublereal modF = std::max(F.Norm(), preF);
 		fc->AfterConvergence(modF,v,X,XP,iGetFirstIndex()+NumSelfDof);
 	}
 }
@@ -785,6 +785,21 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           //variation of shape function
       Sh_c->dSh_c(dShc,f,modF,v,dfc,dF,dv);
           //variation of moment component
+      if (F.Norm() > preF) {
+          ExpandableMatrix dFreact;
+          dFreact.ReDim(3, 1);
+          dFreact.SetBlockDim(1, 3);
+          dFreact.Set(Eye3, 1, 1);
+          dFreact.SetBlockIdx(1, 12+1);
+          ExpandableMatrix dFfrict;
+          dFfrict.ReDim(3,2);
+          dFfrict.SetBlockDim(1,3);
+          dFfrict.SetBlockDim(2,1);
+          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1,&dFreact);
+          dFfrict.Set(-e3a.Cross(F),1,2); dFfrict.Link(2,&dShc);
+          dFfrict.Add(WM, 1, 1.);
+          dFfrict.Sub(WM, 7, 1.);
+      }
       dM3.ReDim(3,2);
       dM3.SetBlockDim(1,1);
       dM3.SetBlockDim(2,1);
@@ -897,7 +912,13 @@ SubVectorHandler& PlaneHingeJoint::AssRes(SubVectorHandler& WorkVec,
       }
       doublereal f = fc->fc();
       doublereal shc = Sh_c->Sh_c(f,modF,v);
+      Ffrict = Vec3(0., 0., 0.);
+      if (F.Norm() > preF) {
+          Ffrict = -e3a.Cross(F)*shc;
+      }
       M3 = shc*modF*r;
+      WorkVec.Sub(1,Ffrict);
+      WorkVec.Add(7,Ffrict);
       WorkVec.Sub(4,e3a*M3);
       WorkVec.Add(10,e3a*M3);
 //!!!!!!!!!!!!!!
@@ -1004,7 +1025,7 @@ void PlaneHingeJoint::Output(OutputHandler& OH) const
 
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
-			Joint::NetCDFOutput(OH, R2Tmp.MulTV(F), M, F, R2Tmp*M);
+			Joint::NetCDFOutput(OH, R2Tmp.MulTV(F+Ffrict), M, F+Ffrict, R2Tmp*M);
 			switch (od) {
 			case EULER_123:
 			case EULER_313:
@@ -1032,7 +1053,7 @@ void PlaneHingeJoint::Output(OutputHandler& OH) const
 #endif // USE_NETCDF
 		if (OH.UseText(OutputHandler::JOINTS)) {
 			  std::ostream &of = Joint::Output(OH.Joints(), "PlaneHinge", GetLabel(),
-					R2Tmp.MulTV(F), M, F, R2Tmp*M)
+					R2Tmp.MulTV(F+Ffrict), M, F+Ffrict, R2Tmp*M)
 			<< " ";
 
 			switch (od) {
