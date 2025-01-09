@@ -50,6 +50,8 @@ RotCoeff.hc \
 RotCoeff.hh \
 solman.cc \
 solman.h \
+SphericalQR.h \
+SphericalQR.cc \
 spmapmh.cc \
 spmapmh.h \
 spmh.cc \
