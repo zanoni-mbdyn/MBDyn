@@ -35,7 +35,7 @@
 #define SPHERJ_H
 
 #include "joint.h"
-#include "friction.h"
+#include "friction2D.h"
 
 
 /* SphericalHingeJoint - begin */
@@ -60,8 +60,8 @@ class SphericalHingeJoint : public Joint {
    Vec3 F;
 
    /* friction related data */
-   BasicShapeCoefficient *const Sh_c;
-   BasicFriction *const fc;
+   BasicShapeCoefficient2D *const Sh_c;
+   BasicFriction2D *const fc;
    const doublereal preF;
    const doublereal r;
    doublereal M1, M2;
@@ -82,8 +82,8 @@ class SphericalHingeJoint : public Joint {
 		       flag fOut,
                const doublereal rr = 0.,
                const doublereal pref = 0.,
-               BasicShapeCoefficient *const sh = 0,
-               BasicFriction *const f = 0);
+               BasicShapeCoefficient2D *const sh = 0,
+               BasicFriction2D *const f = 0);
    
    ~SphericalHingeJoint(void);
 

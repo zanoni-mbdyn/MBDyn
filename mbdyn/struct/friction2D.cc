@@ -39,14 +39,8 @@
 #include "friction2D.h"
 #include "submat.h"
 
-int sign(const doublereal x) {
-	if (x >= 0.) {
-		return 1;
-	} else if (x < 0.) {
-		return -1;
-	}
-	return 0;
-};
+//defined in friction.cc
+extern int sign(const doublereal x);
 
 void
 BasicFriction2D::SetValue(DataManager *pDM,
@@ -376,7 +370,7 @@ void SimpleShapeCoefficient2D::dSh_c(
 
 //---------------------------------------
 
-BasicFriction2D *const ParseFriction(MBDynParser& HP,
+BasicFriction2D *const ParseFriction2D(MBDynParser& HP,
 	DataManager * pDM) 
 {
    const char* sKeyWords[] = { 

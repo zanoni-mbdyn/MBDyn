@@ -52,8 +52,8 @@ SphericalHingeJoint::SphericalHingeJoint(unsigned int uL, const DofOwner* pDO,
 					 flag fOut,
                      const doublereal rr,
                      const doublereal pref,
-                     BasicShapeCoefficient *const sh,
-                     BasicFriction *const f)
+                     BasicShapeCoefficient2D *const sh,
+                     BasicFriction2D *const f)
 : Joint(uL, pDO, fOut),
 pNode1(pN1), pNode2(pN2), 
 d1(dTmp1), R1h(RTmp1h),

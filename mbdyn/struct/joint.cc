@@ -862,11 +862,24 @@ ReadJoint(DataManager* pDM,
 		/* allocazione e creazione cerniera sferica */
 		case SPHERICALHINGE:
 			{
+			doublereal r = 0.;
+			doublereal preload = 0.;
+			BasicFriction2D *bf = 0;
+			BasicShapeCoefficient2D *bsh = 0;
+			if (HP.IsKeyWord("friction")) {
+				r = HP.GetReal();
+				if (HP.IsKeyWord("preload")) {
+					preload = HP.GetReal();
+				}
+				bf = ParseFriction2D(HP, pDM);
+				bsh = ParseShapeCoefficient2D(HP);
+			}
 			SAFENEWWITHCONSTRUCTOR(pEl,
 				SphericalHingeJoint,
 				SphericalHingeJoint(uLabel, pDO,
 					pNode1, pNode2,
-					d1, R1h, d2, R2h, od, fOut));
+					d1, R1h, d2, R2h, od, fOut,
+					r, preload, bsh, bf));
 			std::ostream& out = pDM->GetLogFile();
 			out << "sphericalhinge: " << uLabel
 				<< " " << pNode1->GetLabel()

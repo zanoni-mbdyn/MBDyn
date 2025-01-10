@@ -30,8 +30,8 @@
 
 /* Copyright (C) 2003 Marco Morandini*/
 
-#ifndef FRICTION_H
-#define FRICTION_H
+#ifndef FRICTION2D_H
+#define FRICTION2D_H
 
 #include "ScalarFunctions.h"
 #include "simentity.h"
@@ -247,5 +247,5 @@ BasicFriction2D *const ParseFriction2D(MBDynParser& HP,
 
 BasicShapeCoefficient2D *const ParseShapeCoefficient2D(MBDynParser& HP);
 
-#endif /* FRICTION_H */
+#endif /* FRICTION2D_H */
 
