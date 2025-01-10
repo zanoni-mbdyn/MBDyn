@@ -37,6 +37,8 @@ drvj.cc \
 drvj.h \
 friction.cc \
 friction.h \
+friction2D.cc \
+friction2D.h \
 genj.cc \
 genj.h \
 gimbal.cc \
