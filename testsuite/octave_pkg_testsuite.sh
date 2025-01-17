@@ -275,7 +275,7 @@ function octave_pkg_testsuite_run()
             ;;
     esac
 
-    OCTAVE_CMD=$(printf '%s%s%s%s %s --eval %s' "${TIMEOUT_CMD}" "${octave_pkg_timing_cmd}" "${OCTAVE_EXEC}" "${octave_pkg_gtest_flags}" "${OCTAVE_CMD_ARGS}" "${octave_code_cmd}")
+    OCTAVE_CMD=$(printf '%s%s%s%s %s %s' "${TIMEOUT_CMD}" "${octave_pkg_timing_cmd}" "${OCTAVE_EXEC}" "${octave_pkg_gtest_flags}" "${OCTAVE_CMD_ARGS}" "${octave_code_cmd}")
 
     case "${OCT_PKG_PRINT_RES}" in
         all|*disk*)
@@ -446,16 +446,17 @@ for pkgname_and_flags in ${OCT_PKG_LIST}; do
         oct_pkg_prefix_cmd=$(printf "pkg('local_list','%s');" "${OCT_PKG_INSTALL_PREFIX}/octave_packages")
     fi
 
-    oct_pkg_sigterm_dumps_core="sigterm_dumps_octave_core(false);"
-    oct_pkg_load_cmd=$(printf "pkg('load','%s');" "${pkgname}")
-    oct_pkg_list_cmd=$(printf "p=pkg('list','%s');" "${pkgname}")
-    oct_pkg_run_test_suite_cmd="[PASS,FAIL,XFAIL,XBUG,SKIP,RTSKIP,REGRESS]=__run_test_suite__({p{1}.dir},{p{1}.dir});if(REGRESS);exit(1);end;"
+    # oct_pkg_sigterm_dumps_core="sigterm_dumps_octave_core(false);"
+    # oct_pkg_load_cmd=$(printf "pkg('load','%s');" "${pkgname}")
+    # oct_pkg_list_cmd=$(printf "p=pkg('list','%s');" "${pkgname}")
+    # oct_pkg_run_test_suite_cmd="[PASS,FAIL,XFAIL,XBUG,SKIP,RTSKIP,REGRESS]=__run_test_suite__({p{1}.dir},{p{1}.dir});if(REGRESS);exit(1);end;"
 
     case "${OCT_PKG_TEST_MODE}" in
         pkg)
-            oct_pkg_profile_data="${OCT_PKG_TEST_DIR}/oct_pkg_profile_data_${octave_pkg_testsuite_pid}_${pkgname}.mat"
-            oct_pkg_profile_off_cmd=$(printf "${oct_pkg_profile_off_fmt}" "${oct_pkg_profile_data}")
-            OCTAVE_CODE="${oct_pkg_sigterm_dumps_core}${oct_pkg_prefix_cmd}${oct_pkg_load_cmd}${oct_pkg_list_cmd}${oct_pkg_profile_on_cmd}${oct_pkg_run_test_suite_cmd}${oct_pkg_profile_off_cmd}"
+            # oct_pkg_profile_data="${OCT_PKG_TEST_DIR}/oct_pkg_profile_data_${octave_pkg_testsuite_pid}_${pkgname}.mat"
+            # oct_pkg_profile_off_cmd=$(printf "${oct_pkg_profile_off_fmt}" "${oct_pkg_profile_data}")
+            # OCTAVE_CODE="${oct_pkg_sigterm_dumps_core}${oct_pkg_prefix_cmd}${oct_pkg_load_cmd}${oct_pkg_list_cmd}${oct_pkg_profile_on_cmd}${oct_pkg_run_test_suite_cmd}${oct_pkg_profile_off_cmd}"
+            OCTAVE_CODE="__run_test_suite__"
             ;;
         single)
             OCTAVE_CMD_FUNCTIONS=$(printf "p=pkg('list','-verbose','%s');dir(fullfile(p{1}.dir,'*.m'));dir(fullfile(p{1}.dir,'*.tst'));" "${pkgname}")
@@ -469,10 +470,11 @@ for pkgname_and_flags in ${OCT_PKG_LIST}; do
             ((oct_pkg_func_index=0))
             for pkg_function_name in ${OCTAVE_PKG_FUNCTIONS}; do
                 ((++oct_pkg_func_index))
-                oct_pkg_test_function_cmd=$(printf "[N,NMAX,NXFAIL,NBUG,NSKIP,NRTSKIP,NREGRESSION]=test('%s','verbose','octave_pkg_testsuite_test_%03d_%s');if(NREGRESSION);exit(1);end;" "${pkg_function_name}" "${oct_pkg_func_index}" "${pkg_function_name}")
-                oct_pkg_profile_data=`printf '%s/oct_pkg_profile_data_%d_%s_%03d.mat' "${OCT_PKG_TEST_DIR}" ${octave_pkg_testsuite_pid} "${pkgname}" $((oct_pkg_func_index))`
-                oct_pkg_profile_off_cmd=$(printf "${oct_pkg_profile_off_fmt}" "${oct_pkg_profile_data}")
-                OCTAVE_CODE="${OCTAVE_CODE} ${oct_pkg_sigterm_dumps_core}${oct_pkg_prefix_cmd}${oct_pkg_load_cmd}${oct_pkg_profile_on_cmd}${oct_pkg_test_function_cmd}${oct_pkg_profile_off_cmd}"
+                # oct_pkg_test_function_cmd=$(printf "test('%s');" "${pkg_function_name}")
+                # oct_pkg_profile_data=`printf '%s/oct_pkg_profile_data_%d_%s_%03d.mat' "${OCT_PKG_TEST_DIR}" ${octave_pkg_testsuite_pid} "${pkgname}" $((oct_pkg_func_index))`
+                # oct_pkg_profile_off_cmd=$(printf "${oct_pkg_profile_off_fmt}" "${oct_pkg_profile_data}")
+                # OCTAVE_CODE="${OCTAVE_CODE} ${oct_pkg_sigterm_dumps_core}${oct_pkg_prefix_cmd}${oct_pkg_load_cmd}${oct_pkg_profile_on_cmd}${oct_pkg_test_function_cmd}${oct_pkg_profile_off_cmd}"
+                OCTAVE_CODE="${OCTAVE_CODE} ${pkg_function_name}"
             done
             ;;
         *)

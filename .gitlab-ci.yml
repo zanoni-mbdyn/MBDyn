@@ -79,6 +79,9 @@ variables:
   ## Local installation directory for Siconos
   SICONOS_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/siconos
 
+  ## Local installation directory for Trilinos
+  TRILINOS_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/trilinos
+
   ## Local installation directory for HDF5
   HDF5_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/HDF5
 
@@ -106,6 +109,7 @@ variables:
   MBD_BUILD_DIR_MANUALS: $TESTSUITE_PREFIX_BUILD/mbdyn-manuals
 
   SICONOS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/siconos
+  TRILINOS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/trilinos
 
   HDF5_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/hdf5
   NC_C_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/netcdf-c
@@ -183,7 +187,7 @@ variables:
   ## NOTE: This option is not intended for debugging, but just to see if any assertion will fail.
   ## NOTE: Do not use -Ofast because a few tests are using std::isfinite and std::numeric_limits<double>::nan()
   MBD_COMPILER_FLAGS_DEBUG: "-O3 -Wall -march=native -mtune=native -Wno-unused-variable"
-  
+
   JUNIT_XML_KEEP_ALL_OUTPUT:
     value: "none"
     options:
@@ -402,12 +406,12 @@ variables:
     description: "GNU/Octave interpreter"
 
   GTEST_OCTAVE_EXEC:
-    value: "octave-cli"
+    value: "gtest-octave-cli"
     options:
       - "octave"
       - "octave-cli"
       - "gtest-octave-cli"
-    description: "GNU/Octave interpreter"
+    description: "GNU/Octave interpreter linked to Google-Test"
 
   GTEST_REPOSITORY:
     value: "https://github.com/google/googletest.git"
@@ -457,6 +461,88 @@ variables:
       - "mbdyn"  ## This branch is intended to be used for MBDyn's testsuite
       - "4.4.0"
     description: "Branch of the Siconos library (http://siconos.gforge.inria.fr) to be pulled"
+
+  TRILINOS_REPOSITORY:
+    value: "https://github.com/trilinos/Trilinos.git"
+    description: "Repository of the Trilinos library (https://github.com/trilinos/Trilinos.git) to be cloned"
+
+  TRILINOS_BRANCH:
+    value: "trilinos-release-14-4-0" ## FIXME: In the end, we should switch to "master"
+    options:
+      - "master"
+      - "trilinos-release-9-0-0"
+      - "trilinos-release-9-0-1"
+      - "trilinos-release-9-0-2"
+      - "trilinos-release-9-0-3"
+      - "trilinos-release-10-0-5"
+      - "trilinos-release-10-0-branch-init"
+      - "trilinos-release-10-10-0"
+      - "trilinos-release-10-10-1"
+      - "trilinos-release-10-10-2"
+      - "trilinos-release-10-10-3"
+      - "trilinos-release-10-12-1"
+      - "trilinos-release-10-12-2"
+      - "trilinos-release-10-2-0"
+      - "trilinos-release-10-2-1"
+      - "trilinos-release-10-2-2"
+      - "trilinos-release-10-4-1"
+      - "trilinos-release-10-4-2"
+      - "trilinos-release-10-6-0"
+      - "trilinos-release-10-6-1"
+      - "trilinos-release-10-6-2"
+      - "trilinos-release-10-6-3"
+      - "trilinos-release-10-6-4"
+      - "trilinos-release-10-8-0"
+      - "trilinos-release-10-8-1"
+      - "trilinos-release-10-8-2"
+      - "trilinos-release-10-8-3"
+      - "trilinos-release-10-8-4"
+      - "trilinos-release-10-8-5"
+      - "trilinos-release-11-0-1"
+      - "trilinos-release-11-0-2"
+      - "trilinos-release-11-0-3"
+      - "trilinos-release-11-0-4"
+      - "trilinos-release-11-10-1"
+      - "trilinos-release-11-12-1"
+      - "trilinos-release-11-14-1"
+      - "trilinos-release-11-14-2"
+      - "trilinos-release-11-14-3"
+      - "trilinos-release-11-2-2"
+      - "trilinos-release-11-2-3"
+      - "trilinos-release-11-2-4"
+      - "trilinos-release-11-2-5"
+      - "trilinos-release-11-4-1"
+      - "trilinos-release-11-4-2"
+      - "trilinos-release-11-6-1"
+      - "trilinos-release-11-6-2"
+      - "trilinos-release-11-8-1"
+      - "trilinos-release-12-0-1"
+      - "trilinos-release-12-10-1"
+      - "trilinos-release-12-12-1"
+      - "trilinos-release-12-14-1"
+      - "trilinos-release-12-18-1"
+      - "trilinos-release-12-2-1"
+      - "trilinos-release-12-2-2"
+      - "trilinos-release-12-4-1"
+      - "trilinos-release-12-4-2"
+      - "trilinos-release-12-6-1"
+      - "trilinos-release-12-6-2"
+      - "trilinos-release-12-6-3"
+      - "trilinos-release-12-6-4"
+      - "trilinos-release-12-8-1"
+      - "trilinos-release-13-0-0"
+      - "trilinos-release-13-0-1"
+      - "trilinos-release-13-2-0"
+      - "trilinos-release-13-4-0"
+      - "trilinos-release-13-4-1"
+      - "trilinos-release-14-0-0"
+      - "trilinos-release-14-2-0"
+      - "trilinos-release-14-4-0"
+      - "trilinos-release-15-0-0"
+      - "trilinos-release-15-1-0"
+      - "trilinos-release-15-1-1"
+      - "trilinos-release-16-0-0"
+    description: "Branch of the Trilinos library (https://github.com/trilinos/Trilinos.git) to be pulled"
 
   NLOPT_REPOSITORY:
     value: "https://github.com/stevengj/nlopt.git"
@@ -524,6 +610,7 @@ include:
     - local: '/testsuite/mbdyn-checkout-job.yml'
     - local: '/testsuite/mkl-build-job.yml'
     - local: '/testsuite/siconos-build-job.yml'
+    - local: '/testsuite/trilinos-build-job.yml'
     - local: '/testsuite/hdf5-build-job.yml'
     - local: '/testsuite/netcdf-build-job.yml'
     - local: '/testsuite/nlopt-build-job.yml'

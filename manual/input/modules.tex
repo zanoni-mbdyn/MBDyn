@@ -244,6 +244,11 @@ This module implements several joints.
 
 \input{module-hydrodynamic_plain_bearing}
 
+\subsection{Module-hydrodynamic plain bearing2}
+\emph{Author: Reinhard Resch}
+
+\input{module-hydrodynamic_plain_bearing2}
+
 \subsection{Module-imu}
 \emph{Author: Pierangelo Masarati}
 
@@ -569,6 +574,52 @@ The output can be obtained either in plain text in the \textbf{.usr} file or in 
 \item 73: patch vertical velocity calculated using road displacement and time step
 \item 74: time step
 \end{itemize}
+
+\subsection{Module-MFtire}
+\emph{Author: Andrea Fontana}
+
+\noindent
+This module implements a magic formula tire model.
+
+Note:
+\begin{itemize}
+\item The Wheel Hub and the Wheel Rim structural nodes must be connected
+     by a joint that allows relative rotations only about one axis
+\item The center of the wheel is assumed coincident with
+     the position of the Wheel Hub and Rim structural nodes
+\item The model assumes a flat  infinite plane as road
+\item Forces, moments and slips are defined according to ISO convention.
+\end{itemize}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{name} ::= \kw{MFtire}
+
+    \bnt{module_data} ::=
+        (\ty{StructDispNode}) \bnt{wheel structural node label} , 
+        (\ty{vector}) \bnt{wheel_axle_direction} ,
+        (\ty{real}) \bnt{unloaded_wheel_radius} ,
+        (\ty{real}) \bnt{effective_rolling_radius} ,
+        (\ty{real}) \bnt{vertical_stiffness} ,
+        (\ty{real}) \bnt{Dx}, (\ty{real}) \bnt{Cx}, (\ty{real}) \bnt{Bx}, (\ty{real}) \bnt{Ex},
+        (\ty{real}) \bnt{Dy}, (\ty{real}) \bnt{Cy}, (\ty{real}) \bnt{By}, (\ty{real}) \bnt{Ey}
+        [ , \kw{low speed} , (\ty{real}) \bnt{low speed threshold}, (\ty{real}) \bnt{low speed damping} ]
+\end{Verbatim}
+
+\noindent
+where all the magic formula coefficients but \bnt{Dy} must be > 0; \bnt{Dy} should be < 0.
+
+\subsubsection{Output}
+The output can be obtained in plain text only, in the \textbf{.usr} output file.
+
+\begin{itemize}
+\item 1: element label
+\item 2-4: tire force in global reference frame
+\item 5-7: tire couple in global reference frame
+\item 8:  slip ratio
+\item 9: slip angle
+\item 10: loaded radius
+\end{itemize}
+
 
 
 

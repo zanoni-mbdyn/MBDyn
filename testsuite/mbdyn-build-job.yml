@@ -40,12 +40,14 @@ variables:
   MBD_FORCE_CONFIGURE: "no"
   ## Run MBDyn's configure with the following modules enabled.
   ## In order to enable additional modules, it would be necessary also to install their dependencies.
-  MBD_WITH_MODULE: "fabricate damper-gandhi pid hfelem fab-electric template2 cont-contact wheel4 mds indvel mcp_test1 scalarfunc muscles minmaxdrive drive-test loadinc cudatest randdrive imu convtest md autodiff_test rotor-loose-coupling namespace drive controller constlaw fab-sbearings rotor_disc hunt-crossley diff damper-hydraulic cyclocopter fab-motion flightgear hid ns damper-graall nonsmooth-node cosim-output ballbearing_contact inplane_friction octave"
+  MBD_WITH_MODULE: "fabricate damper-gandhi pid hfelem fab-electric template2 cont-contact wheel4 mds indvel mcp_test1 scalarfunc muscles minmaxdrive drive-test loadinc cudatest randdrive imu convtest md autodiff_test rotor-loose-coupling namespace drive controller constlaw fab-sbearings rotor_disc hunt-crossley diff damper-hydraulic cyclocopter fab-motion flightgear hid ns damper-graall nonsmooth-node cosim-output ballbearing_contact inplane_friction octave MFtire"
 
 mbdyn-build-job:       # This job runs in the build stage, which runs first.
   stage: build
   needs:
     - job: siconos-build-job
+      artifacts: true
+    - job: trilinos-build-job
       artifacts: true
     - job: hdf5-build-job
       artifacts: true
@@ -61,6 +63,8 @@ mbdyn-build-job:       # This job runs in the build stage, which runs first.
   script:
     - export MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX}
     - export SICONOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${SICONOS_INSTALL_PREFIX}
+    - export TRILINOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${TRILINOS_INSTALL_PREFIX}
+    - export TRILINOS_INC_DIR=${TRILINOS_INSTALL_PREFIX}/include
     - export HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
     - export NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
     - export NC_CXX4_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_CXX4_INSTALL_PREFIX}
@@ -151,6 +155,8 @@ mbdyn-build-job-gcov:       # This job runs in the build stage, which runs first
   needs:
     - job: siconos-build-job
       artifacts: true
+    - job: trilinos-build-job
+      artifacts: true
     - job: hdf5-build-job
       artifacts: true
     - job: netcdf-c-build-job
@@ -166,6 +172,7 @@ mbdyn-build-job-gcov:       # This job runs in the build stage, which runs first
     - if: $MBD_TEST_COVERAGE_ENABLED == "yes"
   script:
     - export SICONOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${SICONOS_INSTALL_PREFIX}
+    - export TRILINOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${TRILINOS_INSTALL_PREFIX}
     - export HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
     - export NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
     - export NC_CXX4_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_CXX4_INSTALL_PREFIX}
@@ -386,6 +393,8 @@ mbdyn-build-job-debug:       # This job runs in the build stage, which runs firs
   needs:
     - job: siconos-build-job
       artifacts: true
+    - job: trilinos-build-job
+      artifacts: true
     - job: hdf5-build-job
       artifacts: true
     - job: netcdf-c-build-job
@@ -402,6 +411,7 @@ mbdyn-build-job-debug:       # This job runs in the build stage, which runs firs
   script:
     - export MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_DEBUG}
     - export SICONOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${SICONOS_INSTALL_PREFIX}
+    - export TRILINOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${TRILINOS_INSTALL_PREFIX}
     - export HDF5_INSTALL_PREFIX=${CI_PROJECT_DIR}/${HDF5_INSTALL_PREFIX}
     - export NC_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_INSTALL_PREFIX}
     - export NC_CXX4_INSTALL_PREFIX=${CI_PROJECT_DIR}/${NC_CXX4_INSTALL_PREFIX}

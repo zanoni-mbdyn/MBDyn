@@ -58,6 +58,8 @@
 #include "module-charm/mbcharm.h"
 #endif // HAVE_CHARM
 
+#include "module-mpc/module-mpc.h"
+
 #endif // STATIC_MODULES
 
 typedef std::map<std::string, UserDefinedElemRead *, ltstrcase> UDEMapType;
@@ -159,6 +161,9 @@ InitUDE(void)
 #endif // HAVE_CHARM
 	b = hfelem_set();
 	ASSERT(b != false);
+
+        b = mpc_set();
+        ASSERT(b != false);
 #endif // STATIC_MODULES
 }
 

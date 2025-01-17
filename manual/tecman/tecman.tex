@@ -54,6 +54,10 @@
 
 \newcommand{\kw}[1]{\textcolor{red}{\texttt{#1}}}
 
+% Needed for tecman-hydrodynamic_plain_bearing2.tex
+\DeclareMathOperator{\sign}{sign}
+\setcounter{MaxMatrixCols}{12}
+
 % Custom
 \topmargin 0.31cm % 0.00cm
 \oddsidemargin 0.00cm
@@ -9893,7 +9897,11 @@ Note: $\T{e}_z \T{e}_z^T \T{\omega}_2\times{} = \T{e}_z \plbr{\T{e}_z\times\T{\o
 \chapter{Hydraulic Library}
 \input{tecman-hydr}
 
+\chapter{Hydrodynamic Plain Bearing Element}
+\input{tecman-hydrodynamic_plain_bearing2}
 
+\chapter{Module MFtire}
+\input{module-MFtire}
 
 \bibliographystyle{unsrt}
 \bibliography{../mybib,../mbdyn}
