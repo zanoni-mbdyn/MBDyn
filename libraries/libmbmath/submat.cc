@@ -540,17 +540,16 @@ FullSubMatrixHandler::PutDiag(integer iFirstRow, integer iFirstCol,
 #ifdef DEBUG
      IsValid();
 
-     ASSERT(iFirstRow >= 0);
-     ASSERT(iFirstRow <= iNumRows - 3);
-     ASSERT(iFirstCol >= 0);
-     ASSERT(iFirstCol <= iNumCols - 3);
+     ASSERT(iFirstRow >= 1);
+     ASSERT(iFirstRow <= iNumRows - 2);
+     ASSERT(iFirstCol >= 1);
+     ASSERT(iFirstCol <= iNumCols - 2);
 #endif /* DEBUG */
 
      const doublereal *pdv = v.pGetVec();
-
-     ppdColsm1[iFirstCol + 1][iFirstRow + 1] = pdv[V1];
-     ppdColsm1[iFirstCol + 2][iFirstRow + 2] = pdv[V2];
-     ppdColsm1[iFirstCol + 3][iFirstRow + 3] = pdv[V3];
+     FullMatrixHandler::PutCoef(iFirstRow  , iFirstCol  , pdv[V1]);
+     FullMatrixHandler::PutCoef(iFirstRow+1, iFirstCol+1, pdv[V2]);
+     FullMatrixHandler::PutCoef(iFirstRow+2, iFirstCol+2, pdv[V3]);
 }
 
 
@@ -566,15 +565,15 @@ FullSubMatrixHandler::PutDiag(integer iFirstRow, integer iFirstCol,
 #ifdef DEBUG
      IsValid();
 
-     ASSERT(iFirstRow >= 0);
-     ASSERT(iFirstRow <= iNumRows - 3);
-     ASSERT(iFirstCol >= 0);
-     ASSERT(iFirstCol <= iNumCols - 3);
+     ASSERT(iFirstRow >= 1);
+     ASSERT(iFirstRow <= iNumRows - 2);
+     ASSERT(iFirstCol >= 1);
+     ASSERT(iFirstCol <= iNumCols - 2);
 #endif /* DEBUG */
 
-     ppdColsm1[iFirstCol + 1][iFirstRow + 1] = d;
-     ppdColsm1[iFirstCol + 2][iFirstRow + 2] = d;
-     ppdColsm1[iFirstCol + 3][iFirstRow + 3] = d;
+     FullMatrixHandler::PutCoef(iFirstRow  , iFirstCol  , d);
+     FullMatrixHandler::PutCoef(iFirstRow+1, iFirstCol+1, d);
+     FullMatrixHandler::PutCoef(iFirstRow+2, iFirstCol+2, d);
 }
 
 
@@ -598,14 +597,15 @@ FullSubMatrixHandler::PutCross(integer iFirstRow, integer iFirstCol,
 
      const doublereal *pdv = v.pGetVec();
 
-     ppdColsm1[iFirstCol + 1][ iFirstRow + 2] = pdv[V3];
-     ppdColsm1[iFirstCol + 1][ iFirstRow + 3] = -pdv[V2];
+     FullMatrixHandler::PutCoef(iFirstRow  , iFirstCol+1, -pdv[V3]);
+     FullMatrixHandler::PutCoef(iFirstRow  , iFirstCol+2,  pdv[V2]);
 
-     ppdColsm1[iFirstCol + 2][ iFirstRow + 1] = -pdv[V3];
-     ppdColsm1[iFirstCol + 2][ iFirstRow + 3] = pdv[V1];
+     FullMatrixHandler::PutCoef(iFirstRow+1, iFirstCol  ,  pdv[V3]);
+     FullMatrixHandler::PutCoef(iFirstRow+1, iFirstCol+2, -pdv[V1]);
 
-     ppdColsm1[iFirstCol + 3][ iFirstRow + 1] = pdv[V2];
-     ppdColsm1[iFirstCol + 3][ iFirstRow + 2] = -pdv[V1];
+     FullMatrixHandler::PutCoef(iFirstRow+2, iFirstCol  , -pdv[V2]);
+     FullMatrixHandler::PutCoef(iFirstRow+2, iFirstCol+1,  pdv[V1]);
+
 }
 
 

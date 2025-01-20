@@ -149,13 +149,16 @@ private:
 		const doublereal vm) const;
 	doublereal alphatilded_zm(const doublereal zm,
 		const doublereal vm) const;
+	doublereal alphatilded_vm(const doublereal zm,
+		const doublereal vm) const;
 	doublereal epsilon(const d2D& z, const d2D& v) const;
 	doublereal alpha(const d2D& z,
 		const d2D& v) const;
 	void alphad_v(const d2D& z,
 		const d2D& v, ExpandableMatrix& alpha_v) const;
 	void alphad_z(const d2D& z,
-		const d2D& v, ExpandableRowVector& alpha_z) const;
+		const d2D& v, ExpandableRowVector& alpha_z,
+		const unsigned int solution_startdof) const;
 	const doublereal fs(const doublereal vm) const;
 	const doublereal fsd_vm(const doublereal vm) const;
 public:

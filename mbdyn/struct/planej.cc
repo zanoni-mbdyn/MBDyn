@@ -709,7 +709,7 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       if ((modF == 0.) or (F.Norm() < preF)) {
           dF.Set(Vec3(Zero3),1,12+1);
       } else {
-          dF.Set(F/modF,1,12+1);
+          dF.Set(F/modF, 1, 12+1);
       }
           //variation of relative velocity
       dv.ReDim(6);
@@ -795,16 +795,31 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dFfrict.SetBlockDim(1,3);
           dFfrict.SetBlockDim(2,1);
           dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1,&dFreact);
-          dFfrict.Set(-e3a.Cross(F),1,2); dFfrict.Link(2,&dShc);
+          dFfrict.SetCol(-e3a.Cross(F),1,2,1); dFfrict.Link(2,&dShc);
           dFfrict.Add(WM, 1, 1.);
           dFfrict.Sub(WM, 7, 1.);
+          //WM.Add(4, 13, Mat3x3(MatCross, d1Tmp));
+          //WM.Sub(10, 13, Mat3x3(MatCross, d2Tmp));
+          ExpandableMatrix dMF1;
+          dMF1.ReDim(3, 1);
+          dMF1.SetBlockDim(1, 3);
+          dMF1.Set(Mat3x3(MatCross, d1Tmp), 1, 1, 1);
+          dMF1.Link(1, &dFfrict);
+          dMF1.Add(WM, 4);
+          ExpandableMatrix dMF2;
+          dMF2.ReDim(3, 1);
+          dMF2.SetBlockDim(1, 3);
+          dMF2.Set(Mat3x3(MatCross, d2Tmp), 1, 1, 1);
+          dMF2.Link(1, &dFfrict);
+          dMF2.Add(WM, 10);
+
       }
       //variation of moment component
       dM3.ReDim(3,2);
       dM3.SetBlockDim(1,1);
       dM3.SetBlockDim(2,1);
-      dM3.Set(e3a*shc*r,1,1); dM3.Link(1,&dF);
-      dM3.Set(e3a*modF*r,1,2); dM3.Link(2,&dShc);
+      dM3.SetCol(e3a*shc*r,1,1,1); dM3.Link(1,&dF);
+      dM3.SetCol(e3a*modF*r,1,2,1); dM3.Link(2,&dShc);
       //assemble first node
           //variation of moment component
       dM3.Add(WM, 4, 1.);
@@ -919,6 +934,8 @@ SubVectorHandler& PlaneHingeJoint::AssRes(SubVectorHandler& WorkVec,
       M3 = shc*modF*r;
       WorkVec.Sub(1,Ffrict);
       WorkVec.Add(7,Ffrict);
+      WorkVec.Add(4, Ffrict.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
+      WorkVec.Add(10, dTmp2.Cross(Ffrict));
       WorkVec.Sub(4,e3a*M3);
       WorkVec.Add(10,e3a*M3);
 //!!!!!!!!!!!!!!
@@ -3268,7 +3285,7 @@ AxialRotationJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dFfrict.SetBlockDim(1,3);
           dFfrict.SetBlockDim(2,1);
           dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1,&dFreact);
-          dFfrict.Set(-e3a.Cross(F),1,2); dFfrict.Link(2,&dShc);
+          dFfrict.SetCol(-e3a.Cross(F),1,2,1); dFfrict.Link(2,&dShc);
           dFfrict.Add(WM, 1, 1.);
           dFfrict.Sub(WM, 7, 1.);
       }

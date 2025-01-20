@@ -162,11 +162,11 @@ InLineJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       WM.PutCoef(12+2, 3+iCnt, d);
       }
       
-   WM.PutCross(0, 3, FTmp);  // TODO: change putcross FTmp signs back once FullMat putcross is fixed!
-   WM.PutCross(3, 0, -FTmp);
+   WM.PutCross(1, 4, FTmp);  // TODO: change putcross FTmp signs back once FullMat putcross is fixed!
+   WM.PutCross(4, 1, -FTmp);
    WM.Put(4, 4, Mat3x3(MatCrossCross, x2mx1, FTmp));
-   WM.PutCross(3, 6, FTmp);
-   WM.PutCross(6, 6+3, -FTmp);
+   WM.PutCross(4, 7, FTmp);
+   WM.PutCross(7, 7+3, -FTmp);
    
    if (fc) {
        // friction specific contributions:     
@@ -209,8 +209,8 @@ InLineJoint::AssJac(VariableSubMatrixHandler& WorkMat,
        dF3.ReDim(3,2);
        dF3.SetBlockDim(1,1);
        dF3.SetBlockDim(2,1);
-       dF3.Set(e3a*shc,1,1); dF3.Link(1,&dF); // dF3/dF * dF/d(pos1?)
-       dF3.Set(e3a*modF,1,2); dF3.Link(2,&dShc); // dF3/dShc * dShc/d(?)
+       dF3.SetCol(e3a*shc,1,1,1); dF3.Link(1,&dF); // dF3/dF * dF/d(pos1?)
+       dF3.SetCol(e3a*modF,1,2,1); dF3.Link(2,&dShc); // dF3/dShc * dShc/d(?)
        //assemble first node variation of force component
        dF3.Add(WM, 1, 1.);
        //assemble second node variation of force component

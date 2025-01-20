@@ -220,8 +220,9 @@ public:
 // 	void Set(doublereal xx, integer block, integer eq, integer iidx);
 // 	doublereal& operator ()(integer i);
 // 	const doublereal& operator ()(integer i) const;
-	void Set(const doublereal xx, const integer eq, const integer block, const integer block_col = 1);
-	void Set(const Vec3& xx, const integer eq, const integer block, const integer block_col = 1);
+	void Set(const doublereal xx, const integer eq, const integer block, const integer block_col);
+	void SetCol(const Vec3& xx, const integer eq, const integer block, const integer block_col);
+	void SetRow(const Vec3& xx, const integer eq, const integer block, const integer block_col);
 	void Set(const Mat3x3& xx, const integer eq, const integer block, const integer block_col = 1);
 	void Add(const doublereal xx, const integer eq, const integer block, const integer block_col = 1);
 	void Sub(const doublereal xx, const integer eq, const integer block, const integer block_col = 1);

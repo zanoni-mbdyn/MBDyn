@@ -87,9 +87,9 @@ void inv2x2S(const doublereal *const a, doublereal *const b) {
     b[1] = -a[1] * inv_det; // t8;
     b[2] = a[0] * inv_det;
 
-    std::cout << "(1,1): " << b[0]*a[0] + b[1]*a[1] << std::endl;
-    std::cout << "(1,2): " << b[0]*a[1] + b[1]*a[2] << std::endl;
-    std::cout << "(1,2): " << b[1]*a[1] + b[2]*a[2] << std::endl;
+    // std::cout << "(1,1): " << b[0]*a[0] + b[1]*a[1] << std::endl;
+    // std::cout << "(1,2): " << b[0]*a[1] + b[1]*a[2] << std::endl;
+    // std::cout << "(1,2): " << b[1]*a[1] + b[2]*a[2] << std::endl;
     return;
 }
 
@@ -100,7 +100,7 @@ void inv2x2S(const doublereal *const a, doublereal *const b) {
  */
 std::vector<integer> sort_vector(Vec3& v) {
     std::vector<integer> idx({1, 2, 3});
-    std::stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v(i1) < v(i2);});
+    std::stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return std::abs(v(i1)) < std::abs(v(i2));});
     Vec3 r;
     r(1) = v(idx[0]);
     r(2) = v(idx[1]);
@@ -120,7 +120,9 @@ std::vector<integer> sort_vector(Vec3& v) {
 void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3) {
     Vec3 q1 = r / r.Norm();
     Vec3 q2 = q1;
+    // std::cout << "q2: " << q2 << std::endl;
     std::vector<integer> sort_idx = sort_vector(q2);
+    // std::cout << "sort_idx: " << sort_idx[0] << " " << sort_idx[1] << " " << sort_idx[2] << std::endl;
 
     // std::cout << q1 << "\n\n" << q2 << "\n\n" << sort_idx[0] <<
     //     " " << sort_idx[1] << " " << sort_idx[2] << std::endl;
@@ -129,12 +131,14 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
     v2(sort_idx[2]) = q2(2);
     v2(sort_idx[1]) = -q2(3);
     v2(sort_idx[0]) = 0.;
+    // std::cout << "v2: " << v2 << std::endl;
     v2 = v2 / v2.Norm();
     // std::cout << q1.Dot(v2) << std::endl;
     Vec3 v3 = q1.Cross(v2);
     Q = Mat3x3(q1, v2, v3);
     // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
 
+    // std::cout << "update: " << update << std::endl;
     if (update) {
         // std::cout << "old: " << Qold << std::endl;
         doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];

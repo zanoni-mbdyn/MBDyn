@@ -39,8 +39,24 @@
 #include "friction2D.h"
 #include "submat.h"
 
+#define DEBUG
 //defined in friction.cc
 extern int sign(const doublereal x);
+
+doublereal m(const d2D& z) {
+	return std::sqrt(z.x[0]*z.x[0] + z.x[1]*z.x[1]);
+}
+
+void md(const d2D& z, d2D& mdz) {
+	doublereal zm = m(z);
+	if (zm < 1.E-6) {
+		mdz.x[0] = sign(z.x[0]);
+		mdz.x[1] = sign(z.x[1]);
+	} else {
+		mdz.x[0] = z.x[0] / zm;
+		mdz.x[1] = z.x[1] / zm;
+	}
+}
 
 void
 BasicFriction2D::SetValue(DataManager *pDM,
@@ -74,42 +90,46 @@ ModLugreFriction2D::SetValue(DataManager *pDM,
 		SimulationEntity::Hints *ph,
 		const unsigned int solution_startdof)
 {
-	X.PutCoef(solution_startdof+1,f.x[0]/sigma0);
-	X.PutCoef(solution_startdof+2,f.x[1]/sigma0);
+	X.PutCoef(solution_startdof+1, f.x[0]/sigma0);
+	X.PutCoef(solution_startdof+2, f.x[1]/sigma0);
 }
 
 unsigned int ModLugreFriction2D::iGetNumDof(void) const {
-	return 1;
+	return 2;
 };
 
 std::ostream&
 ModLugreFriction2D::DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const
 {
-	return out << prefix
-		<< "[1]: ModLugreFriction2D state" << std::endl;
+	return out
+		<< prefix << "[1]: ModLugreFriction2D state 1" << std::endl
+		<< prefix << prefix << "[2]: ModLugreFriction2D state 2" << std::endl;
 }
 
 void
 ModLugreFriction2D::DescribeDof(std::vector<std::string>& desc, bool bInitial, int i) const
 {
 	ASSERT(i == -1 || i == 0);
-	desc.resize(1);
-	desc[0] = "ModLugreFriction2D state";
+	desc.resize(2);
+	desc[desc.size()-2] = "ModLugreFriction2D state 1";
+	desc[desc.size()-1] = "ModLugreFriction2D state 2";
 }
 
 std::ostream&
 ModLugreFriction2D::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const
 {
-	return out << prefix
-		<< "[1]: ModLugreFriction2D equation" << std::endl;
+	return out
+		<< prefix << "[1]: ModLugreFriction2D equation 1" << std::endl
+		<< prefix << prefix << "[2]: ModLugreFriction2D equation 2" << std::endl;
 }
 
 void
 ModLugreFriction2D::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i) const
 {
 	ASSERT(i == -1 || i == 0);
-	desc.resize(1);
-	desc[0] = "ModLugreFriction2D equation";
+	desc.resize(2);
+	desc[0] = "ModLugreFriction2D equation 1";
+	desc[1] = "ModLugreFriction2D equation 2";
 }
 
 DofOrder::Order ModLugreFriction2D::GetDofType(unsigned int i) const {
@@ -155,12 +175,36 @@ doublereal ModLugreFriction2D::epsilon(const d2D& z,
 
 doublereal ModLugreFriction2D::alpha(const d2D& z,
 	const d2D& v) const {
-	doublereal zm = std::sqrt(z.x[0]*z.x[0] + z.x[1]*z.x[1]);
-	doublereal vm = std::sqrt(v.x[0]*v.x[0] + v.x[1]*v.x[1]);
+	doublereal zm = m(z);
+	doublereal vm = m(v);
 	return alphatilde(zm, vm) * epsilon(z, v);
 }
 
 doublereal ModLugreFriction2D::alphatilded_zm(const doublereal zm,
+	const doublereal vm) const {
+
+	doublereal zss = fs(vm)/sigma0;
+	doublereal zba = kappa*zss;
+
+	if (zm <= zba) {
+		return 0.;
+	} else if ((zba <= zm) && (zm <= zss)) {
+		return 0.5*M_PI*std::cos(M_PI*sigma0*zm/fs(vm)/(1.-kappa)
+			-M_PI*(1.+kappa)/2./(1.-kappa))
+			*sigma0/fs(vm)/(1.-kappa);
+	} else {
+		return 0.;
+	}
+
+			// der = 0.5*M_PI*sigma0/fs(v)/(1.-kappa)
+			// 	*std::cos(M_PI*sigma0*z/fs(v)/(1.-kappa)
+			// 	-M_PI*(1.+kappa)/2./(1.-kappa));
+
+
+	return 0.;
+};
+
+doublereal ModLugreFriction2D::alphatilded_vm(const doublereal zm,
 	const doublereal vm) const {
 
 	doublereal zss = fs(vm)/sigma0;
@@ -177,39 +221,54 @@ doublereal ModLugreFriction2D::alphatilded_zm(const doublereal zm,
 		return 0.;
 	}
 
+	// doublereal zss = fs(v)/sigma0;
+	// doublereal zba = kappa*zss;
+	// doublereal der;
+			// der = -M_PI/2*std::cos(M_PI*sigma0*z/fs(v)/(1.-kappa)
+			// 	-M_PI*(1.+kappa)/2./(1.-kappa))
+			// 	*sigma0*z/std::pow(fs(v),2)/(1.-kappa)
+			// 	*fsd(v);
+
+
 	return 0.;
 };
 
 void ModLugreFriction2D::alphad_v(const d2D& z,
 	const d2D& v, ExpandableMatrix& alpha_v) const {
 
-	doublereal zm = std::sqrt(z.x[0]*z.x[0] + z.x[1]*z.x[1]);
-	doublereal vm = std::sqrt(v.x[0]*v.x[0] + v.x[1]*v.x[1]);
+	doublereal zm = m(z);
+	doublereal vm = m(v);
+	doublereal eps = epsilon(z, v);
 	doublereal alphat = alphatilde(zm, vm);
+	doublereal alphatd_vm = alphatilded_vm(zm, vm);
+	d2D vmd_v;
+	md(v, vmd_v);
 	// d2D der;
 	// der.x[0] = alphat * z.x[0];
 	// der.x[1] = alphat * z.x[1];
 	alpha_v.ReDim(1, 1);
 	alpha_v.SetBlockDim(1, 2);
-	alpha_v.Set(alphat * z.x[0] / 2., 1, 1, 1);
-	alpha_v.Set(alphat * z.x[1] / 2., 1, 1, 2);
+	alpha_v.Set(alphat * z.x[0] / 2. + eps * alphatd_vm * vmd_v.x[0], 1, 1, 1);
+	alpha_v.Set(alphat * z.x[1] / 2. + eps * alphatd_vm * vmd_v.x[1], 1, 1, 2);
 	return;
 };
 
 void ModLugreFriction2D::alphad_z(const d2D& z,
-	const d2D& v, ExpandableRowVector& alpha_z) const {
+	const d2D& v, ExpandableRowVector& alpha_z, const unsigned int startdof) const {
 
-	doublereal zm = std::sqrt(z.x[0]*z.x[0] + z.x[1]*z.x[1]);
-	doublereal vm = std::sqrt(v.x[0]*v.x[0] + v.x[1]*v.x[1]);
-	doublereal alphat = alphatilde(zm, vm);
-	doublereal alphat_dzm = alphatilded_zm(zm, vm);
+	doublereal zm = m(z);
+	doublereal vm = m(v);
 	doublereal eps = epsilon(z, v);
+	doublereal alphat = alphatilde(zm, vm);
+	doublereal alphatd_zm = alphatilded_zm(zm, vm);
+	d2D zmd_z;
+	md(z, zmd_z);
 	// d2D der;
 	// der.x[0] = alphat * z.x[0] + eps * alphat_dvm * sign(z.x[0]);
 	// der.x[1] = alphat * z.x[1] + eps * alphat_dvm * sign(z.x[1]);
 	alpha_z.ReDim(2);
-	alpha_z.Set(alphat * v.x[0] / 2. + eps * alphat_dzm * sign(z.x[0]), 1);
-	alpha_z.Set(alphat * v.x[1] / 2. + eps * alphat_dzm * sign(z.x[1]), 2);
+	alpha_z.Set(alphat * v.x[0] / 2. + eps * alphatd_zm * zmd_z.x[0], 1, startdof+1);
+	alpha_z.Set(alphat * v.x[1] / 2. + eps * alphatd_zm * zmd_z.x[1], 2, startdof+2);
 
 	return;
 };
@@ -230,13 +289,16 @@ void ModLugreFriction2D::AssRes(
 	d2D z = {X(solution_startdof+1), X(solution_startdof+2)};
 	d2D zp = {XP(solution_startdof+1), XP(solution_startdof+2)};
 
-	doublereal vm = std::sqrt(v.x[0]*v.x[0] + v.x[1]*v.x[1]);
+	doublereal vm = m(v);
 	doublereal fsvm = fs(vm);
+	doublereal alph = alpha(z,v);
 
 	f.x[0] = sigma0*z.x[0] + sigma1*zp.x[0] + sigma2*v.x[0];
 	f.x[1] = sigma0*z.x[1] + sigma1*zp.x[1] + sigma2*v.x[1];
-	WorkVec.IncCoef(startdof+1,zp.x[0]-v.x[0]+alpha(z,v)*z.x[0]/fsvm*sigma0);
-	WorkVec.IncCoef(startdof+2,zp.x[1]-v.x[1]+alpha(z,v)*z.x[1]/fsvm*sigma0);
+	// std::cout << "z.x[0]:" << z.x[0] << "; << zp.x[0]: " << zp.x[0] << "; v.x[0]: " << v.x[0] << std::endl;
+	// std::cout << "z.x[1]:" << z.x[1] << "; << zp.x[1]: " << zp.x[1] << "; v.x[1]: " << v.x[1] << std::endl;
+	WorkVec.IncCoef(startdof+1, zp.x[0] - v.x[0] + alph * z.x[0] / fsvm * sigma0);
+	WorkVec.IncCoef(startdof+2, zp.x[1] - v.x[1] + alph * z.x[1] / fsvm * sigma0);
 };
 
 void ModLugreFriction2D::AssJac(
@@ -252,10 +314,9 @@ void ModLugreFriction2D::AssJac(
 	const ExpandableRowVector& dF,
 	const ExpandableMatrix& dv) const {
 
-	d2D z;
-	z.x[0] = X(solution_startdof+1);
-	z.x[1] = X(solution_startdof+1);
-	doublereal vm = std::sqrt(v.x[0]*v.x[0] + v.x[1]*v.x[1]);
+	d2D z = {X(solution_startdof+1), X(solution_startdof+2)};
+
+	doublereal vm = m(v);
 	//doublereal zp = XP(solution_startdof+1);
 /*
  * 	attrito
@@ -266,23 +327,26 @@ void ModLugreFriction2D::AssJac(
 	dfc.SetBlockIdx(1, startdof+1);
 	dfc.Set(sigma0*dCoef+sigma1, 1, 1, 1);
 	dfc.Set(sigma0*dCoef+sigma1, 2, 1, 2);
-	dfc.Set(sigma2, 2, 2, 1);
+	dfc.Set(sigma2, 1, 2, 1);
 	dfc.Set(sigma2, 2, 2, 2);
 	dfc.Link(2, &dv);
 	
 /*
  * 	z
  */
- 	doublereal alph = alpha(z,v);
+	doublereal alph = alpha(z,v);
 
 	ExpandableRowVector alpha_d_z;
-	alphad_z(z, v, alpha_d_z);
+	alphad_z(z, v, alpha_d_z, startdof);
 	ExpandableMatrix alpha_d_v;
 	alphad_v(z, v, alpha_d_v);
 	alpha_d_v.Link(1, &dv);
 
 	doublereal fsvm = fs(vm);
-	doublereal fsvmdv = fsd_vm(vm);
+	doublereal fsvm2 = fsvm * fsvm;
+	doublereal fsvmd_vm = fsd_vm(vm);
+	d2D vmd_v;
+	md(v, vmd_v);
 
 	// -dot(dz) - alpha * sigma0 / fss * dz
 	WorkMat.IncCoef(startdof+1, startdof+1, -1. - alph * sigma0 / fsvm * dCoef);
@@ -290,17 +354,19 @@ void ModLugreFriction2D::AssJac(
 
 	ExpandableMatrix deq_dv;
 	deq_dv.ReDim(2, 2);
-	deq_dv.SetBlockDim(1, 1);
-	deq_dv.SetBlockDim(2, 2);
+
 	// -z * sigma0 / fss * alpha_{/v} * dv
+	deq_dv.SetBlockDim(1, 1);
 	deq_dv.Set(-z.x[0] * sigma0 / fsvm, 1, 1, 1);
-	deq_dv.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 2);
+	deq_dv.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 1);
 	deq_dv.Link(1, &alpha_d_v);
-	// dv + z * alpha * sigma0 / fss^2 * fss_{/v} * dv
-	deq_dv.Set(1. + z.x[0] * alph * sigma0 / fsvm / fsvm * fsvmdv * sign(v.x[0]), 1, 2, 1);
-	deq_dv.Set(z.x[0] * alph * sigma0 / fsvm / fsvm * fsvmdv * sign(v.x[1]), 1, 2, 2);
-	deq_dv.Set(z.x[2] * alph * sigma0 / fsvm / fsvm * fsvmdv * sign(v.x[0]), 2, 2, 1);
-	deq_dv.Set(1. + z.x[2] * alph * sigma0 / fsvm / fsvm * fsvmdv * sign(v.x[1]), 2, 2, 2);
+
+	// dv + z * alpha * sigma0 / fss^2 * fss_{/vm} vm_{/v} * dv
+	deq_dv.SetBlockDim(2, 2);
+	deq_dv.Set(1. + z.x[0] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[0], 1, 2, 1);
+	deq_dv.Set(   + z.x[0] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[1], 1, 2, 2);
+	deq_dv.Set(   + z.x[1] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[0], 2, 2, 1);
+	deq_dv.Set(1. + z.x[1] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[1], 2, 2, 2);
 	deq_dv.Link(2, &dv);
 
 	deq_dv.Add(WorkMat, startdof+1);
@@ -308,9 +374,10 @@ void ModLugreFriction2D::AssJac(
 	// -z sigma0/fss * alpha_{/z} * dz
 	ExpandableMatrix deq_dz;
 	deq_dz.ReDim(2, 1);
-	deq_dz.SetBlockDim(1, 2);
+	deq_dz.SetBlockDim(1, 1);
+	//deq_dz.SetBlockIdx(1, startdof+1);
 	deq_dz.Set(-z.x[0] * sigma0 / fsvm, 1, 1, 1);
-	deq_dz.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 2);
+	deq_dz.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 1);
 	deq_dz.Link(1, &alpha_d_z);
 	deq_dz.Add(WorkMat, startdof+1, dCoef);
 
