@@ -53,8 +53,8 @@ begin: elements;
 
 	drive caller: 1, string, "-4e-1*Var";
 	drive caller: 2, string, "-2e0*Var*(1-exp(-1*Time))";
-	drive caller: 3, dof, 1, parameter, reference, 1;
-	drive caller: 4, dof, 2, parameter, reference, 2;
+	drive caller: 3, dof, 1, structural, 1, algebraic, reference, 1;
+	drive caller: 4, dof, 2, structural, 1, algebraic, reference, 2;
 	drive caller: 5, array, 2,
 		reference, 3,
 		reference, 4;
@@ -72,7 +72,5 @@ end: elements;
 ##############################################################################################################
 ## Variables to be updated by simple_testsuite.sh --update-reference-test-status
 ## Warning, do not edit!!!
-## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 1
-##############################################################################################################
-
-## @MBDYN_SIMPLE_TESTSUITE_EXCLUDE@ = 0
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+############################################################################################################
