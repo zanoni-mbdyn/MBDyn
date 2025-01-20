@@ -35,6 +35,7 @@
 
 #include "spherj.h"
 #include "Rot.hh"
+#include "SphericalQR.h"
 
 
 /* SphericalHingeJoint - begin */
@@ -60,6 +61,7 @@ d1(dTmp1), R1h(RTmp1h),
 d2(dTmp2), R2h(RTmp2h), 
 F(Zero3),
 Sh_c(sh), fc(f), preF(pref), r(rr),
+Q(Eye3), Qold(Eye3), Fold(Zero3), reset_Q(true), compute_Q(false),
 od(od)
 {
    NO_OP;
@@ -122,10 +124,12 @@ SphericalHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, 
 	if (bInitial) {
 		nself *= 2;
 	}
+	desc.resize(nself);
 	if (fc && (i == -1 || i >= nself)) {
 		fc->DescribeDof(desc, bInitial, i - nself);
 		if (i != -1) {
 			desc[0] = os.str() + ": " + desc[0];
+			desc[1] = os.str() + ": " + desc[1];
 			return;
 		}
 	}
@@ -155,7 +159,7 @@ SphericalHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, 
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
 				os << ": reaction force derivative fP" << xyz[i];
-				desc[3 + 2 + i] = os.str();
+				desc[3 + i] = os.str();
 			}
 		}
 
@@ -300,6 +304,24 @@ SphericalHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, i
 	}
 }
 
+void SphericalHingeJoint::AfterConvergence(const VectorHandler& X,
+				const VectorHandler& XP) {
+	if (fc) {
+		//FIXME
+		//doublereal v = (Omega1-Omega2).Dot(e3a)*r;
+		Qold = Q;
+		Fold = F;
+		Vec3 Omega1(pNode1->GetWCurr());
+		Vec3 Omega2(pNode2->GetWCurr());
+		Vec3 Omegar = Omega1 - Omega2;
+		d2D v;
+		v.x[0] = (Omegar).Dot(Q.GetVec(2))*r;
+		v.x[1] = (Omegar).Dot(Q.GetVec(3))*r;
+		//reaction norm
+		doublereal modF = std::max(F.Norm(), preF);
+		fc->AfterConvergence(modF,v,X,XP,iGetFirstIndex()+NumSelfDof);
+	}
+}
 
 /* Contributo al file di restart */
 std::ostream& SphericalHingeJoint::Restart(std::ostream& out) const
@@ -320,19 +342,40 @@ std::ostream& SphericalHingeJoint::Restart(std::ostream& out) const
 VariableSubMatrixHandler& 
 SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 			    doublereal dCoef,
-			    const VectorHandler& /* XCurr */ ,
-			    const VectorHandler& /* XPrimeCurr */ )
+			    const VectorHandler& XCurr ,
+			    const VectorHandler& XPrimeCurr )
 {
    DEBUGCOUT("Entering SphericalHingeJoint::AssJac()" << std::endl);
       
-   SparseSubMatrixHandler& WM = WorkMat.SetSparse();
-   WM.ResizeReset(54, 1);
-   
+   /* Setta la sottomatrice come piena (e' un po' dispersivo, ma lo jacobiano
+    * e' complicato */
+   FullSubMatrixHandler& WM = WorkMat.SetFull();
+
+   /* Ridimensiona la sottomatrice in base alle esigenze */
+   integer iNumRows = 0;
+   integer iNumCols = 0;
+   WorkSpaceDim(&iNumRows, &iNumCols);
+   WM.ResizeReset(iNumRows, iNumCols);
+
+   /* Recupera gli indici delle varie incognite */
    integer iNode1FirstPosIndex = pNode1->iGetFirstPositionIndex();
    integer iNode1FirstMomIndex = pNode1->iGetFirstMomentumIndex();
    integer iNode2FirstPosIndex = pNode2->iGetFirstPositionIndex();
    integer iNode2FirstMomIndex = pNode2->iGetFirstMomentumIndex();
    integer iFirstReactionIndex = iGetFirstIndex();
+
+      /* Setta gli indici delle equazioni */
+   for (unsigned int iCnt = 1; iCnt <= 6; iCnt++) {
+      WM.PutRowIndex(iCnt, iNode1FirstMomIndex+iCnt);
+      WM.PutColIndex(iCnt, iNode1FirstPosIndex+iCnt);
+      WM.PutRowIndex(6+iCnt, iNode2FirstMomIndex+iCnt);
+      WM.PutColIndex(6+iCnt, iNode2FirstPosIndex+iCnt);
+   }
+
+   for (unsigned int iCnt = 1; iCnt <= iGetNumDof(); iCnt++) {
+      WM.PutRowIndex(12+iCnt, iFirstReactionIndex+iCnt);
+      WM.PutColIndex(12+iCnt, iFirstReactionIndex+iCnt);
+   }
 
    Vec3 dTmp1(pNode1->GetRRef()*d1);
    Vec3 dTmp2(pNode2->GetRRef()*d2);
@@ -367,28 +410,224 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
    Vec3 FTmp = F*dCoef;
    
    /* termini di reazione sul nodo 1 */
-   WM.PutDiag(1, iNode1FirstMomIndex, iFirstReactionIndex, 1.);
-   WM.PutCross(4, iNode1FirstMomIndex+3, iFirstReactionIndex, dTmp1);
+   WM.PutDiag(1, 13, 1.);
+   WM.PutCross(4, 13, dTmp1);
    
-   WM.PutMat3x3(10, iNode1FirstMomIndex+3,
-		 iNode1FirstPosIndex+3, Mat3x3(MatCrossCross, FTmp, dTmp1));
+   WM.Put(4, 4, Mat3x3(MatCrossCross, FTmp, dTmp1));
 
    /* termini di reazione sul nodo 2 */
-   WM.PutDiag(19, iNode2FirstMomIndex, iFirstReactionIndex, -1.);
-   WM.PutCross(22, iNode2FirstMomIndex+3, iFirstReactionIndex, -dTmp2);
+   WM.PutDiag(7, 13, -1.);
+   WM.PutCross(10, 13, -dTmp2);
 
-   WM.PutMat3x3(28, iNode2FirstMomIndex+3,
-		 iNode2FirstPosIndex+3, Mat3x3(MatCrossCross, FTmp, -dTmp2));
+   WM.Put(10, 10, Mat3x3(MatCrossCross, FTmp, -dTmp2));
    
    /* Modifica: divido le equazioni di vincolo per dCoef */
    
    /* termini di vincolo dovuti al nodo 1 */
-   WM.PutDiag(37, iFirstReactionIndex, iNode1FirstPosIndex, -1.);
-   WM.PutCross(40, iFirstReactionIndex, iNode1FirstPosIndex+3, dTmp1);
+   WM.PutDiag(13, 1, -1.);
+   WM.PutCross(13, 4, dTmp1);
       
    /* termini di vincolo dovuti al nodo 1 */
-   WM.PutDiag(46, iFirstReactionIndex, iNode2FirstPosIndex, 1.);
-   WM.PutCross(49, iFirstReactionIndex, iNode2FirstPosIndex+3, -dTmp2);
+   WM.PutDiag(13, 7, 1.);
+   WM.PutCross(13, 10, -dTmp2);
+   if (fc) {
+      //retrive
+          //friction coef
+      d2D f = fc->fc();
+          //shape function
+      d2D shc = Sh_c->Sh_c();
+          //omega and omega rif
+      const Vec3& Omega1(pNode1->GetWCurr());
+      const Vec3& Omega2(pNode2->GetWCurr());
+      const Vec3 Omegar(Omega1-Omega2);
+	  const Vec3& Omega1Ref(pNode1->GetWRef());
+	  const Vec3& Omega2Ref(pNode2->GetWRef());
+      d2D v;
+      v.x[0] = (Omegar).Dot(Q.GetVec(2))*r;
+      v.x[1] = (Omegar).Dot(Q.GetVec(3))*r;
+      ExpandableMatrix dF, dshc, dfc, dv, dQ1, dQ2, dQ3, dOmegar;
+      ExpandableRowVector dmodF;
+
+      // dQ1, dmodF
+      doublereal modF = std::max(F.Norm(), preF);
+      dmodF.ReDim(3);
+      dQ1.ReDim(3, 2);
+      dQ1.SetBlockDim(1, 3);
+      dQ1.SetBlockIdx(1, 12+1);
+      dQ1.SetBlockDim(2, 1);
+      if (!compute_Q) {
+		  // std::cout << "!compute_Q\n";
+          dmodF.Set(Zero3, 1, 12+1);
+          dQ1.Set(Zero3x3, 1, 1, 1);
+          dQ1.SetCol(Zero3, 1, 2, 1);
+          dQ1.Link(2, &dmodF);
+      } else {
+		  // std::cout << "compute_Q\n";
+          dmodF.Set(F/modF, 1, 12+1);
+          dQ1.Set(Eye3/modF, 1, 1, 1);
+          dQ1.SetCol(-F/(modF*modF), 1, 2, 1);
+          dQ1.Link(2, &dmodF);
+      }
+
+      // dQ2
+      dQ2.ReDim(3, 1);
+      dQ2.SetBlockDim(1, 3);
+      dQ2.Set(-Q.GetVec(1).Tens(Q.GetVec(2)), 1, 1, 1);
+      dQ2.Link(1, &dQ1);
+      // dQ3
+      dQ3.ReDim(3, 1);
+      dQ3.SetBlockDim(1, 3);
+      dQ3.Set(-Q.GetVec(1).Tens(Q.GetVec(3)), 1, 1, 1);
+      dQ3.Link(1, &dQ1);
+
+      // dOmegar
+      dOmegar.ReDim(3, 2);
+      dOmegar.SetBlockDim(1, 3); // dOmegar/dOmega1
+      dOmegar.SetBlockIdx(1, 4);
+      dOmegar.Set(Eye3 - Mat3x3(MatCross, Omega1Ref*dCoef), 1, 1, 1);
+      dOmegar.SetBlockDim(2, 3); // dOmegar/dOmega2
+      dOmegar.SetBlockIdx(2, 10);
+      dOmegar.Set(-Eye3 + Mat3x3(MatCross, Omega2Ref*dCoef), 1, 2, 1);
+
+	  // v.x[0] = (-Q.GetVec(1)).Cross(Omegar).Dot(Q.GetVec(2))*r;
+	  // v.x[1] = (-Q.GetVec(1)).Cross(Omegar).Dot(Q.GetVec(3))*r;
+	  // dv
+      dv.ReDim(2, 4);
+      dv.SetBlockDim(1, 3); // dv/dOmegar
+      dv.SetRow(Q.GetVec(1).Cross(Q.GetVec(2))*r, 1, 1, 1);
+      dv.SetRow(Q.GetVec(1).Cross(Q.GetVec(3))*r, 2, 1, 1);
+      dv.Link(1, &dOmegar);
+      dv.SetBlockDim(2, 3); // dv/dQ2
+      dv.SetRow(-Q.GetVec(1).Cross(Omegar)*r, 1, 2, 1);
+      dv.SetRow(Zero3, 2, 2, 1);
+      dv.Link(2, &dQ2);
+      dv.SetBlockDim(3, 3); // dv/dQ3
+      dv.SetRow(Zero3   , 1, 3, 1);
+      dv.SetRow(-Q.GetVec(1).Cross(Omegar)*r, 2, 3, 1);
+      dv.Link(3, &dQ3);
+	  dv.SetBlockDim(4, 3); //dv/dQ1
+	  dv.SetRow(-Omegar.Cross(Q.GetVec(2))*r, 1, 4, 1);
+	  dv.SetRow(-Omegar.Cross(Q.GetVec(3))*r, 2, 4, 1);
+	  dv.Link(4, &dQ1);
+
+      // dshc
+      fc->AssJac(WM, dfc, 12+NumSelfDof, iFirstReactionIndex+NumSelfDof, dCoef, modF, v,
+      		XCurr, XPrimeCurr, dmodF, dv);
+      Sh_c->dSh_c(dshc, f, modF, v, dfc, dmodF, dv);
+      if (compute_Q) {
+		  // std::cout << "Dentro Jac force" << std::endl;
+          ExpandableMatrix dF1, dF2;
+
+		  // Vec3 Ffrict1 = Q.GetVec(2)*modF*f.x[0];
+		  // Vec3 Ffrict2 = Q.GetVec(3)*modF*f.x[1];
+
+		  dF1.ReDim(3, 3);
+          dF1.SetBlockDim(1, 3); // dF1/dQ2
+          dF1.Set(-Eye3 * modF * f.x[0], 1, 1, 1);
+          dF1.Link(1, &dQ2);
+          dF1.SetBlockDim(2, 1); // dF1/dnormF
+          dF1.SetCol(-Q.GetVec(2) * f.x[0], 1, 2, 1);
+          dF1.Link(2, &dmodF);
+          dF1.SetBlockDim(3, 2); // dF1/dfc
+          dF1.SetCol(-Q.GetVec(2) * modF, 1, 3, 1);
+          dF1.SetCol(Zero3, 1, 3, 2);
+          dF1.Link(3, &dfc);
+
+          dF2.ReDim(3, 3);
+          dF2.SetBlockDim(1, 3); // dF2/dQ3
+          dF2.Set(-Eye3 * modF * f.x[1], 1, 1, 1);
+          dF2.Link(1, &dQ3);
+          dF2.SetBlockDim(2, 1); // dF2/dnormF
+          dF2.SetCol(-Q.GetVec(3) * f.x[1], 1, 2, 1);
+          dF2.Link(2, &dmodF);
+          dF2.SetBlockDim(3, 2); // dF1/dfc
+          dF2.SetCol(Zero3, 1, 3, 1);
+          dF2.SetCol(-Q.GetVec(3) * modF, 1, 3, 2);
+          dF2.Link(3, &dfc);
+
+		  dF1.Add(WM, 1, 1.);
+		  dF2.Add(WM, 1, 1.);
+		  dF1.Sub(WM, 7, 1.);
+		  dF2.Sub(WM, 7, 1.);
+
+		// WorkVec.Add(4, Ffrict1.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
+		// WorkVec.Add(4, Ffrict2.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
+		// WorkVec.Add(10, dTmp2.Cross(Ffrict1));
+		// WorkVec.Add(10, dTmp2.Cross(Ffrict2));
+
+		  ExpandableMatrix dMF1;
+          dMF1.ReDim(3, 1);
+          dMF1.SetBlockDim(1, 3);
+          dMF1.Set(Mat3x3(MatCross, dTmp1), 1, 1, 1);
+          dMF1.Link(1, &dF1);
+          dMF1.Add(WM, 4);
+          dMF1.Link(1, &dF2);
+          dMF1.Add(WM, 4);
+
+		  ExpandableMatrix dMF2;
+          dMF2.ReDim(3, 1);
+          dMF2.SetBlockDim(1, 3);
+          dMF2.Set(Mat3x3(MatCross, dTmp2), 1, 1, 1);
+          dMF2.Link(1, &dF1);
+          dMF2.Sub(WM, 10);
+          dMF2.Link(1, &dF2);
+          dMF2.Sub(WM, 10);
+
+
+		  // WM.Put(4, 4, Mat3x3(MatCrossCross, FTmp, dTmp1));
+		  // WM.Put(10, 10, Mat3x3(MatCrossCross, FTmp, -dTmp2));
+		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict1*dCoef, dTmp1));
+		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict2*dCoef, dTmp1));
+		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict1*dCoef, -dTmp2));
+		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict2*dCoef, -dTmp2));
+
+      }
+      // Vec3 M1 = -Q.GetVec(1).Cross(Q.GetVec(2)) * shc.x[0] * r * modF;
+      // Vec3 M2 = -Q.GetVec(1).Cross(Q.GetVec(3)) * shc.x[1] * r * modF;
+      ExpandableMatrix dM1, dM2;
+
+      dM1.ReDim(3, 4);
+	  dM1.SetBlockDim(1, 3); //dM1/dQ1
+	  dM1.Set(-Mat3x3(MatCross, Q.GetVec(2)) * shc.x[0] * r * modF, 1, 1, 1);
+	  dM1.Link(1, &dQ1);
+
+	  dM1.SetBlockDim(2, 3); //dM1/dQ2
+	  dM1.Set(Mat3x3(MatCross, Q.GetVec(1)) * shc.x[0] * r * modF, 1, 2, 1);
+	  dM1.Link(2, &dQ2);
+
+	  dM1.SetBlockDim(3, 2); //dM1/dshc
+	  dM1.SetCol(Q.GetVec(1).Cross(Q.GetVec(2)) * r * modF, 1, 3, 1);
+	  dM1.SetCol(Zero3, 1, 3, 2);
+	  dM1.Link(3, &dshc);
+
+	  dM1.SetBlockDim(4, 1); //dM1/dmodF
+	  dM1.SetCol(Q.GetVec(1).Cross(Q.GetVec(2)) * r * shc.x[0], 1, 4, 1);
+	  dM1.Link(4, &dmodF);
+
+
+      dM2.ReDim(3, 4);
+	  dM2.SetBlockDim(1, 3); //dM2/dQ1
+	  dM2.Set(-Mat3x3(MatCross, Q.GetVec(3)) * shc.x[1] * r * modF, 1, 1, 1);
+	  dM2.Link(1, &dQ1);
+
+	  dM2.SetBlockDim(2, 3); //dM1/dQ2
+	  dM2.Set(Mat3x3(MatCross, Q.GetVec(1)) * shc.x[1] * r * modF, 1, 2, 1);
+	  dM2.Link(2, &dQ3);
+
+	  dM2.SetBlockDim(3, 2); //dM1/dshc
+	  dM2.SetCol(Zero3, 1, 3, 1);
+	  dM2.SetCol(Q.GetVec(1).Cross(Q.GetVec(3)) * r * modF, 1, 3, 2);
+	  dM2.Link(3, &dshc);
+
+	  dM2.SetBlockDim(4, 1); //dM1/dmodF
+	  dM2.SetCol(Q.GetVec(1).Cross(Q.GetVec(3)) * r * shc.x[1], 1, 4, 1);
+	  dM2.Link(4, &dmodF);
+
+	  dM1.Add(WM, 4, 1.);
+	  dM2.Add(WM, 4, 1.);
+	  dM1.Sub(WM, 10, 1.);
+	  dM2.Sub(WM, 10, 1.);
+   }
 
    return WorkMat;
 }
@@ -398,7 +637,7 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 					      doublereal dCoef,
 					      const VectorHandler& XCurr, 
-					      const VectorHandler& /* XPrimeCurr */ )
+					      const VectorHandler& XPrimeCurr)
 {
    DEBUGCOUT("Entering SphericalHingeJoint::AssRes()" << std::endl);
       
@@ -413,13 +652,13 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
    integer iFirstReactionIndex = iGetFirstIndex();
    
    /* Indici dei nodi */
-   for (int iCnt = 1; iCnt <= 6; iCnt++) {	
+   for (unsigned int iCnt = 1; iCnt <= 6; iCnt++) {
       WorkVec.PutRowIndex(iCnt, iNode1FirstMomIndex+iCnt);
       WorkVec.PutRowIndex(6+iCnt, iNode2FirstMomIndex+iCnt);
    }
    
    /* Indici del vincolo */
-   for (int iCnt = 1; iCnt <= 3; iCnt++) {
+   for (unsigned int iCnt = 1; iCnt <= iGetNumDof(); iCnt++) {
       WorkVec.PutRowIndex(12+iCnt, iFirstReactionIndex+iCnt);   
    }
    
@@ -439,6 +678,102 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
    /* Modifica: divido le equazioni di vincolo per dCoef */
    ASSERT(dCoef != 0.);
    WorkVec.Add(13, (x1+dTmp1-x2-dTmp2)/dCoef);
+
+   if (fc) {
+		bool ChangeJac(false);
+		doublereal modF = F.Norm();
+		doublereal modFold = Fold.Norm();
+		reset_Q = false;
+		compute_Q = true;
+		// std::cout << "Force: " << F << std::endl;
+		if (modFold < preF && modF > preF) {
+			// std::cout << "Condition 1" << std::endl;
+			reset_Q = true;
+			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
+		}
+		if (modFold > preF && modF > preF && F.Dot(Fold)/modF/modFold < 5.E-1) {
+			// std::cout << "Condition 2 " << F.Dot(Fold)/modF/modFold << std::endl;
+			reset_Q = true;
+			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
+		}
+		// if (reset_Q) {
+		// 	const_cast<VectorHandler&>(XCurr).PutCoef(iFirstReactionIndex+NumSelfDof+1, 0.);
+		// 	const_cast<VectorHandler&>(XCurr).PutCoef(iFirstReactionIndex+NumSelfDof+2, 0.);
+		// 	const_cast<VectorHandler&>(XPrimeCurr).PutCoef(iFirstReactionIndex+NumSelfDof+1, 0.);
+		// 	const_cast<VectorHandler&>(XPrimeCurr).PutCoef(iFirstReactionIndex+NumSelfDof+2, 0.);
+		// }
+		if (modF <= preF) {
+			// std::cout << "Condition 3" << std::endl;
+			compute_Q = false;
+			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
+		} else {
+			// std::cout << "Call Spherical" << std::endl;
+			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
+			// std::cout << "F: " << F << std::endl;
+			// std::cout << "Ffrict1: " << Ffrict1 << "; f1: " << f.x[0] << std::endl;
+			// std::cout << "Ffrict2: " << Ffrict2 << "; f2: " << f.x[1] << std::endl;
+			// std::cout << "Ftot: " << F + Ffrict1 + Ffrict2 << std::endl;
+			// std::cout << "Q: " << Q << std::endl;
+			// std::cout << "Qold: " << Qold << std::endl;
+			SpericalQR(F, Q, !(reset_Q), Qold);
+		}
+		// std::cout << Q << std::endl;
+		// std::cout << "----------------------------" << std::endl;
+		modF = std::max(modF, preF);
+		const Vec3& Omega1(pNode1->GetWCurr());
+		const Vec3& Omega2(pNode2->GetWCurr());
+		Vec3 Omegar(Omega1 - Omega2);
+		d2D v;
+		v.x[0] = (-Q.GetVec(1)).Cross(Omegar).Dot(Q.GetVec(2))*r;
+		v.x[1] = (-Q.GetVec(1)).Cross(Omegar).Dot(Q.GetVec(3))*r;
+		try {
+			fc->AssRes(WorkVec,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,modF,v,XCurr,XPrimeCurr);
+		}
+		catch (Elem::ChangedEquationStructure& err) {
+			ChangeJac = true;
+		}
+		d2D f = fc->fc();
+		d2D shc = Sh_c->Sh_c(f, modF, v);
+		if (compute_Q) {
+			Ffrict1 = -Q.GetVec(2)*modF*f.x[0];
+			Ffrict2 = -Q.GetVec(3)*modF*f.x[1];
+			WorkVec.Sub(1,Ffrict1);
+			WorkVec.Sub(1,Ffrict2);
+			WorkVec.Add(7,Ffrict1);
+			WorkVec.Add(7,Ffrict2);
+			WorkVec.Add(4, Ffrict1.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
+			WorkVec.Add(4, Ffrict2.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
+			WorkVec.Add(10, dTmp2.Cross(Ffrict1));
+			WorkVec.Add(10, dTmp2.Cross(Ffrict2));
+		}
+		else {
+			Ffrict1 = Zero3;
+			Ffrict2 = Zero3;
+		}
+		M1 = Q.GetVec(1).Cross(Q.GetVec(2))* shc.x[0] * r * modF;
+		M2 = Q.GetVec(1).Cross(Q.GetVec(3))* shc.x[1] * r * modF;
+		// 	std::cout << "Omegar: " << Omegar << std::endl;
+		// 	std::cout << "v: " << v.x[0] << " " << v.x[1] << std::endl;
+		// 	std::cout << "F: " << F << std::endl;
+		// 	std::cout << "Ffrict1: " << Ffrict1 << "; f1: " << f.x[0] << std::endl;
+		// 	std::cout << "Ffrict2: " << Ffrict2 << "; f2: " << f.x[1] << std::endl;
+		// 	std::cout << "Ftot: " << F + Ffrict1 + Ffrict2 << std::endl;
+		// 	std::cout << "Q: " << Q << std::endl;
+		// 	std::cout << "Qold: " << Qold << std::endl;
+		// std::cout << "Q1: " << Q.GetVec(1) << std::endl;
+		// std::cout << "Q2: " << Q.GetVec(2) << std::endl;
+		// std::cout << "Q3: " << Q.GetVec(3) << std::endl;
+		// std::cout << "M1: " << M1 << std::endl;
+		// std::cout << "M2: " << M2 << std::endl;
+		WorkVec.Sub(4,M1);
+		WorkVec.Sub(4,M2);
+		WorkVec.Add(10,M1);
+		WorkVec.Add(10,M2);
+
+		if (ChangeJac) {
+			throw Elem::ChangedEquationStructure(MBDYN_EXCEPT_ARGS);
+		}
+	}
 
    return WorkVec;
 }
@@ -467,9 +802,9 @@ SphericalHingeJoint::OutputPrepare(OutputHandler& OH)
 			if (fc) {
 				Var_MFR = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "MFR",
 						OutputHandler::Dimensions::Moment,
-						"friciton moment ");
+						"Overall fricton moment");
 
-				Var_t1 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "n",
+				Var_n = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "n",
 						OutputHandler::Dimensions::Length,
 						"direction n ");
 				Var_t1 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "t1",
@@ -485,6 +820,18 @@ SphericalHingeJoint::OutputPrepare(OutputHandler& OH)
 				Var_fc2 = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "fc1",
 						OutputHandler::Dimensions::Dimensionless,
 						"friction model specific data: friction coefficient in direction t2");
+
+				Var_Fn = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "Fn",
+						OutputHandler::Dimensions::Force,
+						"Frictionless reaction force in direction n");
+				Var_F1 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "F1",
+						OutputHandler::Dimensions::Force,
+						"Friction force in direction t1");
+				Var_F2 = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "F2",
+						OutputHandler::Dimensions::Force,
+						"Friction force in direction t2");
+
+
 			}
 		}
 #endif // USE_NETCDF
@@ -523,10 +870,11 @@ SphericalHingeJoint::Output(OutputHandler& OH) const
 			/* impossible */
 			break;
 		}
-      
+
+		Vec3 Ftot = F+Ffrict1+Ffrict2;
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
-			Joint::NetCDFOutput(OH, (R1Tmp.MulTV(F)), Zero3, F, Zero3);
+			Joint::NetCDFOutput(OH, (R1Tmp.MulTV(Ftot)), Zero3, Ftot, Zero3);
 			switch (od) {
 			case EULER_123:
 			case EULER_313:
@@ -543,32 +891,54 @@ SphericalHingeJoint::Output(OutputHandler& OH) const
 				/* impossible */
 				break;
 			}
+			if (fc) {
+				Vec3 Mtot = M1 + M2;
+				OH.WriteNcVar(Var_MFR, Mtot);
+				OH.WriteNcVar(Var_n,  Q.GetVec(1));
+				OH.WriteNcVar(Var_t1, Q.GetVec(2));
+				OH.WriteNcVar(Var_t2, Q.GetVec(3));
+				OH.WriteNcVar(Var_fc1, fc->fc().x[0]);
+				OH.WriteNcVar(Var_fc2, fc->fc().x[1]);
+				OH.WriteNcVar(Var_Fn, F);
+				OH.WriteNcVar(Var_F1, Ffrict1);
+				OH.WriteNcVar(Var_F2, Ffrict2);
+			}
 		}
 #endif // USE_NETCDF
 
 		if (OH.UseText(OutputHandler::JOINTS)) {
-			Joint::Output(OH.Joints(), "SphericalHinge", GetLabel(),
-				R1Tmp.MulTV(F), Zero3, F, Zero3)
+			std::ostream &of = Joint::Output(OH.Joints(), "SphericalHinge", GetLabel(),
+				R1Tmp.MulTV(Ftot), Zero3, Ftot, Zero3)
 				<< " ";
 
 			switch (od) {
-			case EULER_123:
-			case EULER_313:
-			case EULER_321:
-			case ORIENTATION_VECTOR:
-				OH.Joints() << E;
-				break;
+				case EULER_123:
+				case EULER_313:
+				case EULER_321:
+				case ORIENTATION_VECTOR:
+					OH.Joints() << E;
+					break;
 
-			case ORIENTATION_MATRIX:
-				OH.Joints() << RTmp;
-				break;
+				case ORIENTATION_MATRIX:
+					OH.Joints() << RTmp;
+					break;
 
-			default:
-				/* impossible */
-				break;
+				default:
+					/* impossible */
+					break;
 			}
-
-			OH.Joints() << std::endl;
+			if(fc) {
+				of << " " << M1 + M2;
+				of << " " <<  -Q.GetVec(1);
+				of << " " <<  Q.GetVec(2);
+				of << " " <<  Q.GetVec(3);
+				of << " " <<  fc->fc().x[0];
+				of << " " <<  fc->fc().x[1];
+				of << " " <<  F;
+				of << " " <<  Ffrict1;
+				of << " " << Ffrict2;
+			}
+			of << std::endl;
 		}
 	}
 }

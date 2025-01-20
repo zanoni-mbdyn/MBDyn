@@ -99,7 +99,7 @@ ModLugreFriction::DescribeDof(std::vector<std::string>& desc, bool bInitial, int
 {
 	ASSERT(i == -1 || i == 0);
 	desc.resize(1);
-	desc[0] = "ModLugreFriction state";
+	desc[desc.size()-1] = "ModLugreFriction state";
 }
 
 std::ostream&

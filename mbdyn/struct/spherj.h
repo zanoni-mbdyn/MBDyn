@@ -45,13 +45,7 @@ class SphericalHingeJoint : public Joint {
    const StructNode* pNode1;
    const StructNode* pNode2;
 #ifdef USE_NETCDF
-	MBDynNcVar Var_Phi;
-	MBDynNcVar Var_MFR;
-   MBDynNcVar Var_n;
-   MBDynNcVar Var_t1;
-   MBDynNcVar Var_t2;
-   MBDynNcVar Var_fc1;
-   MBDynNcVar Var_fc2;
+   MBDynNcVar Var_Phi;
 #endif // USE_NETCDF
    Vec3 d1;
    Mat3x3 R1h;
@@ -64,9 +58,24 @@ class SphericalHingeJoint : public Joint {
    BasicFriction2D *const fc;
    const doublereal preF;
    const doublereal r;
-   doublereal M1, M2;
+   Vec3 Ffrict1, Ffrict2;
+   Vec3 M1, M2;
    static const unsigned int NumSelfDof;
    static const unsigned int NumDof;
+   Mat3x3 Q, Qold;
+   Vec3 Fold;
+   bool reset_Q, compute_Q;
+#ifdef USE_NETCDF
+   MBDynNcVar Var_MFR;
+   MBDynNcVar Var_n;
+   MBDynNcVar Var_t1;
+   MBDynNcVar Var_t2;
+   MBDynNcVar Var_fc1;
+   MBDynNcVar Var_fc2;
+   MBDynNcVar Var_Fn;
+   MBDynNcVar Var_F1;
+   MBDynNcVar Var_F2;
+#endif // USE_NETCDF
    /* end of friction related data */
 
  protected:
@@ -125,6 +134,9 @@ class SphericalHingeJoint : public Joint {
           return fc->GetDofType(i-NumSelfDof);
       }
    };
+
+   virtual void AfterConvergence(const VectorHandler& X,
+                        const VectorHandler& XP);
 
    virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const { 
       *piNumRows = 15; 
