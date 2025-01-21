@@ -4807,7 +4807,7 @@ for the first 13 columns; specific columns contain:
 \begin{itemize}
 \item column 14: the overall relative rotation angle between
         the two nodes, in degrees, along the prescribed screw direction,
-\item colums 15--17: the relative rotation vector
+\item columns 15--17: the relative rotation vector
 	$\mathrm{ax}(\log(\T{R}_{1}^T\T{R}_2)$;
 \end{itemize}
 If friction is present:
@@ -4857,17 +4857,23 @@ with respect to node 1 is reset;
 \item \kw{offset\{2\}} the offset of the joint
 with respect to node 2 is reset;
 \end{itemize}
+\subsubsection{Output}
+The output occurs in the .jnt file, according to default joint output for the first 13 columns; specific
+columns contain:
+\begin{itemize}
+\item  columns 14–-16: the relative rotation vector (if the input file prescribe \kw{orientation matrix} output for the orientation then these would be columns 15--23, and the following columns would be shifted accordingly);
+\end{itemize}
 If friction is present, the output has some additional fields:
 \begin{itemize}
-\item columns 17-19: frictional moment;
-\item columns 20-22: direction $\T{n}$ of the normal (no friction) reaction force;
-\item columns 23-25: direction $\T{t}_1$ of the frictional force;
-\item columns 26-28: direction $\T{t}_2$ of the frictional force;
+\item columns 17--19: frictional moment;
+\item columns 20--22: direction $\T{n}$ of the normal (no friction) reaction force;
+\item columns 23--25: direction $\T{t}_1$ of the frictional force;
+\item columns 26--28: direction $\T{t}_2$ of the frictional force;
 \item column 29: friction coefficient $f_1$ in direction $\T{t}_1$;
 \item column 30: friction coefficient $f_2$ in direction $\T{t}_2$;
-\item columns 31-33: normal (no friction) reaction force $\T{F}$;
-\item columns 34-36: friction reaction force $\T{F}_1$ in direction$\T{t}_1$;
-\item columns 37-39: friction reaction force $\T{F}_2$ in direction$\T{t}_2$;
+\item columns 31--33: normal (no friction) reaction force $\T{F}$;
+\item columns 34--36: friction reaction force $\T{F}_1$ in direction $\T{t}_1$;
+\item columns 37--39: friction reaction force $\T{F}_2$ in direction $\T{t}_2$;
 \end{itemize}
 
 
