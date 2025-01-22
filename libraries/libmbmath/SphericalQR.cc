@@ -68,15 +68,15 @@ void sqrtm2x2S(const doublereal *const a, doublereal *const b) {
 }
 
 /*
- * Compute the iverse of the symmetric matrix A, B = inv(A)
+ * Compute the inverse of the symmetric matrix A, B = inv(A)
  *
  * a[0] = A(1,1)
  * a[1] = A(1,2)
- * a[2] = A[2,2]
+ * a[2] = A(2,2)
  *
  * b[0] = B(1,1)
  * b[1] = B(1,2)
- * b[2] = B[2,2]
+ * b[2] = B(2,2)
  *
  */
 void inv2x2S(const doublereal *const a, doublereal *const b) {
@@ -94,7 +94,7 @@ void inv2x2S(const doublereal *const a, doublereal *const b) {
 }
 
 /*
- * Sort in place v in ascending order, and return the sorting indices
+ * Sort in place v in ascending order wrt |v|, and return the sorting indices
  *
  * Equivalent to Matlab's [v, idx] = sort(v)
  */
@@ -144,7 +144,7 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
         doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
-                c[i][j] = Qold.GetVec(i+1).Dot(Q.GetVec(j+1));
+                c[i][j] = Qold.GetCol(i+2).Dot(Q.GetCol(j+2));
             }
         }
         cct[0] = c[0][0] * c[0][0] + c[0][1] * c[0][1];
@@ -160,8 +160,8 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
         // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
         // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
         // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
-        Vec3 q1 = Q.GetVec(2) * u[0][0] + Q.GetVec(3) * u[1][0];
-        Vec3 q2 = Q.GetVec(2) * u[0][1] + Q.GetVec(3) * u[1][1];
+        Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
+        Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
         Q.PutVec(2, q1);
         Q.PutVec(3, q2);
         // std::cout << "aft: " << Q << std::endl;

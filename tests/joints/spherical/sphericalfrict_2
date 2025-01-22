@@ -14,6 +14,7 @@ begin: initial value;
 	derivatives tolerance: 1e3;
 	max iterations: 10;
 	#newton raphson: modified, 1;
+	method: ms, 0.6;
 	newton raphson: true;
 	#linear solver: naive, colamd;
 	linear solver: umfpack;
@@ -29,7 +30,7 @@ begin: control data;
 #	parameter nodes: 2;
 	rigid bodies: 1;
 	joints: 2;
-	forces: 2;
+	forces: 3;
 	
 	# default output: none;
 	print: all;
@@ -69,6 +70,8 @@ begin: elements;
 	couple: 2, absolute, 2, 0.,0.,1.,
 		string, "3*sin(70*Time)";
 	force: 3, absolute, 2, position, null, 1.,0.,0., const, 10.;
+	couple: 4, absolute, 2, 0.,1.,0.,
+		string, "0.1*sin(70*Time)*0.";
 end: elements;
 
 # vim:ft=mbd
