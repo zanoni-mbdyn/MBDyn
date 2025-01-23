@@ -455,19 +455,19 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       dQ1.SetBlockDim(1, 3);
       dQ1.SetBlockIdx(1, 12+1);
       dQ1.SetBlockDim(2, 1);
-      if (!compute_Q) {
-		  // std::cout << "!compute_Q\n";
-          dmodF.Set(Zero3, 1, 12+1);
-          dQ1.Set(Zero3x3, 1, 1, 1);
-          dQ1.SetCol(Zero3, 1, 2, 1);
-          dQ1.Link(2, &dmodF);
-      } else {
+    //   if (F.Norm() == 0.) {
+		  // // std::cout << "!compute_Q\n";
+    //       dmodF.Set(Zero3, 1, 12+1);
+    //       dQ1.Set(Zero3x3, 1, 1, 1);
+    //       dQ1.SetCol(Zero3, 1, 2, 1);
+    //       dQ1.Link(2, &dmodF);
+    //   } else {
 		  // std::cout << "compute_Q\n";
           dmodF.Set(F/modF, 1, 12+1);
           dQ1.Set(Eye3/modF, 1, 1, 1);
           dQ1.SetCol(-F/(modF*modF), 1, 2, 1);
           dQ1.Link(2, &dmodF);
-      }
+      // }
 
       // dQ2
       dQ2.ReDim(3, 1);
@@ -514,7 +514,7 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       fc->AssJac(WM, dfc, 12+NumSelfDof, iFirstReactionIndex+NumSelfDof, dCoef, modF, v,
       		XCurr, XPrimeCurr, dmodF, dv);
       Sh_c->dSh_c(dshc, f, modF, v, dfc, dmodF, dv);
-      if (compute_Q) {
+      // if (compute_Q) {
 		  // std::cout << "Dentro Jac force" << std::endl;
           ExpandableMatrix dF1, dF2;
 
@@ -523,26 +523,26 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 
 		  dF1.ReDim(3, 3);
           dF1.SetBlockDim(1, 3); // dF1/dQ2
-          dF1.Set(-Eye3 * modF * f.x[0], 1, 1, 1);
+          dF1.Set(-Eye3 * F.Norm() * f.x[0], 1, 1, 1);
           dF1.Link(1, &dQ2);
           dF1.SetBlockDim(2, 1); // dF1/dnormF
           dF1.SetCol(-Q.GetCol(2) * f.x[0], 1, 2, 1);
           dF1.Link(2, &dmodF);
           dF1.SetBlockDim(3, 2); // dF1/dfc
-          dF1.SetCol(-Q.GetCol(2) * modF, 1, 3, 1);
+          dF1.SetCol(-Q.GetCol(2) * F.Norm(), 1, 3, 1);
           dF1.SetCol(Zero3, 1, 3, 2);
           dF1.Link(3, &dfc);
 
           dF2.ReDim(3, 3);
           dF2.SetBlockDim(1, 3); // dF2/dQ3
-          dF2.Set(-Eye3 * modF * f.x[1], 1, 1, 1);
+          dF2.Set(-Eye3 * F.Norm() * f.x[1], 1, 1, 1);
           dF2.Link(1, &dQ3);
           dF2.SetBlockDim(2, 1); // dF2/dnormF
           dF2.SetCol(-Q.GetCol(3) * f.x[1], 1, 2, 1);
           dF2.Link(2, &dmodF);
           dF2.SetBlockDim(3, 2); // dF1/dfc
           dF2.SetCol(Zero3, 1, 3, 1);
-          dF2.SetCol(-Q.GetCol(3) * modF, 1, 3, 2);
+          dF2.SetCol(-Q.GetCol(3) * F.Norm(), 1, 3, 2);
           dF2.Link(3, &dfc);
 
 		  dF1.Add(WM, 1, 1.);
@@ -581,7 +581,7 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict1*dCoef, -dTmp2));
 		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict2*dCoef, -dTmp2));
 
-      }
+      // }
       // Vec3 M1 = -Q.GetCol(1).Cross(Q.GetCol(2)) * shc.x[0] * r * modF;
       // Vec3 M2 = -Q.GetCol(1).Cross(Q.GetCol(3)) * shc.x[1] * r * modF;
       ExpandableMatrix dM1, dM2;
@@ -680,6 +680,8 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
    WorkVec.Add(13, (x1+dTmp1-x2-dTmp2)/dCoef);
 
    if (fc) {
+		// Fold = F;
+		// Qold = Q;
 		bool ChangeJac(false);
 		doublereal modF = F.Norm();
 		doublereal modFold = Fold.Norm();
@@ -688,12 +690,12 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 		// std::cout << "Force: " << F << std::endl;
 		if (modFold < preF && modF > preF) {
 			// std::cout << "Condition 1" << std::endl;
-			reset_Q = true;
+			// reset_Q = true;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
 		}
 		if (modFold > preF && modF > preF && F.Dot(Fold)/modF/modFold < 5.E-1) {
 			// std::cout << "Condition 2 " << F.Dot(Fold)/modF/modFold << std::endl;
-			reset_Q = true;
+			// reset_Q = true;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
 		}
 		// if (reset_Q) {
@@ -702,7 +704,7 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 		// 	const_cast<VectorHandler&>(XPrimeCurr).PutCoef(iFirstReactionIndex+NumSelfDof+1, 0.);
 		// 	const_cast<VectorHandler&>(XPrimeCurr).PutCoef(iFirstReactionIndex+NumSelfDof+2, 0.);
 		// }
-		if (modF <= preF) {
+		if (modF <= preF / 2.) {
 			// std::cout << "Condition 3" << std::endl;
 			compute_Q = false;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
@@ -712,6 +714,10 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			SpericalQR(F, Q, !(reset_Q), Qold);
 			// std::cout << "Qold: " << Qold << std::endl;
 			// std::cout << "Q: " << Q << std::endl;
+		}
+		// std::cout << modF << " " << preF << std::endl;
+		if (reset_Q) {
+			Qold = Q;
 		}
 		// std::cout << Q << std::endl;
 		// std::cout << "----------------------------" << std::endl;
@@ -732,9 +738,9 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 		d2D shc = Sh_c->Sh_c(f, modF, v);
 		// std::cout << "WorkVec  before f" << std::endl;
 		// std::cout << WorkVec << std::endl;
-		if (compute_Q) {
-			Ffrict1 = -Q.GetCol(2)*modF*f.x[0];
-			Ffrict2 = -Q.GetCol(3)*modF*f.x[1];
+		// if (compute_Q) {
+			Ffrict1 = -Q.GetCol(2)*F.Norm()*f.x[0];
+			Ffrict2 = -Q.GetCol(3)*F.Norm()*f.x[1];
 			// std::cout << "..............." << std::endl;
 			// std::cout << "Omega1: " << Omega1 << std::endl;
 			// std::cout << "Omega2: " << Omega2 << std::endl;
@@ -753,11 +759,11 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			WorkVec.Add(4, Ffrict2.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
 			WorkVec.Add(10, dTmp2.Cross(Ffrict1));
 			WorkVec.Add(10, dTmp2.Cross(Ffrict2));
-		}
-		else {
-			Ffrict1 = Zero3;
-			Ffrict2 = Zero3;
-		}
+		// }
+		// else {
+		// 	Ffrict1 = Zero3;
+		// 	Ffrict2 = Zero3;
+		// }
 		M1 = Q.GetCol(1).Cross(Q.GetCol(2))* shc.x[0] * r * modF;
 		M2 = Q.GetCol(1).Cross(Q.GetCol(3))* shc.x[1] * r * modF;
 		// 	std::cout << "Omegar: " << Omegar << std::endl;
