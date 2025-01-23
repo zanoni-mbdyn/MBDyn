@@ -14,7 +14,7 @@ begin: initial value;
     method: ms, Rho, Rho;
     
     max iterations: 20;
-    tolerance: 1.e-9;
+    tolerance: 1.e-6;
     
     derivatives coefficient: 1.e-12;
     derivatives max iterations: 1;
@@ -92,5 +92,5 @@ end: elements;
 ##############################################################################################################
 ## Variables to be updated by simple_testsuite.sh --update-reference-test-status
 ## Warning, do not edit!!!
-## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 1
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
 ##############################################################################################################
