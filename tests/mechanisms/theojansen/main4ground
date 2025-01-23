@@ -40,7 +40,8 @@ end: data;
 
 begin: initial value;
 	initial time: 0.;
-	final time: 99.99;
+	#final time: 99.99;
+	final time: 9.99;
 	time step: 1e-3;
 
 	method: ms, .6;
