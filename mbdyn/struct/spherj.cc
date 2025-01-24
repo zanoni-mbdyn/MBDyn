@@ -831,7 +831,7 @@ SphericalHingeJoint::OutputPrepare(OutputHandler& OH)
 				Var_fc1 = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "fc1",
 						OutputHandler::Dimensions::Dimensionless,
 						"friction model specific data: friction coefficient in direction t1");
-				Var_fc2 = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "fc1",
+				Var_fc2 = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "fc2",
 						OutputHandler::Dimensions::Dimensionless,
 						"friction model specific data: friction coefficient in direction t2");
 
