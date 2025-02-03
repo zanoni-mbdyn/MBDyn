@@ -54,6 +54,7 @@ mbdyn_exec_gen="yes"
 mbdyn_exec_solver="yes"
 update_reference_test_status="no"
 use_reference_test_status="no"
+skip_expected_failures="no"
 declare -i mbdyn_exclude_inverse_dynamics=0
 declare -i mbdyn_exclude_initial_value=0
 mbdyn_suppressed_errors=""
@@ -117,10 +118,19 @@ while ! test -z "$1"; do
             ;;
         --update-reference-test-status)
             update_reference_test_status="$2"
+            if [[ -z "$mbdyn_suppressed_errors" ]]; then
+                mbdyn_suppressed_errors="feature"
+            else
+                mbdyn_suppressed_errors="$mbdyn_suppressed_errors|feature"
+            fi
             shift
             ;;
         --use-reference-test-status)
             use_reference_test_status="$2"
+            shift
+            ;;
+        --skip-expected-failures)
+            skip_expected_failures="$2"
             shift
             ;;
         --regex-filter-include|--regex-filter-exclude)
@@ -212,13 +222,16 @@ while ! test -z "$1"; do
             printf "  --verbose {yes|no}\n"
             printf "  --keep-output {all|failed|unexpected}\n"
             printf "  --patch-input {yes|no}\n"
+            printf "  --skip-expected-failures {yes|no}\n"
+            printf "  --update-reference-test-status {failed|passed|no|{all|yes}}\n"
+            printf "  --use-reference-test-status {yes|no}\n"
             printf "  --mbdyn-exec <mbdyn-binary>\n"
             printf "  --mbdyn-args-add \"<arg1> <arg2> ... <argN>\"\n"
             printf "  --exec-gen {yes|no}\n"
             printf "  --exec-solver {yes|no}\n"
             printf "  --exec-status-mask <mask_errors_to_be_ignored>\n"
             printf "  --print-resources {no|all|time}\n"
-            printf "  --suppressed-errors {syntax|element|feature|module|loadable|socked|interrupted}\n"
+            printf "  --suppressed-errors {syntax|element|feature|module|loadable|socked|interrupted|solver}\n"
             printf "  --help\n"
             exit 1;
             ;;
@@ -231,7 +244,11 @@ while ! test -z "$1"; do
             shift
             ;;
         --suppressed-errors)
-            mbdyn_suppressed_errors="$2"
+            if [[ -z "$mbdyn_suppressed_errors" ]]; then
+                mbdyn_suppressed_errors="$2"
+            else
+                mbdyn_suppressed_errors="$mbdyn_suppressed_errors|$2"
+            fi
             shift
             ;;
         *)
@@ -371,6 +388,8 @@ function simple_testsuite_run_test()
 
     rm -f "${mbd_status_file}"
 
+    expected_test_status=`awk -F '=' 'BEGIN{ status = -1; } /^[[:space:]]*##[[:space:]]*@MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@[[:space:]]*=[[:space:]]*[0-9]*[[:space:]]*$/ { status = ($2 != 0); } END{ printf("%d\n", status); }' "${mbd_filename}"`
+
     if ! test -f "${mbd_filename}"; then
         echo "File \"${mbd_filename}\" not found"
         status=$(printf 'file[%]' "${mbd_filename}")
@@ -485,8 +504,11 @@ function simple_testsuite_run_test()
                 mbd_exec_solver="no"
                 ;;
         esac
-
-        if test "${mbdyn_patch_input}" != "no" && test "${mbd_allow_patch}" != "yes"; then
+        
+        if test ${skip_expected_failures} = "yes" && test ${expected_test_status} != "0"; then
+            echo "Skipping test \"${mbd_filename}\" because it's expected to fail"
+            mbd_exec_solver="no"
+        elif test "${mbdyn_patch_input}" != "no" && test "${mbd_allow_patch}" != "yes"; then
             echo "Cannot execute test \"${mbd_filename}\""
             mbd_exec_solver="no"
         fi
@@ -726,7 +748,7 @@ function simple_testsuite_run_test()
         timeout)
             ((exit_status=0x2))
             ;;
-        suppressed)
+        suppressed*)
             ((exit_status=0x4))
             ;;
         module|loadable)
@@ -739,8 +761,6 @@ function simple_testsuite_run_test()
             ((exit_status=0x40))
             ;;
     esac
-
-    expected_test_status=`awk -F '=' 'BEGIN{ status = -1; } /^[[:space:]]*##[[:space:]]*@MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@[[:space:]]*=[[:space:]]*[0-9]*[[:space:]]*$/ { status = ($2 != 0); } END{ printf("%d\n", status); }' "${mbd_filename}"`
 
     if test $((exit_status)) -eq 0; then
         ((test_status=0))
@@ -760,17 +780,19 @@ function simple_testsuite_run_test()
 
             case "${update_reference_test_status}" in
                 failed)
-                    if test $((test_status)) -ne 0; then
+                    if test $((test_status)) -ne 0 && test $(( exit_status != 0x4 )) -ne 0; then
                         do_update_file="yes"
                     fi
                     ;;
                 passed)
-                    if test $((test_status)) -eq 0; then
+                    if test $((test_status)) -eq 0 && test $(( exit_status != 0x4 )) -ne 0; then
                         do_update_file="yes"
                     fi
                     ;;
                 all|yes)
-                    do_update_file="yes"
+                    if test $(( exit_status != 0x4 )) -ne 0; then
+                        do_update_file="yes"
+                    fi
                     ;;
             esac
 
@@ -856,6 +878,7 @@ else
     export mbdyn_suppressed_errors
     export update_reference_test_status
     export use_reference_test_status
+    export skip_expected_failures
     export MBDYN_EXEC
     export MBDYN_ARGS_ADD
     export MBD_NUM_THREADS
