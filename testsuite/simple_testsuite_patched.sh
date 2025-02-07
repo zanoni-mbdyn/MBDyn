@@ -150,7 +150,7 @@ while ! test -z "$1"; do
             printf "  --exec-solver {yes|no}\n"
             printf "  --exec-status-mask <mask_errors_to_be_ignored>\n"
             printf "  --print-resources {no|all|time}\n"
-            printf "  --suppressed-errors {syntax|element|feature|module|loadable|socked|interrupted}\n"
+            printf "  --suppressed-errors {syntax|element|feature|module|loadable|socked|interrupted|solver}\n"
             printf "  --help\n"
             exit 1;
             ;;

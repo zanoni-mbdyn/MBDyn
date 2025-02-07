@@ -196,8 +196,13 @@ BEGINFILE {
     set_error("feature", "RTPOSIX");
 }
 
-/^ReadRTSolver: need to configure --with-rtai to use default RTAI real-time solver at line [[:digit:]]+, file <.+>$/ {
-    set_error("feature", "RTAI");
+match($0, "configure") && match($0, "--with") {
+    if (RSTART) {
+        xx=substr($0, RSTART+RLENGTH+1, length($0));
+        split(xx, xxs);
+        set_error("feature", xxs[1]);
+        next
+    }
 }
 
 /^ReadAuthMethod: line [[:digit:]]+, file <.+>: no PAM support$/ {
@@ -239,12 +244,8 @@ BEGINFILE {
     set_error("loadable", msg);
 }
 
-/^(Harwell|Meschach) solver not available; requested at line [[:digit:]]+, file <.+>$/ {
+/^.+ solver not available; requested at line [[:digit:]]+, file <.+>$/ {
     set_error("feature", "linearsolver");
-}
-
-/^"use jdqz" needs to configure --with-jdqz at line [[:digit:]]+, file <.+>$/ {
-    set_error("feature", "jdqz");
 }
 
 /^UseLocalSocket\(".+"\): bind\(\) failed/ {
