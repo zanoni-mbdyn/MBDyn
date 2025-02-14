@@ -777,6 +777,10 @@ DataManager::InitialJointAssembly(void)
 					}
 
 					DofOwnerOwner *pDOEl = dynamic_cast<DofOwnerOwner *>(e->second);
+					NestedElem *pNeEl = dynamic_cast<NestedElem *>(e->second);
+					if (pNeEl != 0) {
+						pDOEl = dynamic_cast<DofOwnerOwner *>(pNeEl->pGetElem());
+					}
 					if (pDOEl == 0) {
 						/* Ignore elements subjected
 						 * to initial assembly
@@ -928,6 +932,10 @@ DataManager::InitialJointAssembly(void)
 					}
 
 					DofOwnerOwner *pDOEl = dynamic_cast<DofOwnerOwner *>(p->second);
+					NestedElem *pNeEl = dynamic_cast<NestedElem *>(p->second);
+					if (pNeEl != 0) {
+						pDOEl = dynamic_cast<DofOwnerOwner *>(pNeEl->pGetElem());
+					}
 					if (pDOEl == 0) {
 						/* Ignore elements subjected
 						 * to initial assembly
@@ -1615,6 +1623,10 @@ DataManager::OutputEigPrepare(const integer iNumAnalyses, const integer iSize, u
                                         }
 
                                         DofOwnerOwner* pDO = dynamic_cast<DofOwnerOwner*>(oElemItem.second);
+                                        NestedElem *pNeEl = dynamic_cast<NestedElem *>(oElemItem.second);
+                                        if (pNeEl != 0) {
+                                                pDO = dynamic_cast<DofOwnerOwner *>(pNeEl->pGetElem());
+                                        }
 
                                         if (!pDO) {
                                                 continue;
@@ -1660,6 +1672,10 @@ DataManager::OutputEigPrepare(const integer iNumAnalyses, const integer iSize, u
                                         }
 
                                         DofOwnerOwner* pDO = dynamic_cast<DofOwnerOwner*>(oElemItem.second);
+                                        NestedElem *pNeEl = dynamic_cast<NestedElem *>(oElemItem.second);
+                                        if (pNeEl != 0) {
+                                                pDO = dynamic_cast<DofOwnerOwner *>(pNeEl->pGetElem());
+                                        }
 
                                         if (!pDO) {
                                                 continue;
