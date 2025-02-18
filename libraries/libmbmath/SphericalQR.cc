@@ -33,9 +33,67 @@
 
 #include "mbconfig.h"
 #include "matvec3.h"
+#include "Rot.hh"
 
 #include <algorithm>
 #include <cmath>
+
+
+/*
+ * Compute the SVD of the symmetric matrix A, U Sigma V^T = svd(A)
+ *
+ * a[0] = A(1,1)
+ * a[1] = A(1,2)
+ * a[2] = A[2,2]
+ *
+ * u[0][0] = U(1,1)
+ * u[0][1] = U(1,2)
+ * u[1][0] = U(2,1)
+ * u[1][1] = U(2,2)
+ *
+ * s[0] = Sigma(1, 2)
+ * s[1] = Sigma(2, 2)
+ *
+ * u[0][0] = U(1,1)
+ * u[0][1] = U(1,2)
+ * u[1][0] = U(2,1)
+ * u[1][1] = U(2,2)
+ *
+ * Formulae taken from https://lucidar.me/en/mathematics/singular-value-decomposition-of-a-2x2-matrix/
+ *
+ */
+
+// THE SVD NEEDS TO BE VALIDATED
+//
+// void svd2x2S(const doublereal a[3], doublereal u[1][1], doublereal s[2], doublereal v[1][1]) {
+//     doublereal theta = 0.5 * std::atan2(2. * a[1] * (a[0] + a[2]), a[0] * a[0] - a[2] * a[2]);
+//     u[0][0] = std::cos(theta);
+//     u[0][1] = -std::sin(theta);
+//     u[1][0] = -u[0][1];
+//     u[1][1] = u[0][0];
+//
+//     doublereal S1 = a[0] * a[0] + 2. * a[1] * a[1] + a[2] * a[2];
+//     doublereal S2 = std::sqrt(std::pow(a[0] * a[0] - a[2] * a[2], 2) + 4. * (a[1] * (a[0] + a[2])));
+//     s[0] = std::sqrt((S1 + S2) / 2.);
+//     s[1] = std::sqrt((S1 - S2) / 2.);
+//
+//     doublereal phi = theta;
+//     doublereal cphitheta = std::cos(phi);
+//     doublereal sphitheta = std::sin(phi);
+//     doublereal s11 = (a[0] * cphitheta + a[2] * sphitheta) * cphitheta + ( a[1] * cphitheta + a[2] * sphitheta) * sphitheta;
+//     doublereal s22 = (a[0] * sphitheta - a[2] * cphitheta) * sphitheta + (-a[1] * sphitheta + a[2] * cphitheta) * cphitheta;
+//     if (s11) s11 = std::copysign(1., s11);
+//     if (s22) s22 = std::copysign(1., s22);
+//
+//     v[0][0] =  s11 * cphitheta;
+//     v[0][1] = -s22 * sphitheta;
+//     v[1][0] =  s11 * sphitheta;
+//     v[1][1] =  s22 * cphitheta;
+//
+//     return;
+// }
+
+
 /*
  * Compute the square root of the symmetric matrix A, B = sqrtm(A)
  *
@@ -50,7 +108,7 @@
  * Formulae taken from https://en.wikipedia.org/wiki/Square_root_of_a_2_by_2_matrix
  *
  */
-void sqrtm2x2S(const doublereal *const a, doublereal *const b) {
+void sqrtm2x2S(const doublereal a[3], doublereal b[3]) {
 
     doublereal det = a[0] * a[2] - a[1] * a[1];
     doublereal trace = a[0] + a[2];
@@ -79,7 +137,7 @@ void sqrtm2x2S(const doublereal *const a, doublereal *const b) {
  * b[2] = B(2,2)
  *
  */
-void inv2x2S(const doublereal *const a, doublereal *const b) {
+void inv2x2S(const doublereal a[3], doublereal b[3]) {
     doublereal det = a[0]*a[2] - a[1]*a[1]; //t2+t4;
     doublereal inv_det = 1.0 / det;
 
@@ -140,35 +198,39 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
 
     // std::cout << "update: " << update << std::endl;
     if (update) {
-        // std::cout << "old: " << Qold << std::endl;
-        doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
-                c[i][j] = Qold.GetCol(i+2).Dot(Q.GetCol(j+2));
+        doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
+        if (phi < 0.785398163397448) {
+
+            // std::cout << "old: " << Qold << std::endl;
+            doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2; j++) {
+                    c[i][j] = Qold.GetCol(i+2).Dot(Q.GetCol(j+2));
+                }
             }
+            cct[0] = c[0][0] * c[0][0] + c[0][1] * c[0][1];
+            cct[1] = c[0][0] * c[1][0] + c[0][1] * c[1][1];
+            cct[2] = c[1][0] * c[1][0] + c[1][1] * c[1][1];
+            sqrtm2x2S(cct, sqrtc);
+            inv2x2S(sqrtc, isqrtc);
+            u[0][0] = c[0][0] * isqrtc[0] + c[1][0] * isqrtc[1];
+            u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
+            u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
+            u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
+            // std::cout << "bef: " << Q << std::endl;
+            // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
+            // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
+            // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
+            Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
+            Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
+            Q.PutVec(2, q1);
+            Q.PutVec(3, q2);
+            // std::cout << "aft: " << Q << std::endl;
+            // std::cout << "aft1: " << Q.GetVec(1) << std::endl;
+            // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
+            // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
+            // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
         }
-        cct[0] = c[0][0] * c[0][0] + c[0][1] * c[0][1];
-        cct[1] = c[0][0] * c[1][0] + c[0][1] * c[1][1];
-        cct[2] = c[1][0] * c[1][0] + c[1][1] * c[1][1];
-        sqrtm2x2S(cct, sqrtc);
-        inv2x2S(sqrtc, isqrtc);
-        u[0][0] = c[0][0] * isqrtc[0] + c[1][0] * isqrtc[1];
-        u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
-        u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
-        u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
-        // std::cout << "bef: " << Q << std::endl;
-        // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
-        // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
-        // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
-        Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
-        Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
-        Q.PutVec(2, q1);
-        Q.PutVec(3, q2);
-        // std::cout << "aft: " << Q << std::endl;
-        // std::cout << "aft1: " << Q.GetVec(1) << std::endl;
-        // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
-        // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
-        // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
     }
 }
 
