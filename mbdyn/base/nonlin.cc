@@ -363,8 +363,11 @@ NonlinearSolverTestSepNorm::MakeTest(Solver *pS, const integer &Size,
 		if (pTestDiff) {
 			pTestDiff_temp = TestPost(pTestDiff_temp);
 			abs_pTestDiff_temp = TestPost(abs_pTestDiff_temp);
-
-			testDiffsVector.push_back(pTestDiff_temp/abs_pTestDiff_temp);
+			if (abs_pTestDiff_temp > 0.) {
+				testDiffsVector.push_back(pTestDiff_temp/abs_pTestDiff_temp);
+			} else {
+				testDiffsVector.push_back(0.);
+			}
 		}
 
 		dTest = TestPost(dTest);
