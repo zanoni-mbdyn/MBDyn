@@ -43,12 +43,17 @@
 //defined in friction.cc
 extern int sign(const doublereal x);
 
-doublereal m(const d2D& z) {
-	return std::sqrt(z.x[0]*z.x[0] + z.x[1]*z.x[1]);
+
+doublereal d2Dabs(const d2D& z) {
+	return std::sqrt(z.x[0] * z.x[0] + z.x[1] * z.x[1]);
+}
+
+d2D operator*(const doublereal& x, const d2D& y) {
+	return d2D({x*y.x[0], x*y.x[1]});
 }
 
 void md(const d2D& z, d2D& mdz) {
-	doublereal zm = m(z);
+	doublereal zm = d2Dabs(z);
 	if (zm < 1.E-6) {
 		mdz.x[0] = sign(z.x[0]);
 		mdz.x[1] = sign(z.x[1]);
@@ -56,6 +61,16 @@ void md(const d2D& z, d2D& mdz) {
 		mdz.x[0] = z.x[0] / zm;
 		mdz.x[1] = z.x[1] / zm;
 	}
+}
+
+d2D sign(const d2D& x) {
+	d2D y;
+	md(x, y);
+	return y;
+}
+
+bool operator == (const d2D& x, const d2D& y) {
+	return (x.x[0] == y.x[0]) && (x.x[1] == y.x[1]);
 }
 
 void
@@ -175,8 +190,8 @@ doublereal ModLugreFriction2D::epsilon(const d2D& z,
 
 doublereal ModLugreFriction2D::alpha(const d2D& z,
 	const d2D& v) const {
-	doublereal zm = m(z);
-	doublereal vm = m(v);
+	doublereal zm = d2Dabs(z);
+	doublereal vm = d2Dabs(v);
 	return alphatilde(zm, vm) * epsilon(z, v);
 }
 
@@ -236,8 +251,8 @@ doublereal ModLugreFriction2D::alphatilded_vm(const doublereal zm,
 void ModLugreFriction2D::alphad_v(const d2D& z,
 	const d2D& v, ExpandableMatrix& alpha_v) const {
 
-	doublereal zm = m(z);
-	doublereal vm = m(v);
+	doublereal zm = d2Dabs(z);
+	doublereal vm = d2Dabs(v);
 	doublereal eps = epsilon(z, v);
 	doublereal alphat = alphatilde(zm, vm);
 	doublereal alphatd_vm = alphatilded_vm(zm, vm);
@@ -256,8 +271,8 @@ void ModLugreFriction2D::alphad_v(const d2D& z,
 void ModLugreFriction2D::alphad_z(const d2D& z,
 	const d2D& v, ExpandableRowVector& alpha_z, const unsigned int startdof) const {
 
-	doublereal zm = m(z);
-	doublereal vm = m(v);
+	doublereal zm = d2Dabs(z);
+	doublereal vm = d2Dabs(v);
 	doublereal eps = epsilon(z, v);
 	doublereal alphat = alphatilde(zm, vm);
 	doublereal alphatd_zm = alphatilded_zm(zm, vm);
@@ -289,7 +304,7 @@ void ModLugreFriction2D::AssRes(
 	d2D z = {X(solution_startdof+1), X(solution_startdof+2)};
 	d2D zp = {XP(solution_startdof+1), XP(solution_startdof+2)};
 
-	doublereal vm = m(v);
+	doublereal vm = d2Dabs(v);
 	doublereal fsvm = fs(vm);
 	doublereal alph = alpha(z,v);
 
@@ -316,7 +331,7 @@ void ModLugreFriction2D::AssJac(
 
 	d2D z = {X(solution_startdof+1), X(solution_startdof+2)};
 
-	doublereal vm = m(v);
+	doublereal vm = d2Dabs(v);
 	//doublereal zp = XP(solution_startdof+1);
 /*
  * 	attrito
@@ -402,6 +417,283 @@ ModLugreFriction2D::GetEquationDimension(integer index) const {
 	return dimension;
 }
 
+//-------------------------
+
+DiscreteCoulombFriction2D::DiscreteCoulombFriction2D(
+		const BasicScalarFunction *const ff,
+		const doublereal s2,
+		const doublereal vr) :
+//converged_sticked(true),
+status(sticked),
+transition_type(null),
+converged_v({0., 0.}),
+first_iter(true),
+first_switch(true),
+previous_switch_v({0., 0.}),
+current_velocity({0., 0.}),
+sigma2(s2),
+vel_ratio(vr),
+current_friction_force({0., 0.}),
+fss(dynamic_cast<const DifferentiableScalarFunction&>(*ff)),
+f({0., 0.})
+{
+	NO_OP;
+}
+
+void
+DiscreteCoulombFriction2D::SetValue(DataManager *pDM,
+		VectorHandler&X,
+		VectorHandler&XP,
+		SimulationEntity::Hints *ph,
+		const unsigned int solution_startdof)
+{
+	X.PutCoef(solution_startdof+1,f.x[0]);
+	X.PutCoef(solution_startdof+2,f.x[1]);
+}
+
+unsigned int DiscreteCoulombFriction2D::iGetNumDof(void) const {
+	return 2;
+};
+
+std::ostream&
+DiscreteCoulombFriction2D::DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const
+{
+	return out << prefix
+		<< "[1]: DiscreteCoulombFriction2D state 1" << std::endl
+		<< "[1]: DiscreteCoulombFriction2D state 2" << std::endl;
+}
+
+void
+DiscreteCoulombFriction2D::DescribeDof(std::vector<std::string>& desc, bool bInitial, int i) const
+{
+	ASSERT(i == -1 || i == 0);
+	desc.resize(2);
+	desc[desc.size()-2] = "DiscreteCoulombFriction2D state 1";
+	desc[desc.size()-1] = "DiscreteCoulombFriction2D state 2";
+}
+
+std::ostream&
+DiscreteCoulombFriction2D::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const
+{
+	return out << prefix
+		<< "[1]: DiscreteCoulombFriction2D equation 1" << std::endl
+		<< "[2]: DiscreteCoulombFriction2D equation 2" << std::endl;
+}
+
+void
+DiscreteCoulombFriction2D::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i) const
+{
+	ASSERT(i == -1 || i == 0);
+	desc.resize(2);
+	desc[desc.size()-2] = "DiscreteCoulombFriction2D equation 1";
+	desc[desc.size()-1] = "DiscreteCoulombFriction2D equation 2";
+}
+
+DofOrder::Order DiscreteCoulombFriction2D::GetDofType(unsigned int i) const {
+	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in DiscreteCoulombFriction2D::GetDofType");
+	return DofOrder::ALGEBRAIC;
+};
+
+DofOrder::Order DiscreteCoulombFriction2D::GetEqType(unsigned int i) const {
+	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in DiscreteCoulombFriction2D::GetEqType");
+	return DofOrder::DIFFERENTIAL;
+};
+
+d2D DiscreteCoulombFriction2D::fc(void) const {
+	return current_friction_force;
+};
+
+void DiscreteCoulombFriction2D::AfterConvergence(
+	const doublereal F,
+	const d2D v,
+	const VectorHandler&X,
+	const VectorHandler&XP,
+	const unsigned int solution_startdof) {
+	f.x[0] = X(solution_startdof+1);
+	f.x[1] = X(solution_startdof+2);
+	converged_v = v;
+	current_velocity = v;
+	previous_switch_v = v;
+	transition_type = null;
+	first_iter = true;
+	first_switch = true;
+	if (status == sticking) {
+		status = sticked;
+	} else if (status == sliding) {
+	} else {
+	}
+};
+
+
+void DiscreteCoulombFriction2D::AssRes(
+	SubVectorHandler& WorkVec,
+	const unsigned int startdof,
+	const unsigned int solution_startdof,
+	const doublereal F,
+	const d2D v,
+	const VectorHandler& X,
+	const VectorHandler& XP)  {
+	f.x[0] = X(solution_startdof+1);
+	f.x[1] = X(solution_startdof+2);
+	transition_type = null;
+	if (d2Dabs(f)-fss(0) > 1.0E-6*fss(0)) {
+		//unconditionally switch to sliding
+		if (status == sticked) {
+			transition_type = from_sticked_to_sliding;
+		} else if (status == sticking) {
+			transition_type = from_sticking_to_sliding;
+		} else if (status == sliding) {
+			//do nothing
+		} else {
+			silent_cerr("DiscreteCoulombFriction2D::AssRes() "
+					"logical error1" << std::endl);
+		}
+		status = sliding;
+	}
+	if (status == sliding) {
+		if (v*current_velocity < 0.) {
+			if (((transition_type != from_sticked_to_sliding) &&
+				(transition_type != from_sticking_to_sliding)) &&
+				((d2Dabs(v-current_velocity) < d2Dabs(previous_switch_v)) ||
+					(first_switch == true))) {
+				first_switch = false;
+				status = sticking;
+				transition_type = from_sliding_to_sticking;
+				previous_switch_v = vel_ratio*(v-current_velocity);
+				saved_sliding_velocity = v;
+				saved_sliding_friction = f;
+			}
+		}
+ 	}
+
+	switch (status) {
+	case sticking: {
+		//switch to sticking: null velocity at the end of time step
+		current_friction_force = f;
+		WorkVec.IncCoef(startdof+1, v.x[0]);
+		WorkVec.IncCoef(startdof+2, v.x[1]);
+		break;
+	}
+	case sliding: {
+		doublereal vm = d2Dabs(v);
+		//still sliding
+		switch (transition_type) {
+		case from_sticked_to_sliding: {
+			d2D fd;
+			md(f, fd);
+			current_friction_force = fss(vm)*fd+sigma2*v;
+			break;
+		}
+		case from_sticking_to_sliding: {
+			d2D saved_sliding_friction_d;
+			md(saved_sliding_friction, saved_sliding_friction_d);
+			current_friction_force = fss(vm) * saved_sliding_friction_d + sigma2 * v;
+			break;
+		}
+		default: {
+			if (d2Dabs(v) > 0.) {
+				if (sign(v) == sign(current_velocity)) {
+					current_friction_force = fss(vm)*sign(v)+sigma2*v;
+				} else {
+					current_friction_force = fss(vm)*sign(f)+sigma2*v;
+				}
+			} else {
+				//limit the force value while taking the sticking force direction
+				current_friction_force = fss(vm)*sign(f)+sigma2*v;
+			}
+		 	if (d2Dabs(v) < d2Dabs(current_velocity) && !first_iter) {
+				current_velocity = v;
+		 	}
+			break;
+		}
+		}
+		//save friction force value in the (algebric) state
+		WorkVec.IncCoef(startdof+1,f.x[0] - current_friction_force.x[0]);
+		WorkVec.IncCoef(startdof+2,f.x[1] - current_friction_force.x[1]);
+		break;
+	}
+	case sticked: {
+		current_friction_force = f;
+		WorkVec.IncCoef(startdof+1, v.x[0]);
+		WorkVec.IncCoef(startdof+2, v.x[1]);
+		break;
+	}
+	default: {
+		silent_cerr("DiscreteCoulombFriction2D::AssRes() "
+			"logical error" << std::endl);
+	}
+	}
+	//update status
+	first_iter = false;
+	if (transition_type != null) {
+		throw Elem::ChangedEquationStructure(MBDYN_EXCEPT_ARGS);
+	}
+//	current_velocity = v;
+};
+
+void DiscreteCoulombFriction2D::AssJac(
+	FullSubMatrixHandler& WorkMat,
+	ExpandableMatrix& dfc,
+	const unsigned int startdof,
+	const unsigned int solution_startdof,
+	const doublereal dCoef,
+	const doublereal F,
+	const d2D v,
+	const VectorHandler& X,
+	const VectorHandler& XP,
+	const ExpandableRowVector& dF,
+	const ExpandableMatrix& dv) const {
+	doublereal vm = d2Dabs(v);
+	switch (status) {
+	case sticking:
+	case sticked: {
+		//null velocity at the end of time step
+		dv.Sub(WorkMat,startdof+1);
+		dfc.ReDim(2, 1);
+		dfc.SetBlockDim(1, 2);
+		dfc.SetBlockIdx(1, startdof+1);
+		dfc.Set(1., 1, 1, 1);
+		dfc.Set(1., 2, 1, 2);
+		break;
+	}
+	case sliding: {
+		//still sliding
+		//save friction force value in the (algebric) state
+		WorkMat.IncCoef(startdof+1,startdof+1,-1);
+		WorkMat.IncCoef(startdof+2,startdof+2,-1);
+		d2D diff = fss.ComputeDiff(vm)*sign(current_friction_force)+sigma2*sign(v);
+		dv.Add(WorkMat,startdof+1, diff.x[0]);
+		dv.Add(WorkMat,startdof+2, diff.x[1]);
+		dfc.ReDim(2, 1);
+		dfc.SetBlockDim(1, 1);
+		d2D diff2 = fss.ComputeDiff(vm)*sign(current_friction_force-sigma2*v)+sigma2*sign(v);
+		dfc.Set(diff2.x[0], 1, 1, 1);
+		dfc.Set(diff2.x[1], 2, 1, 1);
+		dfc.Link(1, &dv);
+		break;
+	}
+	default: {
+		silent_cerr("DiscreteCoulombFriction2D::AssJac() "
+			"logical error" << std::endl);
+	}
+	}
+};
+
+const OutputHandler::Dimensions
+DiscreteCoulombFriction2D::GetEquationDimension(integer index) const {
+	// DOF == 1
+
+	OutputHandler::Dimensions dimension = OutputHandler::Dimensions::UnknownDimension;
+
+	switch (index)
+	{
+	case 1:
+		dimension = OutputHandler::Dimensions::UnknownDimension;
+		break;
+	}
+
+	return dimension;
+}
 
 
 
@@ -442,10 +734,12 @@ BasicFriction2D *const ParseFriction2D(MBDynParser& HP,
 {
    const char* sKeyWords[] = { 
       "modlugre" "2D",
+      "discrete" "coulomb" "2D",
       NULL
    };
 	enum KeyWords { 
 	     MODLUGRE2D = 0,
+	     DISCRETECOULOMB,
 	     LASTKEYWORD
 	};
 	/* token corrente */
@@ -463,6 +757,20 @@ BasicFriction2D *const ParseFriction2D(MBDynParser& HP,
 		const BasicScalarFunction*const sf =
 			ParseScalarFunction(HP, pDM);
 		return new ModLugreFriction2D(sigma0, sigma1, sigma2, kappa, sf);
+		break;
+	}
+	case DISCRETECOULOMB: {
+		const BasicScalarFunction*const sf =
+			ParseScalarFunction(HP, pDM);
+		doublereal sigma2 = 0.;
+		doublereal vel_ratio = 0.8;
+		if (HP.IsKeyWord("sigma2")) {
+			sigma2 = HP.GetReal();
+		}
+		if (HP.IsKeyWord("velocity" "ratio")) {
+			vel_ratio = HP.GetReal();
+		}
+		return new DiscreteCoulombFriction2D(sf,sigma2, vel_ratio);
 		break;
 	}
 	default: {

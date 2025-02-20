@@ -1,4 +1,4 @@
-% $Header$
+% % % $Header$
 % MBDyn (C) is a multibody analysis code.
 % http://www.mbdyn.org
 %
@@ -3597,11 +3597,12 @@ a \kw{sine} drive caller with the parameters illustrated above.
 
 
 \section{Friction}
+\label{sec:friction model}
 A friction-based element needs the definition of
 at least a \hty{friction model} and of a \hty{shape function}.
 
 \subsection{1D Friction models}
-\label{sec:friction model}
+\label{sec:friction model 1D}
 The one dimensional \kw{friction model} input format is:
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -3656,6 +3657,8 @@ The input format is:
     (see the documentation of the specific joint for details).
 \end{enumerate}
 
+\subsection{2D Friction models}
+\label{sec:friction model 2D}
 Two dimensional friction models, \kw{friction model 2D} are required whenever the sliding direction can change, as when sliding on a plane, or with a spherical hinge. The general syntax is:
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{friction_model_2D} ::= \bnt{friction_type_2D} ,
@@ -3665,12 +3668,16 @@ Two dimensional friction models, \kw{friction model 2D} are required whenever th
 where \nt{friction\_function} gives the static friction
 as a function of sliding velocity.
 
-The only implemented 2D friction model is the \kw{modlugre 2D} model. It is based on \cite{Waltersson_Karayiannidis_2024}, but
-does not model the moment related to the rotation around the contact point normal.
-In other words,it assumes pure sliding, without relative rotations, at the point of contact.
-It is recommended to set \nt{sigma2} to a zero.
+Currently implemented friction models are:
+\begin{enumerate}
+    \item \kw{modlugre 2D}\\
 
-The input format is:
+    The \kw{modlugre 2D} model is based on \cite{Waltersson_Karayiannidis_2024}, but
+    does not model the moment related to the rotation around the contact point normal.
+    In other words,it assumes pure sliding, without relative rotations, at the point of contact.
+    It is recommended to set \nt{sigma2} to a zero.
+
+    The input format is:
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{friction_type_2D} ::= \kw{modlugre 2D}
@@ -3685,6 +3692,30 @@ The input format is:
 %\end{verbatim}
 where arguments have the same meaning those defined for the \kw{modlugre} one dimensional friction model.
 
+    \item \kw{discrete coulomb 2D}\\
+    This is a Coulomb model with viscous friction and
+    internal states to resolve stick/slip conditions.
+%\begin{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{friction_model} ::= \kw{discrete coulomb 2D}
+
+    \bnt{friction_arglist} ::=
+        (\hty{ScalarFunction}) \bnt{friction_function}
+        [ , \kw{sigma2} , \bnt{sigma2} ]
+        [ , \kw{velocity ratio} , \bnt{vel_ratio} ]
+\end{Verbatim}
+%\end{verbatim}
+    where \nt{sigma2} gives the viscous friction;
+    \nt{vel\_ratio} defaults to 0.8, and is used
+    to discriminate stick/slip conditions.
+    Note that \kw{discrete coulomb 2D}
+    cannot handle stick conditions when the reaction force
+    in the constraint goes to zero (resulting in a singular Jacobian matrix).
+    The \kw{preload} parameter needs to be used to make sure
+    the joint is preloaded as appropriate
+    (see the documentation of the specific joint for details).
+\end{enumerate}
+
 \subsection{Shape functions}
 \label{sec:shape function}
 Implements the type \hty{shape function}.
@@ -3695,7 +3726,9 @@ The input format of shape functions is:
         [ , \bnt{shape_function_arglist} ]
 \end{Verbatim}
 %\end{verbatim}
-Currently implemented shape functions for friction models are:
+\subsubsection{1D shape functions}
+\label{sec:shape function 1D}
+Currently implemented shape functions for \hty{friction model 1D} are:
 \begin{enumerate}
     \item \kw{simple}\\
     This shape function is equal to one. It does not need arguments.
@@ -3738,12 +3771,14 @@ Currently implemented shape functions for friction models are:
     \label{fig:screw_sketch_3D}
   \end{figure}
 
-A two dimensional shape function,
+\subsubsection{2D shape functions}
+\label{sec:shape function 2D}
+Two dimensional shape functions,
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{shape_function_2D} ::= \bnt{shape_function_type_2D}
         [ , \bnt{shape_function_arglist_2D} ]
 \end{Verbatim}
-mat be required together with a \kw{friction model 2D}. The \kw{simple 2D} shape function
+mat be required together with a \hty{friction model 2D}. The \kw{simple 2D} shape function
 syntax is:
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{shape_function_type_2D} ::= \kw{simple 2D}

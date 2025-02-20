@@ -40,6 +40,9 @@
 
 struct d2D {
 	doublereal x[2];
+	doublereal operator*(const d2D y) const {return x[0]*y.x[0] + x[1]*y.x[1];}
+	d2D operator-(const d2D y) const {return d2D({x[0] - y.x[0], x[1] - y.x[1]});}
+	d2D operator+(const d2D y) const {return d2D({x[0] + y.x[0], x[1] + y.x[1]});}
 };
 
 /** Base class for friction models
@@ -169,7 +172,7 @@ public:
 		const doublereal kappa,
 		const BasicScalarFunction *const ff);
 	void SetValue(DataManager *pDM,
-			VectorHandler&X, VectorHandler&XP, 
+			VectorHandler&X, VectorHandler&XP,
 			SimulationEntity::Hints *ph = 0,
 			const unsigned int solution_startdof = 0);
 	unsigned int iGetNumDof(void) const;
@@ -212,7 +215,95 @@ public:
 		const VectorHandler& XP,
 		const ExpandableRowVector& dF,
 		const ExpandableMatrix& dv) const;
-	
+
+	/* returns the dimension of the component */
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+};
+
+class DiscreteCoulombFriction2D : public BasicFriction2D {
+private:
+	enum tr_type{
+		null,
+		from_sticked_to_sliding,
+		from_sticking_to_sliding,
+		from_sliding_to_sticked,
+		from_sliding_to_sticking};
+	enum status_type{
+		sticked,
+		sticking,
+		sliding};
+	//logical converged_sticked;
+	status_type status;
+	tr_type transition_type;
+	d2D converged_v;
+	logical first_iter;
+	logical first_switch;
+	d2D previous_switch_v;
+	d2D current_velocity;
+	d2D saved_sliding_velocity;
+	d2D saved_sliding_friction;
+	doublereal sigma2;
+	doublereal vel_ratio;
+	d2D current_friction_force;
+
+	const DifferentiableScalarFunction & fss;
+	d2D f;
+public:
+	DiscreteCoulombFriction2D(
+		const BasicScalarFunction *const ff,
+		const doublereal s2,
+		const doublereal vr);
+	void SetValue(DataManager *pDM,
+			VectorHandler&X, VectorHandler&XP,
+			SimulationEntity::Hints *ph = 0,
+			const unsigned int solution_startdof = 0);
+	unsigned int iGetNumDof(void) const;
+	virtual std::ostream&
+	DescribeDof(std::ostream& out,
+		const char *prefix = "",
+		bool bInitial = false) const;
+	virtual void
+	DescribeDof(std::vector<std::string>& desc,
+		bool bInitial = false,
+		int i = -1) const;
+	virtual std::ostream&
+	DescribeEq(std::ostream& out,
+		const char *prefix = "",
+		bool bInitial = false) const;
+	virtual void
+	DescribeEq(std::vector<std::string>& desc,
+		bool bInitial = false,
+		int i = -1) const;
+	DofOrder::Order GetDofType(unsigned int i) const;
+	DofOrder::Order GetEqType (unsigned int i) const;
+	d2D fc(void) const;
+	void AfterConvergence(
+		const doublereal F,
+		const d2D v,
+		const VectorHandler&X,
+		const VectorHandler&XP,
+		const unsigned int solution_startdof);
+	void AssRes(
+		SubVectorHandler& WorkVec,
+		const unsigned int startdof,
+		const unsigned int solution_startdof,
+		const doublereal F,
+		const d2D v,
+		const VectorHandler& X,
+		const VectorHandler& XP) /*throw(Elem::ChangedEquationStructure)*/;
+	void AssJac(
+		FullSubMatrixHandler& WorkMat,
+		ExpandableMatrix& dfc,
+		const unsigned int startdof,
+		const unsigned int solution_startdof,
+		const doublereal dCoef,
+		const doublereal F,
+		const d2D v,
+		const VectorHandler& X,
+		const VectorHandler& XP,
+		const ExpandableRowVector& dF,
+		const ExpandableMatrix& dv) const;
+
 	/* returns the dimension of the component */
 	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
 };
