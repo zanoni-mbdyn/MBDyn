@@ -345,12 +345,12 @@ DiscreteCoulombFriction::DescribeEq(std::vector<std::string>& desc, bool bInitia
 }
 
 DofOrder::Order DiscreteCoulombFriction::GetDofType(unsigned int i) const {
-	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in ModLugreFriction::GetDofType");
+	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in DiscreteCoulombFriction::GetDofType");
 	return DofOrder::ALGEBRAIC;
 };
 
 DofOrder::Order DiscreteCoulombFriction::GetEqType(unsigned int i) const {
-	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in ModLugreFriction::GetEqType");
+	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in DiscreteCoulombFriction::GetEqType");
 	return DofOrder::DIFFERENTIAL;
 };
 
