@@ -52,6 +52,10 @@ d2D operator*(const doublereal& x, const d2D& y) {
 	return d2D({x*y.x[0], x*y.x[1]});
 }
 
+doublereal Dot(const d2D& x, const d2D& y) {
+	return x.x[0]*y.x[0] + x.x[1]*y.x[1];
+}
+
 void md(const d2D& z, d2D& mdz) {
 	doublereal zm = d2Dabs(z);
 	if (zm < 1.E-6) {
@@ -63,10 +67,17 @@ void md(const d2D& z, d2D& mdz) {
 	}
 }
 
-d2D sign(const d2D& x) {
-	d2D y;
-	md(x, y);
-	return y;
+d2D sign(const d2D& z) {
+	d2D mdz;
+	doublereal zm = d2Dabs(z);
+	if (zm < 1.E-6) {
+		mdz.x[0] = 0.;
+		mdz.x[1] = 0.;
+	} else {
+		mdz.x[0] = z.x[0] / zm;
+		mdz.x[1] = z.x[1] / zm;
+	}
+	return mdz;
 }
 
 bool operator == (const d2D& x, const d2D& y) {
@@ -308,8 +319,9 @@ void ModLugreFriction2D::AssRes(
 	doublereal fsvm = fs(vm);
 	doublereal alph = alpha(z,v);
 
-	f.x[0] = sigma0*z.x[0] + sigma1*zp.x[0] + sigma2*v.x[0];
-	f.x[1] = sigma0*z.x[1] + sigma1*zp.x[1] + sigma2*v.x[1];
+	f = sigma0*z + sigma1*zp + sigma2*v;
+	// f.x[0] = sigma0*z.x[0] + sigma1*zp.x[0] + sigma2*v.x[0];
+	// f.x[1] = sigma0*z.x[1] + sigma1*zp.x[1] + sigma2*v.x[1];
 	// std::cout << "z.x[0]:" << z.x[0] << "; << zp.x[0]: " << zp.x[0] << "; v.x[0]: " << v.x[0] << std::endl;
 	// std::cout << "z.x[1]:" << z.x[1] << "; << zp.x[1]: " << zp.x[1] << "; v.x[1]: " << v.x[1] << std::endl;
 	WorkVec.IncCoef(startdof+1, zp.x[0] - v.x[0] + alph * z.x[0] / fsvm * sigma0);
@@ -567,61 +579,62 @@ void DiscreteCoulombFriction2D::AssRes(
  	}
 
 	switch (status) {
-	case sticking: {
-		//switch to sticking: null velocity at the end of time step
-		current_friction_force = f;
-		WorkVec.IncCoef(startdof+1, v.x[0]);
-		WorkVec.IncCoef(startdof+2, v.x[1]);
-		break;
-	}
-	case sliding: {
-		doublereal vm = d2Dabs(v);
-		//still sliding
-		switch (transition_type) {
-		case from_sticked_to_sliding: {
-			d2D fd;
-			md(f, fd);
-			current_friction_force = fss(vm)*fd+sigma2*v;
+		case sticking: {
+			//switch to sticking: null velocity at the end of time step
+			current_friction_force = f;
+			WorkVec.IncCoef(startdof+1, v.x[0]);
+			WorkVec.IncCoef(startdof+2, v.x[1]);
 			break;
 		}
-		case from_sticking_to_sliding: {
-			d2D saved_sliding_friction_d;
-			md(saved_sliding_friction, saved_sliding_friction_d);
-			current_friction_force = fss(vm) * saved_sliding_friction_d + sigma2 * v;
+		case sliding: {
+			doublereal vm = d2Dabs(v);
+			//still sliding
+			switch (transition_type) {
+				case from_sticked_to_sliding: {
+					current_friction_force = fss(vm)*sign(f)+sigma2*v;
+					std::cerr << "qui1" << std::endl;
+					break;
+				}
+				case from_sticking_to_sliding: {
+					current_friction_force = fss(vm) * sign(saved_sliding_friction) + sigma2 * v;
+					std::cerr << "qui2" << std::endl;
+					break;
+				}
+				default: {
+					if (vm > 0.) {
+						if (Dot(v, current_velocity) > 0.) {
+							current_friction_force = fss(vm)*sign(v)+sigma2*v;
+							std::cerr << "qui3" << std::endl;
+						} else {
+							current_friction_force = fss(vm)*sign(f)+sigma2*v;
+							std::cerr << "qui4" << std::endl;
+						}
+					} else {
+						//limit the force value while taking the sticking force direction
+						current_friction_force = fss(vm)*sign(f)+sigma2*v;
+						std::cerr << "qui5" << std::endl;
+					}
+					if (vm < d2Dabs(current_velocity) && !first_iter) {
+						current_velocity = v;
+					}
+					break;
+				}
+			}
+			//save friction force value in the (algebric) state
+			WorkVec.IncCoef(startdof+1,f.x[0] - current_friction_force.x[0]);
+			WorkVec.IncCoef(startdof+2,f.x[1] - current_friction_force.x[1]);
+			break;
+		}
+		case sticked: {
+			current_friction_force = f;
+			WorkVec.IncCoef(startdof+1, v.x[0]);
+			WorkVec.IncCoef(startdof+2, v.x[1]);
 			break;
 		}
 		default: {
-			if (d2Dabs(v) > 0.) {
-				if (sign(v) == sign(current_velocity)) {
-					current_friction_force = fss(vm)*sign(v)+sigma2*v;
-				} else {
-					current_friction_force = fss(vm)*sign(f)+sigma2*v;
-				}
-			} else {
-				//limit the force value while taking the sticking force direction
-				current_friction_force = fss(vm)*sign(f)+sigma2*v;
-			}
-		 	if (d2Dabs(v) < d2Dabs(current_velocity) && !first_iter) {
-				current_velocity = v;
-		 	}
-			break;
+			silent_cerr("DiscreteCoulombFriction2D::AssRes() "
+				"logical error" << std::endl);
 		}
-		}
-		//save friction force value in the (algebric) state
-		WorkVec.IncCoef(startdof+1,f.x[0] - current_friction_force.x[0]);
-		WorkVec.IncCoef(startdof+2,f.x[1] - current_friction_force.x[1]);
-		break;
-	}
-	case sticked: {
-		current_friction_force = f;
-		WorkVec.IncCoef(startdof+1, v.x[0]);
-		WorkVec.IncCoef(startdof+2, v.x[1]);
-		break;
-	}
-	default: {
-		silent_cerr("DiscreteCoulombFriction2D::AssRes() "
-			"logical error" << std::endl);
-	}
 	}
 	//update status
 	first_iter = false;
@@ -645,37 +658,37 @@ void DiscreteCoulombFriction2D::AssJac(
 	const ExpandableMatrix& dv) const {
 	doublereal vm = d2Dabs(v);
 	switch (status) {
-	case sticking:
-	case sticked: {
-		//null velocity at the end of time step
-		dv.Sub(WorkMat,startdof+1);
-		dfc.ReDim(2, 1);
-		dfc.SetBlockDim(1, 2);
-		dfc.SetBlockIdx(1, startdof+1);
-		dfc.Set(1., 1, 1, 1);
-		dfc.Set(1., 2, 1, 2);
-		break;
-	}
-	case sliding: {
-		//still sliding
-		//save friction force value in the (algebric) state
-		WorkMat.IncCoef(startdof+1,startdof+1,-1);
-		WorkMat.IncCoef(startdof+2,startdof+2,-1);
-		d2D diff = fss.ComputeDiff(vm)*sign(current_friction_force)+sigma2*sign(v);
-		dv.Add(WorkMat,startdof+1, diff.x[0]);
-		dv.Add(WorkMat,startdof+2, diff.x[1]);
-		dfc.ReDim(2, 1);
-		dfc.SetBlockDim(1, 1);
-		d2D diff2 = fss.ComputeDiff(vm)*sign(current_friction_force-sigma2*v)+sigma2*sign(v);
-		dfc.Set(diff2.x[0], 1, 1, 1);
-		dfc.Set(diff2.x[1], 2, 1, 1);
-		dfc.Link(1, &dv);
-		break;
-	}
-	default: {
-		silent_cerr("DiscreteCoulombFriction2D::AssJac() "
-			"logical error" << std::endl);
-	}
+		case sticking:
+		case sticked: {
+			//null velocity at the end of time step
+			dv.Sub(WorkMat,startdof+1);
+			dfc.ReDim(2, 1);
+			dfc.SetBlockDim(1, 2);
+			dfc.SetBlockIdx(1, startdof+1);
+			dfc.Set(1., 1, 1, 1);
+			dfc.Set(1., 2, 1, 2);
+			break;
+		}
+		case sliding: {
+			//still sliding
+			//save friction force value in the (algebric) state
+			WorkMat.IncCoef(startdof+1,startdof+1,-1);
+			WorkMat.IncCoef(startdof+2,startdof+2,-1);
+			d2D diff = fss.ComputeDiff(vm)*sign(current_friction_force)+sigma2*sign(v);
+			dv.Add(WorkMat,startdof+1, diff.x[0]);
+			dv.Add(WorkMat,startdof+2, diff.x[1]);
+			dfc.ReDim(2, 1);
+			dfc.SetBlockDim(1, 1);
+			d2D diff2 = fss.ComputeDiff(vm)*sign(current_friction_force-sigma2*v)+sigma2*sign(v);
+			dfc.Set(diff2.x[0], 1, 1, 1);
+			dfc.Set(diff2.x[1], 2, 1, 1);
+			dfc.Link(1, &dv);
+			break;
+		}
+		default: {
+			silent_cerr("DiscreteCoulombFriction2D::AssJac() "
+				"logical error" << std::endl);
+		}
 	}
 };
 
