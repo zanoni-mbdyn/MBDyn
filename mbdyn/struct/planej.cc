@@ -151,7 +151,7 @@ PlaneHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, int 
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -288,7 +288,7 @@ PlaneHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -2669,7 +2669,7 @@ AxialRotationJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, i
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -2809,7 +2809,7 @@ AxialRotationJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, in
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();

@@ -142,7 +142,7 @@ SphericalHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, 
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -251,7 +251,7 @@ SphericalHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, i
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
