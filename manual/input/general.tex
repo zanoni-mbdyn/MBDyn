@@ -3635,7 +3635,9 @@ The input format is:
 
     \item \kw{discrete coulomb}\\
     This is a Coulomb model with viscous friction and
-    internal states to resolve stick/slip conditions.
+    internal states to resolve stick/slip conditions.\\
+    This model, not making use of a cone complementary problem solver,
+    is \emph{experimental} and may lead to spurious convergence issue. Its use is \emph{discouraged}.
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{friction_model} ::= \kw{discrete coulomb}
@@ -3694,7 +3696,9 @@ where arguments have the same meaning those defined for the \kw{modlugre} one di
 
     \item \kw{discrete coulomb 2D}\\
     This is a Coulomb model with viscous friction and
-    internal states to resolve stick/slip conditions.
+    internal states to resolve stick/slip conditions.\\
+    Just like the 1D Coulomb model, this model does not use a cone complementary problem solver (while it should),
+    thus is \emph{experimental} and may lead to spurious convergence issue. Its use is \emph{strongly discouraged}.
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{friction_model} ::= \kw{discrete coulomb 2D}
