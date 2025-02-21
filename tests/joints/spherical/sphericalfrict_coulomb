@@ -7,7 +7,7 @@ end: data;
 begin: initial value;
 	initial time: 0.;
 	final time: 10.;
-	time step: 1.e-4;
+	time step: 1.e-2;
 	tolerance: 1e-4;
 	derivatives coefficient: 1E-7;
 	derivatives max iterations: 10;
@@ -62,7 +62,7 @@ begin: elements;
 		friction, 0.1,
 			preload, 1.,
 			#modlugre 2D, 2000, 0.1, 0., 0.71, "constfriction",
-			discrete coulomb 2D, "test", const, 1.,
+			discrete coulomb 2D, "constfriction",
 			simple 2D
 	;
 	body: 2, 2, 1., null, diag, 1.,1.,1.;

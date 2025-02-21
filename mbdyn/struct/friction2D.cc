@@ -470,9 +470,9 @@ unsigned int DiscreteCoulombFriction2D::iGetNumDof(void) const {
 std::ostream&
 DiscreteCoulombFriction2D::DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const
 {
-	return out << prefix
-		<< "[1]: DiscreteCoulombFriction2D state 1" << std::endl
-		<< "[1]: DiscreteCoulombFriction2D state 2" << std::endl;
+	return out
+		<< prefix << "[1]: DiscreteCoulombFriction2D state 1" << std::endl
+		<< prefix << prefix << "[2]: DiscreteCoulombFriction2D state 2" << std::endl;
 }
 
 void
@@ -487,9 +487,9 @@ DiscreteCoulombFriction2D::DescribeDof(std::vector<std::string>& desc, bool bIni
 std::ostream&
 DiscreteCoulombFriction2D::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const
 {
-	return out << prefix
-		<< "[1]: DiscreteCoulombFriction2D equation 1" << std::endl
-		<< "[2]: DiscreteCoulombFriction2D equation 2" << std::endl;
+	return out
+		<< prefix << "[1]: DiscreteCoulombFriction2D equation 1" << std::endl
+		<< prefix << prefix << "[2]: DiscreteCoulombFriction2D equation 2" << std::endl;
 }
 
 void
@@ -592,27 +592,22 @@ void DiscreteCoulombFriction2D::AssRes(
 			switch (transition_type) {
 				case from_sticked_to_sliding: {
 					current_friction_force = fss(vm)*sign(f)+sigma2*v;
-					std::cerr << "qui1" << std::endl;
 					break;
 				}
 				case from_sticking_to_sliding: {
 					current_friction_force = fss(vm) * sign(saved_sliding_friction) + sigma2 * v;
-					std::cerr << "qui2" << std::endl;
 					break;
 				}
 				default: {
 					if (vm > 0.) {
 						if (Dot(v, current_velocity) > 0.) {
 							current_friction_force = fss(vm)*sign(v)+sigma2*v;
-							std::cerr << "qui3" << std::endl;
 						} else {
 							current_friction_force = fss(vm)*sign(f)+sigma2*v;
-							std::cerr << "qui4" << std::endl;
 						}
 					} else {
 						//limit the force value while taking the sticking force direction
 						current_friction_force = fss(vm)*sign(f)+sigma2*v;
-						std::cerr << "qui5" << std::endl;
 					}
 					if (vm < d2Dabs(current_velocity) && !first_iter) {
 						current_velocity = v;
@@ -674,14 +669,14 @@ void DiscreteCoulombFriction2D::AssJac(
 			//save friction force value in the (algebric) state
 			WorkMat.IncCoef(startdof+1,startdof+1,-1);
 			WorkMat.IncCoef(startdof+2,startdof+2,-1);
-			d2D diff = fss.ComputeDiff(vm)*sign(current_friction_force)+sigma2*sign(v);
+			d2D diff = fss.ComputeDiff(vm)*sign(current_friction_force)+sigma2*d2D({1., 1.});
 			dv.Add(WorkMat,startdof+1, diff.x[0]);
 			dv.Add(WorkMat,startdof+2, diff.x[1]);
 			dfc.ReDim(2, 1);
-			dfc.SetBlockDim(1, 1);
-			d2D diff2 = fss.ComputeDiff(vm)*sign(current_friction_force-sigma2*v)+sigma2*sign(v);
+			dfc.SetBlockDim(1, 2);
+			d2D diff2 = fss.ComputeDiff(vm)*sign(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
 			dfc.Set(diff2.x[0], 1, 1, 1);
-			dfc.Set(diff2.x[1], 2, 1, 1);
+			dfc.Set(diff2.x[1], 2, 1, 2);
 			dfc.Link(1, &dv);
 			break;
 		}

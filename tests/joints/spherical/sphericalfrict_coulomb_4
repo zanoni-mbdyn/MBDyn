@@ -7,8 +7,8 @@ end: data;
 begin: initial value;
 	initial time: 0.;
 	final time: 10.;
-	time step: 1.e-3;
-	tolerance: 1e-4;
+	time step: 1.e-4;
+	tolerance: 1e-3;
 	derivatives coefficient: 1E-7;
 	derivatives max iterations: 10;
 	derivatives tolerance: 1e3;
@@ -19,7 +19,7 @@ begin: initial value;
 	#linear solver: naive, colamd;
 	linear solver: umfpack;
 	#abort after : derivatives;
-	output: iterations;
+	#output: iterations;
 	#output: residual;
 	#output: residual, solution;
 	#output: residual, jacobian, solution;
@@ -61,9 +61,9 @@ begin: elements;
 		hinge, reference, node, eye
 		,
 		friction, 1.,
-			preload, .001,
+			preload, .1,
 			#modlugre 2D, 2000, 0.1, 0., 0.71, "constfriction",
-			discrete coulomb 2D, "test", const, 1.,
+			discrete coulomb 2D, "constfriction",
 			simple 2D
 	;
 	body: 2, 2, 1., null, diag, 1.,1.,1.;
