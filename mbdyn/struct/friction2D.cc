@@ -44,7 +44,7 @@
 extern int sign(const doublereal x);
 
 
-doublereal d2Dabs(const d2D& z) {
+doublereal d2DNorm(const d2D& z) {
 	return std::sqrt(z.x[0] * z.x[0] + z.x[1] * z.x[1]);
 }
 
@@ -57,7 +57,7 @@ doublereal Dot(const d2D& x, const d2D& y) {
 }
 
 void md(const d2D& z, d2D& mdz) {
-	doublereal zm = d2Dabs(z);
+	doublereal zm = d2DNorm(z);
 	if (zm < 1.E-6) {
 		mdz.x[0] = sign(z.x[0]);
 		mdz.x[1] = sign(z.x[1]);
@@ -67,9 +67,9 @@ void md(const d2D& z, d2D& mdz) {
 	}
 }
 
-d2D sign(const d2D& z) {
+d2D d2DDirection(const d2D& z) {
 	d2D mdz;
-	doublereal zm = d2Dabs(z);
+	doublereal zm = d2DNorm(z);
 	if (zm < 1.E-6) {
 		mdz.x[0] = 0.;
 		mdz.x[1] = 0.;
@@ -78,6 +78,27 @@ d2D sign(const d2D& z) {
 		mdz.x[1] = z.x[1] / zm;
 	}
 	return mdz;
+}
+
+void d2DDirectionDer(const d2D& z, ExpandableMatrix& dDirection) {
+	dDirection.ReDim(2, 1);
+	dDirection.SetBlockDim(1, 2);
+	doublereal zm = d2DNorm(z);
+	if (zm < 1.E-6) {
+		dDirection.Set(0., 1, 1, 1);
+		dDirection.Set(0., 1, 1, 2);
+		dDirection.Set(0., 2, 1, 1);
+		dDirection.Set(0., 2, 1, 2);
+	} else {
+		d2D dir = d2DDirection(z);
+		doublereal coef1 = -0.5 * dir.x[0] / zm;
+		doublereal coef2 = -0.5 * dir.x[1] / zm;
+		dDirection.Set(1. -coef1, 1, 1, 1);
+		dDirection.Set(   -coef1, 1, 1, 2);
+		dDirection.Set(   -coef2, 2, 1, 1);
+		dDirection.Set(1. -coef2, 2, 1, 2);
+	}
+	return;
 }
 
 bool operator == (const d2D& x, const d2D& y) {
@@ -201,8 +222,8 @@ doublereal ModLugreFriction2D::epsilon(const d2D& z,
 
 doublereal ModLugreFriction2D::alpha(const d2D& z,
 	const d2D& v) const {
-	doublereal zm = d2Dabs(z);
-	doublereal vm = d2Dabs(v);
+	doublereal zm = d2DNorm(z);
+	doublereal vm = d2DNorm(v);
 	return alphatilde(zm, vm) * epsilon(z, v);
 }
 
@@ -262,8 +283,8 @@ doublereal ModLugreFriction2D::alphatilded_vm(const doublereal zm,
 void ModLugreFriction2D::alphad_v(const d2D& z,
 	const d2D& v, ExpandableMatrix& alpha_v) const {
 
-	doublereal zm = d2Dabs(z);
-	doublereal vm = d2Dabs(v);
+	doublereal zm = d2DNorm(z);
+	doublereal vm = d2DNorm(v);
 	doublereal eps = epsilon(z, v);
 	doublereal alphat = alphatilde(zm, vm);
 	doublereal alphatd_vm = alphatilded_vm(zm, vm);
@@ -282,16 +303,16 @@ void ModLugreFriction2D::alphad_v(const d2D& z,
 void ModLugreFriction2D::alphad_z(const d2D& z,
 	const d2D& v, ExpandableRowVector& alpha_z, const unsigned int startdof) const {
 
-	doublereal zm = d2Dabs(z);
-	doublereal vm = d2Dabs(v);
+	doublereal zm = d2DNorm(z);
+	doublereal vm = d2DNorm(v);
 	doublereal eps = epsilon(z, v);
 	doublereal alphat = alphatilde(zm, vm);
 	doublereal alphatd_zm = alphatilded_zm(zm, vm);
 	d2D zmd_z;
 	md(z, zmd_z);
 	// d2D der;
-	// der.x[0] = alphat * z.x[0] + eps * alphat_dvm * sign(z.x[0]);
-	// der.x[1] = alphat * z.x[1] + eps * alphat_dvm * sign(z.x[1]);
+	// der.x[0] = alphat * z.x[0] + eps * alphat_dvm * d2DDirection(z.x[0]);
+	// der.x[1] = alphat * z.x[1] + eps * alphat_dvm * d2DDirection(z.x[1]);
 	alpha_z.ReDim(2);
 	alpha_z.Set(alphat * v.x[0] / 2. + eps * alphatd_zm * zmd_z.x[0], 1, startdof+1);
 	alpha_z.Set(alphat * v.x[1] / 2. + eps * alphatd_zm * zmd_z.x[1], 2, startdof+2);
@@ -315,7 +336,7 @@ void ModLugreFriction2D::AssRes(
 	d2D z = {X(solution_startdof+1), X(solution_startdof+2)};
 	d2D zp = {XP(solution_startdof+1), XP(solution_startdof+2)};
 
-	doublereal vm = d2Dabs(v);
+	doublereal vm = d2DNorm(v);
 	doublereal fsvm = fs(vm);
 	doublereal alph = alpha(z,v);
 
@@ -343,7 +364,7 @@ void ModLugreFriction2D::AssJac(
 
 	d2D z = {X(solution_startdof+1), X(solution_startdof+2)};
 
-	doublereal vm = d2Dabs(v);
+	doublereal vm = d2DNorm(v);
 	//doublereal zp = XP(solution_startdof+1);
 /*
  * 	attrito
@@ -548,7 +569,7 @@ void DiscreteCoulombFriction2D::AssRes(
 	f.x[0] = X(solution_startdof+1);
 	f.x[1] = X(solution_startdof+2);
 	transition_type = null;
-	if (d2Dabs(f)-fss(0) > 1.0E-6*fss(0)) {
+	if (d2DNorm(f)-fss(0) > 1.0E-6*fss(0)) {
 		//unconditionally switch to sliding
 		if (status == sticked) {
 			transition_type = from_sticked_to_sliding;
@@ -566,7 +587,7 @@ void DiscreteCoulombFriction2D::AssRes(
 		if (v*current_velocity < 0.) {
 			if (((transition_type != from_sticked_to_sliding) &&
 				(transition_type != from_sticking_to_sliding)) &&
-				((d2Dabs(v-current_velocity) < d2Dabs(previous_switch_v)) ||
+				((d2DNorm(v-current_velocity) < d2DNorm(previous_switch_v)) ||
 					(first_switch == true))) {
 				first_switch = false;
 				status = sticking;
@@ -587,29 +608,29 @@ void DiscreteCoulombFriction2D::AssRes(
 			break;
 		}
 		case sliding: {
-			doublereal vm = d2Dabs(v);
+			doublereal vm = d2DNorm(v);
 			//still sliding
 			switch (transition_type) {
 				case from_sticked_to_sliding: {
-					current_friction_force = fss(vm)*sign(f)+sigma2*v;
+					current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 					break;
 				}
 				case from_sticking_to_sliding: {
-					current_friction_force = fss(vm) * sign(saved_sliding_friction) + sigma2 * v;
+					current_friction_force = fss(vm) * d2DDirection(saved_sliding_friction) + sigma2 * v;
 					break;
 				}
 				default: {
 					if (vm > 0.) {
 						if (Dot(v, current_velocity) > 0.) {
-							current_friction_force = fss(vm)*sign(v)+sigma2*v;
+							current_friction_force = fss(vm)*d2DDirection(v)+sigma2*v;
 						} else {
-							current_friction_force = fss(vm)*sign(f)+sigma2*v;
+							current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 						}
 					} else {
-						//limit the force value while taking the sticking force direction
-						current_friction_force = fss(vm)*sign(f)+sigma2*v;
+						//limit the force value while taking the sticking force d2DDirection
+						current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 					}
-					if (vm < d2Dabs(current_velocity) && !first_iter) {
+					if (vm < d2DNorm(current_velocity) && !first_iter) {
 						current_velocity = v;
 					}
 					break;
@@ -651,7 +672,7 @@ void DiscreteCoulombFriction2D::AssJac(
 	const VectorHandler& XP,
 	const ExpandableRowVector& dF,
 	const ExpandableMatrix& dv) const {
-	doublereal vm = d2Dabs(v);
+	doublereal vm = d2DNorm(v);
 	switch (status) {
 		case sticking:
 		case sticked: {
@@ -669,12 +690,12 @@ void DiscreteCoulombFriction2D::AssJac(
 			//save friction force value in the (algebric) state
 			WorkMat.IncCoef(startdof+1,startdof+1,-1);
 			WorkMat.IncCoef(startdof+2,startdof+2,-1);
-			d2D diff = fss.ComputeDiff(vm)*sign(current_friction_force)+sigma2*d2D({1., 1.});
+			d2D diff = fss.ComputeDiff(vm)*d2DDirection(current_friction_force)+sigma2*d2D({1., 1.});
 			dv.Add(WorkMat,startdof+1, diff.x[0]);
 			dv.Add(WorkMat,startdof+2, diff.x[1]);
 			dfc.ReDim(2, 1);
 			dfc.SetBlockDim(1, 2);
-			d2D diff2 = fss.ComputeDiff(vm)*sign(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
+			d2D diff2 = fss.ComputeDiff(vm)*d2DDirection(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
 			dfc.Set(diff2.x[0], 1, 1, 1);
 			dfc.Set(diff2.x[1], 2, 1, 2);
 			dfc.Link(1, &dv);
