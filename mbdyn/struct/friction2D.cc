@@ -56,7 +56,7 @@ doublereal Dot(const d2D& x, const d2D& y) {
 	return x.x[0]*y.x[0] + x.x[1]*y.x[1];
 }
 
-void md(const d2D& z, d2D& mdz) {
+void d2DNorm_d(const d2D& z, d2D& mdz) {
 	doublereal zm = d2DNorm(z);
 	if (zm < 1.E-6) {
 		mdz.x[0] = sign(z.x[0]);
@@ -80,23 +80,19 @@ d2D d2DDirection(const d2D& z) {
 	return mdz;
 }
 
-void d2DDirectionDer(const d2D& z, ExpandableMatrix& dDirection) {
-	dDirection.ReDim(2, 1);
-	dDirection.SetBlockDim(1, 2);
+void d2DDirection_d(const d2D& z, ExpandableMatrix& mdz) {
 	doublereal zm = d2DNorm(z);
+	doublereal zm3 = std::pow(zm, 3);
+	mdz.ReDim(2, 1);
+	mdz.SetBlockDim(1, 2);
 	if (zm < 1.E-6) {
-		dDirection.Set(0., 1, 1, 1);
-		dDirection.Set(0., 1, 1, 2);
-		dDirection.Set(0., 2, 1, 1);
-		dDirection.Set(0., 2, 1, 2);
+		mdz.Set(1., 1, 1, 1);
+		mdz.Set(1., 2, 1, 2);
 	} else {
-		d2D dir = d2DDirection(z);
-		doublereal coef1 = -0.5 * dir.x[0] / zm;
-		doublereal coef2 = -0.5 * dir.x[1] / zm;
-		dDirection.Set(1. -coef1, 1, 1, 1);
-		dDirection.Set(   -coef1, 1, 1, 2);
-		dDirection.Set(   -coef2, 2, 1, 1);
-		dDirection.Set(1. -coef2, 2, 1, 2);
+		mdz.Set(z.x[1]*z.x[1] / zm3, 1, 1, 1);
+		mdz.Set(-z.x[0]*z.x[1] / zm, 1, 1, 2);
+		mdz.Set(-z.x[0]*z.x[1] / zm, 2, 1, 1);
+		mdz.Set(z.x[0]*z.x[0] / zm3, 2, 1, 2);
 	}
 	return;
 }
@@ -289,7 +285,7 @@ void ModLugreFriction2D::alphad_v(const d2D& z,
 	doublereal alphat = alphatilde(zm, vm);
 	doublereal alphatd_vm = alphatilded_vm(zm, vm);
 	d2D vmd_v;
-	md(v, vmd_v);
+	d2DNorm_d(v, vmd_v);
 	// d2D der;
 	// der.x[0] = alphat * z.x[0];
 	// der.x[1] = alphat * z.x[1];
@@ -309,7 +305,7 @@ void ModLugreFriction2D::alphad_z(const d2D& z,
 	doublereal alphat = alphatilde(zm, vm);
 	doublereal alphatd_zm = alphatilded_zm(zm, vm);
 	d2D zmd_z;
-	md(z, zmd_z);
+	d2DNorm_d(z, zmd_z);
 	// d2D der;
 	// der.x[0] = alphat * z.x[0] + eps * alphat_dvm * d2DDirection(z.x[0]);
 	// der.x[1] = alphat * z.x[1] + eps * alphat_dvm * d2DDirection(z.x[1]);
@@ -394,7 +390,7 @@ void ModLugreFriction2D::AssJac(
 	doublereal fsvm2 = fsvm * fsvm;
 	doublereal fsvmd_vm = fsd_vm(vm);
 	d2D vmd_v;
-	md(v, vmd_v);
+	d2DNorm_d(v, vmd_v);
 
 	// -dot(dz) - alpha * sigma0 / fss * dz
 	WorkMat.IncCoef(startdof+1, startdof+1, -1. - alph * sigma0 / fsvm * dCoef);
