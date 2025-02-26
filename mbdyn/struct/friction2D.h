@@ -248,6 +248,8 @@ private:
 
 	const DifferentiableScalarFunction & fss;
 	d2D f;
+	mutable ExpandableMatrix Direction_d;
+	bool use_sliding_v;
 public:
 	DiscreteCoulombFriction2D(
 		const BasicScalarFunction *const ff,

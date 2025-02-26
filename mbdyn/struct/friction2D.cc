@@ -565,6 +565,7 @@ void DiscreteCoulombFriction2D::AssRes(
 	f.x[0] = X(solution_startdof+1);
 	f.x[1] = X(solution_startdof+2);
 	transition_type = null;
+	use_sliding_v = false;
 	if (d2DNorm(f)-fss(0) > 1.0E-6*fss(0)) {
 		//unconditionally switch to sliding
 		if (status == sticked) {
@@ -616,9 +617,10 @@ void DiscreteCoulombFriction2D::AssRes(
 					break;
 				}
 				default: {
-					if (vm > 0.) {
+					if (vm >= 1.E-6) {
 						if (Dot(v, current_velocity) > 0.) {
 							current_friction_force = fss(vm)*d2DDirection(v)+sigma2*v;
+							use_sliding_v = true;
 						} else {
 							current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 						}
@@ -684,17 +686,66 @@ void DiscreteCoulombFriction2D::AssJac(
 		case sliding: {
 			//still sliding
 			//save friction force value in the (algebric) state
+					// if (vm > 0.) {
+					// 	if (Dot(v, current_velocity) > 0.) {
+					// 		current_friction_force = fss(vm)*d2DDirection(v)+sigma2*v;
+					// 	} else {
+					// 		current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
+					// 	}
+					// } else {
+					// 	//limit the force value while taking the sticking force d2DDirection
+					// 	current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
+					// }
+					// if (vm < d2DNorm(current_velocity) && !first_iter) {
+					// 	current_velocity = v;
+					// }
+
 			WorkMat.IncCoef(startdof+1,startdof+1,-1);
 			WorkMat.IncCoef(startdof+2,startdof+2,-1);
-			d2D diff = fss.ComputeDiff(vm)*d2DDirection(current_friction_force)+sigma2*d2D({1., 1.});
-			dv.Add(WorkMat,startdof+1, diff.x[0]);
-			dv.Add(WorkMat,startdof+2, diff.x[1]);
+			doublereal fssd = fss.ComputeDiff(vm);
+			d2D dir = d2DDirection(current_friction_force-sigma2*v);
+			d2D vm_d; d2DNorm_d(v, vm_d);
+
+// 			if (use_sliding_v) {
+// 				dfc.ReDim(2, 2);
+// 				dfc.SetBlockDim(2, 2);
+// 
+// 				d2DDirection_d(v, Direction_d);
+// 				Direction_d.Link(1, &dv);
+// 				
+// 				doublereal fs = fss(vm);
+// 				dfc.Set(fs, 1, 2, 1);
+// 				dfc.Set(fs, 2, 2, 2);
+// 				dfc.Link(2, &Direction_d);
+// 			} else {
+// 				dfc.ReDim(2, 1);
+// 			}
+// 			dfc.SetBlockDim(1, 2);
+// 			dfc.Set(fssd * dir.x[0] * vm_d.x[0] + sigma2, 1, 1, 1);
+// 			dfc.Set(fssd * dir.x[0] * vm_d.x[1]         , 1, 1, 2);
+// 			dfc.Set(fssd * dir.x[1] * vm_d.x[0]         , 2, 1, 1);
+// 			dfc.Set(fssd * dir.x[1] * vm_d.x[1] + sigma2, 2, 1, 2);
+// 			dfc.Link(1, &dv);
+// 			dfc.Add(WorkMat, startdof+1, 1.);
+
 			dfc.ReDim(2, 1);
 			dfc.SetBlockDim(1, 2);
-			d2D diff2 = fss.ComputeDiff(vm)*d2DDirection(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
-			dfc.Set(diff2.x[0], 1, 1, 1);
-			dfc.Set(diff2.x[1], 2, 1, 2);
+			dfc.Set(fssd * dir.x[0] * vm_d.x[0] + sigma2, 1, 1, 1);
+			dfc.Set(fssd * dir.x[0] * vm_d.x[1]         , 1, 1, 2);
+			dfc.Set(fssd * dir.x[1] * vm_d.x[0]         , 2, 1, 1);
+			dfc.Set(fssd * dir.x[1] * vm_d.x[1] + sigma2, 2, 1, 2);
 			dfc.Link(1, &dv);
+			dfc.Add(WorkMat, startdof+1, 1.);
+	
+			// d2D diff = fss.ComputeDiff(vm)*d2DDirection(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
+			// dv.Add(WorkMat,startdof+1, diff.x[0]);
+			// dv.Add(WorkMat,startdof+2, diff.x[1]);
+			// dfc.ReDim(2, 1);
+			// dfc.SetBlockDim(1, 2);
+			// d2D diff2 = fss.ComputeDiff(vm)*d2DDirection(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
+			// dfc.Set(diff2.x[0], 1, 1, 1);
+			// dfc.Set(diff2.x[1], 2, 1, 2);
+			// dfc.Link(1, &dv);
 			break;
 		}
 		default: {

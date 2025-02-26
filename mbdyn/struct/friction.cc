@@ -544,7 +544,7 @@ void DiscreteCoulombFriction::AssJac(
 		//WorkVec.IncCoef(startdof+1,f-current_friction_force);
 		WorkMat.IncCoef(startdof+1,startdof+1,-1);
 		dv.Add(WorkMat,startdof+1,
-			sign(current_friction_force)*fss.ComputeDiff(v)+sigma2);
+			sign(current_friction_force-sigma2*v)*fss.ComputeDiff(v)+sigma2);
 		dfc.ReDim(1);
 		dfc.Set(sign(current_friction_force-sigma2*v)*fss.ComputeDiff(v)+sigma2,1); dfc.Link(1, &dv);
 		break;

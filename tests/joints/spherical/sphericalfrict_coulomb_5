@@ -50,7 +50,7 @@ begin: nodes;
 		0., 0., 1.;
 end: nodes;
 
-scalar function: "constfriction", const, 0.3;
+scalar function: "linearfriction", linear, 0., 0.3, 1., 0.5;
 
 begin: elements;
 	joint: 1, clamp, 1, node, node;
@@ -63,7 +63,7 @@ begin: elements;
 		friction, 1.,
 			preload, .1,
 			#modlugre 2D, 2000, 0.1, 0., 0.71, "constfriction",
-			discrete coulomb 2D, "constfriction",
+			discrete coulomb 2D, "linearfriction",
 			simple 2D
 	;
 	body: 2, 2, 1., null, diag, 1.,1.,1.;
