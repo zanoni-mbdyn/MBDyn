@@ -361,8 +361,8 @@ $(PKG_FILE): $(top_srcdir)/utils/PKG_ADD mbdyn_util_oct.oct
 	@$(MKDIR_P) $(PKG_DIR)/package/inst
 	@echo "Copyright $(COPYRIGHT)" > $(PKG_DIR)/package/COPYING
 	@echo "Name: $(PKG_NAME)" > $(PKG_DIR)/package/DESCRIPTION
-	@echo "Version: $(VERSION)" >> $(PKG_DIR)/package/DESCRIPTION
-	@echo "Date: 2019-04-07" >> $(PKG_DIR)/package/DESCRIPTION
+	@echo "Version: 0.1.0" >> $(PKG_DIR)/package/DESCRIPTION
+	@echo "Date: 2025-02-22" >> $(PKG_DIR)/package/DESCRIPTION
 	@echo "Author: $(PKG_AUTHOR)" >> $(PKG_DIR)/package/DESCRIPTION
 	@echo "Maintainer: $(PKG_AUTHOR)" >> $(PKG_DIR)/package/DESCRIPTION
 	@echo "Title: MBDyn Octave package" >> $(PKG_DIR)/package/DESCRIPTION

@@ -6767,6 +6767,67 @@ the linearization of the force becomes
 		} \delta\dot{\T{g}}_1
 \end{align}
 
+In summary:
+\begin{align}
+	\sqbr{\cvvect{
+		\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+		\\
+		\T{f}_1 \times \plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+		\\
+		-\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+		\\
+		-\T{f}_2 \times \plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+	}}
+	\delta\dot{\T{x}}_1
+	& \nonumber \\ \mbox{}
+	+
+	\sqbr{\cvvect{
+		- \plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_1\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_1 \times \T{\omega}_1}\times{}}
+		\\
+		- \T{f}_1 \times \plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_1\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_1 \times \T{\omega}_1}\times{}}
+			- c \T{F} \times \T{f}_1 \times 
+		\\
+		\plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_1\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_1 \times \T{\omega}_1}\times{}}
+		\\
+		\T{f}_2 \times \plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_1\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_1 \times \T{\omega}_1}\times{}}
+	}}
+	\delta\dot{\T{g}}_1
+	& \nonumber \\ \mbox{}
+	+
+	\sqbr{\cvvect{
+		- \plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+		\\
+		- \T{f}_1 \times \plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+		\\
+		\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+		\\
+		\T{f}_2 \times \plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}}
+	}}
+	\delta\dot{\T{x}}_2
+	& \nonumber \\ \mbox{}
+	+
+	\sqbr{\cvvect{
+		\plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_2\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_2 \times \T{\omega}_2}\times{}}
+		\\
+		\T{f}_1 \times \plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_2\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_2 \times \T{\omega}_2}\times{}}
+		\\
+		- \plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_2\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_2 \times \T{\omega}_2}\times{}}
+		\\
+		- \T{f}_2 \times \plbr{\plbr{c\T{K}_{\T{l}} + \T{K}_{\dot{\T{l}}}} \T{f}_2\times{} - c \T{K}_{\dot{\T{l}}} \plbr{\T{f}_2 \times \T{\omega}_2}\times{}}
+			+ c \T{F} \times \T{f}_2 \times{}
+	}}
+	\delta\dot{\T{g}}_2
+	&=
+	\cubr{\cvvect{
+		\T{F}
+		\\
+		\T{f}_1 \times \T{F}
+		\\
+		- \T{F}
+		\\
+		- \T{f}_2 \times \T{F}
+	}}
+\end{align}
 
 
 

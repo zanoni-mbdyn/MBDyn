@@ -1009,7 +1009,7 @@ RodWithOffset::AssJac(VariableSubMatrixHandler& WorkMat,
 	WM.Sub(6 + 1, 3 + 1, Tmp3);
 
 	/* Termini di coppia, Delta g1 */
-	Tmp2 = f1Tmp.Cross(Tmp3) + Mat3x3(MatCrossCross, F, f1Tmp*dCoef);
+	Tmp2 = f1Tmp.Cross(Tmp3) - Mat3x3(MatCrossCross, F, f1Tmp*dCoef);
 	WM.Add(3 + 1, 3 + 1, Tmp2);
 	Tmp2 = f2Tmp.Cross(Tmp3);
 	WM.Sub(9 + 1, 3 + 1, Tmp2);
@@ -1238,7 +1238,7 @@ RodWithOffset::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 	WM.Sub(6 + 1, 3 + 1, Tmp3);
 
 	/* Termini di coppia, Delta g1 */
-	Tmp2 = f1Tmp.Cross(Tmp3) + Mat3x3(MatCrossCross, F, f1Tmp);
+	Tmp2 = f1Tmp.Cross(Tmp3) - Mat3x3(MatCrossCross, F, f1Tmp);
 	WM.Add(3 + 1, 3 + 1, Tmp2);
 	Tmp2 = f2Tmp.Cross(Tmp3);
 	WM.Sub(9 + 1, 3 + 1, Tmp2);
