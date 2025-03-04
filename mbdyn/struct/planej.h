@@ -72,6 +72,9 @@ class PlaneHingeJoint : public Joint {
    mutable doublereal dTheta, dThetaWrapped;
 
    /* friction related data */
+ public:
+   enum ReactionComponentsForFriction {Full, Normal, Axial, OnlyPreload};
+ private:
    BasicShapeCoefficient *const Sh_c;
    BasicFriction *const fc;
    const doublereal preF;
@@ -79,6 +82,8 @@ class PlaneHingeJoint : public Joint {
    doublereal M3;
    static const unsigned int NumSelfDof;
    static const unsigned int NumDof;
+   ReactionComponentsForFriction ReactComp;
+   Vec3 FReactForFrict;
    /* end of friction related data */
 
  protected:
@@ -97,7 +102,8 @@ class PlaneHingeJoint : public Joint {
 		   const doublereal rr = 0.,
 		   const doublereal pref = 0.,
 		   BasicShapeCoefficient *const sh = 0,
-		   BasicFriction *const f = 0);
+		   BasicFriction *const f = 0,
+           ReactionComponentsForFriction rc = ReactionComponentsForFriction::Full);
    
    /* Distruttore */
    ~PlaneHingeJoint(void);

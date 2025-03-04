@@ -57,12 +57,13 @@ PlaneHingeJoint::PlaneHingeJoint(unsigned int uL, const DofOwner* pDO,
 		const doublereal rr,
 		const doublereal pref,
 		BasicShapeCoefficient *const sh,
-		BasicFriction *const f)
+		BasicFriction *const f,
+        ReactionComponentsForFriction rc)
 : Joint(uL, pDO, fOut), 
 pNode1(pN1), pNode2(pN2),
 d1(dTmp1), R1h(R1hTmp), d2(dTmp2), R2h(R2hTmp), F(Zero3), M(Zero3),
 calcInitdTheta(_calcInitdTheta), NTheta(0), dTheta(initDTheta), dThetaWrapped(initDTheta),
-Sh_c(sh), fc(f), preF(pref), r(rr),
+Sh_c(sh), fc(f), preF(pref), r(rr), ReactComp(rc),
 od(od)
 {
 	NO_OP;
@@ -697,20 +698,40 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           //relative velocity
       doublereal v = (Omega1-Omega2).Dot(e3a)*r;
           //reaction norm
-      doublereal modF = std::max(F.Norm(), preF);
-          //reaction moment
+      doublereal modF;
+      ExpandableRowVector dF;
+      dF.ReDim(3);
+          //variation of reaction force
+      dF.Set(Vec3(Zero3), 1, 12+1);
+      modF = std::max(FReactForFrict.Norm(), preF);
+      Mat3x3 ForceProjector;
+      switch (ReactComp) {
+          case ReactionComponentsForFriction::Normal: {
+              ForceProjector = e1b.Tens(e1b) + e2b.Tens(e2b);
+              break;
+          }
+          case ReactionComponentsForFriction::Axial: {
+              ForceProjector = e3a.Tens(e3a);
+              break;
+          }
+          case ReactionComponentsForFriction::OnlyPreload: {
+              ForceProjector = Zero3x3;
+              break;
+          }
+          default: {
+              ForceProjector = Eye3;
+          }
+      }
+      if ((modF != 0.) && (FReactForFrict.Norm() > preF)) {
+          // (wrongly) assuming constant triad orientation!
+          dF.Set(ForceProjector.MulTV(ForceProjector * FReactForFrict)/modF, 1, 12+1);
+      }
+
+      //reaction moment
       //doublereal M3 = shc*modF*r;
       
       ExpandableRowVector dfc;
-      ExpandableRowVector dF;
       ExpandableRowVector dv;
-          //variation of reaction force
-      dF.ReDim(3);
-      if ((modF == 0.) or (F.Norm() < preF)) {
-          dF.Set(Vec3(Zero3),1,12+1);
-      } else {
-          dF.Set(F/modF, 1, 12+1);
-      }
           //variation of relative velocity
       dv.ReDim(6);
       
@@ -777,25 +798,40 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       dv.Set(-e3a*r,4, 6+4);
 
       //assemble friction states
-      fc->AssJac(WM,dfc,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,dCoef,modF,v,
-      		XCurr,XPrimeCurr,dF,dv);
+      fc->AssJac(WM, dfc, 12+NumSelfDof, iFirstReactionIndex+NumSelfDof, dCoef, modF, v,
+      		XCurr, XPrimeCurr, dF, dv);
       ExpandableMatrix dM3;
       ExpandableRowVector dShc;
       //compute 
           //variation of shape function
-      Sh_c->dSh_c(dShc,f,modF,v,dfc,dF,dv);
-      if (F.Norm() > preF) {
+      Sh_c->dSh_c(dShc, f, modF, v, dfc, dF, dv);
+      if ((ReactComp == ReactionComponentsForFriction::Normal || ReactComp == ReactionComponentsForFriction::Full) && (FReactForFrict.Norm() > preF)) {
           ExpandableMatrix dFreact;
           dFreact.ReDim(3, 1);
           dFreact.SetBlockDim(1, 3);
-          dFreact.Set(Eye3, 1, 1);
+          dFreact.Set(ForceProjector, 1, 1);
+          // switch (ReactComp) {
+          //     case ReactionComponentsForFriction::Normal: {
+          //         Mat3x3 Proj = e1b.Tens(e1b)  + e2b.Tens(e2b);
+          //         dFreact.Set(Proj, 1, 1);
+          //         break;
+          //     }
+          //     case ReactionComponentsForFriction::Full: {
+          //         dFreact.Set(Eye3, 1, 1);
+          //         break;
+          //     }
+          //     default: {
+          //         dFreact.Set(Zero3x3, 1, 1);
+          //         break;
+          //     }
+          // }
           dFreact.SetBlockIdx(1, 12+1);
           ExpandableMatrix dFfrict;
           dFfrict.ReDim(3,2);
           dFfrict.SetBlockDim(1,3);
           dFfrict.SetBlockDim(2,1);
-          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1,&dFreact);
-          dFfrict.SetCol(-e3a.Cross(F),1,2,1); dFfrict.Link(2,&dShc);
+          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1, &dFreact);
+          dFfrict.SetCol(-e3a.Cross(FReactForFrict), 1, 2, 1); dFfrict.Link(2,&dShc);
           dFfrict.Add(WM, 1, 1.);
           dFfrict.Sub(WM, 7, 1.);
           //WM.Add(4, 13, Mat3x3(MatCross, d1Tmp));
@@ -812,14 +848,13 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dMF2.Set(Mat3x3(MatCross, d2Tmp), 1, 1, 1);
           dMF2.Link(1, &dFfrict);
           dMF2.Add(WM, 10);
-
       }
       //variation of moment component
-      dM3.ReDim(3,2);
-      dM3.SetBlockDim(1,1);
-      dM3.SetBlockDim(2,1);
-      dM3.SetCol(e3a*shc*r,1,1,1); dM3.Link(1,&dF);
-      dM3.SetCol(e3a*modF*r,1,2,1); dM3.Link(2,&dShc);
+      dM3.ReDim(3, 2);
+      dM3.SetBlockDim(1, 1);
+      dM3.SetBlockDim(2, 1);
+      dM3.SetCol(e3a*shc*r, 1, 1, 1); dM3.Link(1, &dF);
+      dM3.SetCol(e3a*modF*r, 1, 2, 1); dM3.Link(2, &dShc);
       //assemble first node
           //variation of moment component
       dM3.Add(WM, 4, 1.);
@@ -918,18 +953,41 @@ SubVectorHandler& PlaneHingeJoint::AssRes(SubVectorHandler& WorkVec,
       const Vec3& Omega1(pNode1->GetWCurr());
       const Vec3& Omega2(pNode2->GetWCurr());
       doublereal v = (Omega1-Omega2).Dot(e3a)*r;
-      doublereal modF = std::max(F.Norm(), preF);
+      doublereal modF;
+      FReactForFrict = Zero3;
+      switch (ReactComp) {
+          case ReactionComponentsForFriction::Normal: {
+              Vec3 FReactForFrict = e1b * (F.Dot(e1b)) + e2b * (F.Dot(e2b));
+              modF = std::max(FReactForFrict.Norm(), preF);
+              break;
+          }
+          case ReactionComponentsForFriction::Axial: {
+              FReactForFrict = e3a * F.Dot(e3a);
+              modF = std::max(F * e3a, preF);
+              break;
+          }
+          case ReactionComponentsForFriction::OnlyPreload: {
+              modF = preF;
+              FReactForFrict = Zero3;
+              break;
+          }
+          default: {
+              FReactForFrict = F;
+              modF = std::max(FReactForFrict.Norm(), preF);
+          }
+      }
+
       try {
-          fc->AssRes(WorkVec,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,modF,v,XCurr,XPrimeCurr);
+          fc->AssRes(WorkVec, 12+NumSelfDof, iFirstReactionIndex+NumSelfDof, modF, v, XCurr, XPrimeCurr);
       }
       catch (Elem::ChangedEquationStructure& err) {
           ChangeJac = true;
       }
       doublereal f = fc->fc();
       doublereal shc = Sh_c->Sh_c(f,modF,v);
-      Ffrict = Vec3(0., 0., 0.);
-      if (F.Norm() > preF) {
-          Ffrict = -e3a.Cross(F)*shc;
+      Ffrict = Zero3;
+      if ((ReactComp == ReactionComponentsForFriction::Normal || ReactComp == ReactionComponentsForFriction::Full) && FReactForFrict.Norm() > preF) {
+          Ffrict = -e3a.Cross(FReactForFrict)*shc;
       }
       M3 = shc*modF*r;
       WorkVec.Sub(1,Ffrict);

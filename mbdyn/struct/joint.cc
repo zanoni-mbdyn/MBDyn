@@ -905,6 +905,7 @@ ReadJoint(DataManager* pDM,
 			doublereal preload = 0.;
 			BasicFriction *bf = 0;
 			BasicShapeCoefficient *bsh = 0;
+			PlaneHingeJoint::ReactionComponentsForFriction rc = PlaneHingeJoint::ReactionComponentsForFriction::Full;
 			if (HP.IsKeyWord("friction")) {
 				r = HP.GetReal();
 				if (HP.IsKeyWord("preload")) {
@@ -912,13 +913,30 @@ ReadJoint(DataManager* pDM,
 				}
 				bf = ParseFriction(HP,pDM);
 				bsh = ParseShapeCoefficient(HP);
+				if (HP.IsKeyWord("reaction" "components")) {
+					if (HP.IsKeyWord("full")) {
+					} else if (HP.IsKeyWord("axial")) {
+						rc = PlaneHingeJoint::ReactionComponentsForFriction::Axial;
+					} else if (HP.IsKeyWord("normal")) {
+						rc = PlaneHingeJoint::ReactionComponentsForFriction::Normal;
+					} else if (HP.IsKeyWord("only" "preload")) {
+						rc = PlaneHingeJoint::ReactionComponentsForFriction::OnlyPreload;
+					} else {
+						silent_cerr("Error while parsing revolute rotation friction"
+							"reaction component : "
+							"unrecognized component specification "
+							"at line " << HP.GetLineData() << std::endl);
+						throw MBDynParser::ErrGeneric(MBDYN_EXCEPT_ARGS);
+					}
+				}
+
 			}
 			SAFENEWWITHCONSTRUCTOR(pEl,
 				PlaneHingeJoint,
 				PlaneHingeJoint(uLabel, pDO, pNode1, pNode2,
 					d1, d2, R1h, R2h, od, fOut,
 					calcInitdTheta, initDTheta,
-					r, preload, bsh, bf));
+					r, preload, bsh, bf, rc));
 			std::ostream& out = pDM->GetLogFile();
 			out << "revolutehinge: " << uLabel
 				<< " " << pNode1->GetLabel()
