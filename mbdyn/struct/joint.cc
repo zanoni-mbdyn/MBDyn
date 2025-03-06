@@ -913,13 +913,13 @@ ReadJoint(DataManager* pDM,
 				}
 				bf = ParseFriction(HP,pDM);
 				bsh = ParseShapeCoefficient(HP);
-				if (HP.IsKeyWord("reaction" "components")) {
+				if (HP.IsKeyWord("reaction" "force" "components")) {
 					if (HP.IsKeyWord("full")) {
 					} else if (HP.IsKeyWord("axial")) {
 						rc = PlaneHingeJoint::ReactionComponentsForFriction::Axial;
 					} else if (HP.IsKeyWord("normal")) {
 						rc = PlaneHingeJoint::ReactionComponentsForFriction::Normal;
-					} else if (HP.IsKeyWord("only" "preload")) {
+					} else if (HP.IsKeyWord("preload" "only")) {
 						rc = PlaneHingeJoint::ReactionComponentsForFriction::OnlyPreload;
 					} else {
 						silent_cerr("Error while parsing revolute rotation friction"

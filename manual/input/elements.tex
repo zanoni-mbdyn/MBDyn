@@ -4421,7 +4421,7 @@ by the two \kw{orientation} statements.
             [ \kw{preload} , \bnt{const_value} , ]
             \bnt{friction_model} , 
             \bnt{shape_function}
-            [ , \kw{reaction components}, \{ \kw{full} | \kw{axial} | \kw{normal} | \kw{only preload} \} ]
+            [ , \kw{reaction force components}, \{ \kw{full} | \kw{axial} | \kw{normal} | \kw{preload only} \} ]
         ]
 \end{Verbatim}
 %\end{verbatim}
@@ -4452,16 +4452,17 @@ of a mechanism.
 \subsubsection{Friction}
 If \kw{friction} is specified then
 \begin{itemize}
-\item the \nt{average\_radius} $r$ is used to compute the friction-induced moment as $M = frF_f$, where $f$ is the friction coefficient, computed from the 1-D \nt{friction\_model} and \nt{shape\_function}, and $F_f$ is a force;
-\item \nt{preload} is a preload force used account for initial interference of the joint; even if the is no preload
-in the real joint one should set it to a small number $\neq 0$ in order to deal ill-conditioning of the friction computation occurring whenever the real joint reaction force is almost null;
-\item $F_f=\max(||\T{F}_r||,\ \nt{preload})$, where $\T{F}_r$ is some component of the joint reaction force without friction,  specified by \kw{reaction components}
-\item \kw{reaction components} specify which components of the reaction force should be used in order to compute $\T{F}_r$; more specifically
+\item the \nt{average\_radius} $r$ is used to compute the friction-induced moment about the joint's axis as $M = frF_f$, where $f$ is the friction coefficient, computed from the 1-D \nt{friction\_model} and \nt{shape\_function}, and $F_f$ is a force, defined in the following;
+\item \nt{preload} is a preload force used to account for initial interference of the joint; even if there is no preload
+in the real joint, one should set it to a small number $\neq 0$ \textcolor{red}{[FIXME: should preload be $ > 0$ ? In that case, should we check for negative (or null) values? Should it be a drive caller?]} in order to deal with ill-conditioning of the friction computation occurring whenever the real joint reaction force is almost null;
+\item $F_f=\max(||\T{F}_r||,\ \nt{preload})$, where $\T{F}_r$ is some portion of the joint reaction force, % without friction,
+specified by \kw{reaction components}
+\item \kw{reaction force components} specifies which components of the reaction force should be used to compute $\T{F}_r$; more specifically
     \begin{itemize}
-        \item \kw{full} (default behavior): use all whole reaction force (without friction); friction will contribute not only to the torsional moment, but also to the overall force transmitted by the joint to the constrained nodes
-        \item \kw{axial}: use the component along the joint axis of the reaction force (without friction); friction will contribute only to the torsional moment and not to the overall force transmitted by the joint to the constrained nodes, but will depend on the axial component of the reaction force
-        \item \kw{normal}: use the component normal to the joint axis of the reaction force (without friction); friction will contribute not only to the torsional moment, but also to the overall force transmitted by the joint to the constrained nodes
-        \item \kw{only preload}: assume that the friction comes only from the preload, thus $\T{F}_r=\T{0}$ and friction will only to the torsional moment, not to the overall force transmitted by the joint to the constrained nodes, and will be independent from the joint reaction force
+        \item \kw{full} (default behavior): use the whole reaction force (without friction) vector; friction will contribute not only to the torsional moment, but also to the overall force transmitted by the joint to the constrained nodes;
+        \item \kw{axial}: use the component along the joint axis of the reaction force (without friction); friction will contribute only to the torsional moment and not to the overall force transmitted by the joint to the constrained nodes, but will depend on the axial component of the reaction force;
+        \item \kw{normal}: use the component normal to the joint axis of the reaction force (without friction); friction will contribute not only to the torsional moment, but also to the overall force transmitted by the joint to the constrained nodes;
+        \item \kw{preload only}: assume that the friction comes only from the preload, thus $\T{F}_r=\T{0}$, and friction will only contribute to the torsional moment, not to the overall force transmitted by the joint to the constrained nodes, and will not depend on the joint reaction force.
     \end{itemize}
 
 \end{itemize}

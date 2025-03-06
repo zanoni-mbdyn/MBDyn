@@ -63,7 +63,7 @@ begin: elements;
 			#discrete coulomb, "test", const, 1.,
 			simple,
 #			simple plane hinge,
-			reaction components, axial
+			reaction force components, axial
 	;
 	bind: 2, joint, 1, string, "rz";
 	bind: 2, joint, 2, string, "wz";

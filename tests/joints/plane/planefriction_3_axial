@@ -59,7 +59,7 @@ begin: elements;
 			#discrete coulomb, "constfriction",
 			simple,
 #			simple plane hinge,
-			reaction components, axial
+			reaction force components, axial
 	;
 	body: 2, 2, 1., null, diag, 1.,1.,.05;
 	couple: 2, absolute, 2, 0., 0., 1.,

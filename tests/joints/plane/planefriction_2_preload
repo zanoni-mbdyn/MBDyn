@@ -63,7 +63,7 @@ begin: elements;
 			discrete coulomb, "constfriction",
 			simple,
 #			simple plane hinge,
-			reaction components, only preload
+			reaction force components, preload only
 	;
 	bind: 2, joint, 1, string, "rz";
 	bind: 2, joint, 2, string, "wz";
