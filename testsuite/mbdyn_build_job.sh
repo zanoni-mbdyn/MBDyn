@@ -69,6 +69,12 @@ OCTAVE_CLI="${OCTAVE_CLI:-octave-cli}"
 TRILINOS_INSTALL_PREFIX="${TRILINOS_INSTALL_PREFIX:-/usr}"
 TRILINOS_INC_DIR="${TRILINOS_INC_DIR:-${TRILINOS_INSTALL_PREFIX}/include/trilinos}"
 SUITESPARSE_INC_DIR="${SUITESPARSE_INC_DIR:-/usr/include/suitesparse}"
+TFEL_LIB_DIR="${TFEL_LIB_DIR:-${TFEL_INSTALL_PREFIX}/lib}"
+MGIS_INC_DIR="${MGIS_INC_DIR:-${MGIS_INSTALL_PREFIX}/include}"
+MGIS_LIB_DIR="${MGIS_LIB_DIR:-${MGIS_INSTALL_PREFIX}/lib}"
+GALLERY_LIB_DIR="${GALLERY_LIB_DIR:-${GALLERY_INSTALL_PREFIX}/lib}"
+
+
 for libdir in ${LIBDIR64}; do
     NUMPY_INC_DIR="${NUMPY_INC_DIR:-/usr/${libdir}/python3.11/site-packages/numpy/core/include}"
     if ! test -d "${NUMPY_INC_DIR}"; then
@@ -81,6 +87,9 @@ PYTHON_INC_DIR="${PYTHON_INC_DIR:-`python-config --includes`}" ## Just in case "
 PYTHON_LDFLAGS="${PYTHON_LDFLAGS:-`python-config --ldflags`}"
 ## CXXFLAGS="${CXXFLAGS:--Wno-overloaded-virtual}" ## FIXME: Any idea on how to fix this warning is welcome!
 ## CFLAGS="${CFLAGS:--Wno-error=lto-type-mismatch}" ## FIXME: Needed for utils/femgen_f.f and utils/test_strext_socket_f.f
+
+## FIXME: Enable C++20 because it is required by MFrontGenericInterfaceSupport
+CXXFLAGS="${CXXFLAGS:--std=c++20}"
 MBD_CLEAN_BUILD="${MBD_CLEAN_BUILD:-no}"
 MBD_FORCE_CONFIGURE="${MBD_FORCE_CONFIGURE:-no}"
 MBD_CLEAN_ALL="${MBD_CLEAN_ALL:-no}"
@@ -291,7 +300,7 @@ if test -d "${TRILINOS_INSTALL_PREFIX}"; then
     if test -d "${TRILINOS_INC_DIR}"; then
         CPPFLAGS="-I${TRILINOS_INC_DIR} ${CPPFLAGS}"
     fi
-    
+
     TRILINOS_LIB_DIR="${TRILINOS_LIB_DIR:-${TRILINOS_INSTALL_PREFIX}/lib}"
 
     if test -d "${TRILINOS_LIB_DIR}"; then
@@ -398,6 +407,8 @@ if ! test -z "${MBD_WITH_MODULE}"; then
     MBD_COMPILER_FLAGS="${MBD_COMPILER_FLAGS} -rdynamic" ## Needed for --enable-runtime-loading
 fi
 
+CPPFLAGS="${CPPFLAGS} -I${MGIS_INC_DIR}"
+LDFLAGS="${LDFLAGS} -L${MGIS_LIB_DIR} -Wl,-rpath=${MGIS_LIB_DIR} -L${TFEL_LIB_DIR} -Wl,-rpath=${TFEL_LIB_DIR}"
 echo CXXFLAGS="${MBD_COMPILER_FLAGS} ${CXXFLAGS}"
 echo CPPFLAGS="${CPPFLAGS}"
 echo LDFLAGS="${LDFLAGS}"
@@ -417,6 +428,7 @@ if test "${MBD_FORCE_CONFIGURE}" != "no" || ! test -f Makefile || test "${progra
          --with-octave-pkg-prefix="${OCT_PKG_INSTALL_PREFIX}" \
          --with-octave-cli="${OCTAVE_CLI}" \
          --with-mkoctfile="${OCTAVE_MKOCTFILE}" \
+         --with-mfront \
          ${PARDISO_FLAGS} \
          --with-module="${MBD_WITH_MODULE}" \
          ${MBD_CONFIGURE_FLAGS}  ; then
@@ -441,6 +453,9 @@ fi
 
 echo "Run built-in unit tests"
 mkdir -p "${MBD_TEST_PROGS_OUTPUT_DIR}"
+
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GALLERY_LIB_DIR}:${TFEL_LIB_DIR}
+
 if ! make MBD_TEST_PROGS_OUTPUT_DIR="${MBD_TEST_PROGS_OUTPUT_DIR}" test; then
     echo "Built-in unit tests failed"
     exit 1

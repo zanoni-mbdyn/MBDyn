@@ -135,8 +135,7 @@ test: all
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m lapack" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m qr" \
 		"libraries/liby12/y12test" \
-		"mbdyn/struct/solidshapetest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"mbdyn/solidcsltest ${MBD_TEST_PROGS_GTEST_FLAGS}" ; do \
+		"mbdyn/solidtest ${MBD_TEST_PROGS_GTEST_FLAGS}" ; do \
 		printf "running command: \"%s\"\n" "$${cmd}" ; \
 		MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} $${cmd} ; \
 		rc=$$? ; \

@@ -77,6 +77,10 @@
 #undef MPI_Info
 #endif
 
+// FIXME: workaround C++20 warning in GNU-Octave (https://savannah.gnu.org/patch/?10504)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+
 #include <octave/oct.h>
 #include <octave/parse.h>
 #if (OCTAVE_MAJOR_VERSION >= 4 && OCTAVE_MINOR_VERSION >= 2 || OCTAVE_MAJOR_VERSION > 4)
@@ -88,8 +92,12 @@
 #if !(OCTAVE_MAJOR_VERSION >= 4 && OCTAVE_MINOR_VERSION >= 4 || OCTAVE_MAJOR_VERSION > 4)
 #include <octave/oct-alloc.h>
 #endif
+
+#pragma GCC diagnostic pop
+
 #include "module-octave.h"
 #include "octave_object.h"
+
 
 #if OCTAVE_MAJOR_VERSION < 5
 #define isinteger() is_integer_type()
