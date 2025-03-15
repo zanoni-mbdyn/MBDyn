@@ -82,6 +82,15 @@ variables:
   ## Local installation directory for Trilinos
   TRILINOS_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/trilinos
 
+  ## Local installation directory for tfel
+  TFEL_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/tfel
+
+  ## Local installation directory for MFrontGenericInterfaceSupport
+  MGIS_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/mgis
+
+  ## Local installation directory for MFrontGenericInterfaceSupport
+  GALLERY_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/gallery
+
   ## Local installation directory for HDF5
   HDF5_INSTALL_PREFIX: $TESTSUITE_PREFIX_CACHE/HDF5
 
@@ -110,6 +119,9 @@ variables:
 
   SICONOS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/siconos
   TRILINOS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/trilinos
+  TFEL_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/tfel
+  MGIS_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/mgis
+  GALLERY_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/gallery
 
   HDF5_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/hdf5
   NC_C_BUILD_DIR: $TESTSUITE_PREFIX_BUILD/netcdf-c
@@ -615,6 +627,9 @@ include:
     - local: '/testsuite/netcdf-build-job.yml'
     - local: '/testsuite/nlopt-build-job.yml'
     - local: '/testsuite/gtest-build-job.yml'
+    - local: '/testsuite/tfel-build-job.yml'
+    - local: '/testsuite/mgis-build-job.yml'
+    - local: '/testsuite/gallery-build-job.yml'
     - local: '/testsuite/mbdyn-build-job.yml'
     - local: '/testsuite/octave-pkg-build-job.yml'
     - local: '/testsuite/gmsh-build-job.yml'

@@ -47,7 +47,13 @@
 #include <Rot.hh>
 #undef real
 
+// FIXME: workaround C++20 warning in GNU-Octave (https://savannah.gnu.org/patch/?10504)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+
 #include <octave/oct.h>
+
+#pragma GCC diagnostic pop
 
 DEFUN_DLD(rotation_matrix_to_rotation_vector,args,nargout,"[phi] = rotation_matrix_to_rotation_vector(R)\n")
 {

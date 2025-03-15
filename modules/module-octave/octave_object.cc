@@ -46,12 +46,18 @@
 
 #ifdef USE_OCTAVE
 
+// FIXME: workaround C++20 warning in GNU-Octave (https://savannah.gnu.org/patch/?10504)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+
 #include <octave/oct.h>
 #include <octave/parse.h>
 #include <octave/dynamic-ld.h>
 #include <octave/oct-map.h>
 #include <octave/oct-stream.h>
 #include <octave/ov-base-scalar.h>
+
+#pragma GCC diagnostic pop
 
 #include <iostream>
 

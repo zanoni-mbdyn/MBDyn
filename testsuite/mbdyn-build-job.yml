@@ -59,6 +59,12 @@ mbdyn-build-job:       # This job runs in the build stage, which runs first.
       artifacts: true
     - job: gtest-build-job
       artifacts: true
+    - job: tfel-build-job
+      artifacts: true
+    - job: mgis-build-job
+      artifacts: true
+    - job: gallery-build-job
+      artifacts: true
     - job: mbdyn-checkout-job
   script:
     - export MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX}
@@ -75,6 +81,9 @@ mbdyn-build-job:       # This job runs in the build stage, which runs first.
     - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
     - export MBD_COMPILER_FLAGS=${MBD_COMPILER_FLAGS}
     - export MBD_TEST_PROGS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TEST_PROGS_OUTPUT_DIR}
+    - export TFEL_INSTALL_PREFIX=${CI_PROJECT_DIR}/${TFEL_INSTALL_PREFIX}
+    - export MGIS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MGIS_INSTALL_PREFIX}
+    - export GALLERY_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GALLERY_INSTALL_PREFIX}
     - export CI_PROJECT_DIR
     - export MBD_WITH_MODULE
     - export MBD_FORCE_CONFIGURE
@@ -146,7 +155,6 @@ mbdyn-build-job:       # This job runs in the build stage, which runs first.
     - mbdyn/struct/Makefile.in
     - mbdyn/thermo/Makefile.in
     - modules/Makefile.in
-    - testsuite/var/
     - utils/Makefile.in
     - var/Makefile.in
 
@@ -272,7 +280,6 @@ mbdyn-build-job-gcov:       # This job runs in the build stage, which runs first
     - mbdyn/struct/Makefile.in
     - mbdyn/thermo/Makefile.in
     - modules/Makefile.in
-    - testsuite/var/
     - utils/Makefile.in
     - var/Makefile.in
 
@@ -384,7 +391,6 @@ mbdyn-build-job-manuals:       # This job runs in the build stage, which runs fi
     - mbdyn/struct/Makefile.in
     - mbdyn/thermo/Makefile.in
     - modules/Makefile.in
-    - testsuite/var/
     - utils/Makefile.in
     - var/Makefile.in
 
@@ -492,6 +498,5 @@ mbdyn-build-job-debug:       # This job runs in the build stage, which runs firs
     - mbdyn/struct/Makefile.in
     - mbdyn/thermo/Makefile.in
     - modules/Makefile.in
-    - testsuite/var/
     - utils/Makefile.in
     - var/Makefile.in

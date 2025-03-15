@@ -30,7 +30,7 @@
 
 /*
  AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-        Copyright (C) 2024(-2024) all rights reserved.
+        Copyright (C) 2024(-2025) all rights reserved.
 
         The copyright of this code is transferred
         to Pierangelo Masarati and Paolo Mantegazza
@@ -48,6 +48,8 @@
 #include "myassert.h"
 #include "mynewmem.h"
 #include "solidcsl_impl.h"
+#include "solidshape.h"
+#include "demangle.h"
 
 #ifdef USE_MPI
 #include "mbcomm.h"
@@ -583,6 +585,165 @@ MBDYN_TESTSUITE_TEST(solidcsltest, SmallStrainTest)
      CheckConstitutiveLaw(oHookean6D, Kref, 0., dTol);
      CheckConstitutiveLaw(oHookeanVisco6D, Kref, beta, dTol);
      CheckConstitutiveLaw(oBilinearIsotropicHardening6D, Kref, 0., dTol);
+}
+
+template <typename ElementType, sp_grad::index_type iDim>
+bool bCheckShapeFunction()
+{
+     std::cout << "element type: \"" << mbdyn_demangle(typeid(ElementType)) << "\"\n";
+
+     bool bRes = true;
+     using namespace sp_grad;
+
+     SpColVectorA<doublereal, iDim> r;
+     SpColVectorA<doublereal, ElementType::iNumNodes> h;
+
+     for (index_type i = 1; i <= ElementType::iNumNodes; ++i) {
+          std::cout << "node: " << i << "\n";
+
+          ElementType::NodalPosition(i, r);
+          ElementType::ShapeFunction(r, h);
+
+          std::cout << "r = {" << r << "}\n";
+          std::cout << "h = {" << h << "}\n";
+
+          for (index_type j = 1; j <= ElementType::iNumNodes; ++j) {
+               if (h(j) != (i == j)) {
+                    bRes = false;
+               }
+          }
+     }
+
+     return bRes;
+}
+
+template <typename ElementType, sp_grad::index_type iDim>
+bool bCheckShapeFunctionUPC()
+{
+     std::cout << "element type: \"" << ElementType::ElementName() << "\"\n";
+
+     bool bRes = true;
+     using namespace sp_grad;
+
+     SpColVectorA<doublereal, iDim> r;
+     SpColVectorA<doublereal, ElementType::ElemTypeDisplacement::iNumNodes> h;
+     SpColVectorA<doublereal, ElementType::ElemTypePressure::iNumNodes> g;
+
+     for (index_type i = 1; i <= ElementType::ElemTypeDisplacement::iNumNodes; ++i) {
+          std::cout << "node: " << i << "\n";
+
+          ElementType::ElemTypeDisplacement::NodalPosition(i, r);
+          ElementType::ElemTypeDisplacement::ShapeFunction(r, h);
+          ElementType::ElemTypePressure::ShapeFunction(r, g);
+
+          std::cout << "r = {" << r << "}\n";
+          std::cout << "h = {" << h << "}\n";
+          std::cout << "g = {" << g << "}\n";
+
+          for (index_type j = 1; j <= ElementType::ElemTypeDisplacement::iNumNodes; ++j) {
+               if (h(j) != (i == j)) {
+                    bRes = false;
+               }
+
+               if (i <= ElementType::ElemTypePressure::iNumNodes && j <= ElementType::ElemTypePressure::iNumNodes) {
+                    if (g(j) != (i == j)) {
+                         bRes = false;
+                    }
+               }
+          }
+     }
+
+     return bRes;
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ4)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle4, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ8)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle8, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ9)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle9, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionQ8r)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Quadrangle8r, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT6h)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Triangle6h, 2>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH8u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH8p)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8p, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron20u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH27u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron27u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20upc)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Hexahedron20upc, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20ur)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron20ur, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH20upcr)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Hexahedron20upcr, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP6u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron6u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP15u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron15u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP15upc)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Pentahedron15upc, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT4u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron4u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron10u, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10upc)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Tetrahedron10upc, 3>()));
 }
 
 MBDYN_DEFINE_OPERATOR_NEW_DELETE

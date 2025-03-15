@@ -78,6 +78,12 @@ mbdyn-tests-private-test-job:   # This job runs in the test stage.
        artifacts: true
      - job: gtest-build-job
        artifacts: true
+     - job: tfel-build-job
+       artifacts: true
+     - job: mgis-build-job
+       artifacts: true
+     - job: gallery-build-job
+       artifacts: true
      - job: mbdyn-build-job
        artifacts: true
      - job: octave-pkg-build-job ## Needed for gtest-octave-cli

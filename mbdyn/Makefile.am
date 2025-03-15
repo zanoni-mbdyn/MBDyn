@@ -94,9 +94,9 @@ AM_CPPFLAGS = \
 $(GINACLIB_CPPFLAGS) \
 @GTEST_INCLUDE@
 
-noinst_PROGRAMS = solidcsltest
-solidcsltest_SOURCES = struct/solidcsltest.cc
-solidcsltest_LDADD = $(mbdyn_LDADD)
+noinst_PROGRAMS = solidtest
+solidtest_SOURCES = struct/solidtest.cc
+solidtest_LDADD = $(mbdyn_LDADD)
 
 if INSTALL_TEST_PROGRAMS
 bin_PROGRAMS += $(noinst_PROGRAMS)
