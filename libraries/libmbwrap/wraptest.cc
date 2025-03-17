@@ -396,6 +396,7 @@ MBDYN_TESTSUITE_TEST(wraptest, mbdyn_test_linear_solver)
         bool cc(false);
         bool dir(false);
         bool gradmh(false);
+        static_cast<void>(gradmh); // silence warning if gradmh is not used
         unsigned nt = 1;
         unsigned block_size = 0;
         double dpivot = -1.;

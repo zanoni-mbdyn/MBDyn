@@ -91,6 +91,8 @@ int MBDynUnitTestEntry::RunAllTests()
 
      if (status == 0) {
           std::cerr << "All tests passed\n";
+     } else {
+          std::cerr << failed << " / " << nSize << " tests failed\n";
      }
 
      return status;

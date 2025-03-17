@@ -500,3 +500,92 @@ mbdyn-build-job-debug:       # This job runs in the build stage, which runs firs
     - modules/Makefile.in
     - utils/Makefile.in
     - var/Makefile.in
+
+mbdyn-build-job-nodeps:       # This job runs in the build stage, which runs first.
+  stage: build
+  needs:
+    - job: mbdyn-checkout-job
+  variables:
+     MBD_CONFIG_FLAGS_NODEPS: "--disable-crypt --disable-eig --disable-schur --disable-multithread --disable-multithread-naive --disable-netcdf --disable-python --disable-octave --disable-octave-utils --disable-install_test_progs --disable-manuals --disable-openmp --disable-debug-mpi --disable-dependency-tracking --disable-dependency-tracking --without-g2c --without-mpi --without-metis --without-chaco --without-threads --without-rt --without-rtai --without-boost --without-ann --without-bullet --without-goto --without-openblas --without-ginac --without-y12 --without-umfpack --without-klu --without-harwell --without-superlu --without-wsmp --without-pardiso --without-pastix --without-qrupdate --without-suitesparseqr --without-strumpack --without-trilinos --without-siconos --without-mfront --without-arpack --without-jdqz --without-pam --without-sasl2 --without-gtest --without-charm"
+  script:
+    - |
+      if ! test -x configure; then
+        ./bootstrap.sh
+      fi
+    - |
+      if ! test -d "${CI_PROJECT_DIR}/${MBD_BUILD_DIR_NODEPS}"; then
+        mkdir -p "${CI_PROJECT_DIR}/${MBD_BUILD_DIR_NODEPS}"
+      fi
+    - cd "${CI_PROJECT_DIR}/${MBD_BUILD_DIR_NODEPS}"
+    - |
+      if ! test -f Makefile; then
+        "${CI_PROJECT_DIR}/configure" --prefix="${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_NODEPS}" ${MBD_CONFIG_FLAGS_NODEPS}
+      fi
+    - make -j${MBD_NUM_BUILD_JOBS}
+    - make test
+    - make install
+    - make dist
+  artifacts:
+   expire_in: 24h
+   name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+   paths:
+    - $MBD_INSTALL_PREFIX_NODEPS
+    - $MBD_BUILD_DIR_NODEPS/**/config.log
+    - $MBD_BUILD_DIR_NODEPS/mbdyn-*.tar.gz
+   when: always
+  cache:
+   key: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+   when: always
+   paths:
+    - $MBD_BUILD_DIR_NODEPS
+    - Makefile.in
+    - aclocal.m4
+    - autom4te.cache/
+    - build/Makefile.in
+    - build/compile
+    - build/config.guess
+    - build/config.sub
+    - build/depcomp
+    - build/install-sh
+    - build/ltmain.sh
+    - build/missing
+    - configure
+    - contrib/n2m/Makefile.in
+    - contrib/n2m/aclocal.m4
+    - contrib/n2m/autom4te.cache/
+    - contrib/n2m/compile
+    - contrib/n2m/config.guess
+    - contrib/n2m/config.h.in
+    - contrib/n2m/config.sub
+    - contrib/n2m/configure
+    - contrib/n2m/depcomp
+    - contrib/n2m/install-sh
+    - contrib/n2m/ltmain.sh
+    - contrib/n2m/missing
+    - etc/Makefile.in
+    - etc/modal.d/Makefile.in
+    - etc/pam.d/Makefile.in
+    - include/Makefile.in
+    - include/ac/Makefile.in
+    - include/mbconfig.h.in
+    - libraries/Makefile.in
+    - libraries/libann/Makefile.in
+    - libraries/libcolamd/Makefile.in
+    - libraries/libmbc/Makefile.in
+    - libraries/libmbmath/Makefile.in
+    - libraries/libmbutil/Makefile.in
+    - libraries/libmbwrap/Makefile.in
+    - libraries/libnaive/Makefile.in
+    - libraries/libobjs/Makefile.in
+    - libraries/liby12/Makefile.in
+    - manual/Makefile.in
+    - mbdyn/Makefile.in
+    - mbdyn/aero/Makefile.in
+    - mbdyn/base/Makefile.in
+    - mbdyn/elec/Makefile.in
+    - mbdyn/hydr/Makefile.in
+    - mbdyn/struct/Makefile.in
+    - mbdyn/thermo/Makefile.in
+    - modules/Makefile.in
+    - utils/Makefile.in
+    - var/Makefile.in

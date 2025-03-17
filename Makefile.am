@@ -128,9 +128,7 @@ test: all
 		"libraries/libmbmath/itertest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/matmultest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/subtest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"libraries/libmbwrap/arptest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbwrap/cctest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m umfpack" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m naive" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m lapack" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m qr" \
@@ -143,6 +141,14 @@ test: all
 		if test $${rc} -ne 0; then exit 1; fi ; \
 	done
 ## tests for optional features
+if USE_UMFPACK
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m umfpack
+endif
+
+if USE_ARPACK
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/arptest ${MBD_TEST_PROGS_GTEST_FLAGS}
+endif
+
 if USE_SUITESPARSE_QR
 	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m spqr
 endif
