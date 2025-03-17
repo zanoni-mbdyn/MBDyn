@@ -52,9 +52,11 @@ mbdyn_patch_input="no"
 mbdyn_abort_after_step=""
 mbdyn_exec_gen="yes"
 mbdyn_exec_solver="yes"
+mbdyn_enable_gtest="yes"
 update_reference_test_status="no"
 use_reference_test_status="no"
 skip_expected_failures="no"
+
 declare -i mbdyn_exclude_inverse_dynamics=0
 declare -i mbdyn_exclude_initial_value=0
 mbdyn_suppressed_errors=""
@@ -208,6 +210,10 @@ while ! test -z "$1"; do
             ;;
         --exec-solver)
             mbdyn_exec_solver="$2"
+            shift
+            ;;
+        --enable-gtest)
+            mbdyn_enable_gtest="$2"
             shift
             ;;
         --help)
@@ -401,10 +407,17 @@ function simple_testsuite_run_test()
         mbd_output_file="${mbdyn_testsuite_prefix_output}/${mbd_basename}_mbdyn_output_$((idx_test))"
         junit_xml_report_file="${mbdyn_testsuite_prefix_output}/junit_xml_report_${mbd_basename}_$((idx_test)).xml"
 
-        export GTEST_MBDYN_ARGS="--gtest_output=xml:${junit_xml_report_file}"
+        case "${mbdyn_enable_gtest}" in
+            yes)
+                export GTEST_MBDYN_ARGS="--gtest_output=xml:${junit_xml_report_file}"
+                ;;
+            *)
+                export GTEST_MBDYN_ARGS=""
+                ;;
+        esac
 
         ## Needed for all GNU-Octave scripts which are using mboct-mbdyn-pkg (e.g. "triangular_contact_run.m")
-        export MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND="${MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND:-${MBDYN_EXEC} ${GTEST_MBDYN_ARGS} --gtest_output=xml:${junit_xml_report_file}}"
+        export MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND="${MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND:-${MBDYN_EXEC} ${GTEST_MBDYN_ARGS}}"
 
         case "${OCTAVE_EXEC}" in
             gtest-*)
@@ -504,7 +517,7 @@ function simple_testsuite_run_test()
                 mbd_exec_solver="no"
                 ;;
         esac
-        
+
         if test ${skip_expected_failures} = "yes" && test ${expected_test_status} != "0"; then
             echo "Skipping test \"${mbd_filename}\" because it's expected to fail"
             mbd_exec_solver="no"
@@ -591,8 +604,15 @@ function simple_testsuite_run_test()
             0)
                 num_steps=`awk 'BEGIN{num_steps=0}/^End of simulation at time [0-9.-]+ after [0-9]+ steps;$/{num_steps=$8} END{print num_steps}' "${mbd_log_file}"`
 
-                ## Let's check also the output files and do not rely just on a zero exit status!
-                status="failed"
+                case "${mbdyn_enable_gtest}" in
+                    yes)
+                        ## Let's check also the output files and do not rely just on a zero exit status!
+                        status="failed"
+                        ;;
+                    *)
+                        status='passed'
+                        ;;
+                esac
 
                 if test -f "${junit_xml_report_file}" && awk -f parse_test_suite_status.awk "${junit_xml_report_file}" >& /dev/null; then
                     status=$(printf 'passed{Steps=%d}' "${num_steps}")
@@ -876,6 +896,7 @@ else
     export mbdyn_keep_output
     export mbdyn_print_res
     export mbdyn_suppressed_errors
+    export mbdyn_enable_gtest
     export update_reference_test_status
     export use_reference_test_status
     export skip_expected_failures
