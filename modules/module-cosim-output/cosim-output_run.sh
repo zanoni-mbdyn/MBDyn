@@ -30,7 +30,7 @@
 # 
 
 
-MBDYN_EXEC=${MBDYN_EXEC:-mbdyn}
+export MBDYN_EXEC=${MBDYN_EXEC:-mbdyn}
 PYTHON_EXEC="${PYTHON_EXEC:-python3}"
 
 exec ${PYTHON_EXEC} cosim-output.py
