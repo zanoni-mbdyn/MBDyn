@@ -396,6 +396,8 @@ function simple_testsuite_run_test()
 
     expected_test_status=`awk -F '=' 'BEGIN{ status = -1; } /^[[:space:]]*##[[:space:]]*@MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@[[:space:]]*=[[:space:]]*[0-9]*[[:space:]]*$/ { status = ($2 != 0); } END{ printf("%d\n", status); }' "${mbd_filename}"`
 
+    printf "%s: expected_test_status=%d\n" "${mbd_filename}" ${expected_test_status}
+
     if ! test -f "${mbd_filename}"; then
         echo "File \"${mbd_filename}\" not found"
         status=$(printf 'file[%]' "${mbd_filename}")
@@ -603,18 +605,11 @@ function simple_testsuite_run_test()
                 fi
                 ;;
             0)
+                status="passed"
+
                 num_steps=`awk 'BEGIN{num_steps=0}/^End of simulation at time [0-9.-]+ after [0-9]+ steps;$/{num_steps=$8} END{print num_steps}' "${mbd_log_file}"`
 
-                case "${mbdyn_enable_gtest}" in
-                    yes)
-                        ## Let's check also the output files and do not rely just on a zero exit status!
-                        status="failed"
-                        ;;
-                    *)
-                        status='passed'
-                        ;;
-                esac
-
+                ## Let's check also the output files and do not rely just on a zero exit status!
                 if test -f "${junit_xml_report_file}" && awk -f parse_test_suite_status.awk "${junit_xml_report_file}" >& /dev/null; then
                     status=$(printf 'passed{Steps=%d}' "${num_steps}")
                 fi
