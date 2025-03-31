@@ -57,8 +57,8 @@ begin: initial value;
 
 	method: ms, .6;
 	# method: bdf;
-
-	# output: iterations;
+        nonlinear solver: line search, modified, 10, default solver options, heavy nonlinear;
+	output: iterations;
 	# output: residual;
 end: initial value;
 
