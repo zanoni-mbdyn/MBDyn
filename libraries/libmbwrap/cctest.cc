@@ -216,7 +216,7 @@ retry:;
                 break;
 
         case 3:
-                SAFEDELETE(pSM);             
+                SAFEDELETE(pSM);
                 return;
         }
 
@@ -236,22 +236,30 @@ MBDYN_TESTSUITE_TEST(cctest, superlucc3)
 
 MBDYN_TESTSUITE_TEST(cctest, umfpackcc1_3)
 {
+#ifdef USE_UMFPACK
      cctest("umfpack", false, 1, 3);
+#endif
 }
 
 MBDYN_TESTSUITE_TEST(cctest, umfpackdir1_3)
 {
+#ifdef USE_UMFPACK
      cctest("umfpack", true, 1, 3);
+#endif
 }
 
 MBDYN_TESTSUITE_TEST(cctest, umfpackcc2_3)
 {
+#ifdef USE_UMFPACK
      cctest("umfpack", false, 2, 3);
+#endif
 }
 
 MBDYN_TESTSUITE_TEST(cctest, umfpackdir2_3)
 {
+#ifdef USE_UMFPACK
      cctest("umfpack", true, 2, 3);
+#endif
 }
 
 MBDYN_TESTSUITE_TEST(cctest, y12cc1_3)

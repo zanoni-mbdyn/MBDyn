@@ -52,9 +52,11 @@ mbdyn_patch_input="no"
 mbdyn_abort_after_step=""
 mbdyn_exec_gen="yes"
 mbdyn_exec_solver="yes"
+mbdyn_enable_gtest="yes"
 update_reference_test_status="no"
 use_reference_test_status="no"
 skip_expected_failures="no"
+
 declare -i mbdyn_exclude_inverse_dynamics=0
 declare -i mbdyn_exclude_initial_value=0
 mbdyn_suppressed_errors=""
@@ -63,7 +65,7 @@ program_dir=$(realpath $(dirname "${program_name}"))
 
 declare -i mbd_exit_status_mask=0 ## Define the errors codes which should not cause the pipeline to fail
 MBDYN_EXEC="${MBDYN_EXEC:-mbdyn}"
-MBDYN_ARGS_ADD="${MBDYN_ARGS_ADD:--CGF}"
+MBDYN_ARGS_ADD="${MBDYN_ARGS_ADD:--CF}"
 OCT_PKG_INSTALL_PREFIX="${OCT_PKG_INSTALL_PREFIX:-${program_dir}/var/cache/share/octave}"
 if ! test -z "${OCT_PKG_INSTALL_PREFIX}"; then
     OCTAVE_LOCAL_LIST=`printf '%s;' "${OCT_PKG_INSTALL_PREFIX}/octave_packages"`
@@ -208,6 +210,10 @@ while ! test -z "$1"; do
             ;;
         --exec-solver)
             mbdyn_exec_solver="$2"
+            shift
+            ;;
+        --enable-gtest)
+            mbdyn_enable_gtest="$2"
             shift
             ;;
         --help)
@@ -390,6 +396,8 @@ function simple_testsuite_run_test()
 
     expected_test_status=`awk -F '=' 'BEGIN{ status = -1; } /^[[:space:]]*##[[:space:]]*@MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@[[:space:]]*=[[:space:]]*[0-9]*[[:space:]]*$/ { status = ($2 != 0); } END{ printf("%d\n", status); }' "${mbd_filename}"`
 
+    printf "%s: expected_test_status=%d\n" "${mbd_filename}" ${expected_test_status}
+
     if ! test -f "${mbd_filename}"; then
         echo "File \"${mbd_filename}\" not found"
         status=$(printf 'file[%]' "${mbd_filename}")
@@ -401,15 +409,22 @@ function simple_testsuite_run_test()
         mbd_output_file="${mbdyn_testsuite_prefix_output}/${mbd_basename}_mbdyn_output_$((idx_test))"
         junit_xml_report_file="${mbdyn_testsuite_prefix_output}/junit_xml_report_${mbd_basename}_$((idx_test)).xml"
 
-        export GTEST_MBDYN_ARGS="--gtest_output=xml:${junit_xml_report_file}"
+        case "${mbdyn_enable_gtest}" in
+            yes)
+                export GTEST_MBDYN_ARGS="-G --gtest_output=xml:${junit_xml_report_file}"
+                ;;
+            *)
+                export GTEST_MBDYN_ARGS=""
+                ;;
+        esac
 
         ## Needed for all GNU-Octave scripts which are using mboct-mbdyn-pkg (e.g. "triangular_contact_run.m")
-        export MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND="${MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND:-${MBDYN_EXEC} ${GTEST_MBDYN_ARGS} --gtest_output=xml:${junit_xml_report_file}}"
+        export MBOCT_MBDYN_PKG_MBDYN_SOLVER_COMMAND="${MBDYN_EXEC} ${MBDYN_ARGS_ADD} ${GTEST_MBDYN_ARGS}"
 
         case "${OCTAVE_EXEC}" in
             gtest-*)
                 ## Note: It should be safe to use the same name, since gtest will add an index if the file already exists
-                GTEST_OCTAVE_ARGS="${GTEST_MBDYN_ARGS}"
+                GTEST_OCTAVE_ARGS="--gtest_output=xml:${junit_xml_report_file}"
                 ;;
             *)
                 GTEST_OCTAVE_ARGS=""
@@ -504,7 +519,7 @@ function simple_testsuite_run_test()
                 mbd_exec_solver="no"
                 ;;
         esac
-        
+
         if test ${skip_expected_failures} = "yes" && test ${expected_test_status} != "0"; then
             echo "Skipping test \"${mbd_filename}\" because it's expected to fail"
             mbd_exec_solver="no"
@@ -550,6 +565,7 @@ function simple_testsuite_run_test()
 
             rm -f "${mbd_time_file}"
             rm -f "${mbd_log_file}"
+            rm -f "${junit_xml_report_file}"
 
             ## Octave allows us to set TMPDIR in order to store all the temporary files in a single folder.
             ## This will make it easier to delete those files, just in case that we are using *_run.m to run the test case.
@@ -589,11 +605,11 @@ function simple_testsuite_run_test()
                 fi
                 ;;
             0)
+                status="passed"
+
                 num_steps=`awk 'BEGIN{num_steps=0}/^End of simulation at time [0-9.-]+ after [0-9]+ steps;$/{num_steps=$8} END{print num_steps}' "${mbd_log_file}"`
 
                 ## Let's check also the output files and do not rely just on a zero exit status!
-                status="failed"
-
                 if test -f "${junit_xml_report_file}" && awk -f parse_test_suite_status.awk "${junit_xml_report_file}" >& /dev/null; then
                     status=$(printf 'passed{Steps=%d}' "${num_steps}")
                 fi
@@ -876,6 +892,7 @@ else
     export mbdyn_keep_output
     export mbdyn_print_res
     export mbdyn_suppressed_errors
+    export mbdyn_enable_gtest
     export update_reference_test_status
     export use_reference_test_status
     export skip_expected_failures

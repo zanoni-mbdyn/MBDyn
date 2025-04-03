@@ -3954,7 +3954,7 @@ AM_CONDITIONAL(USE_SCHUR,[test "$use_schur" = yes])
 AM_CONDITIONAL(USE_SOCKET,[test "$use_socket" = yes])
 AM_CONDITIONAL(USE_ANN,[test "$ol_link_ann" = yes])
 AM_CONDITIONAL(USE_PASTIX,[test "$ol_link_pastix" = "yes"])
-
+AM_CONDITIONAL(USE_UMFPACK,[test "$ol_link_umfpack" = "yes"])
 AM_CONDITIONAL(FOOL_LIBTOOL,[test "$fool_libtool" = yes])
 
 AM_CONDITIONAL(USE_FORTRAN,[test "$have_fc_f77" = yes])
