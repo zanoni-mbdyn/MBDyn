@@ -456,7 +456,7 @@ variables:
     description: "Repository of the NetCDF C++ library (https://www.unidata.ucar.edu/software/netcdf) to be cloned"
 
   NETCDF_CXX4_BRANCH:
-    value: "master"
+    value: "main"
     description: "Branch of the NetCDF C++ library (https://www.unidata.ucar.edu/software/netcdf) to be pulled"
 
   SICONOS_REPOSITORY:
