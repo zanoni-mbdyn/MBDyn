@@ -129,15 +129,12 @@ test: all
 		"libraries/libmbmath/matmultest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/polardecomp_test ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/subtest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"libraries/libmbwrap/arptest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbwrap/cctest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m umfpack" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m naive" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m lapack" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m qr" \
 		"libraries/liby12/y12test" \
-		"mbdyn/struct/solidshapetest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
-		"mbdyn/solidcsltest ${MBD_TEST_PROGS_GTEST_FLAGS}" ; do \
+		"mbdyn/solidtest ${MBD_TEST_PROGS_GTEST_FLAGS}" ; do \
 		printf "running command: \"%s\"\n" "$${cmd}" ; \
 		MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} $${cmd} ; \
 		rc=$$? ; \
@@ -145,6 +142,14 @@ test: all
 		if test $${rc} -ne 0; then exit 1; fi ; \
 	done
 ## tests for optional features
+if USE_UMFPACK
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m umfpack
+endif
+
+if USE_ARPACK
+	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/arptest ${MBD_TEST_PROGS_GTEST_FLAGS}
+endif
+
 if USE_SUITESPARSE_QR
 	MBDYN_MALLOC_FILL=${MBDYN_MALLOC_FILL} ${MBDYN_TEST_VALGRIND} libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m spqr
 endif

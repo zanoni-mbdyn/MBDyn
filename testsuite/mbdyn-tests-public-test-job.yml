@@ -72,6 +72,12 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       artifacts: true
     - job: gtest-build-job
       artifacts: true
+    - job: tfel-build-job
+      artifacts: true
+    - job: mgis-build-job
+      artifacts: true
+    - job: gallery-build-job
+      artifacts: true
     - job: mbdyn-build-job
       artifacts: true
     - job: octave-pkg-build-job ## needed for gtest-octave-cli
@@ -222,3 +228,34 @@ mbdyn-tests-public-test-job-debug:   # This job runs in the test stage.
     when: always
     reports:
       junit: $MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG/**/junit_xml_report_*.xml
+
+mbdyn-tests-public-test-job-nodeps:   # This job runs in the test stage.
+  variables:
+    MBD_TESTS_PUBLIC_LOG_FILE: "mbdyn-tests-public-test-job.log"
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  needs:
+    - job: mbdyn-build-job-nodeps
+      artifacts: true
+  script:
+      - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_NODEPS}
+      - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR}
+      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
+      - echo "mbdyn-tests-public test job"
+      - export PATH=${MBD_INSTALL_PREFIX}/bin:${PATH}
+      - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
+      - export TESTSUITE_TIME_CMD
+      - export MBDYN_EXEC
+      - export CI_PROJECT_DIR
+      - export MBDYN_ARGS_ADD
+      - mkdir -p ${MBD_TESTS_PUBLIC_OUTPUT_DIR} ## needed for realpath
+      - chmod +x testsuite/simple_testsuite.sh
+      - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
+      - echo "-------------- ORIGINAL TESTS --------------------" | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --enable-gtest no --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
+  artifacts:
+    name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+    expire_in: 24h
+    paths:
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR/$MBD_TESTS_PUBLIC_LOG_FILE
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR/**/*.stdout
+    when: always

@@ -75,8 +75,8 @@ begin: initial value;
 	tolerance: 1e-6;
 	max iterations: 50;
 
-	# linear solver: naive, colamd;
-	linear solver: umfpack, cc;
+	linear solver: naive, colamd;
+	# linear solver: umfpack, cc;
 	# nonlinear solver: newton raphson, modified, 5;
 
 	# output: iterations;

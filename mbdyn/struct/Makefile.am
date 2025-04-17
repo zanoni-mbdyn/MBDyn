@@ -208,18 +208,6 @@ endif
 libstruct_la_LIBADD = @LIBS@ @MFRONT_LIBS@
 libstruct_la_LDFLAGS = -static
 
-noinst_PROGRAMS = solidshapetest
-
-solidshapetest_SOURCES = solidshapetest.cc
-solidshapetest_LDADD = \
-../../libraries/libmbutil/libmbutil.la \
-../../libraries/libmbmath/libmbmath.la \
-libstruct.la
-
-if INSTALL_TEST_PROGRAMS
-bin_PROGRAMS = $(noinst_PROGRAMS)
-endif
-
 AM_CPPFLAGS = \
 -I../../include \
 -I$(srcdir)/../../include \
@@ -237,4 +225,3 @@ AM_CPPFLAGS = \
 @GTEST_INCLUDE@
 
 include $(top_srcdir)/build/bot.mk
-

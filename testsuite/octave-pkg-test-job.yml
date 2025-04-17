@@ -57,6 +57,12 @@ octave-pkg-test-job:   # This job runs in the test stage.
         artifacts: true
       - job: gtest-build-job
         artifacts: true
+      - job: tfel-build-job
+        artifacts: true
+      - job: mgis-build-job
+        artifacts: true
+      - job: gallery-build-job
+        artifacts: true
       - job: mbdyn-build-job
         artifacts: true
       - job: gmsh-build-job
