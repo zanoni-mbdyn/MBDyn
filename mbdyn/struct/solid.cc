@@ -355,8 +355,8 @@ public:
      template <typename T>
      inline void
      AssResElasticDefGrad(sp_grad::SpGradientAssVec<T>& WorkVec,
-                                      doublereal dCoef,
-                                      enum sp_grad::SpFunctionCall func);
+                          doublereal dCoef,
+                          enum sp_grad::SpFunctionCall func);
 
      template <typename T>
      inline void
@@ -427,6 +427,7 @@ public:
      virtual doublereal dGetDissipatedEnergy() const override;
 
      virtual doublereal dGetRequestedTimeStep() const override;
+
 protected:
      template <typename T>
      inline void
@@ -753,6 +754,12 @@ public:
      template <typename T>
      inline void
      AssResElasticIncompr(sp_grad::SpGradientAssVec<T>& WorkVec,
+                          doublereal dCoef,
+                          enum sp_grad::SpFunctionCall func);
+
+     template <typename T>
+     inline void
+     AssResElasticDefGrad(sp_grad::SpGradientAssVec<T>& WorkVec,
                           doublereal dCoef,
                           enum sp_grad::SpFunctionCall func);
 
@@ -2481,6 +2488,56 @@ SolidElemDynamic<ElementType, CollocationType, SolidCSLType, eMassMatrix>::AssRe
      this->AssVector(WorkVec, R, &StructDispNode::iGetFirstMomentumIndex);
 
      ASSERT(R.iGetMaxSize() == oDofMap.iGetLocalSize());
+
+     MassMatrixHelper<eMassMatrix>::AssInertiaVec(*this, M, uP, R, oDofMap);
+
+     ASSERT(R.iGetMaxSize() == oDofMap.iGetLocalSize());
+
+     this->AssVector(WorkVec, R, &StructDispNode::iGetFirstPositionIndex);
+}
+
+template <typename ElementType, typename CollocationType, typename SolidCSLType, MassMatrixType eMassMatrix>
+template <typename T>
+inline void
+SolidElemDynamic<ElementType, CollocationType, SolidCSLType, eMassMatrix>::AssResElasticDefGrad(sp_grad::SpGradientAssVec<T>& WorkVec,
+                                                                                                doublereal dCoef,
+                                                                                                enum sp_grad::SpFunctionCall func)
+{
+     using namespace sp_grad;
+
+     SpMatrix<T, 3, iNumNodes> u(3, iNumNodes, 1), uP(3, iNumNodes, 1);
+
+     this->GetNodalDeformations(u, dCoef, func);
+     this->GetNodalVelocities(uP, dCoef, func);
+
+     SpGradExpDofMapHelper<T> oDofMap;
+
+     oDofMap.GetDofStat(u);
+     oDofMap.GetDofStat(uP);
+     oDofMap.Reset();
+     oDofMap.InsertDof(u);
+     oDofMap.InsertDof(uP);
+     oDofMap.InsertDone();
+
+     SpColVector<T, iNumDof> R(iNumDof, oDofMap);
+
+     this->AssStiffnessVecElasticDefGrad(u, R, dCoef, func, oDofMap);
+
+     ASSERT(R.iGetMaxSize() == oDofMap.iGetLocalSize());
+
+     if (this->pRBK) {
+          this->AssInertiaVecRBK(u, R, oDofMap);
+     }
+
+     ASSERT(R.iGetMaxSize() == oDofMap.iGetLocalSize());
+
+     if (this->pGravity) {
+          this->AssGravityLoadVec(R, dCoef, func);
+     }
+
+     ASSERT(R.iGetMaxSize() == oDofMap.iGetLocalSize());
+
+     this->AssVector(WorkVec, R, &StructDispNode::iGetFirstMomentumIndex);
 
      MassMatrixHelper<eMassMatrix>::AssInertiaVec(*this, M, uP, R, oDofMap);
 
