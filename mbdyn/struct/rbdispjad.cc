@@ -55,7 +55,9 @@ RigidBodyDispJointAd::RigidBodyDispJointAd(unsigned int uL,
       pNodeMaster{pNodeMasterTmp},
       rgNodesSlave{std::move(rgNodesSlaveTmp)},
       FmTmp(::Zero3),
-      MmTmp(::Zero3)
+      MmTmp(::Zero3),
+      lambdatTmp(::Zero3),
+      lambdarTmp(::Zero3)
 {
 }
 
@@ -189,7 +191,7 @@ unsigned int RigidBodyDispJointAd::iGetPrivDataIdx(const char *s) const
      static constexpr char rgPrivDataName[][3] = {"Fx", "Fy", "Fz", "Mx", "My", "Mz", "fx", "fy", "fz", "mx", "my", "mz"};
 
      constexpr integer iNumPrivData = sizeof(rgPrivDataName) / sizeof(rgPrivDataName[0]);
-     
+
      for (integer i = 0; i < iNumPrivData; ++i) {
           if (0 == strcmp(rgPrivDataName[i], s)) {
                return i + 1;
@@ -251,6 +253,10 @@ void RigidBodyDispJointAd::GetConnectedNodes(std::vector<const Node *>& connecte
 void RigidBodyDispJointAd::SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
                                     SimulationEntity::Hints *ph)
 {
+     const integer iFirstIndexLambda = iGetFirstIndex();
+
+     X.Put(iFirstIndexLambda + 1, lambdatTmp);
+     X.Put(iFirstIndexLambda + 4, lambdarTmp);
 }
 
 std::ostream& RigidBodyDispJointAd::Restart(std::ostream& out) const
@@ -356,6 +362,7 @@ void RigidBodyDispJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      WorkVec.AddItem(iFirstIndexLambda + 4, Phir);
 
      SaveReactionForce(Fm, Mm);
+     SaveLambda(lambdat, lambdar);
 }
 
 template <typename T>
@@ -454,12 +461,20 @@ void RigidBodyDispJointAd::InitialAssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      WorkVec.AddItem(iFirstIndexLambda + 10, PhiPr);
 
      SaveReactionForce(Fm, Mm);
+     SaveLambda(lambdat, lambdar);
 }
 
 void RigidBodyDispJointAd::SaveReactionForce(const sp_grad::SpColVector<doublereal, 3>& Fm, const sp_grad::SpColVector<doublereal, 3>& Mm)
 {
      FmTmp = Fm;
      MmTmp = Mm;
+}
+
+void RigidBodyDispJointAd::SaveLambda(const sp_grad::SpColVector<doublereal, 3>& lambdat,
+                                      const sp_grad::SpColVector<doublereal, 3>& lambdar)
+{
+     lambdatTmp = lambdat;
+     lambdarTmp = lambdar;
 }
 
 const OutputHandler::Dimensions
@@ -482,4 +497,12 @@ RigidBodyDispJointAd::GetEquationDimension(integer index) const {
 Joint::Type RigidBodyDispJointAd::GetJointType() const
 {
      return RIGIDBODYDISPLACEMENTJOINT;
+}
+
+void RigidBodyDispJointAd::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "FmTmp", FmTmp, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "MmTmp", MmTmp, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "lambdatTmp", lambdatTmp, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "lambdarTmp", lambdarTmp, eAction);
 }

@@ -1482,6 +1482,13 @@ DataManager::SetValue(VectorHandler& X, VectorHandler& XP)
 			pEl->SetValue(this, X, XP);
 		} while (ElemIter.bGetNext(pEl));
 	}
+
+#ifdef DEBUG
+        DEBUGCERR("Solution X after SetValue():\n");
+        PrintSolution(X, -1);
+        DEBUGCERR("Solution XP after SetValue():\n");
+        PrintSolution(XP, -1);
+#endif
 	if (solArrFileName != NULL) {
 		std::ifstream fp(solArrFileName);
 #ifdef HAVE_ISOPEN
@@ -2653,6 +2660,12 @@ DataManager::AfterConvergence(void) const
 		} while (ElemIter.bGetNext(pEl));
 	}
 
+#ifdef DEBUG
+        DEBUGCERR("Solution XCurr after AfterConvergence():\n");
+        PrintSolution(*pXCurr, -1);
+        DEBUGCERR("Solution XPrimeCurr after AfterConvergence:\n");
+        PrintSolution(*pXPrimeCurr, -1);        
+#endif
 	/* Restart condizionato */
 	switch (RestartEvery) {
 	case NEVER:

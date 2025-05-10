@@ -86,6 +86,11 @@ GenelClamp::Restart(std::ostream& out) const
 	return out;
 }
 
+void GenelClamp::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_GENELS, GetLabel(), "dRct", dRct, eAction);
+}
+
 /* Tipo di Genel */
 Genel::Type
 GenelClamp::GetGenelType(void) const
@@ -180,6 +185,10 @@ GenelClamp::SetValue(DataManager *pDM,
 	} else if (SD.iOrder == 1) {
 		XP.PutCoef(SD.pNode->iGetFirstRowIndex() + 1, dGet());
 	}
+
+        const integer iFirstReactionIndex = iGetFirstIndex() + 1;
+
+        X(iFirstReactionIndex) = dRct;
 }
 
 /* *******PER IL SOLUTORE PARALLELO******** */

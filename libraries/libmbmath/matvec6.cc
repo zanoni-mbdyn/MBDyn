@@ -32,6 +32,7 @@
 #include "mbconfig.h"           /* This goes first in every *.c,*.cc file */
 
 #include <matvec6.h>
+#include "binary_conversion.h"
 
 // NOTE: do not use Zero3, Zero3x3 or mb_zero<>()
 // because they might be not initialized yet
@@ -95,11 +96,22 @@ operator << (std::ostream& out, const Vec6& v)
 {
    const Vec3& v1 = v.GetVec1();
    const Vec3& v2 = v.GetVec2();
+   
+   out.precision(std::numeric_limits<doublereal>::digits10);  
+
    return out 
      << v1.dGet(1) << " " << v1.dGet(2) << " " << v1.dGet(3) << " " 
      << v2.dGet(1) << " " << v2.dGet(2) << " " << v2.dGet(3);    
 }
 
+std::istream& operator>>(std::istream& is, Vec6& v)
+{
+     for (integer i = 1; i <= 6; ++i) {
+          is >> v(i);
+     }
+
+     return is;
+}
 
 std::ostream&
 Write(std::ostream& out, const Vec6& v, const char* sFill)
@@ -163,6 +175,9 @@ operator << (std::ostream& out, const Mat6x6& m)
    const Mat3x3& m12 = m.GetMat12();
    const Mat3x3& m21 = m.GetMat21();
    const Mat3x3& m22 = m.GetMat22();
+   
+   out.precision(std::numeric_limits<doublereal>::digits10);
+   
    return out 
      << m11.dGet(1, 1) << " " << m11.dGet(1, 2) << " " << m11.dGet(1,3) << " " 
      << m12.dGet(1, 1) << " " << m12.dGet(1, 2) << " " << m12.dGet(1,3) << std::endl
@@ -178,6 +193,16 @@ operator << (std::ostream& out, const Mat6x6& m)
      << m22.dGet(3, 1) << " " << m22.dGet(3, 2) << " " << m22.dGet(3,3);     
 }
 
+std::istream& operator>>(std::istream& is, Mat6x6& m)
+{
+     for (integer i = 1; i <= 6; ++i) {
+          for (integer j = 1; j <= 6; ++j) {
+               is >> m(i, j);
+          }
+     }
+
+     return is;
+}
 
 std::ostream&
 Write(std::ostream& out, const Mat6x6& m, const char* sFill, 
@@ -274,4 +299,42 @@ Mat6x6 MultMatVCrossT(const Mat6x6& m, const Vec3& v)
 		m.GetMat21() + m.GetMat22()*vCross,
 		m.GetMat12(),
 		m.GetMat22());
+}
+
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, Vec6& v) {
+          for (integer i = 1; i <= 6; ++i) {
+               ReadBinary(is, v(i));
+          }
+          
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const Vec6& v) {
+          for (integer i = 1; i <= 6; ++i) {
+               WriteBinary(os, v(i));
+          }
+
+          return os;
+     }
+
+     std::istream& ReadBinary(std::istream& is, Mat6x6& A) {
+          for (integer i = 1; i <= 6; ++i) {
+               for (integer j = 1; j <= 6; ++j) {
+                    ReadBinary(is, A(i, j));
+               }
+          }
+          
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const Mat6x6& A) {
+          for (integer i = 1; i <= 6; ++i) {
+               for (integer j = 1; j <= 6; ++j) {
+                    WriteBinary(os, A(i, j));
+               }
+          }
+
+          return os;
+     }
 }

@@ -564,6 +564,54 @@ Beam::Restart_(std::ostream& out) const
 	return out;
 }
 
+void Beam::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "fRef", fRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "R", R, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "RRef", RRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "RPrev", RPrev, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "DRef", DRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "Omega", Omega, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "OmegaRef", OmegaRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "Az", Az, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "AzRef", AzRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "AzLoc", AzLoc, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "DefLoc", DefLoc, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "DefLocRef", DefLocRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "DefLocPrev", DefLocPrev, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "DefPrimeLoc", DefPrimeLoc, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "p", p, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "g", g, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "L0", L0, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "L", L, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "LRef", LRef, eAction);
+
+     for (size_t i = 0; i < pD.size(); ++i) {
+          pD[i]->Restart(oData, RestartData::ELEM_BEAMS, GetLabel(), i, eAction);
+     }
+
+#ifdef DEBUG
+     for (unsigned i = 0; i < NUMSEZ; i++) {
+          DEBUGCOUT("Restart(" << GetLabel() << "):" << std::endl);
+          DEBUGCOUT("p[" << i << "]=" << p[i] << std::endl);
+          DEBUGCOUT("g[" << i << "]=" << g[i] << std::endl);
+          DEBUGCOUT("RPrev[" << i << "]=" << RPrev[i] << std::endl);
+          DEBUGCOUT("RRef[" << i << "]=" << RRef[i] << std::endl);
+          DEBUGCOUT("R[" << i << "]=" << R[i] << std::endl);
+          DEBUGCOUT("L[" << i << "]=" << L[i] << std::endl);
+          DEBUGCOUT("L0[" << i << "]=" << L0[i] << std::endl);
+          DEBUGCOUT("LRef[" << i << "]=" << LRef[i] << std::endl);
+          DEBUGCOUT("dsdxi[" << i << "]=" << dsdxi[i] << std::endl);
+          DEBUGCOUT("DefLoc[" << i << "]=" << DefLoc[i] << std::endl);
+          DEBUGCOUT("DefLocRef[" << i << "]=" << DefLocRef[i] << std::endl);
+          DEBUGCOUT("DefLocPrev[" << i << "]=" << DefLocPrev[i] << std::endl);
+          DEBUGCOUT("Az[" << i << "]=" << Az[i] << std::endl);
+          DEBUGCOUT("AzRef[" << i << "]=" << AzRef[i] << std::endl);
+          DEBUGCOUT("AzLoc[" << i << "]=" << AzLoc[i] << std::endl);
+     }
+#endif
+}
+
 void
 Beam::AfterConvergence(const VectorHandler& X, const VectorHandler& XP)
 {
@@ -572,7 +620,7 @@ Beam::AfterConvergence(const VectorHandler& X, const VectorHandler& XP)
 		DefLocPrev[i] = DefLoc[i];
 		pD[i]->AfterConvergence(DefLoc[i]);
 
-                DEBUGCOUT("AfterConvergence" << std::endl);
+                DEBUGCOUT("AfterConvergence(" << GetLabel() << "):" << std::endl);
                 DEBUGCOUT("p[" << i << "]=" << p[i] << std::endl);
                 DEBUGCOUT("g[" << i << "]=" << g[i] << std::endl);
                 DEBUGCOUT("RPrev[" << i << "]=" << RPrev[i] << std::endl);
@@ -987,7 +1035,7 @@ Beam::SetValue(DataManager *pDM,
 		 * (la deformazione e' gia' stata aggiornata dall'ultimo residuo) */
 		DRef[iSez] = MultRMRt(pD[iSez]->GetFDE(), RRef[iSez]);
 
-                DEBUGCOUT("SetValue" << std::endl);
+                DEBUGCOUT("SetValue(" << GetLabel() << "):" << std::endl);
                 DEBUGCOUT("p[" << iSez << "]=" << p[iSez] << std::endl);
                 DEBUGCOUT("g[" << iSez << "]=" << g[iSez] << std::endl);
                 DEBUGCOUT("RPrev[" << iSez << "]=" << RPrev[iSez] << std::endl);
@@ -1846,6 +1894,16 @@ ViscoElasticBeam::dGetPrivData(unsigned int i) const
 	}
 }
 
+void ViscoElasticBeam::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     Beam::Restart(oData, eAction);
+     
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "LPrime", LPrime, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "gPrime", gPrime, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "LPrimeRef", LPrimeRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "DefPrimeLocRef", DefPrimeLocRef, eAction);
+     oData.Sync(RestartData::ELEM_BEAMS, GetLabel(), "ERef", ERef, eAction);
+}
 /* ViscoElasticBeam - end */
 
 void

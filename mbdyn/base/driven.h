@@ -72,6 +72,8 @@ public:
 	/* Scrive il contributo dell'elemento al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
 	/* funzioni proprie */
 
 	/*

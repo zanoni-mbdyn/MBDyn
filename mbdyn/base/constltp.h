@@ -34,6 +34,7 @@
 #ifndef CONSTLTP_H
 #define CONSTLTP_H
 
+#include "demangle.h"
 #include "withlab.h"
 #include "simentity.h"
 #include "tpldrive.h"
@@ -42,6 +43,7 @@
 #include "sp_gradient.h"
 #include "sp_matrix_base.h"
 #include "ltstrcase.h"
+#include "restart_data.h"
 
 typedef sp_grad::SpColVector<doublereal, 7> Vec7;
 typedef sp_grad::SpColVector<doublereal, 9> Vec9;
@@ -161,6 +163,8 @@ public:
         virtual std::ostream& Restart(std::ostream& out) const {
                 return out;
         }
+
+        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction);
 
         /* simentity */
         virtual unsigned int iGetNumDof(void) const override {

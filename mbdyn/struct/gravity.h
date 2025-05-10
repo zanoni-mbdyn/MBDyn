@@ -119,6 +119,9 @@ public:
 	virtual inline int GetNumConnectedNodes(void) const override {
 		return 0;
 	}
+
+        using Elem::Restart;
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 };
 
 /* Gravity - end */

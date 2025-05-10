@@ -46,10 +46,16 @@
 ##   done
 
 try
-  pkg load mboct-mbdyn-pkg;
-
   clear all;
   close all;
+
+  pkg_prefix = getenv("OCT_PKG_INSTALL_PREFIX");
+
+  if (~isempty(pkg_prefix))
+    pkg("local_list", fullfile(pkg_prefix, "octave_packages"));
+  endif
+
+  pkg load mboct-mbdyn-pkg;
 
   param.N = 1000;
   param.g = 9.81;

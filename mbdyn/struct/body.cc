@@ -91,6 +91,10 @@ Mass::Restart(std::ostream& out) const
 	return out;
 }
 
+void Mass::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     DEBUGCERR("Mass::Restart\n");
+}
 
 /* massa totale */
 doublereal
@@ -773,6 +777,11 @@ Body::Restart(std::ostream& out) const
 	return out;
 }
 
+
+void Body::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     DEBUGCERR("Body::Restart\n");
+}
 
 void
 Body::AfterPredict(VectorHandler& /* X */ , VectorHandler& /* XP */ )

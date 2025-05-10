@@ -42,6 +42,7 @@
 #define VH_H
 
 #include <iostream>
+#include <sstream>
 #include "ac/f2c.h"
 
 /* per il debugging */
