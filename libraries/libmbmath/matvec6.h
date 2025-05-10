@@ -265,6 +265,7 @@ class Vec6: public sp_grad::SpConstMatElemAdapter<Vec6>
 extern Vec6 operator + (const Vec6& v);
 extern Vec6 operator - (const Vec6& v);
 extern std::ostream& operator << (std::ostream& out, const Vec6& m);
+extern std::istream& operator >>(std::istream& is, Vec6& v);
 extern std::ostream& Write(std::ostream& out, const Vec6& v, const char* sFill = " ");
 
 
@@ -670,6 +671,7 @@ class Mat6x6: public sp_grad::SpConstMatElemAdapter<Mat6x6>
 };
 
 extern std::ostream& operator << (std::ostream& out, const Mat6x6& m);
+extern std::istream& operator >>(std::istream& is, Mat6x6& m);
 extern std::ostream& Write(std::ostream& out,
 		      const Mat6x6& m,
 		      const char* sFill = " ", 
@@ -741,6 +743,16 @@ inline Mat6x6& mb_deye<Mat6x6>(Mat6x6& out, const doublereal d)
 	out.PutMat22(mb_deye<Mat3x3>(d));
 
 	return out;
+}
+
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, Vec6& v);
+
+     std::ostream& WriteBinary(std::ostream& os, const Vec6& v);
+
+     std::istream& ReadBinary(std::istream& is, Mat6x6& A);
+
+     std::ostream& WriteBinary(std::ostream& os, const Mat6x6& A);
 }
 
 #endif // MATVEC6_H

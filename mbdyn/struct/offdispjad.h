@@ -116,6 +116,8 @@ public:
      void InitialAssRes(sp_grad::SpGradientAssVec<T>& WorkMat,
                         const sp_grad::SpGradientVectorHandler<T>& XCurr,
                         sp_grad::SpFunctionCall func);
+
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 private:
      void SaveReactionForce(const sp_grad::SpColVector<doublereal, 3>& F1,
                             const sp_grad::SpColVector<doublereal, 3>& M1);

@@ -332,6 +332,9 @@ public:
           }
      }
 
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }
 protected:
      PreStress sigma0;
      PreStrain epsilon0;
@@ -415,6 +418,9 @@ public:
                                                - (epsilon0(1) + epsilon0(2) + epsilon0(3))) - ptilde / kappa); // (pbar - ptilde) / kappa
      }
 
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }
 private:
      const doublereal mu, kappa, gamma;
      PreStress sigma0;
@@ -506,6 +512,10 @@ public:
                oDofMap.MapAssign(sigma(i), mu * (epsilon(i) - epsilon0(i) + beta * epsilonP(i)) + sigma0(i));
           }
      }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }     
 private:
      const doublereal beta;
 };
@@ -700,6 +710,10 @@ public:
                oDofMap.MapAssign(sigma(i), mu * deltajk + (CC(j, k) - C(j, k) * IC + IIC * deltajk) * gamma + sigma0(i));
           }
      }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }     
 protected:
      template <typename T>
      void NeoHookeanStrainTensorAndInvariants(const sp_grad::SpColVector<T, 6>& epsilon, sp_grad::SpMatrix<T, 3, 3>& C, sp_grad::SpMatrix<T, 3, 3>& CC, T& IC, T& IIC, T& IIIC, T& gamma, const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) {
@@ -806,6 +820,10 @@ public:
                                  + (deltajk ? 2. : 1.) * mu * beta * epsilonP(i)
                                  + deltajk * beta * lambda * traceGP + sigma0(i));
           }
+     }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
      }
 private:
      const doublereal beta;
@@ -958,6 +976,10 @@ public:
      void UpdateElasticTpl(const VectorType& epsilon, VectorType& sigma, const sp_grad::SpGradExpDofMapHelper<typename VectorType::ValueType>& oDofMap) {
           this->template MooneyRivlinStressTensor<ConstLawType::ELASTIC>(epsilon, sigma, oDofMap);
      }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }
 };
 
 template <typename PreStress, typename PreStrain>
@@ -1017,6 +1039,10 @@ public:
      void UpdateElasticTpl(const VectorType& epsilon, VectorType& sigma, const sp_grad::SpGradExpDofMapHelper<typename VectorType::ValueType>& oDofMap) {
           this->template MooneyRivlinStressTensor<ConstLawType::ELASTIC>(epsilon, sigma, oDofMap);
      }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }     
 };
 
 template <typename PreStress, typename PreStrain>
@@ -1082,6 +1108,10 @@ public:
                       const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) {
           this->template MooneyRivlinStressTensor<ConstLawType::ELASTICINCOMPR>(epsilon, sigma, oDofMap);
      }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }     
 };
 
 struct PreStressRead {
@@ -1577,6 +1607,12 @@ public:
           UpdatePlasticStrain(eP, sigmay);
      }
 
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          oData.Sync(eOwner, uLabel, iIndex, "eP_prev", eP_prev, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "eP_curr", eP_curr, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "sigmay_prev", sigmay_prev, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "sigmay_curr", sigmay_curr, eAction);
+     }
 private:
      void UpdatePlasticStrain(const sp_grad::SpMatrix<doublereal, 3, 3>& eP, doublereal sigmay) {
           eP_curr = eP;
@@ -1806,6 +1842,10 @@ public:
           EpsVPrev = EpsVCurr;
      }
 
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          oData.Sync(eOwner, uLabel, iIndex, "EpsVPrev", EpsVPrev, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "EpsVCurr", EpsVCurr, eAction);
+     }
 private:
      const doublereal E1, eta1;
      sp_grad::SpColVector<doublereal, iDim> EpsVPrev, EpsVCurr;
@@ -1943,6 +1983,16 @@ public:
           }
      }
 
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          using namespace std::string_literals;
+
+          for (size_t i = 0; i < rgMaxwellData.size(); ++i) {
+               const std::string strPrefix = "maxwell."s + std::to_string(i);
+
+               oData.Sync(eOwner, uLabel, iIndex, strPrefix + ".EpsVPrev", rgMaxwellData[i].EpsVPrev, eAction);
+               oData.Sync(eOwner, uLabel, iIndex, strPrefix + ".EpsVCurr", rgMaxwellData[i].EpsVCurr, eAction);
+          }
+     }
 private:
      std::vector<MaxwellData> rgMaxwellData;
 };
@@ -2101,8 +2151,8 @@ public:
 
      explicit MFrontGenericInterfaceCSL(const mgis::behaviour::Behaviour& oBehaviourTmp, DriveCaller* pTimeStepDrv)
           :oBehaviour(oBehaviourTmp),
-           oData(oBehaviour),
-           oView(mgis::behaviour::make_view(oData)),
+           oBehaviourData(oBehaviour),
+           oView(mgis::behaviour::make_view(oBehaviourData)),
            pTimeStepDrv(pTimeStepDrv) {
      }
 
@@ -2112,32 +2162,32 @@ public:
      }
 
      void setMaterialProperty(const std::string_view& strName, const doublereal dValue) {
-         mgis::behaviour::setMaterialProperty(oData.s0, strName, dValue);
-         mgis::behaviour::setMaterialProperty(oData.s1, strName, dValue);
+         mgis::behaviour::setMaterialProperty(oBehaviourData.s0, strName, dValue);
+         mgis::behaviour::setMaterialProperty(oBehaviourData.s1, strName, dValue);
      }
 
      virtual void Update(const Tstrain& Eps, const Tstrain& EpsPrime) override {
-          mgis::behaviour::revert(oData);
+          mgis::behaviour::revert(oBehaviourData);
 
           static constexpr size_t iNumStrain = ConstLawHelper<Tstrain>::iDim1;
           static constexpr size_t iNumStress = ConstLawHelper<Tstress>::iDim1;
 
-          ASSERT(oData.s1.gradients.size() == iNumStrain);
-          ASSERT(oData.s1.thermodynamic_forces.size() == iNumStress);
-          ASSERT(oData.K.size() == iNumStrain * iNumStress);
+          ASSERT(oBehaviourData.s1.gradients.size() == iNumStrain);
+          ASSERT(oBehaviourData.s1.thermodynamic_forces.size() == iNumStress);
+          ASSERT(oBehaviourData.K.size() == iNumStrain * iNumStress);
           ASSERT(F.iGetNumRows() == iNumStress);
           ASSERT(Eps.iGetNumRows() == iNumStrain);
           ASSERT(FDE.iGetNumRows() == iNumStress);
           ASSERT(FDE.iGetNumCols() == iNumStrain);
 
           for (size_t i = 0; i < iNumStrain; ++i) {
-               oData.s1.gradients[i] = dGetScale(i) * Eps(i + 1);
+               oBehaviourData.s1.gradients[i] = dGetScale(i) * Eps(i + 1);
           }
 
           oView.dt = pTimeStepDrv->dGet();
 
           // If K[0] is greater than 3.5, the consistent tangent operator must be computed.
-          oData.K[0] = 4;
+          oBehaviourData.K[0] = 4;
 
           int status = mgis::behaviour::integrate(oView, oBehaviour);
 
@@ -2147,12 +2197,12 @@ public:
           }
 
           for (size_t i = 0; i < iNumStress; ++i) {
-               F(i + 1) = dGetScale(i) * oData.s1.thermodynamic_forces[i];
+               F(i + 1) = dGetScale(i) * oBehaviourData.s1.thermodynamic_forces[i];
           }
 
           for (size_t j = 0; j < iNumStrain; ++j) {
                for (size_t i = 0; i < iNumStress; ++i) {
-                    FDE(i + 1, j + 1) = dGetScale(i) * dGetScale(j) * oData.K[i * iNumStrain + j];
+                    FDE(i + 1, j + 1) = dGetScale(i) * dGetScale(j) * oBehaviourData.K[i * iNumStrain + j];
                }
           }
 
@@ -2162,12 +2212,12 @@ public:
 
           if (pedantic_out) {
                MBDYN_LOCK_COUT();
-               mgis::behaviour::print_markdown(std::cerr, oBehaviour, oData, 0);
+               mgis::behaviour::print_markdown(std::cerr, oBehaviour, oBehaviourData, 0);
           }
      }
 
      virtual void AfterConvergence(const Tstrain& Eps, const Tstrain& EpsPrime) override {
-          mgis::behaviour::update(oData);
+          mgis::behaviour::update(oBehaviourData);
      }
 
      virtual ConstLawType::Type GetConstLawType(void) const override {
@@ -2181,8 +2231,8 @@ public:
                                  MFrontGenericInterfaceCSL,
                                  MFrontGenericInterfaceCSL(oBehaviour, pTimeStepDrv->pCopy()));
 
-          CopyState(pCL->oData.s0, oData.s0);
-          CopyState(pCL->oData.s1, oData.s1);
+          CopyState(pCL->oBehaviourData.s0, oBehaviourData.s0);
+          CopyState(pCL->oBehaviourData.s1, oBehaviourData.s1);
 
           return pCL;
      }
@@ -2209,11 +2259,11 @@ public:
      virtual doublereal dGetPrivData(unsigned int i) const override {
          switch (i) {
              case 1u:
-                 return oData.rdt;
+                 return oBehaviourData.rdt;
              case 2u:
-                 return oData.s1.stored_energy;
+                 return oBehaviourData.s1.stored_energy;
              case 3:
-                 return oData.s1.dissipated_energy;
+                 return oBehaviourData.s1.dissipated_energy;
              default:
                  throw ErrGeneric(MBDYN_EXCEPT_ARGS);
          }
@@ -2221,6 +2271,43 @@ public:
 
      virtual unsigned int iGetNumPrivData() const override {
           return 3u;
+     }
+
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+
+          const size_t iNumIntStates = oBehaviourData.s0.internal_state_variables.size();
+          const size_t iNumExtStates = oBehaviourData.s0.external_state_variables.size();
+
+          oData.Sync(eOwner, uLabel, iIndex, "s0.stored_energy", oBehaviourData.s0.stored_energy, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s0.dissipated_energy", oBehaviourData.s0.dissipated_energy, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s0.mass_density", oBehaviourData.s0.mass_density, eAction);
+
+          oData.Sync(eOwner, uLabel, iIndex, "s0.gradients", oBehaviourData.s0.gradients, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s0.thermodynamic_forces", oBehaviourData.s0.thermodynamic_forces, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s0.internal_state_variables", oBehaviourData.s0.internal_state_variables, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s0.external_state_variables", oBehaviourData.s0.external_state_variables, eAction);
+
+          oData.Sync(eOwner, uLabel, iIndex, "s1.stored_energy", oBehaviourData.s1.stored_energy, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s1.dissipated_energy", oBehaviourData.s1.dissipated_energy, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s1.mass_density", oBehaviourData.s1.mass_density, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s1.gradients", oBehaviourData.s1.gradients, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s1.thermodynamic_forces", oBehaviourData.s1.thermodynamic_forces, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s1.internal_state_variables", oBehaviourData.s1.internal_state_variables, eAction);
+          oData.Sync(eOwner, uLabel, iIndex, "s1.external_state_variables", oBehaviourData.s1.external_state_variables, eAction);
+
+          static constexpr size_t iNumStrain = ConstLawHelper<Tstrain>::iDim1;
+          static constexpr size_t iNumStress = ConstLawHelper<Tstress>::iDim1;
+
+          if (oBehaviourData.s0.gradients.size() != iNumStrain ||
+              oBehaviourData.s0.thermodynamic_forces.size() != iNumStress ||
+              oBehaviourData.s0.internal_state_variables.size() != iNumIntStates ||
+              oBehaviourData.s0.external_state_variables.size() != iNumExtStates ||
+              oBehaviourData.s1.gradients.size() != iNumStrain ||
+              oBehaviourData.s1.thermodynamic_forces.size() != iNumStress ||
+              oBehaviourData.s1.internal_state_variables.size() != iNumIntStates ||
+              oBehaviourData.s1.external_state_variables.size() != iNumExtStates) {
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
      }
 private:
      static void CopyState(mgis::behaviour::State& oDest, const mgis::behaviour::State& oSrc) {
@@ -2245,7 +2332,7 @@ private:
           }
      }
      mgis::behaviour::Behaviour oBehaviour;
-     mgis::behaviour::BehaviourData oData;
+     mgis::behaviour::BehaviourData oBehaviourData;
      mgis::behaviour::BehaviourDataView oView;
      std::unique_ptr<DriveCaller> pTimeStepDrv;
 };

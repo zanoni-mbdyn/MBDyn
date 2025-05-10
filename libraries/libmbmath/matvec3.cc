@@ -39,6 +39,7 @@
 #include <limits>
 
 #include "matvec3.h"
+#include "binary_conversion.h"
 #include <ac/lapack.h>
 
 /* noteworthy constant */
@@ -741,7 +742,9 @@ std::ostream&
 operator << (std::ostream& out, const Mat3x3& m)
 {
    const doublereal* pd = m.pGetMat();
-
+   
+   out.precision(std::numeric_limits<doublereal>::digits10);
+   
    out
      << pd[M11] << sDefFill << pd[M12] << sDefFill << pd[M13] << sDefFill
      << pd[M21] << sDefFill << pd[M22] << sDefFill << pd[M23] << sDefFill
@@ -764,6 +767,8 @@ std::ostream&
 operator << (std::ostream& out, const Vec3& v)
 {
    const doublereal* pd = v.pGetVec();
+
+   out.precision(std::numeric_limits<doublereal>::digits10);
    
    out << pd[0] << sDefFill << pd[1] << sDefFill << pd[2];
    
@@ -810,6 +815,25 @@ Write(std::ostream& out, const doublereal& d, const char*)
    return out << d;
 }
 
+std::istream& operator>>(std::istream& is, Vec3& v)
+{
+     for (integer i = 1; i <= v.iGetNumRows(); ++i) {
+          is >> v(i);
+     }
+
+     return is;
+}
+
+std::istream& operator>>(std::istream& is, Mat3x3& A)
+{
+     for (integer i = 1; i <= A.iGetNumRows(); ++i) {
+          for (integer j = 1; j <= A.iGetNumCols(); ++j) {
+               is >> A(i, j);
+          }
+     }
+
+     return is;
+}
 
 /* calcolo dei parametri di rotazione a partire dalla matrice R */
 
@@ -1225,3 +1249,40 @@ MultRMRt(const Mat3x3& m, const Mat3x3& R)
 	return R*m.MulMT(R);
 }
 
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, Vec3& v) {
+          for (integer i = 1; i <= 3; ++i) {
+               ReadBinary(is, v(i));
+          }
+          
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const Vec3& v) {
+          for (integer i = 1; i <= 3; ++i) {
+               WriteBinary(os, v(i));
+          }
+
+          return os;
+     }
+
+     std::istream& ReadBinary(std::istream& is, Mat3x3& A) {
+          for (integer i = 1; i <= 3; ++i) {
+               for (integer j = 1; j <= 3; ++j) {
+                    ReadBinary(is, A(i, j));
+               }
+          }
+          
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const Mat3x3& A) {
+          for (integer i = 1; i <= 3; ++i) {
+               for (integer j = 1; j <= 3; ++j) {
+                    WriteBinary(os, A(i, j));
+               }
+          }
+
+          return os;
+     }
+}

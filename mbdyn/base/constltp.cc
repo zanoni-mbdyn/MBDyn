@@ -37,6 +37,11 @@
 #include "mbpar.h"
 #include "dataman.h"
 
+void ConstitutiveLawCommon::Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) {
+     silent_cerr(mbdyn_demangle(typeid(*this)) << "::Restart not implemented yet\n");
+     throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+}
+
 void
 ConstitutiveLawAd<doublereal, doublereal, doublereal>::Update(const doublereal& Eps,
                                                               doublereal& FTmp,

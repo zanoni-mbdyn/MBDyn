@@ -371,8 +371,11 @@ BeamAd::UnivAssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
           DEBUGCOUT("RRef[" << iSez << "]=" << RRef[iSez] << std::endl);
           DEBUGCOUT("R[" << iSez << "]=" << R[iSez] << std::endl);
           DEBUGCOUT("L[" << iSez << "]=" << L[iSez] << std::endl);
+          DEBUGCOUT("L0[" << iSez << "]=" << L0[iSez] << std::endl);
           DEBUGCOUT("DefLoc[" << iSez << "]=" << DefLoc[iSez] << std::endl);
+          DEBUGCOUT("DefLocRef[" << iSez << "]=" << DefLocRef[iSez] << std::endl);
           DEBUGCOUT("Az[" << iSez << "]=" << Az[iSez] << std::endl);
+          DEBUGCOUT("AzLoc[" << iSez << "]=" << AzLoc[iSez] << std::endl);
      }
 
      AssReactionForce(WorkVec, p, Az, X, oDofMap);

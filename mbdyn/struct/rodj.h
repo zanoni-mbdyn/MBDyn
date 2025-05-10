@@ -97,9 +97,11 @@ public:
 	};
 
 	/* Contributo al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+        virtual std::ostream& Restart(std::ostream& out) const;
 
-	virtual void
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
+        virtual void
 	AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
 
 	virtual unsigned int iGetNumDof(void) const {

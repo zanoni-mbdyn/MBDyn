@@ -141,7 +141,9 @@ public:
 
      /* Scrive il contributo dell'elemento al file di restart */
      virtual std::ostream& Restart(std::ostream& out) const override;
-
+     
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
      virtual void Output(OutputHandler& OH) const override;
 
      void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;

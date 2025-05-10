@@ -792,7 +792,7 @@ InverseSolver::~InverseSolver(void)
 
 /* scrive il contributo al file di restart */
 std::ostream &
-InverseSolver::Restart(std::ostream& out,DataManager::eRestart type) const
+InverseSolver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
 {
 #if 0
 	out << "begin: inverse dynamics;" << std::endl;

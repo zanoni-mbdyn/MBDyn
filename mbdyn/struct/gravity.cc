@@ -73,6 +73,10 @@ Gravity::AssRes(SubVectorHandler& WorkVec,
 	return WorkVec;
 }
 
+void Gravity::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     DEBUGCERR("Gravity::Restart\n");
+}
 /* Gravity - end */
 
 

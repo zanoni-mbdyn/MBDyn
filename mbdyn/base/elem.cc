@@ -31,6 +31,7 @@
 
 #include "mbconfig.h"           /* This goes first in every *.c,*.cc file */
 
+#include "demangle.h"
 #include "dataman.h"
 #include "elem.h"
 #include "gravity.h"
@@ -136,6 +137,12 @@ unsigned int
 Elem::iGetNumDof(void) const
 {
 	return 0;
+}
+
+void Elem::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     silent_cerr(mbdyn_demangle(typeid(*this)) << "::Restart not implemented yet!\n");
+     throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
 }
 
 std::ostream&

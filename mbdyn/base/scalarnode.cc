@@ -51,6 +51,34 @@ ScalarNode::~ScalarNode(void)
 	NO_OP;
 }
 
+RestartData::RestartEntity ScalarNode::GetRestartEntity() const
+{
+     RestartData::RestartEntity eEntity;
+     
+     switch (GetNodeType()) {
+     case Node::ABSTRACT:
+          eEntity = RestartData::NODES_ABSTRACT;
+          break;
+     case Node::ELECTRIC:
+          eEntity = RestartData::NODES_ELECTRIC;
+          break;
+     case Node::THERMAL:
+          eEntity = RestartData::NODES_THERMAL;
+          break;
+     case Node::HYDRAULIC:
+          eEntity = RestartData::NODES_HYDRAULIC;
+          break;
+     case Node::PARAMETER:
+          eEntity = RestartData::NODES_PARAMETER;
+          break;
+     default:
+          ASSERT(0);
+          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+     }
+
+     return eEntity;
+}
+
 void
 ScalarNode::OutputPrepare_int(OutputHandler& OH, bool bDifferential)
 {
@@ -294,6 +322,13 @@ ScalarDifferentialNode::Restart(std::ostream& out) const
 
 	return out << ", value, " << dX
 		<< ", derivative, " << dXP << ";" << std::endl;
+}
+
+void ScalarDifferentialNode::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     const auto eEntity = GetRestartEntity();
+     oData.Sync(eEntity, GetLabel(), "dX", dX, eAction);
+     oData.Sync(eEntity, GetLabel(), "dXP", dXP, eAction);
 }
 
 void
@@ -560,6 +595,12 @@ ScalarAlgebraicNode::Restart(std::ostream& out) const
 	}
 
 	return out << ", value, " << dX << ";" << std::endl;
+}
+
+void ScalarAlgebraicNode::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     const auto eEntity = GetRestartEntity();
+     oData.Sync(eEntity, GetLabel(), "dX", dX, eAction);
 }
 
 void

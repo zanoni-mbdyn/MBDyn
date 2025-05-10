@@ -91,7 +91,7 @@ mbdyn-modules-test-job:   # This job runs in the test stage.
         artifacts: true
   script:
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX}
-      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_MODULE_TESTS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_MODULE_TESTS_OUTPUT_DIR}
       - echo "MBDyn modules test job"
@@ -156,7 +156,7 @@ mbdyn-modules-test-job-gcov:   # This job runs in the test stage.
   rules:
     - if: $MBD_TEST_COVERAGE_ENABLED == "yes"
   script:
-      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_GCOV}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_GCOV}
       - OCT_PKG_TEST_OUTPUT_DIR=${CI_PROJECT_DIR}/${OCT_PKG_TEST_OUTPUT_DIR_GCOV}
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_GCOV}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
@@ -180,12 +180,6 @@ mbdyn-modules-test-job-gcov:   # This job runs in the test stage.
       - sp_gradient_test --gtest_output=xml:${MBD_MODULE_TESTS_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml >& /dev/null
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_MODULE_TESTS_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_MODULE_TESTS_EXIT_STATUS_MASK}" --abort-after-step "${MBD_MODULE_TESTS_ABORT_AFTER_STEP}" --timeout "${MBD_MODULE_TESTS_TIMEOUT}" --prefix-output "${MBD_MODULE_TESTS_OUTPUT_DIR}" --prefix-input "${MBD_MODULE_TESTS_INPUT_DIR}" --tasks "${MBD_MODULE_TESTS_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_MODULE_TESTS_USE_REFERENCE_TEST_STATUS}" --keep-output failed --abort-after "${MBD_MODULE_TESTS_ABORT_AFTER}" --linear-solvers "${MBD_MODULE_TESTS_LINEAR_SOLVERS}" --nonlinear-solvers "${MBD_MODULE_TESTS_NONLINEAR_SOLVERS}" --exit-status-mask "${MBD_MODULE_TESTS_EXIT_STATUS_MASK}" --timeout "${MBD_MODULE_TESTS_TIMEOUT}" --prefix-output "${MBD_MODULE_TESTS_OUTPUT_DIR}" --prefix-input "${MBD_MODULE_TESTS_INPUT_DIR}" --tasks "${MBD_MODULE_TESTS_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
-      # - ${TESTSUITE_TIME_CMD} testsuite/octave_pkg_testsuite.sh --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}"
-      # --octave-pkg-list "${OCT_PKG_LIST}"
-      # --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}"
-      # --octave-pkg-test-mode "${OCT_PKG_TEST_MODE}"
-      # --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" ##
-      # --octave-function-filter "${OCT_PKG_FUNCTION_FILTER}"  2>&1 | tee -a "${log_file}"
       ## Disable multithreaded BLAS/LAPACK
       - export OMP_NUM_THREADS=1
       - export MKL_NUM_THREADS=1
@@ -229,7 +223,7 @@ mbdyn-modules-test-job-debug:   # This job runs in the test stage.
     - if: $MBD_DEBUG_ENABLED == "yes"
   script:
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_DEBUG}
-      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_MODULE_TESTS_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_MODULE_TESTS_OUTPUT_DIR_DEBUG}
       - echo "MBDyn modules test job"

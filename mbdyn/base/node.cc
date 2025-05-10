@@ -32,6 +32,7 @@
 #include "mbconfig.h"           /* This goes first in every *.c,*.cc file */
 
 #include "mynewmem.h"
+#include "demangle.h"
 #include "node.h"
 #include "nodead.h"
 #include "solman.h"
@@ -109,6 +110,12 @@ void Node::UpdateJac(doublereal dCoef)
 
 void Node::UpdateJac(const VectorHandler& Y, doublereal dCoef)
 {
+}
+
+void Node::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     silent_cerr(mbdyn_demangle(typeid(*this)) << "::Restart not implemented yet!\n");
+     throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
 }
 
 /* Node - end */

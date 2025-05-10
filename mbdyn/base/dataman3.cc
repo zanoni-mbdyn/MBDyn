@@ -170,8 +170,8 @@ DataManager::ReadControl(MBDynParser& HP,
 		"rigid" "body" "kinematics",
                 
                 "use" "automatic" "differentiation",
-                
-		0
+                "load" "restart" "file",
+		nullptr
 	};
 
 
@@ -267,7 +267,7 @@ DataManager::ReadControl(MBDynParser& HP,
 		MODEL,
 		RIGIDBODYKINEMATICS,
                 USE_AUTOMATIC_DIFFERENTIATION,
-                
+                LOAD_RESTART_FILE,
 		LASTKEYWORD
 	};
 
@@ -886,7 +886,8 @@ EndOfUse:
 		/* Crea il file di restart */
 		case MAKERESTARTFILE:
 			DEBUGLCOUT(MYDEBUG_INPUT, "Restart file will be generated " << std::endl);
-			if (HP.IsArg()) {
+                        RestartEvery = ATEND;
+			while (HP.IsArg()) {
 				if (HP.IsKeyWord("iterations")) {
 					RestartEvery = ITERATIONS;
 					iRestartIterations = HP.GetInt(0, HighParser::range_ge<integer>(0));
@@ -915,14 +916,22 @@ EndOfUse:
 							<< pdRestartTimes[0]
 							<< std::endl);
 					}
-				} else {
+				} else if (HP.IsKeyWord("format")) {
+                                     if (HP.IsKeyWord("classic")) {
+                                          RestartType = RESTART_CLASSIC;
+                                     } else if (HP.IsKeyWord("binary")) {
+                                          RestartType = RESTART_BINARY;
+                                     } else {
+                                          silent_cerr("Keyword \"classic\" or \"binary\" expected at line "
+                                                      << HP.GetLineData() << "\n");
+                                          throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                                     }
+                                } else {
 					silent_cerr("Error: unrecognized restart option at line "
 						<< HP.GetLineData() << std::endl);
 
 					throw DataManager::ErrGeneric(MBDYN_EXCEPT_ARGS);
 				}
-			} else {
-				RestartEvery = ATEND;
 			}
 
 			if (HP.IsKeyWord("with" "solution" "array")) {
@@ -1597,7 +1606,9 @@ EndOfUse:
                         DEBUGCERR("Support for automatic differentiation is enabled\n");
                         bAutoDiff = true;
                         break;
-                        
+                case LOAD_RESTART_FILE:
+                        strRestartFile = HP.GetStringWithDelims();
+                        break;
 		case UNKNOWN:
 			/*
 			 * If description is not in key table the parser

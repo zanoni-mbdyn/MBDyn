@@ -142,6 +142,10 @@ public:
           pConstLaw->AfterConvergence(pConstLaw->GetEpsilon(), pConstLaw->GetEpsilonPrime());
      }
 
+     void Restart(RestartData& oData, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) {
+          pConstLaw->Restart(oData, RestartData::ELEM_SOLIDS, uLabel, iIndex, eAction);
+     }
+
      bool bGetRequestedTimeStep(doublereal& dRequestedTimeStep) const {
           ASSERT(pConstLaw != nullptr);
 
@@ -307,7 +311,8 @@ public:
      using SolidElem::AssJac;
      using SolidElem::InitialAssRes;
      using SolidElem::InitialAssJac;
-
+     using SolidElem::Restart;
+     
      typedef IncomprSolidElemStatic<SolidCSLType::eConstLawType == ConstLawType::ELASTICINCOMPR, ElementType::ElemTypePressure::iNumNodes> IncomprSolidElemType;
 
      static constexpr ConstLawType::Type eConstLawType = SolidCSLType::eConstLawType;
@@ -428,6 +433,8 @@ public:
 
      virtual doublereal dGetRequestedTimeStep() const override;
 
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 protected:
      template <typename T>
      inline void
@@ -630,6 +637,10 @@ protected:
 
           void AfterConvergence() {
                oConstLaw.AfterConvergence();
+          }
+
+          void Restart(RestartData& oData, unsigned uLabel, integer iIndex, RestartData::RestartAction& eAction) {
+               oConstLaw.Restart(oData, uLabel, iIndex, eAction);
           }
 
           SolidCSLType oConstLaw;
@@ -1843,6 +1854,14 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::dGe
      }
 
      return rdt;
+}
+
+template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
+void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     for (size_t i = 0; i < rgCollocData.size(); ++i) {
+          rgCollocData[i].Restart(oData, GetLabel(), i, eAction);
+     }
 }
 
 template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>

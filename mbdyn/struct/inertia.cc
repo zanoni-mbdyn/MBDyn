@@ -253,6 +253,12 @@ Inertia::Restart(std::ostream& out) const
      return out;
 }
 
+void Inertia::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_INERTIA, GetLabel(), "R_princ_Prev", R_princ_Prev, eAction);
+     oData.Sync(RestartData::ELEM_INERTIA, GetLabel(), "R_princ", R_princ, eAction);     
+}
+
 void
 Inertia::Output(OutputHandler& OH) const
 {

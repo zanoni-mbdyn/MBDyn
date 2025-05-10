@@ -1843,6 +1843,11 @@ ClampJoint::Restart(std::ostream& out) const
 		<< ", ", M.Write(out, ", ") << ';' << std::endl;
 }
 
+void ClampJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "F", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "M", M, eAction);
+}
 
 VariableSubMatrixHandler&
 ClampJoint::AssJac(VariableSubMatrixHandler& WorkMat,
