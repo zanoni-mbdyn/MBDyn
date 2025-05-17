@@ -240,8 +240,8 @@ ncprint_SOURCES = ncprint.cc
 
 mbdyn_util_oct_oct_SOURCES = mbdyn_util_oct.cc
 if USE_OCTAVE_UTILS
-OCTAVE_XINCLUDE = -I$(top_srcdir)/include -I$(top_srcdir)/libraries/libmbutil -I$(top_srcdir)/libraries/libmbmath -I$(top_srcdir)/mbdyn -I../include @GTEST_INCLUDE@
-OCTAVE_XLIBS = -L../libraries/libmbmath/.libs -L../libraries/libmbutil/.libs -lmbmath -lmbutil @GTEST_LIBS@
+OCTAVE_XINCLUDE = -I$(top_srcdir)/include -I$(top_srcdir)/libraries/libmbutil -I$(top_srcdir)/libraries/libmbmath -I$(top_srcdir)/mbdyn -I../include $(CPPFLAGS) @GTEST_INCLUDE@
+OCTAVE_XLIBS = -L../libraries/libmbmath/.libs -L../libraries/libmbutil/.libs -lmbmath -lmbutil $(LDFLAGS) @GTEST_LIBS@
 OCTAVE_XFUNCS = \
 rotation_matrix_to_rotation_vector.oct \
 rotation_vector_to_rotation_matrix.oct \
