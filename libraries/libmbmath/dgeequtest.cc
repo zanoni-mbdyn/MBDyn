@@ -50,8 +50,11 @@
 
 #ifdef USE_TRILINOS
 #undef HAVE_BLAS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
 #include "epetraspmh.h"
 #include <Epetra_SerialComm.h>
+#pragma GCC diagnostic pop
 #endif
 
 static doublereal mat[5][5] = {

@@ -81,10 +81,15 @@
 #include "restart_data.h"
 
 #ifdef USE_TRILINOS
+
+
 #undef HAVE_BLAS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
 #include "epetravh.h"
 #include "epetraspmh.h"
 #include <Epetra_SerialComm.h>
+#pragma GCC diagnostic pop
 #endif
 
 #include "sp_gradient_test_func.h"

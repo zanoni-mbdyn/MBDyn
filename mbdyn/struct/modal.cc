@@ -224,6 +224,14 @@ Modal::Restart(std::ostream& out) const
 	return out << "modal; # not implemented yet" << std::endl;
 }
 
+void Modal::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "a", a, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "aPrime", aPrime, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "b", b, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "bPrime", bPrime, eAction);
+}
+
 unsigned int
 Modal::iGetNumDof(void) const
 {
@@ -2132,6 +2140,7 @@ Modal::SetValue(DataManager *pDM,
 
 		/* derivatives of modal multipliers */
 		X.PutCoef(iFlexIndex + NModes + iCnt, b(iCnt));
+                XP.PutCoef(iFlexIndex + NModes + iCnt, bPrime(iCnt));
 		XP.PutCoef(iFlexIndex + iCnt, b(iCnt));
 	}
 

@@ -33,6 +33,7 @@
 
 #include <utility>
 #include <matvec3n.h>
+#include "binary_conversion.h"
 
 /* VecN - begin */
 
@@ -1179,6 +1180,34 @@ operator << (std::ostream& out, const MatNxN& m)
 
 	return out;
 }
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, VecN& v)
+     {
+          integer iNumRows;
 
+          ReadBinary(is, iNumRows);
+
+          v.Resize(iNumRows);
+
+          for (integer i = 1; i <= iNumRows; ++i) {
+               ReadBinary(is, v(i));
+          }
+
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const VecN& v)
+     {
+          const integer iNumRows = v.iGetNumRows();
+
+          WriteBinary(os, iNumRows);
+
+          for (integer i = 1; i <= iNumRows; ++i) {
+               WriteBinary(os, v(i));
+          }
+
+          return os;
+     }
+}
 /* MatNxN - end */
 
