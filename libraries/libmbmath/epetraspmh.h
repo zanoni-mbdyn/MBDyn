@@ -46,9 +46,12 @@
 #include "spmh.h"
 #include "cscmhtpl.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
 #include <Epetra_Comm.h>
 #include <Epetra_Map.h>
 #include <Epetra_CrsMatrix.h>
+#pragma GCC diagnostic pop
 
 class EpetraSparseMatrixHandler: public SparseMatrixHandler {
 public:

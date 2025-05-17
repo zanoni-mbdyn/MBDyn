@@ -171,6 +171,8 @@ class AngularVelocityJoint
    /* Contributo al file di restart */
    virtual std::ostream& Restart(std::ostream& out) const;
 
+   virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
    virtual unsigned int iGetNumDof(void) const { 
       return 1;
    };

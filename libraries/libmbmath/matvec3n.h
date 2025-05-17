@@ -688,6 +688,11 @@ std::ostream& operator << (std::ostream&, const MatNxN&);
 
 /* MatNxN - end */
 
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, VecN& v);
+
+     std::ostream& WriteBinary(std::ostream& os, const VecN& v);
+}
 
 #endif /* MATVEC3N_H */
 

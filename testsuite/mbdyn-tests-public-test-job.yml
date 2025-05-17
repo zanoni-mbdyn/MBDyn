@@ -82,6 +82,8 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       artifacts: true
     - job: mbdyn-build-job
       artifacts: true
+    - job: gmsh-build-job
+      artifacts: true      
     - job: octave-pkg-build-job ## needed for gtest-octave-cli
       artifacts: true
   script:

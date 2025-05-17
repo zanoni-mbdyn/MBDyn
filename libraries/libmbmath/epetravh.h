@@ -43,9 +43,13 @@
 
 #ifdef USE_TRILINOS
 #include "vh.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
 #include <Epetra_Comm.h>
 #include <Epetra_Map.h>
 #include <Epetra_Vector.h>
+#pragma GCC diagnostic pop
 
 class EpetraVectorHandler: public VectorHandler {
 public:

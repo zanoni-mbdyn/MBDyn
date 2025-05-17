@@ -41,6 +41,7 @@
 #include "binary_conversion.h"
 #include "matvec3.h"
 #include "matvec6.h"
+#include "matvec3n.h"
 #include "sp_matrix_base.h"
 
 class RestartData {
@@ -172,28 +173,7 @@ private:
           BinaryConversion::ReadBinary(is, oData);
      }
      
-     bool Sync(const Key& oKey, std::string& strData, RestartAction eAction) {
-          auto it = m_Map.find(oKey);
-
-          if (eAction == RESTART_SAVE) {
-               if (it != m_Map.end()) {
-                    throw ErrDuplicateEntry(MBDYN_EXCEPT_ARGS);
-               } 
-
-               m_Map.insert(std::make_pair(oKey, strData));
-          } else {
-               ASSERT(eAction = RESTART_RESTORE);
-
-               if (it != m_Map.end()) {
-                    strData = it->second;
-                    return true;
-               } else {
-                    // Do not alter strData
-               }
-          }
-
-          return false;
-     }
+     bool Sync(const Key& oKey, std::string& strData, RestartAction eAction);
 
      std::map<Key, std::string> m_Map;
 

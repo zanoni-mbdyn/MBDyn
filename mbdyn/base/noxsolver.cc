@@ -49,6 +49,9 @@
 #include "mbcomm.h"
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
+
 // FIXME: Compiler fails with -Werror if HAVE_BLAS is redefined inside a Trilinos header
 #define HAVE_BLAS_SAVE HAVE_BLAS
 #define HAVE_BOOL_SAVE HAVE_BOOL
@@ -82,6 +85,8 @@
 #define HAVE_BOOL HAVE_BOOL_SAVE
 #undef HAVE_BLAS_SAVE
 #undef HAVE_BOOL_SAVE
+
+#pragma GCC diagnostic pop
 
 #ifdef DEBUG_JACOBIAN
 #include "sp_gradient_spmh.h"
