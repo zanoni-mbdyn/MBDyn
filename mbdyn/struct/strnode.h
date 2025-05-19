@@ -1123,6 +1123,8 @@ public:
 	/* Distruttore (per ora e' banale) */
 	virtual ~ModalNode(void);
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	/* Tipo di nodo strutturale */
 	virtual StructNode::Type GetStructNodeType(void) const;
 
@@ -1151,6 +1153,10 @@ public:
 	 * al posto giusto */
 	virtual integer iGetFirstRowIndex(void) const;
 
+        virtual void SetValue(DataManager *pDM,
+                              VectorHandler& X, VectorHandler& XP,
+                              SimulationEntity::Hints *ph = 0) override;
+     
 	/* Aggiorna dati in base alla soluzione */
 	virtual void Update(const VectorHandler& X,
 		const VectorHandler& XP);

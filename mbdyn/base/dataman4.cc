@@ -46,6 +46,8 @@
 /* Elementi */
 #include "autostr.h"   /* Elementi automatici associati ai nodi dinamici */
 #include "autostrad.h"
+#include "automodal.h"
+#include "automodalad.h"
 #include "gravity.h"   /* Elemento accelerazione di gravita' */
 #include "body.h"
 #include "inertia.h"
@@ -318,23 +320,35 @@ DataManager::ReadElems(MBDynParser& HP)
 		for (NodeContainerType::const_iterator i = NodeData[Node::STRUCTURAL].NodeContainer.begin();
 			i != NodeData[Node::STRUCTURAL].NodeContainer.end(); ++i)
 		{
-			const DynamicStructNode *pN = dynamic_cast<const DynamicStructNode *>(i->second);
-			if (pN != 0) {
-				// NOTE: could be a modal node
-				if (pN->GetStructNodeType() != StructNode::DYNAMIC) {
-					continue;
-				}
+                        const DynamicStructNode *pN = dynamic_cast<const DynamicStructNode *>(i->second);
+                        if (pN != 0) {
+                                Elem *pTmpEl = nullptr;
 
-				Elem *pTmpEl = 0;
-
-                                if (bUseAutoDiff()) {
-                                     SAFENEWWITHCONSTRUCTOR(pTmpEl,
-                                                            AutomaticStructElemAd,
-                                                            AutomaticStructElemAd(dynamic_cast<const DynamicStructNodeAd*>(pN)));
-                                } else {
-                                     SAFENEWWITHCONSTRUCTOR(pTmpEl,
-                                                            AutomaticStructElem,
-                                                            AutomaticStructElem(pN));
+                                switch (pN->GetStructNodeType()) {
+                                case StructNode::DYNAMIC:
+                                     if (bUseAutoDiff()) {
+                                          SAFENEWWITHCONSTRUCTOR(pTmpEl,
+                                                                 AutomaticStructElemAd,
+                                                                 AutomaticStructElemAd(dynamic_cast<const DynamicStructNodeAd*>(pN)));
+                                     } else {
+                                          SAFENEWWITHCONSTRUCTOR(pTmpEl,
+                                                                 AutomaticStructElem,
+                                                                 AutomaticStructElem(pN));
+                                     }
+                                     break;
+                                case StructNode::MODAL:
+                                     if (bUseAutoDiff()) {
+                                          SAFENEWWITHCONSTRUCTOR(pTmpEl,
+                                                                 AutomaticModalElemAd,
+                                                                 AutomaticModalElemAd(dynamic_cast<const ModalNodeAd*>(pN)));
+                                     } else {
+                                          SAFENEWWITHCONSTRUCTOR(pTmpEl,
+                                                                 AutomaticModalElem,
+                                                                 AutomaticModalElem(dynamic_cast<const ModalNode*>(pN)));
+                                     }
+                                     break;
+                                default:
+                                     continue;
                                 }
                                 
 				InsertElem(ElemData[Elem::AUTOMATICSTRUCTURAL], pN->GetLabel(), pTmpEl);

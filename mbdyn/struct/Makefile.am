@@ -7,6 +7,10 @@ noinst_LTLIBRARIES = libstruct.la
 libstruct_la_SOURCES = \
 accj.cc \
 accj.h \
+automodal.h \
+automodal.cc \
+automodalad.h \
+automodalad.cc \
 autostr.cc \
 autostr.h \
 autostrad.cc \

@@ -591,6 +591,17 @@ ModalNodeAd::AfterConvergence(const VectorHandler& X,
      // Must override DynamicStructNode's function!
 }
 
+void ModalNodeAd::SetValue(DataManager *pDM,
+                           VectorHandler& X, VectorHandler& XP,
+                           SimulationEntity::Hints *ph)
+{
+     InvalidateGradients();
+
+     SetCurrFunc(sp_grad::REGULAR_JAC);
+     
+     ModalNode::SetValue(pDM, X, XP, ph);
+}
+
 void ModalNodeAd::UpdateJac(const VectorHandler& Y, doublereal dCoef)
 {
         StructNodeAd::UpdateJac(Y, dCoef);
