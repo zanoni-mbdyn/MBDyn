@@ -1669,6 +1669,7 @@ EndOfUse:
 		OutHdl.SetNetCDF(OutputHandler::FORCES);
 		OutHdl.SetNetCDF(OutputHandler::GRAVITY);
                 OutHdl.SetNetCDF(OutputHandler::INERTIA_ELEMENTS);
+                OutHdl.SetNetCDF(OutputHandler::MODAL);
 		// OutHdl.SetNetCDF(OutputHandler::PLATES);
 	}
 

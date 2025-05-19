@@ -222,7 +222,9 @@ public:
 protected:
      inline void InvalidateGradients() const;
      inline void UpdateJacRotation(const VectorHandler& Y, doublereal dCoef);
-
+     inline void SetCurrFunc(sp_grad::SpFunctionCall eFunc) {
+          eCurrFunc = eFunc;
+     }
 private:
      void UpdateRotation(doublereal dCoef) const;
      void UpdateRotation(const VectorHandler& Y, doublereal dCoef) const;
@@ -346,6 +348,10 @@ public:
 
      virtual ~ModalNodeAd();
 
+     virtual void SetValue(DataManager *pDM,
+                           VectorHandler& X, VectorHandler& XP,
+                           SimulationEntity::Hints *ph = 0) override;
+     
      virtual void Update(const VectorHandler& X, const VectorHandler& XP) override;
 
      virtual void DerivativesUpdate(const VectorHandler& X, const VectorHandler& XP) override;

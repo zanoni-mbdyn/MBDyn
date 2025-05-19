@@ -3347,6 +3347,27 @@ ModalNode::~ModalNode(void)
         NO_OP;
 }
 
+void ModalNode::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     DynamicStructNode::Restart(oData, eAction);
+
+     oData.Sync(RestartData::NODES_STRUCT, GetLabel(), "XPP", XPPCurr, eAction);
+     oData.Sync(RestartData::NODES_STRUCT, GetLabel(), "WP", WPCurr, eAction);
+}
+
+void ModalNode::SetValue(DataManager *pDM,
+                         VectorHandler& X, VectorHandler& XP,
+                         SimulationEntity::Hints *ph)
+{
+     DynamicStructNode::SetValue(pDM, X, XP, ph);
+
+     const integer iFirstIndex = iGetFirstIndex();
+
+     for (integer i = 1; i <= 3; ++i) {
+          XP.PutCoef(iFirstIndex + 6 + i, XPPCurr(i));
+          XP.PutCoef(iFirstIndex + 9 + i, WPCurr(i));
+     }
+}
 
 /* Tipo di nodo strutturale */
 StructNode::Type
@@ -4525,10 +4546,10 @@ ReadStructNode(DataManager* pDM,
                                                        DynamicStructDispNodeAd,
                                                        DynamicStructDispNodeAd(uLabel,
                                                                                pDO,
-                                        X0,
-                                        XPrime0,
-                                        pRefNode,
-                                        pRBK,
+                                                                               X0,
+                                                                               XPrime0,
+                                                                               pRefNode,
+                                                                               pRBK,
                                                                                dPosStiff,
                                                                                dVelStiff,
                                                                                od,
@@ -4658,6 +4679,7 @@ ReadStructNode(DataManager* pDM,
                                                                  od,
                                                                  fOut));
                         }
+                        pDM->IncElemCount(Elem::AUTOMATICSTRUCTURAL);                        
                         break;
 
                 default:
