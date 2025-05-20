@@ -58,6 +58,8 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
     MBD_TESTS_PUBLIC_LOG_FILE: "mbdyn-tests-public-test-job.log"
   stage: test    # It only starts when the job in the build stage completes successfully.
   needs:
+    - job: mkl-build-job
+      artifacts: true    
     - job: siconos-build-job
       artifacts: true
     - job: trilinos-build-job
@@ -68,8 +70,8 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       artifacts: true
     - job: netcdf-cxx4-build-job
       artifacts: true
-    - job: mkl-build-job
-      artifacts: true
+    - job: nlopt-build-job
+      artifacts: true      
     - job: gtest-build-job
       artifacts: true
     - job: tfel-build-job
@@ -80,14 +82,19 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       artifacts: true
     - job: mbdyn-build-job
       artifacts: true
+    - job: gmsh-build-job
+      artifacts: true      
     - job: octave-pkg-build-job ## needed for gtest-octave-cli
       artifacts: true
   script:
+      - GALLERY_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GALLERY_INSTALL_PREFIX}
+      - export LD_LIBRARY_PATH=${GALLERY_INSTALL_PREFIX}/lib:${LD_LIBRARY_PATH}
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX}
-      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR}
       - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
+      - MBD_TESTS_RESTART_INPUT_DIR=${CI_PROJECT_DIR}/tests/restart
       - echo "mbdyn-tests-public test job"
       - export PATH=${MBD_INSTALL_PREFIX}/bin:${GMSH_INSTALL_PREFIX}/bin:${OCT_PKG_INSTALL_PREFIX}/bin:${PATH}
       - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
@@ -101,6 +108,8 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml >& /dev/null
       - chmod +x testsuite/simple_testsuite.sh
       - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
+      - echo "-------------- RESTARTED TESTS --------------------" | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_RESTART_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
       - echo "-------------- ORIGINAL TESTS --------------------" | tee -a "${log_file}"
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
       - echo "-------------- PATCHED TESTS --------------------" | tee -a "${log_file}"
@@ -141,7 +150,7 @@ mbdyn-tests-public-test-job-gcov:   # This job runs in the test stage.
     - if: $MBD_TEST_COVERAGE_ENABLED == "yes"
   script:
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_GCOV}
-      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_GCOV}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX_GCOV}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR_GCOV}
       - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
@@ -197,7 +206,7 @@ mbdyn-tests-public-test-job-debug:   # This job runs in the test stage.
     - if: $MBD_DEBUG_ENABLED == "yes"
   script:
       - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_DEBUG}
-      - OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
       - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
       - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR_DEBUG}
       - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks

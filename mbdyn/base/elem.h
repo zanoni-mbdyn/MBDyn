@@ -43,6 +43,7 @@
 
 #include "myassert.h"
 #include "except.h"
+#include "restart_data.h"
 
 #include "solman.h"
 #include "submat.h"
@@ -150,6 +151,8 @@ public:
 	/* Scrive il contributo dell'elemento al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const = 0;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction);
+     
 	/* Tipo dell'elemento (usato solo per debug ecc.) */
 	virtual Elem::Type GetElemType(void) const = 0;
 

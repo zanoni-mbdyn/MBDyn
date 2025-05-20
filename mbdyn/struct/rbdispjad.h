@@ -128,6 +128,8 @@ public:
      void InitialAssRes(sp_grad::SpGradientAssVec<T>& WorkMat,
                         const sp_grad::SpGradientVectorHandler<T>& XCurr,
                         sp_grad::SpFunctionCall func);
+
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 private:
      void SaveReactionForce(const sp_grad::SpColVector<doublereal, 3>& Fm,
                             const sp_grad::SpColVector<doublereal, 3>& Mm);
@@ -135,10 +137,19 @@ private:
                             const sp_grad::SpColVector<sp_grad::SpGradient, 3>&) {}
      void SaveReactionForce(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>&,
                             const sp_grad::SpColVector<sp_grad::GpGradProd, 3>&) {}
+
+     void SaveLambda(const sp_grad::SpColVector<doublereal, 3>& lambdat,
+                     const sp_grad::SpColVector<doublereal, 3>& lambdar);
+     void SaveLambda(const sp_grad::SpColVector<sp_grad::SpGradient, 3>&,
+                     const sp_grad::SpColVector<sp_grad::SpGradient, 3>&) {}
+     void SaveLambda(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>&,
+                     const sp_grad::SpColVector<sp_grad::GpGradProd, 3>&) {}
      const StructNodeAd* const pNodeMaster;
      const std::vector<SlaveNodeData> rgNodesSlave;
      Vec3 FmTmp;
      Vec3 MmTmp;
+     Vec3 lambdatTmp;
+     Vec3 lambdarTmp;
 };
 
 #endif

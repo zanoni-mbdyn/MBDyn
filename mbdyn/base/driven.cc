@@ -142,6 +142,11 @@ DrivenElem::Restart(std::ostream& out) const
 	return out;
 }
 
+void DrivenElem::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     pElem->Restart(oData, eAction);
+}
+
 /*
  * Elaborazione vettori e dati prima e dopo la predizione
  * per MultiStepIntegrator

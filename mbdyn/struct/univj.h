@@ -70,6 +70,8 @@ public:
 	/* Contributo al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	/* Tipo di Joint */
 	virtual Joint::Type GetJointType(void) const {
 		return Joint::UNIVERSALHINGE;

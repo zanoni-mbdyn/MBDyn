@@ -464,8 +464,10 @@ public:
    	/* esegue la simulazione */
    	void Run(void);
 
-	std::ostream & Restart(std::ostream& out, DataManager::eRestart type) const;
+	std::ostream & Restart(std::ostream& out, DataManager::eRestartWhen type) const;
 
+        void Restart(RestartData& oData, RestartData::RestartAction eAction);
+     
 	/* EXPERIMENTAL */
 	/* FIXME: better const'ify? */
 	virtual DataManager *pGetDataManager(void) const {

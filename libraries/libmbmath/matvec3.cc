@@ -39,6 +39,7 @@
 #include <limits>
 
 #include "matvec3.h"
+#include "binary_conversion.h"
 #include <ac/lapack.h>
 
 /* noteworthy constant */
@@ -741,7 +742,9 @@ std::ostream&
 operator << (std::ostream& out, const Mat3x3& m)
 {
    const doublereal* pd = m.pGetMat();
-
+   
+   out.precision(std::numeric_limits<doublereal>::digits10);
+   
    out
      << pd[M11] << sDefFill << pd[M12] << sDefFill << pd[M13] << sDefFill
      << pd[M21] << sDefFill << pd[M22] << sDefFill << pd[M23] << sDefFill
@@ -764,6 +767,8 @@ std::ostream&
 operator << (std::ostream& out, const Vec3& v)
 {
    const doublereal* pd = v.pGetVec();
+
+   out.precision(std::numeric_limits<doublereal>::digits10);
    
    out << pd[0] << sDefFill << pd[1] << sDefFill << pd[2];
    
@@ -810,6 +815,25 @@ Write(std::ostream& out, const doublereal& d, const char*)
    return out << d;
 }
 
+std::istream& operator>>(std::istream& is, Vec3& v)
+{
+     for (integer i = 1; i <= v.iGetNumRows(); ++i) {
+          is >> v(i);
+     }
+
+     return is;
+}
+
+std::istream& operator>>(std::istream& is, Mat3x3& A)
+{
+     for (integer i = 1; i <= A.iGetNumRows(); ++i) {
+          for (integer j = 1; j <= A.iGetNumCols(); ++j) {
+               is >> A(i, j);
+          }
+     }
+
+     return is;
+}
 
 /* calcolo dei parametri di rotazione a partire dalla matrice R */
 
@@ -861,61 +885,57 @@ Mat3x3 MatR2vec(integer ia, const Vec3& va,
    if (ib == (ia%3)+1) {
       doublereal d = va.Norm();
       if (d <= std::numeric_limits<doublereal>::epsilon()) {
-	 silent_cerr("MatR2vec: first vector must be non-null" << std::endl );
-	 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+         silent_cerr("MatR2vec: first vector must be non-null" << std::endl );
+         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
       }
       r[i1] = va/d;
       d = vb.Norm();
       if (d <= std::numeric_limits<doublereal>::epsilon()) {
-	 silent_cerr("MatR2vec: second vector must be non-null" << std::endl );
-	 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+         silent_cerr("MatR2vec: second vector must be non-null" << std::endl );
+         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
       }
       r[i3] = r[i1].Cross(vb);
       d = r[i3].Dot();
       if (d <= std::numeric_limits<doublereal>::epsilon()) {
-	 silent_cerr("MatR2vec: vectors must be distinct" 
-		 << std::endl);
-	 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-      }	
+         silent_cerr("MatR2vec: vectors must be distinct"
+                 << std::endl);
+         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+      }
       d = sqrt(d);
       r[i3] /= d;
       r[i2] = r[i3].Cross(r[i1]);
-      
-      DEBUGCOUT("R = " << Mat3x3(r[0], r[1], r[2]) << std::endl);
-      
-      return Mat3x3(r[0], r[1], r[2]);
    } else if (ib == ((ia+1)%3+1)) {
       doublereal d = va.Norm();
       if (d <= std::numeric_limits<doublereal>::epsilon()) {
-	 silent_cerr("MatR2vec: first vector must be non-null" << std::endl );
-	 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+         silent_cerr("MatR2vec: first vector must be non-null" << std::endl );
+         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
       }
       r[i1] = va/d;
       d = vb.Norm();
       if (d <= std::numeric_limits<doublereal>::epsilon()) {
-	 silent_cerr("MatR2vec: second vector must be non-null" << std::endl );
-	 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+         silent_cerr("MatR2vec: second vector must be non-null" << std::endl );
+         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
       }
       r[i2] = vb.Cross(r[i1]);
       d = r[i2].Dot();
       if (d <= std::numeric_limits<doublereal>::epsilon()) {
-	 silent_cerr("MatR2vec: vectors must be distinct" 
-		 << std::endl);
-	 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-      }	
+         silent_cerr("MatR2vec: vectors must be distinct"
+                 << std::endl);
+         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+      }
       d = sqrt(d);
       r[i2] /= d;
-      r[i3] = r[i1].Cross(r[i2]);  
-      
-      DEBUGCOUT("R = " << Mat3x3(r[0], r[1], r[2]) << std::endl);
-      
-      return Mat3x3(r[0], r[1], r[2]);
+      r[i3] = r[i1].Cross(r[i2]);
    } else {
       silent_cerr("MatR2vec: second index is illegal" << std::endl);
       throw ErrGeneric(MBDYN_EXCEPT_ARGS);
    }
-   
-   return ::Zero3x3; // phony call, not reachable
+
+   DEBUGCOUT("R = " << Mat3x3(r[0], r[1], r[2]) << std::endl);
+   ASSERT(Mat3x3(r[0], r[1], r[2]).MulTM(Mat3x3(r[0], r[1], r[2])).IsSame(Eye3, std::pow(std::numeric_limits<doublereal>::epsilon(), 0.8)));
+   ASSERT(Mat3x3(r[0], r[1], r[2]).MulMT(Mat3x3(r[0], r[1], r[2])).IsSame(Eye3, std::pow(std::numeric_limits<doublereal>::epsilon(), 0.8)));
+
+   return Mat3x3(r[0], r[1], r[2]);
 }
 
 
@@ -1225,3 +1245,40 @@ MultRMRt(const Mat3x3& m, const Mat3x3& R)
 	return R*m.MulMT(R);
 }
 
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, Vec3& v) {
+          for (integer i = 1; i <= 3; ++i) {
+               ReadBinary(is, v(i));
+          }
+          
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const Vec3& v) {
+          for (integer i = 1; i <= 3; ++i) {
+               WriteBinary(os, v(i));
+          }
+
+          return os;
+     }
+
+     std::istream& ReadBinary(std::istream& is, Mat3x3& A) {
+          for (integer i = 1; i <= 3; ++i) {
+               for (integer j = 1; j <= 3; ++j) {
+                    ReadBinary(is, A(i, j));
+               }
+          }
+          
+          return is;
+     }
+
+     std::ostream& WriteBinary(std::ostream& os, const Mat3x3& A) {
+          for (integer i = 1; i <= 3; ++i) {
+               for (integer j = 1; j <= 3; ++j) {
+                    WriteBinary(os, A(i, j));
+               }
+          }
+
+          return os;
+     }
+}

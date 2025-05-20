@@ -2556,7 +2556,7 @@ Solver::~Solver(void)
 
 /*scrive il contributo al file di restart*/
 std::ostream &
-Solver::Restart(std::ostream& out,DataManager::eRestart type) const
+Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
 {
 
 	out << "begin: initial value;" << std::endl;
@@ -2751,6 +2751,17 @@ Solver::Restart(std::ostream& out,DataManager::eRestart type) const
 	return out;
 }
 
+void Solver::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     // FIXME: During the execution of the constructor of DataManager, pDM will be a null pointer
+     double dRestartTime = pDM ? pDM->dGetTime() : dTime; 
+
+     oData.Sync(RestartData::INITVAL_TIME, 0, "dTime", dRestartTime, eAction);
+
+     if (eAction == RestartData::RESTART_RESTORE) {
+          dTime = dInitialTime = dRestartTime;
+     }
+}
 /* Dati dell'integratore */
 void
 Solver::ReadData(MBDynParser& HP)

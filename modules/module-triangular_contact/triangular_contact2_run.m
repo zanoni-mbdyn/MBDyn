@@ -51,6 +51,13 @@
 try
   clear all;
   close all;
+
+  pkg_prefix = getenv("OCT_PKG_INSTALL_PREFIX");
+
+  if (~isempty(pkg_prefix))
+    pkg("local_list", fullfile(pkg_prefix, "octave_packages"));
+  endif
+
   pkg load mboct-fem-pkg;
 
   param.N1 = 100;

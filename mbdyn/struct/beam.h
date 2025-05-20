@@ -36,6 +36,8 @@
 #ifndef BEAM_H
 #define BEAM_H
 
+#include <array>
+
 #include "myassert.h"
 #include "except.h"
 
@@ -140,24 +142,24 @@ protected:
 
   protected:
     /* Puntatori ai nodi */
-    const StructNode* pNode[NUMNODES];
+    std::array<const StructNode*, NUMNODES> pNode;
 
     /* Offset dei nodi */
-    const Vec3 f[NUMNODES];
-    Vec3 fRef[NUMNODES];
-    const Mat3x3 RNode[NUMNODES];
+    const std::array<Vec3, NUMNODES> f;
+    std::array<Vec3, NUMNODES> fRef;
+    const std::array<Mat3x3, NUMNODES> RNode;
 
     /* Matrice di rotazione delle sezioni - non sono const perche' vengono
      * aggiornate ad ogni iterazione */
-    Mat3x3 R[NUMSEZ];
-    Mat3x3 RRef[NUMSEZ];
-    Mat3x3 RPrev[NUMSEZ];
+    std::array<Mat3x3, NUMSEZ> R;
+    std::array<Mat3x3, NUMSEZ> RRef;
+    std::array<Mat3x3, NUMSEZ> RPrev;
 
     /* Constitutive laws*/
-    ConstitutiveLaw6D* pD[NUMSEZ];
+    std::array<ConstitutiveLaw6D*, NUMSEZ> pD;
 
     /* Reference constitutive laws */
-    Mat6x6 DRef[NUMSEZ];
+    std::array<Mat6x6, NUMSEZ> DRef;
 
     /* Per forze d'inerzia consistenti: */
     const bool bConsistentInertia;
@@ -171,28 +173,28 @@ protected:
     const Mat3x3 J0II;
 
     /* Velocita' angolare delle sezioni */
-    Vec3 Omega[NUMSEZ];
-    Vec3 OmegaRef[NUMSEZ];
+    std::array<Vec3, NUMSEZ> Omega;
+    std::array<Vec3, NUMSEZ> OmegaRef;
 
     /* Dati temporanei che vengono passati da AssRes ad AssJac */
-    Vec6 Az[NUMSEZ];
-    Vec6 AzRef[NUMSEZ];
-    Vec6 AzLoc[NUMSEZ];
-    Vec6 DefLoc[NUMSEZ];
-    Vec6 DefLocRef[NUMSEZ];
-    Vec6 DefLocPrev[NUMSEZ];
+    std::array<Vec6, NUMSEZ> Az;
+    std::array<Vec6, NUMSEZ> AzRef;
+    std::array<Vec6, NUMSEZ> AzLoc;
+    std::array<Vec6, NUMSEZ> DefLoc;
+    std::array<Vec6, NUMSEZ> DefLocRef;
+    std::array<Vec6, NUMSEZ> DefLocPrev;
 
     // NOTE: Moved to Beam from ViscoElasticBeam for output purposes
-    Vec6 DefPrimeLoc[NUMSEZ];
+    std::array<Vec6, NUMSEZ> DefPrimeLoc;
 
-    Vec3 p[NUMSEZ];
-    Vec3 g[NUMSEZ];
-    Vec3 L0[NUMSEZ];
-    Vec3 L[NUMSEZ];
+    std::array<Vec3, NUMSEZ> p;
+    std::array<Vec3, NUMSEZ> g;
+    std::array<Vec3, NUMSEZ> L0;
+    std::array<Vec3, NUMSEZ> L;
 
-    Vec3 LRef[NUMSEZ];
+    std::array<Vec3, NUMSEZ> LRef;
 
-    doublereal dsdxi[NUMSEZ];
+    std::array<doublereal, NUMSEZ> dsdxi;
 
     /* Is first res? */
     bool bFirstRes;
@@ -307,6 +309,8 @@ protected:
     /* Contributo al file di restart */
     virtual std::ostream& Restart(std::ostream& out) const override;
 
+    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;     
+     
     virtual void
     AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
@@ -456,17 +460,17 @@ class ViscoElasticBeam : public Beam {
   protected:
 
     /* Derivate di deformazioni e curvature */
-    Vec3 LPrime[NUMSEZ];
-    Vec3 gPrime[NUMSEZ];
+     std::array<Vec3, NUMSEZ> LPrime;
+     std::array<Vec3, NUMSEZ> gPrime;
 
-    Vec3 LPrimeRef[NUMSEZ];
+     std::array<Vec3, NUMSEZ> LPrimeRef;
 
     // NOTE: Moved to Beam from ViscoElasticBeam for output purposes
     // Vec6 DefPrimeLoc[NUMSEZ];
 
-    Vec6 DefPrimeLocRef[NUMSEZ];
+     std::array<Vec6, NUMSEZ> DefPrimeLocRef;
 
-    Mat6x6 ERef[NUMSEZ];
+     std::array<Mat6x6, NUMSEZ> ERef;
 
     /* Funzioni di calcolo delle matrici */
     virtual void
@@ -556,6 +560,8 @@ class ViscoElasticBeam : public Beam {
     		const VectorHandler& XPP);
 
     virtual doublereal dGetPrivData(unsigned int i) const;
+
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;     
 };
 
 /* ViscoElasticBeam - end */

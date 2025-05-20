@@ -1465,7 +1465,9 @@ extern Mat3x3 operator - (const Mat3x3& v);
  Nota: i coefficienti sono separati da spazi. Non c'e' endl al termine
  */
 extern std::ostream& operator << (std::ostream& out, const Vec3& v);
-      
+
+extern std::istream& operator >>(std::istream& is, Vec3& v);
+
 /*
  Operatore di scrittura di Mat3x3 su ostream.
  Nota: i coefficienti sono separati da spazi e sono scritti consecutivamente,
@@ -1473,6 +1475,7 @@ extern std::ostream& operator << (std::ostream& out, const Vec3& v);
  */
 extern std::ostream& operator << (std::ostream& out, const Mat3x3& m);
 
+extern std::istream& operator >>(std::istream& is, Mat3x3& m);
 
 /*
  Funzione di Output di reali su ostream.
@@ -1884,6 +1887,16 @@ extern Vec3 MultRV(const Vec3& v, const Mat3x3& R);
 extern Mat3x3 MultRM(const Mat3x3& m, const Mat3x3& R);
 extern Mat3x3 MultMRt(const Mat3x3& m, const Mat3x3& R);
 extern Mat3x3 MultRMRt(const Mat3x3& m, const Mat3x3& R);
+
+namespace BinaryConversion {
+     std::istream& ReadBinary(std::istream& is, Vec3& v);
+
+     std::ostream& WriteBinary(std::ostream& os, const Vec3& v);
+
+     std::istream& ReadBinary(std::istream& is, Mat3x3& A);
+
+     std::ostream& WriteBinary(std::ostream& os, const Mat3x3& A);
+}
 
 #endif /* MATVEC3_H */
 

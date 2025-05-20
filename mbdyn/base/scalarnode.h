@@ -51,7 +51,7 @@ protected:
 	using ToBeOutput::Output;
         using Node::DescribeEq;
 	virtual std::ostream& Output(std::ostream& out) const;
-
+        RestartData::RestartEntity GetRestartEntity() const;
 public:
 	/* Costruttori */
 
@@ -226,6 +226,8 @@ public:
 	/* restart */
 	std::ostream& Restart(std::ostream& out) const;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
 	virtual OutputHandler::OutFiles GetOutputType(void) const { return OutputHandler::ABSTRACT; };
 	virtual void OutputPrepare(OutputHandler& OH);
 	virtual void Output(OutputHandler& OH) const;
@@ -369,6 +371,8 @@ public:
 	/* restart */
 	std::ostream& Restart(std::ostream& out) const override;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	virtual OutputHandler::OutFiles GetOutputType(void) const override { return OutputHandler::ABSTRACT; };
 	virtual void OutputPrepare(OutputHandler& OH) override;
 	virtual void Output(OutputHandler& OH) const override;

@@ -186,7 +186,7 @@ unsigned int OffsetDispJointAd::iGetPrivDataIdx(const char *s) const
 {
      static constexpr char rgPrivDataName[][3] = {"Fx", "Fy", "Fz", "Mx", "My", "Mz", "fx", "fy", "fz", "mx", "my", "mz"};
      constexpr integer iNumPrivData = sizeof(rgPrivDataName) / sizeof(rgPrivDataName[0]);
-     
+
      for (integer i = 0; i < iNumPrivData; ++i) {
           if (0 == strcmp(rgPrivDataName[i], s)) {
                return i + 1;
@@ -242,6 +242,9 @@ void OffsetDispJointAd::GetConnectedNodes(std::vector<const Node *>& connectedNo
 void OffsetDispJointAd::SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
                                  SimulationEntity::Hints *ph)
 {
+     const integer iFirstIndexLambda = iGetFirstIndex();
+
+     X.Put(iFirstIndexLambda + 1, -F1Tmp);
 }
 
 std::ostream& OffsetDispJointAd::Restart(std::ostream& out) const
@@ -392,4 +395,10 @@ OffsetDispJointAd::GetEquationDimension(integer index) const {
 Joint::Type OffsetDispJointAd::GetJointType() const
 {
      return OFFSETDISPLACEMENTJOINT;
+}
+
+void OffsetDispJointAd::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "F1Tmp", F1Tmp, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "M1Tmp", M1Tmp, eAction);
 }

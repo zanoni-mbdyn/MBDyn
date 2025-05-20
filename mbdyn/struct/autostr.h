@@ -79,7 +79,7 @@ public:
 
 	/* Scrive il contributo dell'elemento al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
-
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 	/* Tipo dell'elemento (usato per debug ecc.) */
 	virtual Elem::Type GetElemType(void) const {
 		return Elem::AUTOMATICSTRUCTURAL;
@@ -212,7 +212,8 @@ public:
 
 	/* Scrive il contributo dell'elemento al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
-
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	using AutomaticStructDispElem::AddInertia;
 	virtual void AddInertia(const doublereal& dm, const Vec3& dS,
 		const Mat3x3& dJ);

@@ -40,6 +40,7 @@
 #include "withlab.h"
 #include "dofown.h"
 #include "simentity.h"
+#include "restart_data.h"
 
 /*
  * Array dei nomi dei nodi.
@@ -117,6 +118,7 @@ public:
 	/* Contributo del nodo al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const = 0;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction);
 	/*
 	 * Describe the degrees of freedom
 	 */

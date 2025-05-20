@@ -107,10 +107,6 @@ octave-pkg-test-job:   # This job runs in the test stage.
       - export OPENBLAS_NUM_THREADS=1
       - ${GTEST_OCTAVE_EXEC} -q ${OCT_PKG_TESTSUITE_SCRIPT} --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-exec "${GTEST_OCTAVE_EXEC}" --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}"
 
-      ## FIXME: remove legacy code ...
-      # - chmod +x testsuite/octave_pkg_testsuite.sh
-      # - ${TESTSUITE_TIME_CMD} testsuite/octave_pkg_testsuite.sh --tasks "${OCT_PKG_TEST_JOB_NUM_TASKS}" --octave-pkg-list "${OCT_PKG_LIST}" --octave-pkg-test-dir "${OCT_PKG_TEST_OUTPUT_DIR}" --octave-pkg-test-mode "${OCT_PKG_TEST_MODE}" --octave-pkg-prefix "${OCT_PKG_INSTALL_PREFIX}" --octave-function-filter "${OCT_PKG_FUNCTION_FILTER}"  2>&1 | tee -a "${log_file}"
-
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}
     expire_in: 2 days

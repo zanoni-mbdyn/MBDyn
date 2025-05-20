@@ -160,10 +160,12 @@ protected:
 	char* sSimulationTitle;
 
 public:
-	enum eRestart { NEVER, ATEND, ITERATIONS, TIME, TIMES };
+	enum eRestartWhen { NEVER, ATEND, ITERATIONS, TIME, TIMES };
+        enum eRestartFormat { RESTART_CLASSIC, RESTART_BINARY };
 protected:
 	/* soft-restart stuff */
-	eRestart RestartEvery;
+	eRestartWhen RestartEvery;
+        eRestartFormat RestartType;
 	integer iRestartIterations;
 	doublereal dRestartTime;
 
@@ -481,6 +483,7 @@ public:
 
 	/* Funzioni di aggiornamento dati durante la simulazione */
 	virtual void MakeRestart(void);
+        void Restart(RestartData& oData, RestartData::RestartAction eAction);
 	virtual void DerivativesUpdate(void) const;
 	virtual void BeforePredict(VectorHandler& X, VectorHandler& XP,
 		std::deque<VectorHandler*>& qXPr,
@@ -896,6 +899,7 @@ public:
 
         MBDYN_DEFINE_OPERATOR_NEW_DELETE
 private:
+        std::string strRestartFile;
         bool bAutoDiff; // Create nodes and elements with support for automatic differentiation if applicable
 };
 

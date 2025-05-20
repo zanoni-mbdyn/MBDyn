@@ -56,8 +56,6 @@ try
 
   args = argv();
 
-  pkg load mboct-octave-pkg;
-
   output_file = "";
 
   idx = int32(0);
@@ -68,7 +66,7 @@ try
   opts.user_hook_func = @octave_pkg_testsuite_hook;
 
   ## FIXME: We should use semaphores instead of polling!
-  ## FIXME: However this apprears to be less robust,
+  ## FIXME: However this appears to be less robust,
   ## FIXME: just in case that one of our jobs terminates without releasing the semaphore.
   opts.waitpid_polling_period = 100e-3; ## Higher values will reduce the CPU time which is wasted inside the main loop!
 
@@ -135,6 +133,8 @@ try
     pkg(pkg_list_type, test_data.octave_pkg_prefix);
   endif
 
+  pkg load mboct-octave-pkg;
+
   sigterm_dumps_octave_core(false);
 
   test_data.pkg_functions = {};
@@ -175,9 +175,10 @@ try
     printf("%3d: test(\"%s\":\"%s\"): %2d/%2d passed, %2d/%2d failed)\n", i, test_data.pkg_name{status{i}.pkg_index}, status{i}.pkg_function, status{i}.test.N, status{i}.test.NMAX, NREGRESSION, status{i}.test.NMAX);
   endfor
 catch
-  gtest_fail(lasterror(), __FILE__);
+  gtest_error = lasterror();
+  gtest_fail(gtest_error, __FILE__);
   printf("%s FAILED\n", __FILE__);
-  exit(1);
+  rethrow(gtest_error);
 end_try_catch
 
 if (total.NREGRESSION > 0)

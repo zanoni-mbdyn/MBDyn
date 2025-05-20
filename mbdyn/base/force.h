@@ -121,6 +121,8 @@ public:
 
 	virtual std::ostream& Restart(std::ostream& out) const;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	virtual unsigned int iGetInitialNumDof(void) const { 
 		return 0;
 	};

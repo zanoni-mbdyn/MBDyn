@@ -62,6 +62,10 @@
 #include <string>
 #include <vector>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include "myassert.h"
 #include "mynewmem.h"
 #include "submat.h"
@@ -74,12 +78,18 @@
 #include "sp_gradient_op.h"
 #include "sp_matvecass.h"
 #include "sp_gradient_spmh.h"
+#include "restart_data.h"
 
 #ifdef USE_TRILINOS
+
+
 #undef HAVE_BLAS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
 #include "epetravh.h"
 #include "epetraspmh.h"
 #include <Epetra_SerialComm.h>
+#pragma GCC diagnostic pop
 #endif
 
 #include "sp_gradient_test_func.h"
@@ -156,6 +166,7 @@ namespace sp_grad_test {
      }
 
      void testx() {
+          SpMatrix<doublereal> zero(0, 0, 0);
           SpMatrix<doublereal> A(3, 3, 0);
           SpMatrix<doublereal, 3, 3> B(3, 3, 0);
 
@@ -4629,12 +4640,9 @@ namespace sp_grad_test {
      }
 }
 
-
 namespace {
      namespace sp_gradient_test_parameters {
           using namespace sp_grad_test;
-          constexpr doublereal dall_tests = -1.0;
-          doublereal dtest = dall_tests;
           index_type inumloops = 1;
           index_type inumnz = 100;
           index_type inumdof = 200;
@@ -4643,6 +4651,137 @@ namespace {
           index_type imatcolsb = 5;
           index_type imatcolsc = 7;
      }
+}
+
+MBDYN_TESTSUITE_TEST(sp_gradient_test, test_binary_io) {
+     using namespace sp_grad;
+
+     SpMatrix<doublereal, 3, 3> A(3, 3, 0);
+
+     for (index_type i = 1; i <= 3; ++i) {
+          for (index_type j = 1; j <= 3; ++j) {
+               A(i, j) = 10 * i + j;
+          }
+     }
+
+     Mat3x3 B;
+     Vec3 C;
+
+     for (index_type i = 1; i <= 3; ++i) {
+          C(i) = 200 * i;
+
+          for (index_type j = 1; j <= 3; ++j) {
+               B(i, j) = 20 * i + 2 * j;
+          }
+     }
+
+     Vec6 D;
+     Mat6x6 E;
+
+     for (index_type i = 1; i <= 6; ++i) {
+          D(i) = 200 * i;
+
+          for (index_type j = 1; j <= 6; ++j) {
+               E(i, j) = 200 * i + 20 * j;
+          }
+     }
+
+     SpColVector<doublereal, 6> F(6, 0);
+
+     for (index_type i = 1; i <= F.iGetNumRows(); ++i) {
+          F(i) = 1000. * i + 1.;
+     }
+
+     std::vector<doublereal> v1;
+     v1.reserve(10);
+
+     for (integer i = 0; i < 10; ++i) {
+          v1.push_back(10. * i + 0.5);
+     }
+
+     std::array<doublereal, 10> a1;
+
+     for (integer i = 0; i < 10; ++i) {
+          a1[i] = 20. * i + 0.5;
+     }
+
+     std::array<Mat3x3, 4> R1;
+
+     for (integer i = 0; i < 4; ++i) {
+          R1[i] = Eye3;
+     }
+     
+     RestartData oRestartData1;
+
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 1u, "A", A, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 1u, "B", B, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 1u, "C", C, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 1u, "D", D, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 1u, "E", E, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::ELEM_SOLIDS, 1u, "F", F, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 1u, "v", v1, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 2u, "a", a1, RestartData::RESTART_SAVE);
+     oRestartData1.Sync(RestartData::NODES_STRUCT, 3u, "R", R1, RestartData::RESTART_SAVE);
+     
+     char szFileName[TMP_MAX];
+     const std::string strFileName = tmpnam(szFileName);
+
+     oRestartData1.WriteFile(strFileName);
+
+     RestartData oRestartData2;
+
+     oRestartData2.ReadFile(strFileName);
+
+     SpMatrix<doublereal, 3, 3> Aout(3, 3, 0);
+     Mat3x3 Bout;
+     Vec3 Cout;
+     Vec6 Dout;
+     Mat6x6 Eout;
+     SpColVector<doublereal, 6> Fout(6, 0);
+     std::vector<doublereal> v2;
+     std::array<doublereal, 10> a2;
+     std::array<Mat3x3, 4> R2;
+     
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 1u, "A", Aout, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 1u, "B", Bout, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 1u, "C", Cout, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 1u, "D", Dout, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 1u, "E", Eout, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::ELEM_SOLIDS, 1u, "F", Fout, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 1u, "v", v2, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 2u, "a", a2, RestartData::RESTART_RESTORE);
+     oRestartData2.Sync(RestartData::NODES_STRUCT, 3u, "R", R2, RestartData::RESTART_RESTORE);
+     
+     for (index_type i = 1; i <= 3; ++i) {
+          for (index_type j = 1; j <= 3; ++j) {
+               MBDYN_TESTSUITE_ASSERT(A(i, j) == Aout(i, j));
+               MBDYN_TESTSUITE_ASSERT(B(i, j) == Bout(i, j));
+          }
+          MBDYN_TESTSUITE_ASSERT(C(i) == Cout(i));
+     }
+
+     for (index_type i = 1; i <= 6; ++i) {
+          for (index_type j = 1; j <= 6; ++j) {
+               MBDYN_TESTSUITE_ASSERT(E(i, j) == Eout(i, j));
+          }
+          MBDYN_TESTSUITE_ASSERT(D(i) == Dout(i));
+          MBDYN_TESTSUITE_ASSERT(F(i) == Fout(i));
+     }
+
+     for (size_t i = 0; i < v2.size(); ++i) {
+          MBDYN_TESTSUITE_ASSERT(v2[i] == v1[i]);
+     }
+
+     for (size_t i = 0; i < a2.size(); ++i) {
+          MBDYN_TESTSUITE_ASSERT(a2[i] == a1[i]);
+     }
+
+     for (size_t i = 0; i < R1.size(); ++i) {
+          MBDYN_TESTSUITE_ASSERT(R2[i].IsSame(R1[i], 0.));
+     }
+#ifdef HAVE_UNISTD_H
+     unlink(strFileName.c_str());
+#endif
 }
 
 MBDYN_TESTSUITE_TEST(sp_gradient_test, testx) {
@@ -4859,7 +4998,6 @@ int main(int argc, char* argv[]) {
      using namespace sp_grad_test;
      using namespace sp_gradient_test_parameters;
 
-     dtest = argc > 8 ? atof(argv[8]) : dall_tests;
      inumloops = argc > 1 ? atoi(argv[1]) : 1;
      inumnz = argc > 2 ? atoi(argv[2]) : 100;
      inumdof = argc > 3 ? atoi(argv[3]) : 200;
