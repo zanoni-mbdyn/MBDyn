@@ -154,15 +154,6 @@ PiezoActuatorBeam::~PiezoActuatorBeam(void)
 }
 
     
-/* Contributo al file di restart */
-std::ostream&
-PiezoActuatorBeam::Restart(std::ostream& out) const
-{
-   Restart_(out);
-   return out << "/* piezoelectric actuator NOT IMPLEMENTED YET */ ;" << std::endl;
-}
-
-    
 /* Dimensioni del workspace; sono 36 righe perche' se genera anche le
  *     * forze d'inerzia consistenti deve avere accesso alle righe di definizione
  *     * della quantita' di moto */
@@ -395,15 +386,6 @@ PiezoActuatorVEBeam::~PiezoActuatorVEBeam(void)
    SAFEDELETEARR(pvElecDofs);
 }
 
-    
-/* Contributo al file di restart */
-std::ostream&
-PiezoActuatorVEBeam::Restart(std::ostream& out) const
-{
-   Restart_(out);
-   return out << "/* piezoelectric actuator NOT IMPLEMENTED YET */ ;" << std::endl;
-}
-
 
 /* Dimensioni del workspace; sono 36 righe perche' se genera anche le
  * forze d'inerzia consistenti deve avere accesso alle righe di definizione
@@ -607,15 +589,6 @@ PiezoBeam::~PiezoBeam(void)
 }
 
     
-/* Contributo al file di restart */
-std::ostream&
-PiezoBeam::Restart(std::ostream& out) const
-{
-   Restart_(out);
-   return out << "/* piezoelectric beam restart NOT IMPLEMENTED YET */ ;" << std::endl;
-}
-
-
 /* Dimensioni del workspace; sono 36 righe perche' se genera anche le
  * forze d'inerzia consistenti deve avere accesso alle righe di definizione
  * della quantita' di moto */
