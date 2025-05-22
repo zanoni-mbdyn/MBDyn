@@ -561,7 +561,7 @@ class ViscoElasticBeam : public Beam {
 
     virtual doublereal dGetPrivData(unsigned int i) const;
 
-     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;     
+    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 };
 
 /* ViscoElasticBeam - end */
