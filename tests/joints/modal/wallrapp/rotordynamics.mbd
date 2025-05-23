@@ -40,8 +40,7 @@ end: data;
 begin: initial value;
         initial time: initial_time;
         final time: final_time;
-        time step: 2. * pi / (360. * abs(omega0));
-        strategy: change, postponed, drive_id_time_step;
+        time step: 2. * pi / (3600. * abs(omega0));
         method: ms, 0.6;
         tolerance: 1e-6, test, norm, 1e-6, test, norm;
         derivatives tolerance: 1e-4, 1e-4;
@@ -66,9 +65,12 @@ begin: initial value;
         threads: assembly, 1;
 end: initial value;
 begin: control data;
-       default output: none, structural nodes;
        default orientation: euler123;
        output precision: 16;
+
+       output results: netcdf, notext;
+
+       default output: all;
        max iterations: 0;
         structural nodes:
                 +1           # modal
@@ -133,7 +135,7 @@ begin: nodes;
 end: nodes;
 begin: elements;
        drive caller: drive_id_rotor_speed, string, "(omega1 - omega0) / (final_time - initial_time) * Time + omega0", output, yes;
-       drive caller: drive_id_time_step, string, "2. * pi / (max(1., 360. * abs(model::drive(drive_id_rotor_speed, Time))))";
+
        body: body_id_unbalance,
              node_id_rotor,
                 dm,

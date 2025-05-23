@@ -56,6 +56,8 @@ protected:
         /* Scrive il contributo dell'elemento al file di restart */
         virtual std::ostream& Restart(std::ostream& out) const override;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
         void
         AssVecRBK_int(SubVectorHandler& WorkVec);
 
@@ -302,6 +304,8 @@ public:
         /* Scrive il contributo dell'elemento al file di restart */
         virtual std::ostream& Restart(std::ostream& out) const override;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
         /* massa totale */
         doublereal dGetM(void) const override;
 

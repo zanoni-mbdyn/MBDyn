@@ -37,6 +37,7 @@
 #include "rbk.h"
 #include "invdyn.h"
 #include "output.h"
+#include "restart_data.h"
 
 extern const char* psStructNodeNames[];
 
@@ -154,7 +155,8 @@ public:
 
 	/* Contributo del nodo strutturale al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const override;
-
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	virtual std::ostream& DescribeDof(std::ostream& out,
 		const char *prefix = "",
 		bool bInitial = false) const override;
@@ -607,7 +609,7 @@ protected:
 	};
 
 	// mutable Mat3x3 RPrev;   /* Matrice di rotazione da zero al passo prec. */
-	mutable Mat3x3 RPrev[NPREV];   /* Matrice di rotazione da zero al passo prec. */
+        mutable std::array<Mat3x3, NPREV> RPrev;   /* Matrice di rotazione da zero al passo prec. */
 	mutable std::deque<Mat3x3 *> qRPrev;
 	Mat3x3 RRef;            /* Matrice di rotazione predetta al passo corr. */
 	mutable Mat3x3 RCurr;   /* Matrice di rotazione all'iterazione corrente */
@@ -626,7 +628,7 @@ protected:
 	 */
 
 	// mutable Vec3 WPrev;   /* Velocita' angolare al passo precedente */
-	mutable Vec3 WPrev[NPREV];   /* Velocita' angolare al passo precedente */
+        mutable std::array<Vec3, NPREV> WPrev;   /* Velocita' angolare al passo precedente */
 	mutable std::deque<Vec3 *> qWPrev;
 	Vec3 WRef;            /* Velocita' angolare predetta al passo corrente */
 	mutable Vec3 WCurr;   /* Velocita' angolare corrente */
@@ -674,7 +676,8 @@ public:
 
 	/* Contributo del nodo strutturale al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
-
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	virtual std::ostream& DescribeDof(std::ostream& out,
 		const char *prefix = "",
 		bool bInitial = false) const;
@@ -1120,6 +1123,8 @@ public:
 	/* Distruttore (per ora e' banale) */
 	virtual ~ModalNode(void);
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+     
 	/* Tipo di nodo strutturale */
 	virtual StructNode::Type GetStructNodeType(void) const;
 
@@ -1148,6 +1153,10 @@ public:
 	 * al posto giusto */
 	virtual integer iGetFirstRowIndex(void) const;
 
+        virtual void SetValue(DataManager *pDM,
+                              VectorHandler& X, VectorHandler& XP,
+                              SimulationEntity::Hints *ph = 0) override;
+     
 	/* Aggiorna dati in base alla soluzione */
 	virtual void Update(const VectorHandler& X,
 		const VectorHandler& XP);

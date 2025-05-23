@@ -54,6 +54,11 @@ Force::Restart(std::ostream& out) const
 	return out << "  force: " << GetLabel();
 }
 
+void Force::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     DEBUGCERR("Force::Restart\n");
+}
+
 /* Force - end */
 
 

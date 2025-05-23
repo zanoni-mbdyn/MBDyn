@@ -85,6 +85,11 @@ UniversalHingeJoint::Restart(std::ostream& out) const
 	return out;
 }
 
+void UniversalHingeJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "F", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "dM", dM, eAction);
+}
 
 /* Assemblaggio jacobiano */
 VariableSubMatrixHandler&

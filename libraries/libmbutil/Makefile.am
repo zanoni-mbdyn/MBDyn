@@ -60,7 +60,11 @@ task2cpu.cc \
 task2cpu.h \
 veciter.h \
 withlab.cc \
-withlab.h
+withlab.h \
+restart_data.h \
+restart_data.cc \
+binary_conversion.h \
+binary_conversion.cc
 
 libmbutil_la_LIBADD = @LIBS@ @GTEST_LIBS@
 libmbutil_la_LDFLAGS =

@@ -95,7 +95,7 @@ public:
 
    	// virtual void Run(void);
 
-	std::ostream& Restart(std::ostream& out, DataManager::eRestart type) const;
+	std::ostream& Restart(std::ostream& out, DataManager::eRestartWhen type) const;
 
 	InverseDynamics::Type GetProblemType(void) const;
 	void GetWeight(InverseDynamics::Order iOrder, doublereal& dw1, doublereal& dw2) const;

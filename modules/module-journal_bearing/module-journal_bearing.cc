@@ -110,7 +110,8 @@ public:
         void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override;
         void SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
                       SimulationEntity::Hints *ph) override;
-        std::ostream& Restart(std::ostream& out) const override;
+        virtual std::ostream& Restart(std::ostream& out) const override;
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
         virtual unsigned int iGetInitialNumDof(void) const override;
         virtual void
         InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
@@ -566,7 +567,7 @@ JournalBearing::AssJac(VectorHandler& JacY,
                        VariableSubMatrixHandler& WorkMat)
 {
         using namespace sp_grad;
-     
+
         SpGradientAssVec<GpGradProd>::AssJac(this,
                                              JacY,
                                              Y,
@@ -730,6 +731,13 @@ std::ostream&
 JournalBearing::Restart(std::ostream& out) const
 {
         return out;
+}
+
+void JournalBearing::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "lambda", lambda, eAction);
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "z", z, eAction);
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "zP", zP, eAction);
 }
 
 unsigned int

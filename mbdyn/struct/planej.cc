@@ -4497,7 +4497,19 @@ std::ostream& PlanePinJoint::Restart(std::ostream& out) const
    return out;
 }
 
-
+void PlanePinJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "X0", X0, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "R0", R0, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "d", d, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "Rh", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "F", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "M", M, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "NTheta", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "dTheta", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "dThetaWrapped", F, eAction);
+}
+     
 /* Assemblaggio jacobiano */
 VariableSubMatrixHandler& 
 PlanePinJoint::AssJac(VariableSubMatrixHandler& WorkMat,

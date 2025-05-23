@@ -425,6 +425,7 @@ if test "${MBD_FORCE_CONFIGURE}" != "no" || ! test -f Makefile || test "${progra
          FFLAGS="${MBD_COMPILER_FLAGS} ${FFLAGS}" \
          FCFLAGS="${MBD_COMPILER_FLAGS} ${FCFLAGS}" \
          --prefix="${MBD_INSTALL_PREFIX}" \
+         --with-boost-ptree \
          --with-octave-pkg-prefix="${OCT_PKG_INSTALL_PREFIX}" \
          --with-octave-cli="${OCTAVE_CLI}" \
          --with-mkoctfile="${OCTAVE_MKOCTFILE}" \

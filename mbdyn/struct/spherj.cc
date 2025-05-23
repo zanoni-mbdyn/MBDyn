@@ -337,6 +337,12 @@ std::ostream& SphericalHingeJoint::Restart(std::ostream& out) const
    return out;
 }
 
+void SphericalHingeJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "d1", d1, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "d2", d2, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "F", F, eAction);
+}
 
 /* Assemblaggio jacobiano */
 VariableSubMatrixHandler& 

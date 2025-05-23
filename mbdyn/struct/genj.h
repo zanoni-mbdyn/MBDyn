@@ -56,8 +56,8 @@ class DistanceJoint : public Joint, public DriveOwner {
  public:
    /* Costruttore non banale */
    DistanceJoint(unsigned int uL, const DofOwner* pDO,
-		 const StructDispNode* pN1, const StructDispNode* pN2,
-		 const DriveCaller* pDC, flag fOut);
+                 const StructDispNode* pN1, const StructDispNode* pN2,
+                 const DriveCaller* pDC, flag fOut);
 
    ~DistanceJoint(void);
 
@@ -87,13 +87,13 @@ class DistanceJoint : public Joint, public DriveOwner {
      { *piNumRows = 10; *piNumCols = 10; };
 
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
-				    doublereal dCoef,
-				    const VectorHandler& XCurr,
-				    const VectorHandler& XPrimeCurr);
+                                    doublereal dCoef,
+                                    const VectorHandler& XCurr,
+                                    const VectorHandler& XPrimeCurr);
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
-			    doublereal dCoef,
-			    const VectorHandler& XCurr,
-			    const VectorHandler& XPrimeCurr);
+                            doublereal dCoef,
+                            const VectorHandler& XCurr,
+                            const VectorHandler& XPrimeCurr);
 
    void OutputPrepare(OutputHandler& OH);
    virtual void Output(OutputHandler& OH) const;
@@ -103,22 +103,22 @@ class DistanceJoint : public Joint, public DriveOwner {
 
    virtual unsigned int iGetInitialNumDof(void) const { return 8; };
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-				    integer* piNumCols) const
+                                    integer* piNumCols) const
      { *piNumRows = 20; *piNumCols = 20; };
 
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-					   const VectorHandler& XCurr);
+                                           const VectorHandler& XCurr);
 
    /* Contributo al residuo durante l'assemblaggio iniziale */
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-				   const VectorHandler& XCurr);
+                                   const VectorHandler& XCurr);
 
    /* Setta il valore iniziale delle proprie variabili */
    virtual void SetInitialValue(VectorHandler& X);
    virtual void SetValue(DataManager *pDM,
-		   VectorHandler& X, VectorHandler& XP,
-		   SimulationEntity::Hints *ph = 0);
+                   VectorHandler& X, VectorHandler& XP,
+                   SimulationEntity::Hints *ph = 0);
 
    /* Dati privati */
    virtual unsigned int iGetNumPrivData(void) const;
@@ -136,19 +136,19 @@ class DistanceJoint : public Joint, public DriveOwner {
    /* ************************************************ */
 
    /* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+        const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
 
    /* describes the dimension of components of equation */
    virtual std::ostream& DescribeDof(std::ostream& out,
-		   const char *prefix = "",
-		   bool bInitial = false) const;
+                   const char *prefix = "",
+                   bool bInitial = false) const;
    virtual void DescribeDof(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const;
    virtual std::ostream& DescribeEq(std::ostream& out,
-		   const char *prefix = "",
-		   bool bInitial = false) const;
+                   const char *prefix = "",
+                   bool bInitial = false) const;
    virtual void DescribeEq(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const;
 };
 
 /* DistanceJoint - end */
@@ -173,9 +173,9 @@ public Joint, public DriveOwner {
  public:
    /* Costruttore non banale */
    DistanceJointWithOffset(unsigned int uL, const DofOwner* pDO,
-			   const StructNode* pN1, const StructNode* pN2,
-			   const Vec3& f1Tmp, const Vec3& f2Tmp,
-			   const DriveCaller* pDC, flag fOut);
+                           const StructNode* pN1, const StructNode* pN2,
+                           const Vec3& f1Tmp, const Vec3& f2Tmp,
+                           const DriveCaller* pDC, flag fOut);
 
    ~DistanceJointWithOffset(void);
 
@@ -208,13 +208,13 @@ public Joint, public DriveOwner {
    };
 
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
-				    doublereal dCoef,
-				    const VectorHandler& XCurr,
-				    const VectorHandler& XPrimeCurr);
+                                    doublereal dCoef,
+                                    const VectorHandler& XCurr,
+                                    const VectorHandler& XPrimeCurr);
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
-			    doublereal dCoef,
-			    const VectorHandler& XCurr,
-			    const VectorHandler& XPrimeCurr);
+                            doublereal dCoef,
+                            const VectorHandler& XCurr,
+                            const VectorHandler& XPrimeCurr);
 
    void OutputPrepare(OutputHandler& OH);
    virtual void Output(OutputHandler& OH) const;
@@ -224,22 +224,22 @@ public Joint, public DriveOwner {
 
    virtual unsigned int iGetInitialNumDof(void) const { return 8; };
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-				    integer* piNumCols) const
+                                    integer* piNumCols) const
      { *piNumRows = 32; *piNumCols = 32; };
 
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-					   const VectorHandler& XCurr);
+                                           const VectorHandler& XCurr);
 
    /* Contributo al residuo durante l'assemblaggio iniziale */
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-				   const VectorHandler& XCurr);
+                                   const VectorHandler& XCurr);
 
    /* Setta il valore iniziale delle proprie variabili */
    virtual void SetInitialValue(VectorHandler& X);
    virtual void SetValue(DataManager *pDM,
-		   VectorHandler& X, VectorHandler& XP,
-		   SimulationEntity::Hints *ph = 0);
+                   VectorHandler& X, VectorHandler& XP,
+                   SimulationEntity::Hints *ph = 0);
 
    /* Dati privati */
    virtual unsigned int iGetNumPrivData(void) const;
@@ -257,19 +257,19 @@ public Joint, public DriveOwner {
    /* ************************************************ */
 
    /* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+        const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
 
    /* describes the dimension of components of equation */
    virtual std::ostream& DescribeDof(std::ostream& out,
-		   const char *prefix = "",
-		   bool bInitial = false) const;
+                   const char *prefix = "",
+                   bool bInitial = false) const;
    virtual void DescribeDof(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const;
    virtual std::ostream& DescribeEq(std::ostream& out,
-		   const char *prefix = "",
-		   bool bInitial = false) const;
+                   const char *prefix = "",
+                   bool bInitial = false) const;
    virtual void DescribeEq(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const;
 };
 
 /* DistanceJointWithOffset - end */
@@ -289,7 +289,7 @@ class ClampJoint : public Joint {
  public:
    /* Costruttore definitivo (da mettere a punto) */
    ClampJoint(unsigned int uL, const DofOwner*pD, const StructNode* pN,
-	      const Vec3& X0, const Mat3x3& R0, flag fOut);
+              const Vec3& X0, const Mat3x3& R0, flag fOut);
 
    /* Distruttore + o - banale */
    virtual ~ClampJoint(void);
@@ -305,20 +305,22 @@ class ClampJoint : public Joint {
    /* Contributo al file di restart */
    virtual std::ostream& Restart(std::ostream& out) const;
 
+   virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
    /* Funzioni obbligatorie, per la gestione dei dof */
    virtual unsigned int iGetNumDof(void) const {
       return 6;
    };
    virtual std::ostream& DescribeDof(std::ostream& out,
-		   const char *prefix = "",
-		   bool bInitial = false) const;
+                   const char *prefix = "",
+                   bool bInitial = false) const;
    virtual void DescribeDof(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const;
    virtual std::ostream& DescribeEq(std::ostream& out,
-		   const char *prefix = "",
-		   bool bInitial = false) const;
+                   const char *prefix = "",
+                   bool bInitial = false) const;
    virtual void DescribeEq(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const;
    virtual DofOrder::Order GetDofType(unsigned int i) const
    {
       ASSERT(i >= 0 && i < 6);
@@ -335,36 +337,36 @@ class ClampJoint : public Joint {
 
    /* Assemblaggio matrice jacobiana */
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
-				    doublereal dCoef,
-				    const VectorHandler& XCurr,
-				    const VectorHandler& XPrimeCurr);
+                                    doublereal dCoef,
+                                    const VectorHandler& XCurr,
+                                    const VectorHandler& XPrimeCurr);
 
 
    /* Inverse Dynamics: AssJac() */
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
-				    const VectorHandler& XCurr);
+                                    const VectorHandler& XCurr);
 
    /* assemblaggio matrici per autovalori */
    void AssMats(VariableSubMatrixHandler& WorkMatA,
-	       VariableSubMatrixHandler& WorkMatB,
-	       const VectorHandler& XCurr,
-	       const VectorHandler& XPrimeCurr);
+               VariableSubMatrixHandler& WorkMatB,
+               const VectorHandler& XCurr,
+               const VectorHandler& XPrimeCurr);
 
    /* Assemblaggio residuo */
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
-			    doublereal dCoef,
-			    const VectorHandler& XCurr,
-			    const VectorHandler& XPrimeCurr);
+                            doublereal dCoef,
+                            const VectorHandler& XCurr,
+                            const VectorHandler& XPrimeCurr);
 
    /* inverse dynamics capable element */
    virtual bool bInverseDynamics(void) const;
 
    /* Inverse Dynamics: AssRes */
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
-			    const VectorHandler& XCurr,
-			    const VectorHandler& XPrimeCurr,
-			    const VectorHandler& XPrimePrimeCurr,
-			    InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+                            const VectorHandler& XCurr,
+                            const VectorHandler& XPrimeCurr,
+                            const VectorHandler& XPrimePrimeCurr,
+                            InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
 
    /* Inverse Dynamics update */
    void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
@@ -377,20 +379,20 @@ class ClampJoint : public Joint {
 
    virtual unsigned int iGetInitialNumDof(void) const { return 12; };
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-				    integer* piNumCols) const
+                                    integer* piNumCols) const
      { *piNumRows = 24; *piNumCols = 24; };
 
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-					   const VectorHandler& XCurr);
+                                           const VectorHandler& XCurr);
 
    /* Contributo al residuo durante l'assemblaggio iniziale */
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-				   const VectorHandler& XCurr);
+                                   const VectorHandler& XCurr);
 
    virtual void SetValue(DataManager *pDM,
-		   VectorHandler& X, VectorHandler& XP,
-		   SimulationEntity::Hints *ph = 0);
+                   VectorHandler& X, VectorHandler& XP,
+                   SimulationEntity::Hints *ph = 0);
    /* Metodi per l'estrazione di dati "privati".
     * Si suppone che l'estrattore li sappia interpretare.
     * Come default non ci sono dati privati estraibili */

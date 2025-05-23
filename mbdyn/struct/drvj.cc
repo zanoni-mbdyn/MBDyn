@@ -347,7 +347,12 @@ std::ostream& AngularVelocityJoint::Restart(std::ostream& out) const
      Dir.Write(out, ", ") << ", ";
    return pGetDriveCaller()->Restart(out) << ';' << std::endl;
 }
-   
+
+void AngularVelocityJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "dM", dM, eAction);
+}
+
 /* dati privati */
 unsigned int
 AngularVelocityJoint::iGetNumPrivData(void) const

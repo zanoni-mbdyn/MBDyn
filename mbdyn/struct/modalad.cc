@@ -431,18 +431,11 @@ ModalAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      SpColVector<T, 3> FTmp(3, 0), MTmp(3, 0);
 
      if (pModalNode) {
-          SpColVector<T, 3> xP(3, 1), g(3, 1), gP(3, 1), v(3, 1);
-
           pModalNode->GetXCurr(x, dCoef, func);
-          pModalNode->GetVCurr(xP, dCoef, func);
-          pModalNode->GetgCurr(g, dCoef, func);
-          pModalNode->GetgPCurr(gP, dCoef, func);
           pModalNode->GetXPPCurr(vP, dCoef, func);
-          const ::Vec3& wr = pModalNode->GetWRef();
           pModalNode->GetWPCurr(wP, dCoef, func);
 
           for (index_type i = 1; i <= 3; ++i) {
-               XCurr.dGetCoef(iRigidIndex + 6 + i, v(i), dCoef);
                XCurr.dGetCoef(iRigidIndex + 9 + i, w(i), dCoef);
           }
 
@@ -518,11 +511,6 @@ ModalAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
                MTmp += Cross(S, GravityAcceleration);
           }
 #endif
-          const SpColVector<T, 3> f1 = v - xP;
-          const SpColVector<T, 3> f2 = w - MatGVec(g) * gP - MatRVec(g) * wr;
-
-          WorkVec.AddItem(iRigidIndex + 1, f1);
-          WorkVec.AddItem(iRigidIndex + 4, f2);
 
           if (!rgModalStressStiff.empty()) {
                for (unsigned i = 0; i < oStressStiffIndexW.uGetSize(); ++i) {

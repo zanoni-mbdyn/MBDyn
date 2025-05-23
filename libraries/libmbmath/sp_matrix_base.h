@@ -53,6 +53,7 @@
 
 #include "sp_matrix_base_fwd.h"
 #include "sp_gradient.h"
+#include "binary_conversion.h"
 
 namespace sp_grad {
      template <typename ValueType, typename ScalarExpr, index_type NumRows = 1, index_type NumCols = 1>
@@ -6004,4 +6005,41 @@ Write(std::ostream& out, const sp_grad::SpMatElemExprBase<ValueType, DerivedType
      return out;
 }
 
+namespace BinaryConversion {
+     template <typename ValueType, sp_grad::index_type NumRows, sp_grad::index_type NumCols>
+     std::istream& ReadBinary(std::istream& is, sp_grad::SpMatrixBase<ValueType, NumRows, NumCols>& A) {
+          using namespace sp_grad;
+          
+          index_type iNumRows = 0, iNumCols = 0;
+          
+          ReadBinary(is, iNumRows);
+          ReadBinary(is, iNumCols);
+          
+          A.ResizeReset(iNumRows, iNumCols, 0);
+
+          for (index_type i = 1; i <= iNumRows; ++i) {
+               for (index_type j = 1; j <= iNumCols; ++j) {
+                    ReadBinary(is, A.GetElem(i, j));
+               }
+          }
+               
+          return is;
+     }
+
+     template <typename ValueType, sp_grad::index_type NumRows, sp_grad::index_type NumCols>
+     std::ostream& WriteBinary(std::ostream& os, const sp_grad::SpMatrixBase<ValueType, NumRows, NumCols>& A) {
+          using namespace sp_grad;
+
+          WriteBinary(os, A.iGetNumRows());
+          WriteBinary(os, A.iGetNumCols());
+
+          for (index_type i = 1; i <= A.iGetNumRows(); ++i) {
+               for (index_type j = 1; j <= A.iGetNumCols(); ++j) {
+                    WriteBinary(os, A.GetElem(i, j));
+               }
+          }
+
+          return os;
+     }
+}
 #endif

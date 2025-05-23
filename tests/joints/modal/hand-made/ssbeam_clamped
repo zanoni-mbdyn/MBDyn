@@ -11,7 +11,7 @@ begin: initial value;
     final time:   5.;
     time step:   1.e-3;
 
-    method: ms, .6;  
+    method: ms, .6;
 
     tolerance: 1.e-6;
     max iterations: 10;
@@ -22,59 +22,48 @@ begin: initial value;
 end: initial value;
 
 begin: control data;
-    #skip initial joint assembly;
     structural nodes:
-	#+ 1	# modal
-	+ 1	# fem
+        #+ 1	# modal
+        + 1	# fem
     ;
     rigid bodies:
-	+ 0	# mb
+        + 0	# mb
     ;
     joints:
-	#+ 1	# clamp
-	+ 1	# modal
+        + 1	# modal
     ;
     forces:
-	+ 0	# excitation modal
+        + 0	# excitation modal
     ;
     gravity;
 end: control data;
 
 begin: nodes;
-    /*
-    structural: 1000, modal,
-                reference, global, null,
-                reference, global, eye,
-                reference, global, null,
-                reference, global, null;
-    */
-    
     structural: 1001, static,
                 reference, global, .5, 0., 0.,
-                reference, global, eye,              
+                reference, global, eye,
                 reference, global, null,
                 reference, global, null;
 end: nodes;
 
 
 begin: elements;
-    joint: 0, clamp, 1000, node, node;
     joint: 1000, modal,
-	clamped, # FEM model is directly grounded
+        clamped, # FEM model is directly grounded
         2,	# n. of modes
         11,	# n. of FEM nodes
-	no damping,
+        no damping,
         "ssbeam.fem",
         1,
         5, 1001, null;
 
-	gravity: 0., 0., -1., 9.81;
+        gravity: 0., 0., -1., 9.81;
 end: elements;
 
 ##############################################################################################################
 ## Variables to be updated by simple_testsuite.sh --update-reference-test-status
 ## Warning, do not edit!!!
-## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 1
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
 ##############################################################################################################
 
 ## @MBDYN_SIMPLE_TESTSUITE_EXCLUDE@ = 0
