@@ -704,9 +704,9 @@ To extract the current from an electric circuit where a resistor $R$ is defined 
 				evaluates the \htmlref{\kw{scalar function}}{sec:ScalarFunction}
 				\nt{name} ( \bnt{value} [ , \bnt{order} ] ) for the input specified as the first argument (the \nt{value}, optionally followed by the derivative \nt{order}) \\
 		\kw{node}\texttt{::}\bnt{type} & Real & Integer, String	&
-				evaluates a private datum of the node \nt{type} ( \bnt{label}, \bnt{string} ) where \nt{type} is the node type, \nt{label} is the node label, and \nt{string} indicates the node's private datum \\
+				evaluates a private datum of the node \nt{type} ( \bnt{label}, \bnt{string} ) where \nt{type} is the node type (all types listed in Section~\ref{sec:NODES} are supported), \nt{label} is the node label, and \nt{string} indicates the node's private datum \\
 		\kw{element}\texttt{::}\bnt{type} & Real & [ Integer , ] String	& 
-				evaluates a private datum of the element \nt{type} ( [ \bnt{label} , ] \bnt{string} ) where \nt{type} is the element type, \nt{label} is the element label (only required if that element is not unique, e.g., it is not \kw{gravity} or \kw{air properties}), and \nt{string} indicates the element's private datum \\
+				evaluates a private datum of the element \nt{type} ( [ \bnt{label} , ] \bnt{string} ) where \nt{type} is the element type (all types listed in Section~\ref{sec:ELEMENTS} are supported), \nt{label} is the element label (only required if that element is not unique, e.g., it is not \kw{gravity} or \kw{air properties}), and \nt{string} indicates the element's private datum \\
 		\hline
 	\end{tabular}
 	\end{center}
