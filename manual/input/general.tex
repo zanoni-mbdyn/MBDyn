@@ -548,6 +548,19 @@ yields
 \subsection{Namespaces}
 \label{sec:GENERAL:NAMESPACE}
 The math parser uses the notion of \emph{namespace} to group and uniquely identify functions.
+A namespace is a (unique) string followed by two colons, as in
+\begin{verbatim}
+    <namespace>::<subname>
+\end{verbatim}
+The solver recognizes built-in namespaces,
+\begin{itemize}
+	\item \kw{default}
+	\item \kw{model}
+\end{itemize}
+and supports the introduction of user-defined namespaces.
+The latter can be loaded using the \kw{module load} card described
+in Section~\ref{sec:GENERAL:MODULE-LOAD}
+(see for example the \kw{units} namespace in Section~\ref{sec:modules:udunits} and the related code).
 
 \subsubsection{Default Namespace}
 The functions listed in Table~\ref{tab:MATHP-FUNCTIONS}
@@ -557,12 +570,6 @@ i.e.\ they should be referenced by writing
     default::sqrt(2.)
 \end{verbatim}
 but the \kw{default::} portion is optional, as the \kw{default} namespace is implicitly assumed.
-
-\subsubsection{Other Namespaces}
-Other namespaces may be defined by the user, and loaded by means
-of the \kw{module load} card described
-in Section~\ref{sec:GENERAL:MODULE-LOAD}
-(see for example the \kw{units} namespace in Section~\ref{sec:modules:udunits} and the related code).
 
 \subsubsection{Model Namespaces}
 The namespace that refers to the current model is loaded by default.
@@ -592,7 +599,19 @@ This string returns the absolute $x$ component of the position of node ``\verb;N
 \end{verbatim}
 
 \paragraph{Example 3.} \
-To extract the current from an electric circuit where a resistor $R$ is defined between electric nodes 1 and 2:
+This string returns the product of the value of the scalar function \texttt{myfunc} and its first derivative for a given argument:
+\begin{verbatim}
+    string, "model::sf::myfunc(10.)*model::sf::myfunc(10., 1)"
+\end{verbatim}
+
+\paragraph{Example 4.} \
+To extract the $z$ component of the reaction force, \kw{Fz}, from a joint of label 99:
+\begin{verbatim}
+    string, "model::element::joint(99, \"Fz\")"
+\end{verbatim}
+
+\paragraph{Example 5.} \
+To extract the current from an electric circuit where a resistor $R$ is defined between electric nodes 1 and 2 (whose state \kw{x} represents the voltage at the node), namely $i = (V_1 - V_2)/R$:
 \begin{verbatim}
     string, "(model::node::electric(1, \"x\") - model::node::electric(2, \"x\"))/R"
 \end{verbatim}
@@ -663,7 +682,7 @@ To extract the current from an electric circuit where a resistor $R$ is defined 
 		\kw{current}	& Real	& String		& allows to retrieve data specific to the current context \\
 	\end{tabular}
 	\end{center}
-	{\footnotesize $^*$``relative'' is intended as second node minus first node}
+	{\footnotesize $^*$``relative'' is intended as second node's minus first node's value}
 \end{table}
 \begin{table}
 	\begin{center}
@@ -676,18 +695,18 @@ To extract the current from an electric circuit where a resistor $R$ is defined 
 		\multicolumn{1}{c}{\textbf{Arg[s]}} &
 		\multicolumn{1}{c}{\textbf{Description}} \\
 		\hline
-		\kw{drive}	& Real	& Integer, [Real]		&
+		\kw{drive}	& Real	& Integer [ , Real ]		&
 				evaluates the \htmlref{\kw{drive caller}}{sec:DRIVE-CALLER}
 				indicated by its label (the first argument)
 				for the input specified as second (optional) argument
 				(\kw{Time} is used instead, if needed) \\
-		\kw{sf}\texttt{::}\bnt{name}	& Real	& Real, [Integer]	&
+		\kw{sf}\texttt{::}\bnt{name}	& Real	& Real [ , Integer ]	&
 				evaluates the \htmlref{\kw{scalar function}}{sec:ScalarFunction}
-				\nt{name} for the input specified as argument (value, optional derivative order) \\
+				\nt{name} ( \bnt{value} [ , \bnt{order} ] ) for the input specified as the first argument (the \nt{value}, optionally followed by the derivative \nt{order}) \\
 		\kw{node}\texttt{::}\bnt{type} & Real & Integer, String	&
-				evaluates a private datum of a node (label, string) \\
-		\kw{element}\texttt{::}\bnt{type} & Real & [Integer], String	&
-				evaluates a private datum of an element ((optional)label, string) \\
+				evaluates a private datum of the node \nt{type} ( \bnt{label}, \bnt{string} ) where \nt{type} is the node type, \nt{label} is the node label, and \nt{string} indicates the node's private datum \\
+		\kw{element}\texttt{::}\bnt{type} & Real & [ Integer , ] String	& 
+				evaluates a private datum of the element \nt{type} ( [ \bnt{label} , ] \bnt{string} ) where \nt{type} is the element type, \nt{label} is the element label (only required if that element is not unique, e.g., it is not \kw{gravity} or \kw{air properties}), and \nt{string} indicates the element's private datum \\
 		\hline
 	\end{tabular}
 	\end{center}
@@ -847,6 +866,19 @@ of the reaction force of \kw{joint} \texttt{ELEMLABEL}
     # the joint must exist
     set: [element,VARNAME,ELEMLABEL,joint,string="Fz"];
 \end{verbatim}
+
+
+
+\subsubsection{Equivalence Between Node/Element Plugin Variables and Node/Element Functions in Model Namespace}
+The following syntaxes are equivalent:
+\begin{verbatim}
+    set: [element,VARNAME,ELEMLABEL,joint,string="Fz"];
+    string, "abs(VARNAME)" # generic use of Fz...
+    # is equivalent to
+    string, "abs(model::element::joint(ELEMLABEL,\"Fz\"))" # same generic use of Fz...
+\end{verbatim}
+i.e., setting an element plugin variable \texttt{VARNAME} and using it in a string is exactly equivalent to using the corresponding element private data through the \kw{model} namespace.
+The same is true for the node pluging variables and the corresponding node private data through the \kw{model} namespace.
 
 
 
