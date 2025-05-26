@@ -827,11 +827,14 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           // }
           dFreact.SetBlockIdx(1, 12+1);
           ExpandableMatrix dFfrict;
-          dFfrict.ReDim(3,2);
-          dFfrict.SetBlockDim(1,3);
-          dFfrict.SetBlockDim(2,1);
-          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1, &dFreact);
+          dFfrict.ReDim(3, 3);
+          dFfrict.SetBlockDim(1, 3);
+          dFfrict.SetBlockDim(2, 1);
+          dFfrict.SetBlockDim(3, 3);
+          dFfrict.SetBlockIdx(3, 4);
+          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc, 1, 1); dFfrict.Link(1, &dFreact);
           dFfrict.SetCol(-e3a.Cross(FReactForFrict), 1, 2, 1); dFfrict.Link(2,&dShc);
+          dFfrict.Set(Mat3x3(MatCross, FReactForFrict)*Mat3x3(0., -1., 0., 1., 0., 0., 0., 0., 0.)*shc, 1, 3, 1);
           dFfrict.Add(WM, 1, 1.);
           dFfrict.Sub(WM, 7, 1.);
           //WM.Add(4, 13, Mat3x3(MatCross, d1Tmp));
@@ -841,20 +844,23 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dMF1.SetBlockDim(1, 3);
           dMF1.Set(Mat3x3(MatCross, d1Tmp), 1, 1, 1);
           dMF1.Link(1, &dFfrict);
-          dMF1.Add(WM, 4);
+          dMF1.Sub(WM, 4);
           ExpandableMatrix dMF2;
           dMF2.ReDim(3, 1);
           dMF2.SetBlockDim(1, 3);
           dMF2.Set(Mat3x3(MatCross, d2Tmp), 1, 1, 1);
           dMF2.Link(1, &dFfrict);
-          dMF2.Add(WM, 10);
+          dMF2.Sub(WM, 10);
       }
       //variation of moment component
-      dM3.ReDim(3, 2);
+      dM3.ReDim(3, 3);
       dM3.SetBlockDim(1, 1);
       dM3.SetBlockDim(2, 1);
+      dM3.SetBlockDim(3, 3);
+      dM3.SetBlockIdx(3, 4);
       dM3.SetCol(e3a*shc*r, 1, 1, 1); dM3.Link(1, &dF);
       dM3.SetCol(e3a*modF*r, 1, 2, 1); dM3.Link(2, &dShc);
+      dM3.Set(Mat3x3(0., -1., 0., 1., 0., 0., 0., 0., 0.)*M3, 1, 3, 1);
       //assemble first node
           //variation of moment component
       dM3.Add(WM, 4, 1.);
