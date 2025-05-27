@@ -86,9 +86,6 @@ class PiezoActuatorBeam : public Beam {
       return Beam::PIEZOELECTRICELASTIC; 
    };
    
-   /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
-    
    /* Dimensioni del workspace; sono 36 righe perche' se genera anche le
     *     * forze d'inerzia consistenti deve avere accesso alle righe di definizione
     *     * della quantita' di moto */
@@ -195,10 +192,7 @@ class PiezoActuatorVEBeam : public ViscoElasticBeam {
    virtual Beam::Type GetBeamType(void) const {
       return Beam::PIEZOELECTRICVISCOELASTIC; 
    };
-   
-   /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
-    
+
    /* Dimensioni del workspace; sono 36 righe perche' se genera anche le
     *     * forze d'inerzia consistenti deve avere accesso alle righe di definizione
     *     * della quantita' di moto */
@@ -312,10 +306,7 @@ class PiezoBeam : virtual public PiezoActuatorVEBeam {
    virtual Beam::Type GetBeamType(void) const {
       return Beam::FULLYCOUPLEDPIEZOELECTRICELASTIC; 
    };
-   
-   /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
-    
+
    /* Dimensioni del workspace; sono 36 righe perche' se genera anche le
     *     * forze d'inerzia consistenti deve avere accesso alle righe di definizione
     *     * della quantita' di moto */
