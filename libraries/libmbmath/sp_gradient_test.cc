@@ -45,7 +45,7 @@
 #include <fenv.h>
 #endif // HAVE_FENV_H
 
-#ifdef _POSIX_C_SOURCE
+#if _POSIX_C_SOURCE >= 200809L
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
@@ -4598,7 +4598,7 @@ namespace sp_grad_test {
      }
 
      void test23() {
-#ifdef _POSIX_C_SOURCE
+#if _POSIX_C_SOURCE >= 200809L
           constexpr index_type iNumDeriv = std::numeric_limits<index_type>::max();
 
           rlimit rlimprev;
