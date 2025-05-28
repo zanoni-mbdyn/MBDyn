@@ -584,12 +584,12 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		  // WM.Put(10, 10, Mat3x3(MatCrossCross, FTmp, -dTmp2));
 		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict1*dCoef, dTmp1));
 		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict2*dCoef, dTmp1));
-		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict1*dCoef, -dTmp2));
-		  WM.Add(4, 4, Mat3x3(MatCrossCross, Ffrict2*dCoef, -dTmp2));
+		  WM.Add(10, 10, Mat3x3(MatCrossCross, Ffrict1*dCoef, -dTmp2));
+		  WM.Add(10, 10, Mat3x3(MatCrossCross, Ffrict2*dCoef, -dTmp2));
 
       // }
-      // Vec3 M1 = -Q.GetCol(1).Cross(Q.GetCol(2)) * shc.x[0] * r * modF;
-      // Vec3 M2 = -Q.GetCol(1).Cross(Q.GetCol(3)) * shc.x[1] * r * modF;
+      // Vec3 M1 = Q.GetCol(1).Cross(Q.GetCol(2)) * shc.x[0] * r * modF;
+      // Vec3 M2 = Q.GetCol(1).Cross(Q.GetCol(3)) * shc.x[1] * r * modF;
       ExpandableMatrix dM1, dM2;
 
       dM1.ReDim(3, 4);
@@ -616,16 +616,16 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 	  dM2.Set(-Mat3x3(MatCross, Q.GetCol(3)) * shc.x[1] * r * modF, 1, 1, 1);
 	  dM2.Link(1, &dQ1);
 
-	  dM2.SetBlockDim(2, 3); //dM1/dQ2
+	  dM2.SetBlockDim(2, 3); //dM2/dQ2
 	  dM2.Set(Mat3x3(MatCross, Q.GetCol(1)) * shc.x[1] * r * modF, 1, 2, 1);
 	  dM2.Link(2, &dQ3);
 
-	  dM2.SetBlockDim(3, 2); //dM1/dshc
+	  dM2.SetBlockDim(3, 2); //dM2/dshc
 	  dM2.SetCol(Zero3, 1, 3, 1);
 	  dM2.SetCol(Q.GetCol(1).Cross(Q.GetCol(3)) * r * modF, 1, 3, 2);
 	  dM2.Link(3, &dshc);
 
-	  dM2.SetBlockDim(4, 1); //dM1/dmodF
+	  dM2.SetBlockDim(4, 1); //dM2/dmodF
 	  dM2.SetCol(Q.GetCol(1).Cross(Q.GetCol(3)) * r * shc.x[1], 1, 4, 1);
 	  dM2.Link(4, &dmodF);
 
