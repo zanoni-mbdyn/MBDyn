@@ -844,7 +844,7 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dMF1.SetBlockDim(1, 3);
           dMF1.Set(Mat3x3(MatCross, d1Tmp), 1, 1, 1);
           dMF1.Link(1, &dFfrict);
-          dMF1.Sub(WM, 4);
+          dMF1.Add(WM, 4);
           ExpandableMatrix dMF2;
           dMF2.ReDim(3, 1);
           dMF2.SetBlockDim(1, 3);
