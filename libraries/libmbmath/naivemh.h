@@ -306,6 +306,7 @@ public:
 
         virtual
         void Scale(const std::vector<doublereal>& oRowScale, const std::vector<doublereal>& oColScale) override;
+        virtual void EnumerateNz(const std::function<EnumerateNzCallback>& func) const override;
 protected:
         /* Matrix Matrix product */
         virtual MatrixHandler&
