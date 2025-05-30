@@ -14,6 +14,7 @@ begin: initial value;
 	tolerance: 1e-6, test, norm, scale;
 
 	max iterations: 10;
+threads: disable;
 end: initial value;
 
 begin: control data;

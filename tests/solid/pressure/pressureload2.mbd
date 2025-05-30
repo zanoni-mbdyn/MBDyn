@@ -19,6 +19,7 @@ begin: initial value;
     nonlinear solver: newton raphson;
     linear solver: umfpack, grad;
     method: ms, 0.6;
+threads: disable;
 end: initial value;
 
 begin: control data;

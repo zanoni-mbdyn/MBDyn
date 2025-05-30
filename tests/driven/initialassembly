@@ -12,6 +12,7 @@ begin: initial value;
 	# output: residual;
 	# output: iterations;
         max iterations: 10;
+threads: disable;
 end: initial value;
 
 begin: control data;

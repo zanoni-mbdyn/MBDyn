@@ -23,6 +23,7 @@ begin: initial value;
         output: iterations, cpu time, solver condition number, stat, yes;
         # output: residual;
         # output: jacobian;
+threads: disable;
 end: initial value;
 
 include: "cylinder_mxn.set";

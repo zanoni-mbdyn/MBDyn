@@ -9,6 +9,7 @@ begin: initial value;
 	tolerance: 1e-6;
 	max iterations: 10;
 	#output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

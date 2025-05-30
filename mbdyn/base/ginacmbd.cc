@@ -33,40 +33,13 @@
 #include "ginacmbd.h"
 
 #ifdef USE_MULTITHREAD
-int GiNaCEntity::iInitMutex;
-pthread_mutex_t GiNaCEntity::GiNaCMutex;
+std::mutex GiNaCEntity::GiNaCMutex;
 #endif
 
 GiNaCEntity::GiNaCEntity()
 {
-#ifdef USE_MULTITHREAD
-     ASSERT(iInitMutex >= 0);
-
-     if (!iInitMutex) {
-          if (pthread_mutex_init(&GiNaCMutex, nullptr)) {
-               silent_cerr("GiNaCEntity::GiNaCEntity():"
-                           "mutex init failed\n");
-               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-          }
-     }
-
-     ++iInitMutex;
-#endif
 }
 
 GiNaCEntity::~GiNaCEntity()
 {
-#ifdef USE_MULTITHREAD
-     ASSERT(iInitMutex > 0);
-
-     --iInitMutex;
-
-     if (!iInitMutex) {
-          if (pthread_mutex_destroy(&GiNaCMutex)) {
-               silent_cerr("GiNaCEntity::~GiNaCEntity(): "
-                           "mutex init failed\n");
-               ASSERT(0);
-          }
-     }
-#endif
 }

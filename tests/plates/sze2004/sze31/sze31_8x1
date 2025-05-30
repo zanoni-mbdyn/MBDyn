@@ -58,6 +58,7 @@ begin: initial value;
 	output: iterations;
         derivatives max iterations: 10;
         derivatives coefficient: auto;
+threads: disable;
 end: initial value;
 
 begin: control data;

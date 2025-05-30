@@ -28,6 +28,7 @@ begin: initial value;
 
     set: real Rho = .6;
     method: ms, Rho, Rho;   
+threads: disable;
 end: initial value;
 
 begin: control data;

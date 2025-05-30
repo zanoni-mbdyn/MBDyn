@@ -119,6 +119,7 @@ begin: initial value;
 		reserve stack, 1000000,
 		hard real time;
 		#real time log;
+threads: disable;
 end: initial value;
 
 begin: control data;

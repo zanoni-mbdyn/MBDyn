@@ -28,6 +28,7 @@ begin: initial value;
 	#output meter: step, 3.9, 1., 0.;
 
 	threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

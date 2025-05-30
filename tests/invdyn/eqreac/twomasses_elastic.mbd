@@ -14,6 +14,7 @@ begin: initial value;
 	method: ms, 0.;
 	# method: ms, 0.6;
 	# output: residual, jacobian;
+threads: disable;
 end: initial value;
 
 begin: control data;

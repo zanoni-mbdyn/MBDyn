@@ -32,6 +32,7 @@ end: data;
 
 begin: initial value;
 include: "princeton.inv";
+threads: disable;
 end: initial value;
 
 include: "princeton.set";

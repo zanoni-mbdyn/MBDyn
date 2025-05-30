@@ -29,6 +29,7 @@ begin: initial value;
 	# eigenanalysis: .001, output matrices, output eigenvectors, use jdqz, 4, 20, 1e-9;
 
 	output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

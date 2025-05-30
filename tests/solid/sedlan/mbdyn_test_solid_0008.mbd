@@ -22,6 +22,7 @@
          output: iterations, cpu time, solver condition number, stat, yes;
     nonlinear solver: nox, modified, 100, keep jacobian matrix, jacobian operator, newton krylov, forcing term, type 2, forcing term min tolerance, 1e-10, forcing term max tolerance, 1e-6, inner iterations before assembly, 30;
     abort after: regular step, 10;
+threads: disable;
  end: initial value;
  begin: control data;
     model: static;

@@ -78,6 +78,7 @@ begin: initial value;
         # threads: 4;
 
         output: iterations, cpu time, solver condition number, stat, yes;
+threads: disable;
 end: initial value;
 
 begin: control data;

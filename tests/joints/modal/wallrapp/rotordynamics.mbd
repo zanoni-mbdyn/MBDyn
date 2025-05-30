@@ -63,6 +63,7 @@ begin: initial value;
              krylov subspace size, 12;
         enforce constraint equations: constraint violations;
         threads: assembly, 1;
+threads: disable;
 end: initial value;
 begin: control data;
        default orientation: euler123;

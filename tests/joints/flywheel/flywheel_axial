@@ -12,6 +12,7 @@ begin: initial value;
 	max iterations: 10;
 	method: ms, .6;
 	linear solver: naive, colamd;
+threads: disable;
 end: initial value;
 
 begin: control data;

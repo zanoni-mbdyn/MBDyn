@@ -20,6 +20,7 @@ begin: initial value;
 	#output: iterations;
 	#output: residual;
 	#output: residual, jacobian, solution;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -63,7 +63,7 @@ MKL_PKG_CONFIG="${MKL_PKG_CONFIG:-mkl-dynamic-lp64-gomp}"
 OCT_PKG_INSTALL_PREFIX="${OCT_PKG_INSTALL_PREFIX:-${program_dir}/var/cache/share/octave}"
 MBD_WITH_MODULE="${MBD_WITH_MODULE:-fabricate damper-gandhi pid hfelem fab-electric template2 cont-contact wheel4 mds indvel mcp_test1 scalarfunc muscles minmaxdrive drive-test loadinc cudatest randdrive imu convtest md autodiff_test rotor-loose-coupling namespace drive controller constlaw fab-sbearings rotor_disc hunt-crossley diff damper-hydraulic cyclocopter fab-motion flightgear hid ns damper-graall nonsmooth-node cosim-output}"
 MBD_NUM_BUILD_JOBS="${MBD_NUM_BUILD_JOBS:-$(($(lscpu | awk '/^Socket\(s\)/{ print $2 }') * $(lscpu | awk '/^Core\(s\) per socket/{ print $4 }')))}"
-MBD_CONFIGURE_FLAGS="${MBD_CONFIGURE_FLAGS:---enable-python --enable-octave --enable-octave-utils --enable-install_test_progs --enable-netcdf --with-lapack --with-arpack --with-umfpack --with-klu --with-suitesparseqr --with-static-modules --without-mpi --enable-runtime-loading --enable-Werror --with-trilinos --with-siconos --with-gtest --enable-override-operator-new}"
+MBD_CONFIGURE_FLAGS="${MBD_CONFIGURE_FLAGS:---enable-python --enable-octave --enable-octave-utils --enable-install_test_progs --enable-netcdf --with-lapack --with-arpack --with-umfpack --with-klu --with-suitesparseqr --with-static-modules --without-mpi --enable-runtime-loading --enable-Werror --with-trilinos --with-siconos --with-gtest --enable-override-operator-new --enable-multithread}"
 OCTAVE_MKOCTFILE="${MKOCTFILE:-mkoctfile}"
 OCTAVE_CLI="${OCTAVE_CLI:-octave-cli}"
 TRILINOS_INSTALL_PREFIX="${TRILINOS_INSTALL_PREFIX:-/usr}"
@@ -425,7 +425,6 @@ if test "${MBD_FORCE_CONFIGURE}" != "no" || ! test -f Makefile || test "${progra
          FFLAGS="${MBD_COMPILER_FLAGS} ${FFLAGS}" \
          FCFLAGS="${MBD_COMPILER_FLAGS} ${FCFLAGS}" \
          --prefix="${MBD_INSTALL_PREFIX}" \
-         --with-boost-ptree \
          --with-octave-pkg-prefix="${OCT_PKG_INSTALL_PREFIX}" \
          --with-octave-cli="${OCTAVE_CLI}" \
          --with-mkoctfile="${OCTAVE_MKOCTFILE}" \

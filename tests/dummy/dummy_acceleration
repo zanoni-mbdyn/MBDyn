@@ -38,6 +38,7 @@ begin: initial value;
 
 	max iterations: 10;
 	tolerance: 1e-6;
+threads: disable;
 end: initial value;
 
 begin: control data;

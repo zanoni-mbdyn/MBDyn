@@ -25,6 +25,7 @@ begin: initial value;
 	eigenanalysis: 0,
 		use lapack,
 		balance, permute;
+threads: disable;
 end: initial value;
 
 begin: control data;

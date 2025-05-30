@@ -46,6 +46,7 @@ begin: initial value;
        #output: residual;
        #output: iterations;
        #output: jacobian;
+threads: disable;
 end: initial value;
 
 #Screw joint test 4:

@@ -116,6 +116,7 @@ begin: initial value;
              linear solver, gmres,
              linear solver max iterations, 12,
              krylov subspace size, 12;
+threads: disable;
 end: initial value;
 begin: control data;
        use automatic differentiation;

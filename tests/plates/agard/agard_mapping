@@ -51,6 +51,7 @@ begin: initial value;
 	#linear solver: umfpack, cc;
 	#linear solver: klu, dir;
 	linear solver: umfpack, dir;
+threads: disable;
 end: initial value;
 
 include: "agard.set";

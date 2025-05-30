@@ -64,6 +64,7 @@ begin: initial value;
 		# balance, all,
 		output matrices, output eigenvectors;
 	# output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

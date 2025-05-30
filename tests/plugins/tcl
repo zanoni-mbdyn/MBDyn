@@ -11,6 +11,7 @@ begin: initial value;
 
 	tolerance: 1.e-12;
 	max iterations: 10;
+threads: disable;
 end: initial value;
 
 begin: control data;

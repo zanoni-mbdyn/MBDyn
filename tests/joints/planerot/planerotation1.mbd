@@ -18,6 +18,7 @@
      derivatives tolerance: 0.0001;
      derivatives max iterations: 100;
      derivatives coefficient: auto;
+threads: disable;
  end: initial value;
 
  #-----------------------------------------------------------------------------

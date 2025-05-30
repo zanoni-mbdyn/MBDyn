@@ -50,6 +50,7 @@ begin: initial value;
              linear solver, gmres,
              linear solver max iterations, 24,
              krylov subspace size, 24;
+threads: disable;
 end: initial value;
 begin: control data;
        use automatic differentiation;

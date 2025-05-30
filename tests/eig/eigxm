@@ -16,6 +16,7 @@ begin: initial value;
 	eigenanalysis: .001, output matrices, output eigenvectors;
 
 	output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -66,6 +66,7 @@ begin: initial value;
     #output: residual;
     #output: solver condition number;
     #output: matrix condition number, norm, inf;
+threads: disable;
 end: initial value;
 
 begin: control data;

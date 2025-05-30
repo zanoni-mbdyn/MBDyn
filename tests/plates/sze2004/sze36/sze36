@@ -60,6 +60,7 @@ begin: initial value;
         nonlinear solver: line search, modified, 10, default solver options, heavy nonlinear;
 	output: iterations;
 	# output: residual;
+threads: disable;
 end: initial value;
 
 include: "sze36_m.set";

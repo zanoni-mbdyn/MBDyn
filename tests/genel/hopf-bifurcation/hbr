@@ -29,6 +29,7 @@ begin: initial value;
 	# output: residual;
 	# output: solution;
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

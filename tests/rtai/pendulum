@@ -16,6 +16,7 @@ begin: initial value;
 
 	nonlinear solver: newton raphson;
 	
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -51,6 +51,7 @@ begin: initial value;
 	# output: residual;
 	
 	threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

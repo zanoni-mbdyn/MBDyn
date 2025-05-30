@@ -59,6 +59,7 @@ begin: initial value;
         derivatives tolerance: 1e-2;
         # output: iterations;
         # output: residual;
+threads: disable;
 end: initial value;
 #--------------------------------------------------------------------------------
 /*

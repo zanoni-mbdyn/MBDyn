@@ -38,6 +38,7 @@ include: "multibarmech_m.set";
 
 begin: initial value;
 include: "multibarmech.inv";
+threads: disable;
 end: initial value;
 
 begin: control data;

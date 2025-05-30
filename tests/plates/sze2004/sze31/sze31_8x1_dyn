@@ -69,6 +69,7 @@ begin: initial value;
 		use lapack;
 
 	output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -40,6 +40,7 @@ include: "srscm.set";
 
 begin: initial value;
 include: "srscm.inv";
+threads: disable;
 end: initial value;
 
 begin: control data;

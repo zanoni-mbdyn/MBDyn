@@ -8,6 +8,7 @@ begin: initial value;
     initial time: 0.;
     final time: 1e-2;
     eigenanalysis: 1e-2, use lapack, output matrices, output eigenvectors, upper frequency limit, 60;
+threads: disable;
 end: initial value;
 
 begin: control data;
