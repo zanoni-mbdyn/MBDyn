@@ -68,6 +68,7 @@ begin: initial value;
 
 #	output: iterations;
 #	output: residual;
+threads: disable;
 end: initial value;
 
 set: integer NBAYS = 5;

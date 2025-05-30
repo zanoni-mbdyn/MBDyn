@@ -47,6 +47,7 @@ begin: initial value;
 	# output: iterations;
 
 	eigenanalysis: 1., use lapack;
+threads: disable;
 end: initial value;
 
 set: const real GM = 398600.4418e+9;

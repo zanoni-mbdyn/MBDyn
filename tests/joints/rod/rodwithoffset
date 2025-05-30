@@ -15,6 +15,7 @@ begin: initial value;
 	threads: 1;
 
 	#output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

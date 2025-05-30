@@ -38,6 +38,7 @@ begin: initial value;
 		# balance, permute,
 		output matrices, output eigenvectors;
 	# output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

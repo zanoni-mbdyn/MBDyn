@@ -15,6 +15,7 @@ begin: initial value;
 
 	newton raphson: modified, 4;
 	output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

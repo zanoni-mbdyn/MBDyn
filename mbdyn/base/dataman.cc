@@ -646,6 +646,11 @@ DataManager::~DataManager(void)
 		MakeRestart();
 	}
 
+        if (pdRestartTimes) {
+             SAFEDELETEARR(pdRestartTimes);
+             pdRestartTimes = nullptr;
+        }
+        
 	if (sSimulationTitle != 0) {
 		SAFEDELETEARR(sSimulationTitle);
 		sSimulationTitle = 0;

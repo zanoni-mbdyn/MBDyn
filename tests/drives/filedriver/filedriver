@@ -9,6 +9,7 @@ begin: initial value;
 	final time: 9.99e-2;
 	time step: 1.e-3;
 	output: residuals;
+threads: disable;
 end: initial value;
 
 begin: control data;

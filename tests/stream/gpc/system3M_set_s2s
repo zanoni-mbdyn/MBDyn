@@ -19,6 +19,7 @@ begin: initial value;
 	derivatives coefficient: 1.e+2;
 	derivatives max iterations: 10;
 	derivatives tolerance: 1.e-6;
+threads: disable;
 end: initial value;
 
 include: "system3M.set";

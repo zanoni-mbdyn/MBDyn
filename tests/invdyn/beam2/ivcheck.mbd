@@ -12,6 +12,7 @@ begin: initial value;
   	linear solver: 		naive;
 	# output: residual;
 	# output: jacobian;
+threads: disable;
 end: initial value;
 
 begin: control data;

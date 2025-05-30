@@ -21,6 +21,7 @@ begin: initial value;
     
 	method: ms, .6, .6;
 	eigenanalysis: .001, parameter, 1.e-6, output matrices, output eigenvectors;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -38,6 +38,7 @@ begin: initial value;
 	initial time: 0.;
 	final time: 1.;
 	time step: 1.e-3;
+threads: disable;
 end: initial value;
 
 begin: control data;

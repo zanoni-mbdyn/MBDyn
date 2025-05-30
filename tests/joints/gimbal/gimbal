@@ -25,6 +25,7 @@ begin: initial value;
 	dummy steps tolerance: 1.e-9;
 	dummy steps max iterations: 10;
 	dummy steps ratio: 1.e-3;
+threads: disable;
 end: initial value;
 
 begin: control data;

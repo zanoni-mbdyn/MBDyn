@@ -61,6 +61,7 @@ begin: initial value;
     fictitious steps number: 0;
 
     #abort after: input;
+threads: disable;
 end: initial value;
 
 begin: control data;

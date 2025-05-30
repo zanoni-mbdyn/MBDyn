@@ -43,6 +43,7 @@ begin: initial value;
    eigenanalysis: list, 1, 10,
         parameter, 1e-3,
         use lapack, balance, permute, suffix format, "%02d";
+threads: disable;
 end: initial value;
 
 begin: control data;

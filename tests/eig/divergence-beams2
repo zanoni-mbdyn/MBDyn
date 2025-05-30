@@ -59,6 +59,7 @@ begin: initial value;
 		use lapack;
 
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 set: integer NBEAMS = 5;

@@ -34,6 +34,7 @@ problem: initial value;
 end: data;
 
 begin: initial value;
+threads: disable;
 end: initial value;
 
 begin: control data;
@@ -44,3 +45,9 @@ end: nodes;
 
 begin: elements;
 end: elements;
+
+##############################################################################################################
+## Variables to be updated by simple_testsuite.sh --update-reference-test-status
+## Warning, do not edit!!!
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
+##############################################################################################################

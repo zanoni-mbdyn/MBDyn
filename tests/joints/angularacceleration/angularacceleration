@@ -42,6 +42,7 @@ begin: initial value;
 	method: ms, .6;
 
 	# output: iterations, residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

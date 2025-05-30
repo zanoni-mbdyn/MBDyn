@@ -1383,17 +1383,42 @@ if test "$ol_enable_multithread" != no ; then
         if test "$ol_enable_multithread" = "yes" -a "$ol_with_thread" = "no" ; then
                 AC_MSG_ERROR([Can't enable multithread --without-threads])
         fi
+
+        AC_LANG([C++])
+
+        AC_CHECK_HEADERS([atomic condition_variable mutex semaphore thread],[have_thread_lib=yes],[have_thread_lib=no])
+        AC_MSG_CHECKING(for standard C++ thread library)
+        if test $have_thread_lib = yes; then
+           AC_TRY_LINK([
+                #include <atomic>
+                #include <condition_variable>
+                #include <mutex>
+                #include <semaphore>
+                #include <thread>
+                ],[
+                std::mutex m;
+                std::atomic<bool> b;
+                std::counting_semaphore s{0};
+                std::condition_variable c;
+                std::unique_lock<std::mutex> l(m);
+                c.notify_one();
+                c.wait(l);
+                s.release();
+                s.acquire();
+                bool b1 = false;
+                b.compare_exchange_strong(b1, true);
+                ],[have_thread_lib=yes],[have_thread_lib=no])
+        fi
+        AC_MSG_RESULT($have_thread_lib)
+        AC_LANG([C])
+
         AC_MSG_CHECKING([whether to enable multithread])
 
         if test "$ac_cv_header_pthread_h" != "yes" ; then
                 AC_MSG_ERROR([need pthreads.h])
         fi
 
-        if test "$ac_cv_header_atomic_ops_h" != "yes" ; then
-                AC_MSG_ERROR([need atomic_ops.h (from HP's atomic_ops project)])
-        fi
-
-        if test "$have_threads" = no ; then
+        if test "$have_threads" = no -o "$have_thread_lib" = no; then
                 case "$ol_enable_multithread" in
                 yes)
                         AC_MSG_ERROR([No threads available])
@@ -1476,10 +1501,6 @@ if test "$ol_enable_multithread" != no ; then
                 AC_MSG_ERROR([need pthreads.h])
         fi
 
-        if test "$ac_cv_header_atomic_ops_h" != "yes" ; then
-                AC_MSG_ERROR([need atomic_ops.h (from HP's atomic_ops project)])
-        fi
-
         if test "$have_threads" = no ; then
                 AC_MSG_RESULT([no])
                 case "$ol_enable_multithread" in
@@ -1503,7 +1524,7 @@ if test "$ol_enable_multithread" != no ; then
         fi
 fi
 
-if test "$ol_link_multithread" = "yes" -o "$ol_link_multithread_naive" = "yes" ; then
+if test "$ol_link_multithread_naive" = "yes" ; then
         SAVE_LIBS="$LIBS"
         LIBS="$LIBS -latomic_ops_gpl -latomic_ops"
         AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <atomic_ops.h>]], [[AO_t t; AO_TS_t tt; AO_compare_and_swap_full(&t, t, t); AO_test_and_set_full(&tt)]])],[have_atomic_ops=yes],[have_atomic_ops=no])	LIBS="$SAVE_LIBS"
@@ -1514,7 +1535,6 @@ if test "$ol_link_multithread" = "yes" -o "$ol_link_multithread_naive" = "yes" ;
                 ATOMIC_OPS_LIBS="-latomic_ops_gpl -latomic_ops"
         fi
 fi
-
 
 dnl ----------------------------------------------------------------
 dnl

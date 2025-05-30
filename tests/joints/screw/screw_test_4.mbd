@@ -43,6 +43,7 @@ begin: initial value;
        threads: disable;
        #derivatives tolerance:    .1;
        #output: residual;#, jacobian;
+threads: disable;
 end: initial value;
 
 #Screw joint test 3:

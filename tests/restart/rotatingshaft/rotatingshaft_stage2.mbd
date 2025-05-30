@@ -34,6 +34,7 @@ include: "rotatingshaft.set";
 
 begin: initial value;
 include: "rotatingshaft.inv";
+threads: disable;
 end: initial value;
 
 begin: control data;
