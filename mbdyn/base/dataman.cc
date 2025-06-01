@@ -722,11 +722,11 @@ void DataManager::MakeRestart(void)
         silent_cout("Making restart file ...\n");
 
         if (RestartType == RESTART_BINARY) {
-             OutHdl.RestartOpen(false);
-
              RestartData oData;
 
              Restart(oData, RestartData::RESTART_SAVE);
+
+             OutHdl.RestartOpen(false);
 
              oData.WriteFile(OutHdl.Restart());
 
