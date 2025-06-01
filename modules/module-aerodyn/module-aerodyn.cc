@@ -274,7 +274,7 @@ bFirst(true)
 	}
 
 	/* read nacelle node */
-	pNacelle = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	pNacelle = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	if (pNacelle == 0) {
 		silent_cerr("AeroDynModule(" << GetLabel() << "): "
 			"nacelle node not defined "
@@ -283,7 +283,7 @@ bFirst(true)
 	}
 
 	/* read hub node */
-	pHub = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	pHub = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	if (pHub == 0) {
 		silent_cerr("AeroDynModule(" << GetLabel() << "): "
 			"hub node not defined "
@@ -350,7 +350,7 @@ bFirst(true)
 #endif
 		}
 
-		nodes[elem].pNode = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+		nodes[elem].pNode = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 		// (optional) aerodynamics offset with respect to the node,
 		// constant in the reference frame of the node

@@ -241,8 +241,7 @@ read(LoadableElem* pEl,
 	/*
 	 * leggo la ruota
 	 */
-	// p->pWheel = (StructNode *)pDM->ReadNode(HP, Node::STRUCTURAL);
-	p->pWheel = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	p->pWheel = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 	/*
 	 * leggo l'orientazione dell'asse ruota nel sistema locale
@@ -253,8 +252,7 @@ read(LoadableElem* pEl,
 	/*
 	 * leggo il terreno
 	 */
-	// p->pGround = (StructNode *)pDM->ReadNode(HP, Node::STRUCTURAL);
-	p->pGround = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	p->pGround = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	
 	/*
 	 * leggo posizione ed orientazione del terreno nel sistema del nodo
@@ -332,8 +330,7 @@ read(LoadableElem* pEl,
 	p->kb = 0;
 	p->pRim = 0;
 	if (HP.IsKeyWord("damping")) {
-		// p->pRim = (StructNode *)pDM->ReadNode(HP, Node::STRUCTURAL);
-		p->pRim = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+                p->pRim = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 		p->kb = HP.GetReal();
 		if (p->kb < 0.) {
 			silent_cerr("Wheel2(" << pEl->GetLabel() << "): "

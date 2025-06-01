@@ -4205,7 +4205,15 @@ ReadStructNode(DataManager* pDM,
         OrientationDescription od = UNKNOWN_ORIENTATION_DESCRIPTION;
         KeyWords DummyType = UNKNOWN;
         if (CurrType == DUMMY) {
-                const StructNode* pNode = pDM->ReadNode<const StructNode, Node::STRUCTURAL>(HP);
+                // Attention: Do not use pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP) here,
+                // because a DummyStructNode would work in this context.
+                const StructNode* pNode = dynamic_cast<StructNode*>(pDM->ReadNode(HP, Node::STRUCTURAL));
+
+                if (pNode == nullptr) {
+                     silent_cerr("ReadStructNode: unable to cast node (" << pNode->GetLabel() << ") "
+                                 "to \"StructNode\" at line " << HP.GetLineData() << "\n");
+                     throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                }
 
                 od = pNode->GetOrientationDescription();
 

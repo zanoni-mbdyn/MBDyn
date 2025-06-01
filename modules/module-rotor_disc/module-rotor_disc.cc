@@ -128,7 +128,7 @@ RotorDisc::RotorDisc( unsigned int uLabel, const DofOwner *pDO,
     }
 
     // read rotor hub node
-    pHubNode = dynamic_cast<const StructNode*>(pDM->ReadNode(HP, Node::STRUCTURAL));
+    pHubNode = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
     ReferenceFrame rf;
     if (pHubNode)
     {
