@@ -46,6 +46,7 @@
 
 #include <ac/lapack.h>
 #include "nodead.h"
+#include "presnode.h"
 #include "strnodead.h"
 #include "sp_matvecass.h"
 #include "constltp.h"
@@ -2869,7 +2870,7 @@ ReadSolid(DataManager* const pDM, MBDynParser& HP, const unsigned int uLabel)
           static_assert(iNumNodesPressure > 0);
 
           for (index_type i = 0; i < iNumNodesPressure; ++i) {
-               rgNodesPressure[i] = pDM->ReadNode<const ScalarNodeAd, Node::HYDRAULIC>(HP);
+               rgNodesPressure[i] = pDM->ReadNode<const ScalarNodeAd, const PressureNode, Node::HYDRAULIC>(HP);
           }
      } else {
           static_assert(iNumNodesPressure == 0);

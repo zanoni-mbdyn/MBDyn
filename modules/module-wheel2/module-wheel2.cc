@@ -205,14 +205,14 @@ Wheel2::Wheel2(unsigned uLabel, const DofOwner *pDO,
 	}
 
 	// read wheel node
-	pWheel = dynamic_cast<const StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	pWheel = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 	// read wheel axle
 	ReferenceFrame RF = ReferenceFrame(pWheel);
 	WheelAxle = HP.GetVecRel(RF);
 
 	// read ground node
-	pGround = dynamic_cast<const StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	pGround = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 	// read ground position/orientation
 	RF = ReferenceFrame(pGround);

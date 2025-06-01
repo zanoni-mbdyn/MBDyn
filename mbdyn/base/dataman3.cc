@@ -2628,6 +2628,18 @@ DataManager::ReadNode(MBDynParser& HP, Node::Type type) const
 	return pNode;
 }
 
+void DataManager::VerifyNoDummyNode(MBDynParser& HP, Node* pNode, Node::Type type)
+{
+     StructNode* pNodeStruct = dynamic_cast<StructNode*>(pNode);
+
+     if (pNodeStruct && pNodeStruct->GetStructNodeType() == StructNode::DUMMY) {
+          silent_cerr("DataManager::ReadNode: " << psNodeNames[type] << "(" << pNodeStruct->GetLabel() << ")"
+                      " dummy nodes are not valid in this context at line "
+                      << HP.GetLineData() << std::endl);
+          throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+     }
+}
+
 Elem*
 DataManager::ReadElem(MBDynParser& HP, Elem::Type type) const
 {
