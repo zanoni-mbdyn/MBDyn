@@ -73,6 +73,8 @@ public:
 
      virtual std::ostream& Restart(std::ostream& out) const override;
 
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
      virtual unsigned int iGetInitialNumDof() const override;
 
      virtual bool bIsDeformable() const override;

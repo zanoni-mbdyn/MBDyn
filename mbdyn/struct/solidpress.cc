@@ -507,6 +507,10 @@ std::ostream& SurfaceLoadElem::Restart(std::ostream& out) const
      return out;
 }
 
+void SurfaceLoadElem::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+}
+
 unsigned int SurfaceLoadElem::iGetInitialNumDof() const
 {
      return 0;
