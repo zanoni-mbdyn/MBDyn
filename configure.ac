@@ -355,11 +355,11 @@ dnl
 dnl check for c++17
 dnl
 AC_LANG([C++])
-AC_MSG_CHECKING(for c++ >= c++17)
+AC_MSG_CHECKING(for c++ >= c++20)
 AC_RUN_IFELSE(
         [AC_LANG_PROGRAM([],
                 [
-                        if (__cplusplus >= 201703L) {
+                        if (__cplusplus >= 202002L) {
                                 return 0;
                         }
                         return 1;
@@ -368,12 +368,12 @@ AC_RUN_IFELSE(
         [AC_MSG_RESULT([yes])],
         [
                 save_CXXFLAGS="$CXXFLAGS"
-                CXXFLAGS="$CXXFLAGS -std=c++17"
+                CXXFLAGS="$CXXFLAGS -std=c++20"
 
                 AC_RUN_IFELSE(
                         [AC_LANG_PROGRAM([],
                                 [
-                                        if (__cplusplus >= 201703L) {
+                                        if (__cplusplus >= 202002L) {
                                                 return 0;
                                         }
                                         return 1;
@@ -382,7 +382,7 @@ AC_RUN_IFELSE(
                         [
                                 AC_MSG_RESULT([no])
                                 CXXFLAGS="$save_CXXFLAGS"
-                                AC_MSG_ERROR([I'm afraid MBDyn now requires compiler to support	at least c++17.])
+                                AC_MSG_ERROR([MBDyn now requires the compiler to support at least c++20.])
                         ])
         ]
 )
