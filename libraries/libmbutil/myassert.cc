@@ -118,7 +118,7 @@ const char* MBDynUnitTestEntry::Failure::what() const noexcept
 #endif
 
 #ifdef USE_MULTITHREAD
-std::mutex mbdyn_lock_cout;
+std::recursive_mutex mbdyn_lock_cout;
 #endif
 
 #ifdef DEBUG
