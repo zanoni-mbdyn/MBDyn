@@ -49,6 +49,7 @@ class Quadrangle8;
 class Quadrangle9;
 class Quadrangle8r;
 class Triangle6h;
+class Triangle10;
 
 // 2D collocation rules
 class Gauss2x2;
@@ -56,6 +57,7 @@ class Gauss2x2Lumped;
 class Gauss3x3;
 class Gauss3x3Lumped;
 class CollocTria6h;
+class CollocTria10;
 
 // 2D base class
 class SurfaceLoadElem: public InitialAssemblyElem {

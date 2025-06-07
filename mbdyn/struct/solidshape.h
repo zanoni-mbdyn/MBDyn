@@ -159,6 +159,29 @@ private:
      static constexpr doublereal si[] = {0, 0, 1,    0,  1./2., 1./2.};
 };
 
+class Triangle10 {
+public:
+     static constexpr const char* ElementName() {
+          return "triangle10";
+     }
+
+     static constexpr sp_grad::index_type iNumNodes = 10;
+
+     static inline void
+     ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 2>& r,
+                        sp_grad::SpMatrix<doublereal, iNumNodes, 2>& hd);
+
+     static inline void
+     ShapeFunction(const sp_grad::SpColVector<doublereal, 2>& r,
+                   sp_grad::SpColVector<doublereal, iNumNodes>& h);
+
+     static inline void
+     NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 2>& r);
+private:
+     static constexpr doublereal ri[] = {1.,0.,0.,2./3.,1./3.,0.,0.,1./3.,2./3.,1./3.};
+     static constexpr doublereal si[] = {0.,1.,0.,1./3.,2./3.,2./3.,1./3.,0.,0.,1./3.};
+};
+
 enum class SolidElemFlags: unsigned {
      DISPLACEMENT_INTERP_FLAG     = 0x1u,
      PRESSURE_INTERP_FLAG         = 0x2u,
@@ -481,6 +504,43 @@ private:
      static constexpr doublereal ti[] = {0, 1, 0,   0, 0.5, 0.5,   0,   0, 0.5,   0};
 };
 
+class Tetrahedron20u {
+public:
+     static constexpr sp_grad::index_type iNumNodes = 20;
+     static constexpr sp_grad::index_type iNumNodesExtrap = 4;
+
+     static inline void
+     ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
+                        sp_grad::SpMatrix<doublereal, iNumNodes, 3>& h0d1);
+
+     static inline void
+     ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
+                   sp_grad::SpColVector<doublereal, iNumNodes>& h);
+
+     static inline void
+     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
+                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
+
+     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
+     static inline void
+     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
+                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
+
+     static inline void
+     NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
+
+private:
+     // static constexpr doublereal ri[] = {0.,1./3.,2./3.,1.,2./3.,1./3.,0.,0.,0.,1./3.,2./3.,1./3.,0.,0.,0.,1./3.,1./3.,0.,0.,0.};
+     // static constexpr doublereal si[] = {0.,0.,0.,0.,1./3.,2./3.,1.,2./3.,1./3.,1./3.,0.,1./3.,2./3.,1./3.,0.,0.,0.,1./3.,0.,0.};
+     // static constexpr doublereal ti[] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,1./3.,1./3.,1./3.,1./3.,1./3.,1./3.,2./3.,2./3.,2./3.,1.};
+
+     static constexpr doublereal ri[] = {0.0, 0.3333333333333333, 0.6666666666666666, 1.0, 0.6666666666666666, 0.3333333333333333, 0.0, 0.0, 0.0, 0.3333333333333333, 0.6666666666666666, 0.3333333333333333, 0.0, 0.0, 0.0, 0.3333333333333333, 0.3333333333333333, 0.0, 0.0, 0.0};
+
+     static constexpr doublereal si[] = {0.0, 0.0, 0.0, 0.0, 0.3333333333333333, 0.6666666666666666, 1.0, 0.6666666666666666, 0.3333333333333333, 0.3333333333333333, 0.0, 0.3333333333333333, 0.6666666666666666, 0.3333333333333333, 0.0, 0.0, 0.0, 0.3333333333333333, 0.0, 0.0};
+
+     static constexpr doublereal ti[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3333333333333333, 0.3333333333333333, 0.3333333333333333, 0.3333333333333333, 0.3333333333333333, 0.3333333333333333, 0.6666666666666666, 0.6666666666666666, 0.6666666666666666, 1.0};
+};
+
 class EmptyElement {
 public:
      EmptyElement()=delete;
@@ -702,6 +762,17 @@ public:
      typedef Tetrahedron4u ElemTypePressure;
 
      static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PRESSURE_PK2GL;
+};
+
+class Tetrahedron20 {
+public:
+     static constexpr const char* ElementName() {
+          return "tetrahedron20";
+     }
+
+     typedef Tetrahedron20u ElemTypeDisplacement;
+     typedef EmptyElement ElemTypePressure;
+     static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK2GL;
 };
 
 void
@@ -969,6 +1040,101 @@ Triangle6h::ShapeFunction(const sp_grad::SpColVector<doublereal, 2>& r,
 
 void
 Triangle6h::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 2>& r)
+{
+     ASSERT(iNode >= 1);
+     ASSERT(iNode <= iNumNodes);
+
+     r(1) = ri[iNode - 1];
+     r(2) = si[iNode - 1];
+}
+
+void
+Triangle10::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 2>& r,
+                               sp_grad::SpMatrix<doublereal, iNumNodes, 2>& hd)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+
+     hd(1,1) = ((3*r1-2)*(3*r1-1))/2.0E+0+(3.0E+0*r1*(3*r1-1))/2.0E+0+(3.0E+0*r1*(3*r1-2))/2.0E+0;
+     hd(1,2) = 0;
+     hd(2,1) = 0;
+     hd(2,2) = ((3*r2-2)*(3*r2-1))/2.0E+0+(3.0E+0*r2*(3*r2-1))/2.0E+0+(3.0E+0*r2*(3*r2-2))/2.0E+0;
+     hd(3,1) = ((-3.0E+0)*(3*((-r2)-r1+1)-1)*((-r2)-r1+1))/2.0E+0+((-3.0E+0)*(3*((-r2)-r1+1)-2)*((-r2)-r1+1))/2.0E+0-((3*((-r2)-r1+1)-2)*(3*((-r2)-r1+1)-1))/2.0E+0;
+     hd(3,2) = ((-3.0E+0)*(3*((-r2)-r1+1)-1)*((-r2)-r1+1))/2.0E+0+((-3.0E+0)*(3*((-r2)-r1+1)-2)*((-r2)-r1+1))/2.0E+0-((3*((-r2)-r1+1)-2)*(3*((-r2)-r1+1)-1))/2.0E+0;
+     hd(4,1) = (9.0E+0*(3*r1-1)*r2)/2.0E+0+(2.7E+1*r1*r2)/2.0E+0;
+     hd(4,2) = (9.0E+0*r1*(3*r1-1))/2.0E+0;
+     hd(5,1) = (9.0E+0*r2*(3*r2-1))/2.0E+0;
+     hd(5,2) = (9.0E+0*r1*(3*r2-1))/2.0E+0+(2.7E+1*r1*r2)/2.0E+0;
+     hd(6,1) = ((-9.0E+0)*r2*(3*r2-1))/2.0E+0;
+     hd(6,2) = ((-9.0E+0)*r2*(3*r2-1))/2.0E+0+(9.0E+0*((-r2)-r1+1)*(3*r2-1))/2.0E+0+(2.7E+1*((-r2)-r1+1)*r2)/2.0E+0;
+     hd(7,1) = ((-2.7E+1)*((-r2)-r1+1)*r2)/2.0E+0+((-9.0E+0)*(3*((-r2)-r1+1)-1)*r2)/2.0E+0;
+     hd(7,2) = ((-2.7E+1)*((-r2)-r1+1)*r2)/2.0E+0+((-9.0E+0)*(3*((-r2)-r1+1)-1)*r2)/2.0E+0+(9.0E+0*(3*((-r2)-r1+1)-1)*((-r2)-r1+1))/2.0E+0;
+     hd(8,1) = (9.0E+0*(3*((-r2)-r1+1)-1)*((-r2)-r1+1))/2.0E+0+((-2.7E+1)*r1*((-r2)-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*((-r2)-r1+1)-1))/2.0E+0;
+     hd(8,2) = ((-2.7E+1)*r1*((-r2)-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*((-r2)-r1+1)-1))/2.0E+0;
+     hd(9,1) = (9.0E+0*(3*r1-1)*((-r2)-r1+1))/2.0E+0+(2.7E+1*r1*((-r2)-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*r1-1))/2.0E+0;
+     hd(9,2) = ((-9.0E+0)*r1*(3*r1-1))/2.0E+0;
+     hd(10,1) = 27*((-r2)-r1+1)*r2-27*r1*r2;
+     hd(10,2) = 27*r1*((-r2)-r1+1)-27*r1*r2;
+     // const doublereal zeta = r(1);
+     // const doublereal eta = r(2);
+
+     // hd(1,1) = ((3*zeta-2)*(3*zeta-1))/2.0E+0+(3.0E+0*zeta*(3*zeta-1))/2.0E+0+(3.0E+0*zeta*(3*zeta-2))/2.0E+0;
+     // hd(1,2) = 0;
+     // hd(2,1) = 0;
+     // hd(2,2) = ((3*eta-2)*(3*eta-1))/2.0E+0+(3.0E+0*eta*(3*eta-1))/2.0E+0+(3.0E+0*eta*(3*eta-2))/2.0E+0;
+     // hd(3,1) = ((-3.0E+0)*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1))/2.0E+0+((-3.0E+0)*(3*((-zeta)-eta+1)-2)*((-zeta)-eta+1))/2.0E+0-((3*((-zeta)-eta+1)-2)*(3*((-zeta)-eta+1)-1))/2.0E+0;
+     // hd(3,2) = ((-3.0E+0)*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1))/2.0E+0+((-3.0E+0)*(3*((-zeta)-eta+1)-2)*((-zeta)-eta+1))/2.0E+0-((3*((-zeta)-eta+1)-2)*(3*((-zeta)-eta+1)-1))/2.0E+0;
+     // hd(4,1) = (9.0E+0*eta*(3*zeta-1))/2.0E+0+(2.7E+1*eta*zeta)/2.0E+0;
+     // hd(4,2) = (9.0E+0*zeta*(3*zeta-1))/2.0E+0;
+     // hd(5,1) = (9.0E+0*eta*(3*eta-1))/2.0E+0;
+     // hd(5,2) = (9.0E+0*(3*eta-1)*zeta)/2.0E+0+(2.7E+1*eta*zeta)/2.0E+0;
+     // hd(6,1) = ((-9.0E+0)*eta*(3*eta-1))/2.0E+0;
+     // hd(6,2) = (9.0E+0*(3*eta-1)*((-zeta)-eta+1))/2.0E+0+(2.7E+1*eta*((-zeta)-eta+1))/2.0E+0+((-9.0E+0)*eta*(3*eta-1))/2.0E+0;
+     // hd(7,1) = ((-2.7E+1)*eta*((-zeta)-eta+1))/2.0E+0+((-9.0E+0)*eta*(3*((-zeta)-eta+1)-1))/2.0E+0;
+     // hd(7,2) = (9.0E+0*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1))/2.0E+0+((-2.7E+1)*eta*((-zeta)-eta+1))/2.0E+0+((-9.0E+0)*eta*(3*((-zeta)-eta+1)-1))/2.0E+0;
+     // hd(8,1) = ((-2.7E+1)*((-zeta)-eta+1)*zeta)/2.0E+0+((-9.0E+0)*(3*((-zeta)-eta+1)-1)*zeta)/2.0E+0+(9.0E+0*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1))/2.0E+0;
+     // hd(8,2) = ((-2.7E+1)*((-zeta)-eta+1)*zeta)/2.0E+0+((-9.0E+0)*(3*((-zeta)-eta+1)-1)*zeta)/2.0E+0;
+     // hd(9,1) = ((-9.0E+0)*zeta*(3*zeta-1))/2.0E+0+(9.0E+0*((-zeta)-eta+1)*(3*zeta-1))/2.0E+0+(2.7E+1*((-zeta)-eta+1)*zeta)/2.0E+0;
+     // hd(9,2) = ((-9.0E+0)*zeta*(3*zeta-1))/2.0E+0;
+     // hd(10,1) = 27*eta*((-zeta)-eta+1)-27*eta*zeta;
+     // hd(10,2) = 27*((-zeta)-eta+1)*zeta-27*eta*zeta;
+}
+
+void
+Triangle10::ShapeFunction(const sp_grad::SpColVector<doublereal, 2>& r,
+                          sp_grad::SpColVector<doublereal, iNumNodes>& h)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+
+     h(1) = (r1*(3*r1-2)*(3*r1-1))/2.0E+0;
+     h(2) = (r2*(3*r2-2)*(3*r2-1))/2.0E+0;
+     h(3) = ((3*((-r2)-r1+1)-2)*(3*((-r2)-r1+1)-1)*((-r2)-r1+1))/2.0E+0;
+     h(4) = (9.0E+0*r1*(3*r1-1)*r2)/2.0E+0;
+     h(5) = (9.0E+0*r1*r2*(3*r2-1))/2.0E+0;
+     h(6) = (9.0E+0*((-r2)-r1+1)*r2*(3*r2-1))/2.0E+0;
+     h(7) = (9.0E+0*(3*((-r2)-r1+1)-1)*((-r2)-r1+1)*r2)/2.0E+0;
+     h(8) = (9.0E+0*r1*(3*((-r2)-r1+1)-1)*((-r2)-r1+1))/2.0E+0;
+     h(9) = (9.0E+0*r1*(3*r1-1)*((-r2)-r1+1))/2.0E+0;
+     h(10) = 27*r1*((-r2)-r1+1)*r2;
+
+     // const doublereal zeta = r(1);
+     // const doublereal eta = r(2);
+
+     // h(1) = (zeta*(3*zeta-2)*(3*zeta-1))/2.0E+0;
+     // h(2) = (eta*(3*eta-2)*(3*eta-1))/2.0E+0;
+     // h(3) = ((3*((-zeta)-eta+1)-2)*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1))/2.0E+0;
+     // h(4) = (9.0E+0*eta*zeta*(3*zeta-1))/2.0E+0;
+     // h(5) = (9.0E+0*eta*(3*eta-1)*zeta)/2.0E+0;
+     // h(6) = (9.0E+0*eta*(3*eta-1)*((-zeta)-eta+1))/2.0E+0;
+     // h(7) = (9.0E+0*eta*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1))/2.0E+0;
+     // h(8) = (9.0E+0*(3*((-zeta)-eta+1)-1)*((-zeta)-eta+1)*zeta)/2.0E+0;
+     // h(9) = (9.0E+0*((-zeta)-eta+1)*zeta*(3*zeta-1))/2.0E+0;
+     // h(10) = 27*eta*((-zeta)-eta+1)*zeta;
+}
+
+inline void
+Triangle10::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 2>& r)
 {
      ASSERT(iNode >= 1);
      ASSERT(iNode <= iNumNodes);
@@ -2019,4 +2185,165 @@ Tetrahedron4u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<dou
      r(3) = ti[iNode - 1];
 }
 
+void
+Tetrahedron20u::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
+                                   sp_grad::SpMatrix<doublereal, iNumNodes, 3>& h0d1)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+     const doublereal r3 = r(3);
+
+     h0d1(1,1) = ((-3.0E+0)*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0+((-3.0E+0)*(3*((-r3)-r2-r1+1)-2)*((-r3)-r2-r1+1))/2.0E+0-((3*((-r3)-r2-r1+1)-2)*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(1,2) = ((-3.0E+0)*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0+((-3.0E+0)*(3*((-r3)-r2-r1+1)-2)*((-r3)-r2-r1+1))/2.0E+0-((3*((-r3)-r2-r1+1)-2)*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(1,3) = ((-3.0E+0)*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0+((-3.0E+0)*(3*((-r3)-r2-r1+1)-2)*((-r3)-r2-r1+1))/2.0E+0-((3*((-r3)-r2-r1+1)-2)*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(2,1) = (9.0E+0*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0+((-2.7E+1)*r1*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(2,2) = ((-2.7E+1)*r1*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(2,3) = ((-2.7E+1)*r1*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(3,1) = (9.0E+0*(3*r1-1)*((-r3)-r2-r1+1))/2.0E+0+(2.7E+1*r1*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r1*(3*r1-1))/2.0E+0;
+     h0d1(3,2) = ((-9.0E+0)*r1*(3*r1-1))/2.0E+0;
+     h0d1(3,3) = ((-9.0E+0)*r1*(3*r1-1))/2.0E+0;
+     h0d1(4,1) = ((3*r1-2)*(3*r1-1))/2.0E+0+(3.0E+0*r1*(3*r1-1))/2.0E+0+(3.0E+0*r1*(3*r1-2))/2.0E+0;
+     h0d1(4,2) = 0;
+     h0d1(4,3) = 0;
+     h0d1(5,1) = (9.0E+0*(3*r1-1)*r2)/2.0E+0+(2.7E+1*r1*r2)/2.0E+0;
+     h0d1(5,2) = (9.0E+0*r1*(3*r1-1))/2.0E+0;
+     h0d1(5,3) = 0;
+     h0d1(6,1) = (9.0E+0*r2*(3*r2-1))/2.0E+0;
+     h0d1(6,2) = (9.0E+0*r1*(3*r2-1))/2.0E+0+(2.7E+1*r1*r2)/2.0E+0;
+     h0d1(6,3) = 0;
+     h0d1(7,1) = 0;
+     h0d1(7,2) = ((3*r2-2)*(3*r2-1))/2.0E+0+(3.0E+0*r2*(3*r2-1))/2.0E+0+(3.0E+0*r2*(3*r2-2))/2.0E+0;
+     h0d1(7,3) = 0;
+     h0d1(8,1) = ((-9.0E+0)*r2*(3*r2-1))/2.0E+0;
+     h0d1(8,2) = (9.0E+0*(3*r2-1)*((-r3)-r2-r1+1))/2.0E+0+(2.7E+1*r2*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r2*(3*r2-1))/2.0E+0;
+     h0d1(8,3) = ((-9.0E+0)*r2*(3*r2-1))/2.0E+0;
+     h0d1(9,1) = ((-2.7E+1)*r2*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r2*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(9,2) = (9.0E+0*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0+((-2.7E+1)*r2*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r2*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(9,3) = ((-2.7E+1)*r2*((-r3)-r2-r1+1))/2.0E+0+((-9.0E+0)*r2*(3*((-r3)-r2-r1+1)-1))/2.0E+0;
+     h0d1(10,1) = 27*r2*((-r3)-r2-r1+1)-27*r1*r2;
+     h0d1(10,2) = 27*r1*((-r3)-r2-r1+1)-27*r1*r2;
+     h0d1(10,3) = -27*r1*r2;
+     h0d1(11,1) = (9.0E+0*(3*r1-1)*r3)/2.0E+0+(2.7E+1*r1*r3)/2.0E+0;
+     h0d1(11,2) = 0;
+     h0d1(11,3) = (9.0E+0*r1*(3*r1-1))/2.0E+0;
+     h0d1(12,1) = 27*r2*r3;
+     h0d1(12,2) = 27*r1*r3;
+     h0d1(12,3) = 27*r1*r2;
+     h0d1(13,1) = 0;
+     h0d1(13,2) = (9.0E+0*(3*r2-1)*r3)/2.0E+0+(2.7E+1*r2*r3)/2.0E+0;
+     h0d1(13,3) = (9.0E+0*r2*(3*r2-1))/2.0E+0;
+     h0d1(14,1) = -27*r2*r3;
+     h0d1(14,2) = 27*((-r3)-r2-r1+1)*r3-27*r2*r3;
+     h0d1(14,3) = 27*r2*((-r3)-r2-r1+1)-27*r2*r3;
+     h0d1(15,1) = ((-2.7E+1)*((-r3)-r2-r1+1)*r3)/2.0E+0+((-9.0E+0)*(3*((-r3)-r2-r1+1)-1)*r3)/2.0E+0;
+     h0d1(15,2) = ((-2.7E+1)*((-r3)-r2-r1+1)*r3)/2.0E+0+((-9.0E+0)*(3*((-r3)-r2-r1+1)-1)*r3)/2.0E+0;
+     h0d1(15,3) = ((-2.7E+1)*((-r3)-r2-r1+1)*r3)/2.0E+0+((-9.0E+0)*(3*((-r3)-r2-r1+1)-1)*r3)/2.0E+0+(9.0E+0*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0;
+     h0d1(16,1) = 27*((-r3)-r2-r1+1)*r3-27*r1*r3;
+     h0d1(16,2) = -27*r1*r3;
+     h0d1(16,3) = 27*r1*((-r3)-r2-r1+1)-27*r1*r3;
+     h0d1(17,1) = (9.0E+0*r3*(3*r3-1))/2.0E+0;
+     h0d1(17,2) = 0;
+     h0d1(17,3) = (9.0E+0*r1*(3*r3-1))/2.0E+0+(2.7E+1*r1*r3)/2.0E+0;
+     h0d1(18,1) = 0;
+     h0d1(18,2) = (9.0E+0*r3*(3*r3-1))/2.0E+0;
+     h0d1(18,3) = (9.0E+0*r2*(3*r3-1))/2.0E+0+(2.7E+1*r2*r3)/2.0E+0;
+     h0d1(19,1) = ((-9.0E+0)*r3*(3*r3-1))/2.0E+0;
+     h0d1(19,2) = ((-9.0E+0)*r3*(3*r3-1))/2.0E+0;
+     h0d1(19,3) = ((-9.0E+0)*r3*(3*r3-1))/2.0E+0+(9.0E+0*((-r3)-r2-r1+1)*(3*r3-1))/2.0E+0+(2.7E+1*((-r3)-r2-r1+1)*r3)/2.0E+0;
+     h0d1(20,1) = 0;
+     h0d1(20,2) = 0;
+     h0d1(20,3) = ((3*r3-2)*(3*r3-1))/2.0E+0+(3.0E+0*r3*(3*r3-1))/2.0E+0+(3.0E+0*r3*(3*r3-2))/2.0E+0;
+}
+
+void
+Tetrahedron20u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
+                              sp_grad::SpColVector<doublereal, iNumNodes>& h)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+     const doublereal r3 = r(3);
+
+     h(1) = ((3*((-r3)-r2-r1+1)-2)*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0;
+     h(2) = (9.0E+0*r1*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0;
+     h(3) = (9.0E+0*r1*(3*r1-1)*((-r3)-r2-r1+1))/2.0E+0;
+     h(4) = (r1*(3*r1-2)*(3*r1-1))/2.0E+0;
+     h(5) = (9.0E+0*r1*(3*r1-1)*r2)/2.0E+0;
+     h(6) = (9.0E+0*r1*r2*(3*r2-1))/2.0E+0;
+     h(7) = (r2*(3*r2-2)*(3*r2-1))/2.0E+0;
+     h(8) = (9.0E+0*r2*(3*r2-1)*((-r3)-r2-r1+1))/2.0E+0;
+     h(9) = (9.0E+0*r2*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1))/2.0E+0;
+     h(10) = 27*r1*r2*((-r3)-r2-r1+1);
+     h(11) = (9.0E+0*r1*(3*r1-1)*r3)/2.0E+0;
+     h(12) = 27*r1*r2*r3;
+     h(13) = (9.0E+0*r2*(3*r2-1)*r3)/2.0E+0;
+     h(14) = 27*r2*((-r3)-r2-r1+1)*r3;
+     h(15) = (9.0E+0*(3*((-r3)-r2-r1+1)-1)*((-r3)-r2-r1+1)*r3)/2.0E+0;
+     h(16) = 27*r1*((-r3)-r2-r1+1)*r3;
+     h(17) = (9.0E+0*r1*r3*(3*r3-1))/2.0E+0;
+     h(18) = (9.0E+0*r2*r3*(3*r3-1))/2.0E+0;
+     h(19) = (9.0E+0*((-r3)-r2-r1+1)*r3*(3*r3-1))/2.0E+0;
+     h(20) = (r3*(3*r3-2)*(3*r3-1))/2.0E+0;
+}
+
+void
+Tetrahedron20u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
+                                   sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
+{
+     h(1) = 1 - r(1) - r(2) - r(3);
+     h(2) = r(1);
+     h(3) = r(2);
+     h(4) = r(3);
+}
+
+template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
+void
+Tetrahedron20u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
+                                   const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune)
+{
+     static_assert(iNumRhs >= iNumNodesExtrap, "extrapolation is not possible");
+
+     using namespace sp_grad;
+
+     for (index_type j = 1; j <= iNumComp; ++j) {
+          tauni(1, j) = taune(1, j);
+          tauni(4, j) = taune(2, j);
+          tauni(7, j) = taune(3, j);
+          tauni(20, j) = taune(4, j);
+          
+          tauni(2, j) = 2./3. * tauni(1, j) + 1./3. * tauni(4, j);
+          tauni(3, j) = 1./3. * tauni(1, j) + 2./3. * tauni(4, j);
+
+          tauni(5, j) = 2./3. * tauni(4, j) + 1./3. * tauni(7, j);
+          tauni(6, j) = 1./3. * tauni(4, j) + 2./3. * tauni(7, j);
+
+          tauni(8, j) = 2./3. * tauni(7, j) + 1./3. * tauni(1, j);
+          tauni(9, j) = 1./3. * tauni(7, j) + 2./3. * tauni(1, j);
+
+          tauni(11, j) = 2./3. * tauni(4, j) + 1./3. * tauni(20, j);
+          tauni(17, j) = 1./3. * tauni(4, j) + 2./3. * tauni(20, j);
+
+          tauni(13, j) = 2./3. * tauni(7, j) + 1./3. * tauni(20, j);
+          tauni(18, j) = 1./3. * tauni(7, j) + 2./3. * tauni(20, j);
+
+          tauni(15, j) = 2./3. * tauni(1, j) + 1./3. * tauni(20, j);
+          tauni(19, j) = 1./3. * tauni(1, j) + 2./3. * tauni(20, j);
+
+          tauni(12, j) = 0.5 * (tauni(11, j) + tauni(13, j));
+          tauni(14, j) = 0.5 * (tauni(13, j) + tauni(15, j));
+          tauni(16, j) = 0.5 * (tauni(11, j) + tauni(15, j));
+
+          tauni(10, j) = (tauni(1, j) + tauni(4, j) + tauni(7, j)) / 3.;
+     }
+}
+
+void
+Tetrahedron20u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
+{
+     ASSERT(iNode >= 1);
+     ASSERT(iNode <= iNumNodes);
+
+     r(1) = ri[iNode - 1];
+     r(2) = si[iNode - 1];
+     r(3) = ti[iNode - 1];
+}
 #endif

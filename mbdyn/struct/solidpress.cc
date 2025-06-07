@@ -1678,6 +1678,7 @@ template SurfaceLoadElem* ReadPressureLoad<Quadrangle8, Gauss3x3>(DataManager*, 
 template SurfaceLoadElem* ReadPressureLoad<Quadrangle9, Gauss3x3>(DataManager*, MBDynParser&, unsigned int);
 template SurfaceLoadElem* ReadPressureLoad<Quadrangle8r, Gauss3x3>(DataManager*, MBDynParser&, unsigned int);
 template SurfaceLoadElem* ReadPressureLoad<Triangle6h, CollocTria6h>(DataManager*, MBDynParser&, unsigned int);
+template SurfaceLoadElem* ReadPressureLoad<Triangle10, CollocTria10>(DataManager*, MBDynParser&, unsigned int);
 
 template <typename ElementType, typename CollocationType>
 SurfaceLoadElem*
@@ -1767,6 +1768,7 @@ template SurfaceLoadElem* ReadTractionLoad<Quadrangle8, Gauss3x3>(DataManager*, 
 template SurfaceLoadElem* ReadTractionLoad<Quadrangle9, Gauss3x3>(DataManager*, MBDynParser&, unsigned int);
 template SurfaceLoadElem* ReadTractionLoad<Quadrangle8r, Gauss3x3>(DataManager*, MBDynParser&, unsigned int);
 template SurfaceLoadElem* ReadTractionLoad<Triangle6h, CollocTria6h>(DataManager*, MBDynParser&, unsigned int);
+template SurfaceLoadElem* ReadTractionLoad<Triangle10, CollocTria10>(DataManager*, MBDynParser&, unsigned int);
 
 template <typename ElementType, typename CollocationType>
 SurfaceLoadElem*
