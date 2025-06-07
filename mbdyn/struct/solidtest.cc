@@ -598,6 +598,8 @@ bool bCheckShapeFunction()
      SpColVectorA<doublereal, iDim> r;
      SpColVectorA<doublereal, ElementType::iNumNodes> h;
 
+     const doublereal dTol = std::pow(std::numeric_limits<doublereal>::epsilon(), 0.9);
+     
      for (index_type i = 1; i <= ElementType::iNumNodes; ++i) {
           std::cout << "node: " << i << "\n";
 
@@ -608,7 +610,7 @@ bool bCheckShapeFunction()
           std::cout << "h = {" << h << "}\n";
 
           for (index_type j = 1; j <= ElementType::iNumNodes; ++j) {
-               if (h(j) != (i == j)) {
+               if (fabs(h(j) - (i == j)) > dTol) {
                     bRes = false;
                }
           }
@@ -681,6 +683,11 @@ MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT6h)
      MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Triangle6h, 2>()));
 }
 
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Triangle10, 2>()));
+}
+
 MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionH8u)
 {
      MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Hexahedron8u, 3>()));
@@ -744,6 +751,11 @@ MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10u)
 MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT10upc)
 {
      MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Tetrahedron10upc, 3>()));
+}
+
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionT20u)
+{
+      MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Tetrahedron20u, 3>()));
 }
 
 MBDYN_DEFINE_OPERATOR_NEW_DELETE

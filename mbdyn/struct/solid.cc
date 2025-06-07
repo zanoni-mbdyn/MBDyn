@@ -3169,6 +3169,7 @@ template SolidElem* ReadSolid<Hexahedron27, Gauss3x3x3>(DataManager*, MBDynParse
 template SolidElem* ReadSolid<Hexahedron20r, GaussH20r>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Pentahedron15, CollocPenta15>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron10, CollocTet10h>(DataManager*, MBDynParser&, unsigned int);
+template SolidElem* ReadSolid<Tetrahedron20, CollocTet20>(DataManager*, MBDynParser&, unsigned int);
 
 // Displacement based elements using the deformation gradient and the 1st Piola Kirchhoff stress tensor
 template SolidElem* ReadSolid<Hexahedron8f, Gauss2x2x2>(DataManager*, MBDynParser&, unsigned int);
