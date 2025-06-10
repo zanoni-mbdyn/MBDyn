@@ -21,6 +21,7 @@ begin: initial value;
 
 	# output: residual, jacobian;
 	threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -61,6 +61,7 @@ begin: initial value;
 
 	output: iterations;
 	# output: residual;
+threads: disable;
 end: initial value;
 
 include: "sze35_m.set";

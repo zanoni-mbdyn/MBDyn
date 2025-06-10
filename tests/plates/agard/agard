@@ -61,6 +61,7 @@ begin: initial value;
 		output geometry,
 		output eigenvectors,                
 		use arpack, 20, 60, 1e-4;
+threads: disable;
 end: initial value;
 
 include: "agard.set";

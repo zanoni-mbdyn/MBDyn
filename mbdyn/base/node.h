@@ -219,6 +219,46 @@ public:
 
 Node::Type str2nodetype(const char *const s);
 
+class StructDispNode;
+class ScalarNode;
+class ElectricNode;
+class ThermalNode;
+class PressureNode;
+class ParameterNode;
+
+template <Node::Type node_type>
+struct NodeTypeHelper;
+
+template <>
+struct NodeTypeHelper<Node::STRUCTURAL> {
+     typedef StructDispNode type;
+};
+
+template <>
+struct NodeTypeHelper<Node::ABSTRACT> {
+     typedef ScalarNode type;
+};
+
+template <>
+struct NodeTypeHelper<Node::ELECTRIC> {
+     typedef ElectricNode type;
+};
+
+template <>
+struct NodeTypeHelper<Node::THERMAL> {
+     typedef ThermalNode type;
+};
+
+template <>
+struct NodeTypeHelper<Node::HYDRAULIC> {
+     typedef PressureNode type;
+};
+
+template <>
+struct NodeTypeHelper<Node::PARAMETER> {
+     typedef ParameterNode type;
+};
+
 /* Node - end */
 
 #endif /* NODE_H */

@@ -34,6 +34,7 @@ begin: initial value;
 	method: ms, .6, .6;
 
 	eigenanalysis: 1., output matrices, output eigenvectors, use lapack;
+threads: disable;
 end: initial value;
 
 begin: control data;

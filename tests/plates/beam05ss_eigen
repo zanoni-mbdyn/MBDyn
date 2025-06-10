@@ -25,6 +25,7 @@ begin: initial value;
 		#lower frequency limit, .01,
 		#upper frequency limit, 100,
 		use lapack, output eigenvectors, output geometry;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -15,6 +15,7 @@ begin: initial value;
 	#output: residual;
 	#output: solution;
 	#output: residual, jacobian, solution;
+threads: disable;
 end: initial value;
 
 begin: control data;

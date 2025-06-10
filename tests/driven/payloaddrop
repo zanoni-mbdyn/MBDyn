@@ -15,6 +15,7 @@ begin: initial value;
 	max iterations: 10;
 
 	output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

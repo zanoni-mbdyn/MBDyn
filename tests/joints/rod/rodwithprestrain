@@ -15,6 +15,7 @@ begin: initial value;
 	eigenanalysis: list, 2, 0., 10., use lapack, upper frequency limit, 1e3, lower frequency limit, 1e-3;
 
 	#output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

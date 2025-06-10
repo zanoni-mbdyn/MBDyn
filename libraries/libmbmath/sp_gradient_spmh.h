@@ -312,6 +312,7 @@ class SpGradientSparseMatrixWrapper: public MatrixHandler
 public:
      using MatrixHandler::operator=;
      explicit SpGradientSparseMatrixWrapper(SpGradientSparseMatrixHandler* pMH = nullptr);
+     SpGradientSparseMatrixWrapper(const SpGradientSparseMatrixWrapper& oMW):pMH(oMW.pMH) {}
      ~SpGradientSparseMatrixWrapper();
 
 #ifdef DEBUG

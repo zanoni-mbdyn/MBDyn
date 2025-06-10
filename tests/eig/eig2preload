@@ -28,6 +28,7 @@ begin: initial value;
 	output eigenvectors,
 	use lapack;
     # output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

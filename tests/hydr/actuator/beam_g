@@ -80,6 +80,7 @@ begin: initial value;
     fictitious steps number: 0;
     
     newton raphson: modified, 4;
+threads: disable;
 end: initial value;
 
 begin: control data;

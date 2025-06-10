@@ -16,6 +16,7 @@ end: data;
 
 begin: initial value;
     eigenanalysis: 0.;
+threads: disable;
 end: initial value;
 
 begin: control data;

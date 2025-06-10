@@ -1349,10 +1349,10 @@ Elem* ReadHydraulicElem(DataManager* pDM,
     case DYNAMIC_PIPE: {
        
        /* nodo 1 */
-       const PressureNode* pNode1 = dynamic_cast<PressureNode *>(pDM->ReadNode(HP, Node::HYDRAULIC));
+       const PressureNode* pNode1 = pDM->ReadNode<PressureNode, Node::HYDRAULIC>(HP);
        
        /* nodo 2 */
-       const PressureNode* pNode2 = dynamic_cast<PressureNode *>(pDM->ReadNode(HP, Node::HYDRAULIC));
+       const PressureNode* pNode2 = pDM->ReadNode<PressureNode, Node::HYDRAULIC>(HP);
 
        if (pNode2 == pNode1) {
 	  silent_cerr("DynamicPipe(" << uLabel << "): "

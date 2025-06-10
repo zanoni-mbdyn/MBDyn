@@ -23,6 +23,7 @@ begin: initial value;
 	#abort after : derivatives;
 	#output: residual, jacobian, solution;
 #~ 	output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

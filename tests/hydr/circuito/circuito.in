@@ -49,6 +49,7 @@ begin: initial value;
     fictitious steps number: 0;
 
     # output: iterations;
+threads: disable;
 end: initial value;
 
 set: integer num_attuatori = 3;

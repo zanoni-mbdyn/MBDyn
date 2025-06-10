@@ -23,6 +23,7 @@ begin: initial value;
         output: iterations, cpu time;
         # output: residual;
         # output: jacobian;
+threads: disable;
 end: initial value;
 
 

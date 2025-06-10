@@ -97,6 +97,7 @@ begin: initial value;
 	newton raphson: modified, 4;
 	output: iterations;
 #	output: residual;
+threads: disable;
 end: initial value;
 
 # begin reference frame definition

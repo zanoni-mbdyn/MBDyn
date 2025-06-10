@@ -38,6 +38,7 @@ begin: initial value;
     output: iterations, solver condition number, stat, yes;
     fictitious steps number: 0;
     threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

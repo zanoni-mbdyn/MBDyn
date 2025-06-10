@@ -47,6 +47,7 @@ begin: initial value;
 	# linear solver: umfpack, cc;
 
 	output: iterations;
+threads: disable;
 end: initial value;
 
 include: "princeton.set";

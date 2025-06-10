@@ -47,6 +47,7 @@ begin: initial value;
         nonlinear solver: linesearch, default solver options, heavy nonlinear, lambda min, 0., tolerance x, 1e-5;
         threads: disable;
         output: iterations, solver condition number, stat, yes;
+threads: disable;
 end: initial value;
 
 begin: control data;

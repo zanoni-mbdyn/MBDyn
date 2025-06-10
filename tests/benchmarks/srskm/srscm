@@ -81,6 +81,7 @@ begin: initial value;
 	# output: none;
 	# output: iterations;
 	# output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -35,6 +35,7 @@ end: data;
 
 begin: initial value;
         include: "solid.inv";
+threads: disable;
 end: initial value;
 
 begin: control data;

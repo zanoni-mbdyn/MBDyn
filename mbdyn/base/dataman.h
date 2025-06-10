@@ -899,6 +899,7 @@ public:
 
         MBDYN_DEFINE_OPERATOR_NEW_DELETE
 private:
+        static void VerifyNoDummyNode(MBDynParser& HP, Node* pNode, Node::Type type);
         std::string strRestartFile;
         bool bAutoDiff; // Create nodes and elements with support for automatic differentiation if applicable
 };
@@ -1028,6 +1029,10 @@ template <class Tbase, Node::Type type>
 Tbase *
 DataManager::ReadNode(MBDynParser& HP) const
 {
+        static_assert(std::is_base_of<Node, Tbase>::value);
+        static_assert(std::is_base_of<typename NodeTypeHelper<type>::type, typename std::remove_cv<Tbase>::type>::value);
+        static_assert(type >= 0 && type < Node::LASTNODETYPE);
+
 	Node *pNode = ReadNode(HP, type);
 	ASSERT(pNode != 0);
 
@@ -1038,15 +1043,20 @@ DataManager::ReadNode(MBDynParser& HP) const
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
-	return pNodeBase;
+        if constexpr(std::is_base_of<StructNode, Tbase>::value ||
+                     std::is_base_of<StructDispNode, Tbase>::value) {
+             VerifyNoDummyNode(HP, pNode, type);
+        }
+
+        return pNodeBase;
 }
 
 template <class Tder, class Tbase, Node::Type type>
 Tder *
 DataManager::ReadNode(MBDynParser& HP) const
 {
-	Tbase *pNodeBase = ReadNode<Tbase, type>(HP);
-	ASSERT(pNodeBase != 0);
+        Tbase *pNodeBase = ReadNode<Tbase, type>(HP);
+        ASSERT(pNodeBase != 0);
 
 	Tder *pNodeDer = dynamic_cast<Tder *>(pNodeBase);
 	if (pNodeDer == 0) {
@@ -1056,7 +1066,7 @@ DataManager::ReadNode(MBDynParser& HP) const
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
-	return pNodeDer;
+        return pNodeDer;
 }
 
 template <class Tbase, Elem::Type type>

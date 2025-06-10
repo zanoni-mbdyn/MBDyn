@@ -37,6 +37,7 @@ begin: initial value;
 	max time step: postponed, 99;
 
 	method: ms, postponed, 99;
+threads: disable;
 end: initial value;
 
 begin: control data;

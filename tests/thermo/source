@@ -13,6 +13,7 @@ begin: initial value;
 
 	newton raphson: modified, 4;
 	#output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

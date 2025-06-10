@@ -48,6 +48,7 @@ begin: initial value;
 	# output: iterations;
 	# output: residual;
 	# output: jacobian;
+threads: disable;
 end: initial value;
 
 begin: control data;

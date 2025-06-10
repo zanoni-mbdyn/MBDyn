@@ -57,6 +57,7 @@ begin: initial value;
 	# method: bdf;
 
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 include: "sze33_m.set";

@@ -20,6 +20,7 @@ begin: initial value;
 	newton raphson: modified, 4;
 
 linear solver: umfpack;
+threads: disable;
 end: initial value;
 
 begin: control data;

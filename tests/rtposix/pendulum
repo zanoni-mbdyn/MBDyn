@@ -60,6 +60,7 @@ begin: initial value;
 		cpu map, 15,
 		# output, yes;
 		output, no;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -423,12 +423,10 @@ ReadElectric(DataManager* pDM,
 		ASSERT(Eye3.IsSame(Rn.MulTM(Rn), sqrt(std::numeric_limits<doublereal>::epsilon())));
 
 		// nodo elettrico1 collegato
-		ElectricNode* pVoltage1
-			= dynamic_cast<ElectricNode *>(pDM->ReadNode(HP, Node::ELECTRIC));
+		ElectricNode* pVoltage1 = pDM->ReadNode<ElectricNode, Node::ELECTRIC>(HP);
 
 		// nodo elettrico2 collegato
-		ElectricNode* pVoltage2
-			= dynamic_cast<ElectricNode *>(pDM->ReadNode(HP, Node::ELECTRIC));
+                ElectricNode* pVoltage2 = pDM->ReadNode<ElectricNode, Node::ELECTRIC>(HP);
 
 		doublereal dG = HP.GetReal();
 		doublereal dL = HP.GetReal();
