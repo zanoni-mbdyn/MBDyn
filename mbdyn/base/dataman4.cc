@@ -133,6 +133,7 @@ enum KeyWords {
         TETRAHEDRON10F,      
         TETRAHEDRON10UPC,
         TETRAHEDRON20,
+        TETRAHEDRON20F,
         PRESSUREQ4,
         PRESSUREQ8,
         PRESSUREQ9,
@@ -242,6 +243,7 @@ DataManager::ReadElems(MBDynParser& HP)
                 "tetrahedron10f",
                 "tetrahedron10upc",
                 "tetrahedron20",
+                "tetrahedron20f",
                 "pressureq4",
                 "pressureq8",
                 "pressureq9",
@@ -476,7 +478,8 @@ DataManager::ReadElems(MBDynParser& HP)
                         case TETRAHEDRON10:
                         case TETRAHEDRON10F:                             
                         case TETRAHEDRON10UPC:
-                        case TETRAHEDRON20: {
+                        case TETRAHEDRON20:
+                        case TETRAHEDRON20F: {
                              DEBUGLCOUT(MYDEBUG_INPUT, "solids\n");
                              Typ = Elem::SOLID;
                              break;
@@ -716,6 +719,7 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case TETRAHEDRON10F:
                                 case TETRAHEDRON10UPC:
                                 case TETRAHEDRON20:
+                                case TETRAHEDRON20F:
                                         t = Elem::SOLID;
                                         break;
 
@@ -1073,6 +1077,7 @@ DataManager::ReadElems(MBDynParser& HP)
                                         case TETRAHEDRON10:
                                         case TETRAHEDRON10UPC:
                                         case TETRAHEDRON20:
+                                        case TETRAHEDRON20F:
                                         case PRESSUREQ4:
                                         case PRESSUREQ8:
                                         case PRESSUREQ9:
@@ -1183,16 +1188,23 @@ DataManager::ReadElems(MBDynParser& HP)
 							break;
 
                                                 case HEXAHEDRON8:
+                                                case HEXAHEDRON8F:
                                                 case HEXAHEDRON8UPC:                                                     
                                                 case HEXAHEDRON20:
+                                                case HEXAHEDRON20F:
                                                 case HEXAHEDRON20UPC:
                                                 case HEXAHEDRON20UPCR:
                                                 case HEXAHEDRON20R:
                                                 case HEXAHEDRON27:
+                                                case HEXAHEDRON27F:
                                                 case PENTAHEDRON15:
+                                                case PENTAHEDRON15F:
                                                 case PENTAHEDRON15UPC:
                                                 case TETRAHEDRON10:
+                                                case TETRAHEDRON10F:
                                                 case TETRAHEDRON10UPC:
+                                                case TETRAHEDRON20:
+                                                case TETRAHEDRON20F:
                                                         ppE = ppFindElem(Elem::SOLID, uLabel);
                                                         break;
 
@@ -1381,6 +1393,7 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case TETRAHEDRON10F:                                     
                                 case TETRAHEDRON10UPC:
                                 case TETRAHEDRON20:
+                                case TETRAHEDRON20F:
                                 case PRESSUREQ4:
                                 case PRESSUREQ8:
                                 case PRESSUREQ9:
@@ -1920,9 +1933,10 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
         case PENTAHEDRON15F:
         case PENTAHEDRON15UPC:
         case TETRAHEDRON10:
-        case TETRAHEDRON20:
         case TETRAHEDRON10F:
-        case TETRAHEDRON10UPC: {
+        case TETRAHEDRON10UPC:
+        case TETRAHEDRON20:
+        case TETRAHEDRON20F: {
                 static constexpr char sType[][17] = {
                         "Hexahedron8",
                         "Hexahedron8f",
@@ -1941,7 +1955,8 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                         "Tetrahedron10",
                         "Tetrahedron10f",
                         "Tetrahedron10upc",
-                        "Tetrahedron20"
+                        "Tetrahedron20",
+                        "Tetrahedron20f"
                 };
 
                 constexpr integer iNumElemTypes = sizeof(sType) / sizeof(sType[0]);
@@ -1963,6 +1978,7 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                 static_assert(TETRAHEDRON10F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON10UPC - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON20 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
+                static_assert(TETRAHEDRON20F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 
                 ASSERT(CurrType - HEXAHEDRON8 < iNumElemTypes);
 
@@ -2046,7 +2062,10 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                      break;
                 case TETRAHEDRON20:
                      pE = ReadSolid<Tetrahedron20, CollocTet20>(this, HP, uLabel);
-                     break;                     
+                     break;
+                case TETRAHEDRON20F:
+                     pE = ReadSolid<Tetrahedron20f, CollocTet20>(this, HP, uLabel);
+                     break;
                 default:
                      ASSERT(0);
                 }
