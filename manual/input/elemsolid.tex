@@ -39,11 +39,11 @@ See also table~\ref{sec:EL:SOLID:elemtypes} and table~\ref{sec:EL:SOLID:elemtype
 \label{sec:EL:SOLID:INPUT:FORMAT}
 \begin{Verbatim}[commandchars=\\\{\}]
   \bnt{elem_type} ::= \{ \kw{hexahedron8} | \kw{hexahedron20} | \kw{hexahedron20r} | \kw{hexahedron27} |
-                    \kw{pentahedron15} | \kw{tetrahedron10} |
+                    \kw{pentahedron15} | \kw{tetrahedron10} | \kw{tetrahedron20}
                     \kw{hexahedron8upc} | \kw{hexahedron20upc} | \kw{hexahedron20upcr} |
                     \kw{pentahedron15upc} | \kw{tetrahedron10upc} |
                     \kw{hexahedron8f} | \kw{hexahedron20f} | \kw{hexahedron20fr} | \kw{hexahedron27f} |
-                    \kw{pentahedron15f} | \kw{tetrahedron10f} \}
+                    \kw{pentahedron15f} | \kw{tetrahedron10f} | \kw{tetrahedron20f} \}
 
     \bnt{normal_arglist} ::=
         [ \kw{static} , ] [ \kw{lumped mass} , ] \bnt{struct_node_data}, [ \bnt{hydr_node_data}, ]
@@ -109,6 +109,8 @@ See table~\ref{SEC:EL:ELEMTYPE:CONSTLAW}.
   \hline
   \kw{tetrahedron10} & $\surd$ & & \tabularnewline
   \hline
+  \kw{tetrahedron20} & $\surd$ & & \tabularnewline
+  \hline
   \kw{hexahedron8upc} & & $\surd$ & \tabularnewline
   \hline
   \kw{hexahedron20upc} & & $\surd$ & \tabularnewline
@@ -130,6 +132,8 @@ See table~\ref{SEC:EL:ELEMTYPE:CONSTLAW}.
   \kw{pentahedron15f} & & & $\surd$ \tabularnewline
   \hline
   \kw{tetrahedron10f} & & & $\surd$ \tabularnewline
+  \hline
+  \kw{tetrahedron20f} & & & $\surd$ \tabularnewline
   \hline
   \end{tabular}
   \caption{Constitutive laws to be used for each solid element type}
@@ -291,6 +295,8 @@ can be used to compute accelerations for structural nodes as described in sectio
   \hline
   \kw{tetrahedron10} & 10 & \ref{fig:EL:SOLID:TETRAHEDRON10H} & 5 & 2 & full & \cite{CODEASTERR30301} \tabularnewline
   \hline
+  \kw{tetrahedron20} & 20 & \ref{fig:EL:SOLID:TETRAHEDRON20} & 11 & 3 & full & ? \tabularnewline
+  \hline
 \end{tabular}
 \caption{Finite Element Types using a pure displacement based formulation}
 \label{sec:EL:SOLID:elemtypes}
@@ -331,6 +337,8 @@ can be used to compute accelerations for structural nodes as described in sectio
   \hline
   \kw{tetrahedron10f} & 10 & \ref{fig:EL:SOLID:TETRAHEDRON10H} & 5 & 2 & full & \cite{CODEASTERR30301} \tabularnewline
   \hline
+  \kw{tetrahedron20f} & 20 & \ref{fig:EL:SOLID:TETRAHEDRON20} & 11 & 3 & full & ? \tabularnewline
+  \hline  
 \end{tabular}
 \caption{Finite Element Types using the deformation gradient and the First~Piola-Kirchhoff stress tensor}
 \label{sec:EL:SOLID:elemtypes:F}
@@ -377,6 +385,12 @@ section~\ref{sec:CONTROLDATA:MODEL}.
     \caption{tetrahedron10}
     \label{fig:EL:SOLID:TETRAHEDRON10H}
   \end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \includegraphics[width=.5\textwidth]{tetrahedron20}
+    \caption{tetrahedron20}
+    \label{fig:EL:SOLID:TETRAHEDRON20}
+  \end{subfigure}  
   \caption{Node order}
   \label{fig:EL:SOLID:NODE_ORDER}
 \end{figure}

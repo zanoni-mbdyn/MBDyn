@@ -65,6 +65,7 @@ class Tetrahedron10;
 class Tetrahedron10f;
 class Tetrahedron10upc;
 class Tetrahedron20;
+class Tetrahedron20f;
 
 // 3D collocation rules
 class Gauss2x2x2;
