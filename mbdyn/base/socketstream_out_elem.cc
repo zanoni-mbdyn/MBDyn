@@ -438,7 +438,7 @@ void SocketStreamOutputElemCreator::getSocketStreamOutParam(DataManager *pDM, MB
 			socketStreamOutputDataTmp.socket_type = sock_dgram;
 
 			if (!bGotCreate) {
-				socketStreamOutputDataTmp.bCreate = true;
+				socketStreamOutputDataTmp.bCreate = false;
 			}
 
 		} else if (!HP.IsKeyWord("tcp")) {
@@ -451,7 +451,7 @@ void SocketStreamOutputElemCreator::getSocketStreamOutParam(DataManager *pDM, MB
 
 	if (socketStreamOutputDataTmp.socket_type == sock_dgram && socketStreamOutputDataTmp.bCreate) {
 		silent_cerr("SocketStreamElem(" << uLabel << "): "
-			"socket type=udp incompatible with create=yes "
+			"socket type = udp incompatible with create = yes "
 			"at line " << HP.GetLineData() << std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
