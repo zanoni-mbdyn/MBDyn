@@ -201,7 +201,7 @@ mbdyn_make_inet_socket_type(SOCKET* sock, struct sockaddr_in *name, const char *
 
    	/* disable Nagle's algorithm (only for TCP sockets) */
 	int flag = 1;
-	int result;
+	int result = 1;
 	if (socket_type == SOCK_DGRAM) {
 		result = setsockopt(*sock,           /* socket affected */
 				IPPROTO_TCP,     /* set option at TCP level */
