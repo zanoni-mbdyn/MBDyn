@@ -53,8 +53,8 @@ begin: drivers;
                 # path, "./mbdyn.spring.sock",
                 port, 8005,
 		# nonblocking,
-		# socket type, udp,
-		socket type, tcp,
+		socket type, udp,
+		# socket type, tcp,
 		timeout, 5.,
 		echo, "body-in.echo",
                 1;	# force
