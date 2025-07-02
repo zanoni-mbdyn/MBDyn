@@ -3178,6 +3178,7 @@ template SolidElem* ReadSolid<Hexahedron27f, Gauss3x3x3>(DataManager*, MBDynPars
 template SolidElem* ReadSolid<Hexahedron20fr, GaussH20r>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Pentahedron15f, CollocPenta15>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron10f, CollocTet10h>(DataManager*, MBDynParser&, unsigned int);
+template SolidElem* ReadSolid<Tetrahedron20f, CollocTet20>(DataManager*, MBDynParser&, unsigned int);
 
 // Displacement/pressure formulation using the Green Lagrange strain tensor, the 2nd Piola Kirchhoff stress tensor and the hydrostatic pressure
 template SolidElem* ReadSolid<Hexahedron8upc, Gauss2x2x2>(DataManager*, MBDynParser&, unsigned int);

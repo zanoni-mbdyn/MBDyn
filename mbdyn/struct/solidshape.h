@@ -775,6 +775,17 @@ public:
      static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK2GL;
 };
 
+class Tetrahedron20f {
+public:
+     static constexpr const char* ElementName() {
+          return "tetrahedron20f";
+     }
+
+     typedef Tetrahedron20u ElemTypeDisplacement;
+     typedef EmptyElement ElemTypePressure;
+     static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK1F;
+};
+
 void
 Quadrangle4::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 2>& r,
                                 sp_grad::SpMatrix<doublereal, iNumNodes, 2>& hd)
@@ -2309,7 +2320,7 @@ Tetrahedron20u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNum
           tauni(4, j) = taune(2, j);
           tauni(7, j) = taune(3, j);
           tauni(20, j) = taune(4, j);
-          
+
           tauni(2, j) = 2./3. * tauni(1, j) + 1./3. * tauni(4, j);
           tauni(3, j) = 1./3. * tauni(1, j) + 2./3. * tauni(4, j);
 
