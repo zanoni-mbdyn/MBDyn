@@ -618,7 +618,7 @@ iDebug(0), iDebugCount(0)
 			"at line " << HP.GetLineData() << std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
-	pCraft = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	pCraft = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 	ReferenceFrame RF(pCraft);
 	if (HP.IsKeyWord("aircraft" "orientation")) {
@@ -800,7 +800,7 @@ iDebug(0), iDebugCount(0)
 					"at line " << HP.GetLineData() << std::endl);
 				throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 			}
-			m_Rotors[ir].pHub = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+			m_Rotors[ir].pHub = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	
 			if (HP.IsKeyWord("rotor" "orientation")) {
 				m_Rotors[ir].Rh_hub = HP.GetRotRel(ReferenceFrame(m_Rotors[ir].pHub));
@@ -814,7 +814,7 @@ iDebug(0), iDebugCount(0)
 			}
 	
 			if (HP.IsKeyWord("shaft" "node")) {
-				m_Rotors[ir].pShaft = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+                                m_Rotors[ir].pShaft = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	
 				if (HP.IsKeyWord("shaft" "orientation")) {
 					m_Rotors[ir].Rh_shaft = HP.GetRotRel(ReferenceFrame(m_Rotors[ir].pShaft));

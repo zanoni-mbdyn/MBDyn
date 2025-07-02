@@ -31,6 +31,7 @@ begin: initial value;
 
 	nonlinear solver: newton raphson;
         threads: disable;
+threads: disable;
 end: initial value;
 
 set: integer NB = 4;

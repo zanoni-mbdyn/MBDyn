@@ -51,6 +51,7 @@ begin: initial value;
  	# output: jacobian;
 
 	# abort after: input;
+threads: disable;
 end: initial value;
 
 set: real K1 = 1e0;

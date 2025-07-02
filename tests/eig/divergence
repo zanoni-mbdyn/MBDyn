@@ -26,6 +26,7 @@ begin: initial value;
         eigenanalysis: .001, output matrices, output eigenvectors, use arpack, 4, 20, 1e-9;
 
         output: residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -36,12 +36,17 @@
 
 #ifdef USE_MULTITHREAD
 
-#include "ac/pthread.h"		/* includes POSIX semaphores */
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <semaphore>
+#include <thread>
 
 #include "dataman.h"
 #include "spmh.h"
 
 #ifdef USE_NAIVE_MULTITHREAD
+#include <atomic_ops.h>
 #include "naivemh.h"
 #endif
 
@@ -80,16 +85,17 @@ protected:
                 MultiThreadDataManager *pDM;
                 integer threadNumber;
                 integer iCPUIndex;
-                pthread_t thread;
-                sem_t sem;
+                std::thread thread;
+                std::counting_semaphore<> sem{0};
                 std::exception_ptr except;
                 mutable MT_VecIter<Elem *> ElemIter;
 
                 VariableSubMatrixHandler *pWorkMatA;	/* Working SubMatrix */
                 VariableSubMatrixHandler *pWorkMatB;
                 VariableSubMatrixHandler *pWorkMat;	/* same as pWorkMatA */
+#ifdef MBDYN_X_MT_ASSRES
                 MySubVectorHandler *pWorkVec;
-
+#endif
                 /* for CC assembly */
                 CompactSparseMatrixHandler* pJacHdl;
 #ifdef USE_NAIVE_MULTITHREAD
@@ -99,12 +105,13 @@ protected:
                 SpGradientSparseMatrixWrapper oGradJacHdl;
                 const VectorHandler* pY;
                 VectorHandler* pJacProd;
-
+#ifdef USE_NAIVE_MULTITHREAD
                 AO_TS_t* lock;
+#endif
 #ifdef MBDYN_X_MT_ASSRES
                 VectorHandler* pResHdl;
-#endif
                 VectorHandler* pAbsResHdl;
+#endif
                 MatrixHandler* pMatA;
                 MatrixHandler* pMatB;
                 doublereal dCoef;
@@ -140,16 +147,16 @@ protected:
         unsigned thread_count;
 
         /* this can be replaced by a barrier ... */
-        pthread_mutex_t	thread_mutex;
-        pthread_cond_t	thread_cond;
+        std::mutex thread_mutex;
+        std::condition_variable	thread_cond;
 
         /* this is used to propagate ErrMatrixRebuild ... */
-        AO_TS_t	propagate_ErrMatrixRebuild;
+        std::atomic<bool>	propagate_ErrMatrixRebuild;
 
         void EndOfOp(void);
 
         /* thread function */
-        static void *thread(void *arg);
+        static void thread(ThreadData *arg);
         static void thread_cleanup(ThreadData *arg);
 
         /* starts the helper threads */

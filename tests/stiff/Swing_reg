@@ -44,6 +44,7 @@ begin: initial value;
         linear solver: umfpack, grad, scale, lapack, always, max iterations, 10;
         nonlinear solver: linesearch, default solver options, heavy nonlinear, lambda min, 0., tolerance x, 1e-5;
         threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

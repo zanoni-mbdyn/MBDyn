@@ -11,6 +11,7 @@ begin: initial value;
 	derivatives tolerance: 2.0;
 	derivatives coefficient: 0.001;
 	output: none;
+threads: disable;
 end: initial value;
 
 begin: control data;

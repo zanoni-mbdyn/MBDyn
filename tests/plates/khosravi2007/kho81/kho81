@@ -67,6 +67,7 @@ begin: initial value;
         derivatives max iterations: 10;
         derivatives coefficient: auto;
 	output: iterations, solver condition number, stat, yes, cpu time;
+threads: disable;
 end: initial value;
 
 include: "kho81_m.set";

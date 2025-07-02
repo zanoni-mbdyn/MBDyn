@@ -13,6 +13,7 @@ begin: initial value;
 	max iterations: 10;
 
 	threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -38,7 +38,7 @@
 /* include generali */
 #include <time.h>
 #include "ac/f2c.h"
-#include "ac/pthread.h"
+#include <mutex>
 
 /* include per il debug */
 #include "myassert.h"
@@ -172,8 +172,8 @@ class DriveHandler {
 	friend class DiscreteFilterDriveCaller;
 
 private:
-#ifdef USE_MULTITHREAD
-	mutable pthread_mutex_t parser_mutex;
+#if defined(USE_MULTITHREAD) && defined(DO_NOT_USE_EE)
+        mutable std::recursive_mutex parser_mutex;
 #endif /* USE_MULTITHREAD */
 	MathParser& Parser;
 

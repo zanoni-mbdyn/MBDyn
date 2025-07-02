@@ -187,8 +187,8 @@ MFtire::MFtire(unsigned uLabel, const DofOwner *pDO, DataManager* pDM, MBDynPars
 	}
 
 	// read wheel nodes
-	m_pHub = dynamic_cast<const StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
-	m_pRim = dynamic_cast<const StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+	m_pHub = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
+	m_pRim = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 	// read wheel axle
 	m_WheelAxle = HP.GetVec3();

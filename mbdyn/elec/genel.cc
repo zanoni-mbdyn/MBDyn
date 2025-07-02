@@ -227,7 +227,7 @@ ReadGenel(DataManager* pDM,
 
 		if (HP.IsKeyWord("generic")) {
 			if (HP.IsKeyWord("reference" "node")) {
-				pStrNode = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+                             pStrNode = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 			}
 
 			pThrust = HP.GetDriveCaller();

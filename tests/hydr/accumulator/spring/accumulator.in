@@ -25,6 +25,7 @@ begin: initial value;
     fictitious steps ratio: 1.e-4;
     fictitious steps max iterations: 10;
     fictitious steps tolerance: 1.e-4;
+threads: disable;
 end: initial value;
 
 

@@ -71,19 +71,6 @@ ClosestNext(0),
 SH(0),
 DiscreteFilter(0)
 {
-#ifdef USE_MULTITHREAD
-	pthread_mutexattr_t ma;
-	pthread_mutexattr_init(&ma);
-	pthread_mutexattr_settype(&ma, PTHREAD_MUTEX_RECURSIVE);
-	int rc = pthread_mutex_init(&parser_mutex, &ma);
-	pthread_mutexattr_destroy(&ma);
-	if (rc) {
-		silent_cerr("DriveHandler::DriveHandler(): mutex init failed"
-			<< std::endl);
-		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-	}
-#endif /* USE_MULTITHREAD */
-
 	NamedValue *v;
 
 	/* Inserisce la variabile Time nella tabella dei simboli; sara'
@@ -176,10 +163,6 @@ DiscreteFilter(0)
 
 DriveHandler::~DriveHandler(void)
 {
-#ifdef USE_MULTITHREAD
-	pthread_mutex_destroy(&parser_mutex);
-#endif /* USE_MULTITHREAD */
-
 	for (std::vector<MyMeter *>::iterator i = Meter.begin();
 		i != Meter.end(); ++i)
 	{
@@ -384,10 +367,9 @@ doublereal
 DriveHandler::dGet(InputStream& InStr) const
 {
 	doublereal d;
-
 #ifdef USE_MULTITHREAD
 	// FIXME: risk recursive lock
-	pthread_mutex_lock(&parser_mutex);
+        std::unique_lock<std::recursive_mutex> lock(parser_mutex);
 #endif /* USE_MULTITHREAD */
 
 	try {
@@ -395,11 +377,6 @@ DriveHandler::dGet(InputStream& InStr) const
 
 	} catch (MBDynErrBase& e) {
 		silent_cerr("StringDrive: " << e.what() << std::endl);
-
-#ifdef USE_MULTITHREAD
-		pthread_mutex_unlock(&parser_mutex);
-#endif /* USE_MULTITHREAD */
-
 		throw e;
 
 #if 0
@@ -410,18 +387,9 @@ DriveHandler::dGet(InputStream& InStr) const
 
 	} catch (...) {
 		silent_cerr("StringDrive generic error" << std::endl);
-
-#ifdef USE_MULTITHREAD
-		pthread_mutex_unlock(&parser_mutex);
-#endif /* USE_MULTITHREAD */
-
 		throw;
 	}
-
-#ifdef USE_MULTITHREAD
-	pthread_mutex_unlock(&parser_mutex);
-#endif /* USE_MULTITHREAD */
-
+        
 	return d;
 }
 #endif // DO_NOT_USE_EE

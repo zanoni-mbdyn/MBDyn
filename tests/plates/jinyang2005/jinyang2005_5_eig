@@ -85,6 +85,7 @@ begin: initial value;
 		output eigenvectors,
 		lower frequency limit, .1,
 		upper frequency limit, 100.;
+threads: disable;
 end: initial value;
 
 begin: control data;

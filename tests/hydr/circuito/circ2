@@ -19,6 +19,7 @@ begin: initial value;
     derivatives tolerance: 1.e-9;
     output: iterations, solver condition number, stat, yes;
     fictitious steps number: 0;
+threads: disable;
 end: initial value;
 
 begin: control data;

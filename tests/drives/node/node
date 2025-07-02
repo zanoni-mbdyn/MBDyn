@@ -42,6 +42,7 @@ begin: initial value;
 
 	output: iterations;
         threads: disable;
+threads: disable;
 end: initial value;
 
 begin: control data;

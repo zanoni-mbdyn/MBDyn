@@ -95,8 +95,8 @@ extern int fSilent;
 extern int fPedantic;
 
 #if defined(USE_MULTITHREAD) && defined(__cplusplus)
-extern std::mutex mbdyn_lock_cout;
-#define MBDYN_LOCK_COUT() std::lock_guard<std::mutex> mbdyn_lock_cout_guard(::mbdyn_lock_cout)
+extern std::recursive_mutex mbdyn_lock_cout;
+#define MBDYN_LOCK_COUT() std::lock_guard<std::recursive_mutex> mbdyn_lock_cout_guard(::mbdyn_lock_cout)
 #else
 #define MBDYN_LOCK_COUT() static_cast<void>(0)
 #endif

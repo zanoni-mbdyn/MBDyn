@@ -59,6 +59,7 @@ begin: initial value;
 #	output: residual;
 #	output: iterations;
 	
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -37,7 +37,7 @@
 
 #ifdef USE_MULTITHREAD
 #include <signal.h>
-#include "ac/spinlock.h"
+#include <atomic>
 #endif /* USE_MULTITHREAD */
 
 #include "myassert.h"
@@ -142,10 +142,10 @@ public:
  */
 class InUse {
 private:
-	mutable volatile AO_TS_t	inuse;
+     mutable volatile std::atomic<bool> inuse;
 
 public:
-	InUse(void) : inuse(AO_TS_INITIALIZER) { NO_OP; };
+	InUse(void) : inuse(false) { NO_OP; };
 	virtual ~InUse(void) { NO_OP; };
 
 	inline bool bIsInUse(void) const
@@ -155,11 +155,10 @@ public:
 		 * 	true:	leave it as is; return false
 		 * 	false:	make it true; return true
 		 */
-		/* FIXME: make it portable */
-
-		return (mbdyn_test_and_set(&inuse) == AO_TS_CLEAR);
+                bool locked = false;
+                return inuse.compare_exchange_strong(locked, true);
 	};
-	inline void ReSetInUse() { AO_CLEAR(&inuse); };
+        inline void ReSetInUse() { inuse.exchange(false); };
 };
 
 /* #define DEBUG_VECITER */
@@ -170,73 +169,89 @@ protected:
 #ifdef DEBUG_VECITER
 	mutable unsigned iCount;
 #endif /* DEBUG_VECITER */
-
+        unsigned iOffset; // Each thread should process it's own set of elements defined by iOffset and iStep
+        unsigned iStep;
+        mutable bool bSecondRound; // After a thread has processed it's own set of elements it may start a second round
+                                   // in order to process elements from other threads which were not processed so far.     
 public:
-	MT_VecIter(void) : VecIter<T>() { NO_OP; };
-	MT_VecIter(const T* p, unsigned i) : VecIter<T>(p, i)
+        MT_VecIter()
+             :iOffset(0), iStep(1), bSecondRound(false)
 	{
-		NO_OP;
-	};
+#ifdef DEBUG_VECITER
+             iCount = 0;
+#endif
+	}
 
 	virtual ~MT_VecIter(void)
 	{
 		NO_OP;
-	};
+	}
 
+        void Init(const T* pStart, unsigned iSize, unsigned iOffset = 0, unsigned iStep = 1) {
+                VecIter<T>::Init(pStart, iSize);
+                this->iOffset = iOffset;
+                this->iStep = iStep;
+                bSecondRound = false;
+        }
 	/* NOTE: it must be called only once */
 	void ResetAccessData(void)
 	{
-		ASSERT(VecIter<T>::pStart != NULL);
-		ASSERT(VecIter<T>::iSize > 0);
+		ASSERT(this->pStart != nullptr);
+		ASSERT(this->iSize > 0);
 
-		for (unsigned i = 0; i < VecIter<T>::iSize; i++) {
-			VecIter<T>::pStart[i]->ReSetInUse();
+		for (unsigned i = 0; i < this->iSize; i++) {
+			this->pStart[i]->ReSetInUse();
 		}
 	}
 
 	inline bool bGetFirst(T& TReturn) const
 	{
-		ASSERT(VecIter<T>::pStart != NULL);
-		ASSERT(VecIter<T>::iSize > 0);
+		ASSERT(this->pStart != nullptr);
+		ASSERT(this->iSize > 0);
 
 #ifdef DEBUG_VECITER
 		iCount = 0;
 #endif /* DEBUG_VECITER */
 
-		VecIter<T>::pCount = VecIter<T>::pStart - 1;
-
+		this->pCount = this->pStart - iStep + iOffset;
+                bSecondRound = false;
+                
 		return bGetNext(TReturn);
-	};
+	}
 
 	inline bool bGetCurr(T& TReturn) const
 	{
-		ASSERT(VecIter<T>::pStart != NULL);
-		ASSERT(VecIter<T>::iSize > 0);
-		ASSERT(VecIter<T>::pCount >= VecIter<T>::pStart - 1 && 
-			VecIter<T>::pCount < VecIter<T>::pStart + VecIter<T>::iSize);
+		ASSERT(this->pStart != nullptr);
+		ASSERT(this->iSize > 0);
+		ASSERT(this->pCount >= this->pStart);
 
-		if (VecIter<T>::pCount == VecIter<T>::pStart + VecIter<T>::iSize) {
+		if (this->pCount >= this->pStart + this->iSize) {
 			return false;
 		}
 
-		TReturn = *VecIter<T>::pCount;
+		TReturn = *this->pCount;
 		/* NOTE: of course, by definition it's already in use */
 
 		return true;
-	};
+	}
 
 	inline bool bGetNext(T& TReturn) const
 	{
-		ASSERT(VecIter<T>::pStart != NULL);
-		ASSERT(VecIter<T>::iSize > 0);
-		ASSERT(VecIter<T>::pCount >= VecIter<T>::pStart - 1 && 
-			VecIter<T>::pCount < VecIter<T>::pStart + VecIter<T>::iSize);
+		ASSERT(this->pStart != nullptr);
+		ASSERT(this->iSize > 0);
+		ASSERT(this->pCount >= this->pStart - iStep); 
+                ASSERT(this->pCount < this->pStart + this->iSize + iStep);
+                
+                const unsigned iStepCurr = bSecondRound ? 1u : iStep;
+                
+		for (this->pCount += iStepCurr; 
+                     this->pCount < this->pStart + this->iSize; 
+                     this->pCount += iStepCurr) {
 
-		for (VecIter<T>::pCount++; 
-			VecIter<T>::pCount < VecIter<T>::pStart + VecIter<T>::iSize; 
-			VecIter<T>::pCount++) {
-			if ((*VecIter<T>::pCount)->bIsInUse()) {
-				TReturn = *VecIter<T>::pCount;
+                        ASSERT(this->pCount >= this->pStart);
+                        
+			if ((*this->pCount)->bIsInUse()) {
+				TReturn = *this->pCount;
 #ifdef DEBUG_VECITER
 				iCount++;
 #endif /* DEBUG_VECITER */
@@ -244,12 +259,22 @@ public:
 			}
 		}
 
+                ASSERT(this->pCount >= this->pStart); 
+                ASSERT(this->pCount < this->pStart + this->iSize + iStep);
+
+                if (!bSecondRound) {
+                     bSecondRound = true;
+                     this->pCount = this->pStart - 1;
+                     return bGetNext(TReturn);
+                }
+                
 #ifdef DEBUG_VECITER
 		silent_cerr("[" << pthread_self() << "]: total=" << iCount
 				<< std::endl);
 #endif /* DEBUG_VECITER */
+                
 		return false;
-	};
+	}
 };
 
 #endif /* USE_MULTITHREAD */

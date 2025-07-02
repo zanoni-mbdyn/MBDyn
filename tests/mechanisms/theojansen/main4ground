@@ -55,6 +55,7 @@ begin: initial value;
 	derivatives max iterations: 20;
 
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 set: integer NBAYS = 4;

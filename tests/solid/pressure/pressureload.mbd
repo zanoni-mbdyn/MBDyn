@@ -21,6 +21,7 @@ begin: initial value;
     linear solver: umfpack, grad;
     nonlinear solver: nox, modified, 100, keep jacobian matrix,jacobian operator, newton krylov, forcing term, type 2;
     method: ms, 0.6;
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -21,6 +21,7 @@ begin: initial value;
     derivatives tolerance: 1.e12;
     
     fictitious steps number: 0;
+threads: disable;
 end: initial value;
 
 begin: control data;

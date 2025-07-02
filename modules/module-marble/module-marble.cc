@@ -99,7 +99,7 @@ marble_read(LoadableElem* pEl,
 		}
 	}
 
-	p->pNode = (StructNode *)pDM->ReadNode(HP, Node::STRUCTURAL);
+	p->pNode = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	p->dRadius = HP.GetReal();
 	p->e3R = e3*p->dRadius;
 

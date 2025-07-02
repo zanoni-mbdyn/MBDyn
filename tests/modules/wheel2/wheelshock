@@ -19,6 +19,7 @@ begin: initial value;
 	derivatives max iterations: 20;
 
 	newton raphson: modified, 4;
+threads: disable;
 end: initial value;
 
 begin: control data;

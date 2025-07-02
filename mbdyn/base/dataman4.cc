@@ -132,16 +132,20 @@ enum KeyWords {
         TETRAHEDRON10,
         TETRAHEDRON10F,      
         TETRAHEDRON10UPC,
+        TETRAHEDRON20,
+        TETRAHEDRON20F,
         PRESSUREQ4,
         PRESSUREQ8,
         PRESSUREQ9,
         PRESSUREQ8R,
         PRESSURET6,
+        PRESSURET10,
         TRACTIONQ4,
         TRACTIONQ8,
         TRACTIONQ9,
         TRACTIONQ8R,
         TRACTIONT6,
+        TRACTIONT10,
         UNILATERALINPLANECONTACTQ4,
         UNILATERALINPLANECONTACTQ8,
         UNILATERALINPLANECONTACTQ9,
@@ -238,16 +242,20 @@ DataManager::ReadElems(MBDynParser& HP)
                 "tetrahedron10",
                 "tetrahedron10f",
                 "tetrahedron10upc",
+                "tetrahedron20",
+                "tetrahedron20f",
                 "pressureq4",
                 "pressureq8",
                 "pressureq9",
                 "pressureq8r",
                 "pressuret6",
+                "pressuret10",
                 "tractionq4",
                 "tractionq8",
                 "tractionq9",
                 "tractionq8r",
                 "tractiont6",
+                "tractiont10",
                 "unilateral" "in" "plane" "contact" "q4",
                 "unilateral" "in" "plane" "contact" "q8",
                 "unilateral" "in" "plane" "contact" "q9",
@@ -469,7 +477,9 @@ DataManager::ReadElems(MBDynParser& HP)
                         case PENTAHEDRON15UPC:
                         case TETRAHEDRON10:
                         case TETRAHEDRON10F:                             
-                        case TETRAHEDRON10UPC: {
+                        case TETRAHEDRON10UPC:
+                        case TETRAHEDRON20:
+                        case TETRAHEDRON20F: {
                              DEBUGLCOUT(MYDEBUG_INPUT, "solids\n");
                              Typ = Elem::SOLID;
                              break;
@@ -480,11 +490,13 @@ DataManager::ReadElems(MBDynParser& HP)
                         case PRESSUREQ9:
                         case PRESSUREQ8R:
                         case PRESSURET6:
+                        case PRESSURET10:
                         case TRACTIONQ4:
                         case TRACTIONQ8:
                         case TRACTIONQ9:
                         case TRACTIONQ8R:
                         case TRACTIONT6:
+                        case TRACTIONT10:
                         case UNILATERALINPLANECONTACTQ4:
                         case UNILATERALINPLANECONTACTQ8:
                         case UNILATERALINPLANECONTACTQ9:
@@ -706,6 +718,8 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case TETRAHEDRON10:
                                 case TETRAHEDRON10F:
                                 case TETRAHEDRON10UPC:
+                                case TETRAHEDRON20:
+                                case TETRAHEDRON20F:
                                         t = Elem::SOLID;
                                         break;
 
@@ -714,11 +728,13 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case PRESSUREQ9:
                                 case PRESSUREQ8R:
                                 case PRESSURET6:
+                                case PRESSURET10:
                                 case TRACTIONQ4:
                                 case TRACTIONQ8:
                                 case TRACTIONQ9:
                                 case TRACTIONQ8R:
                                 case TRACTIONT6:
+                                case TRACTIONT10:
                                 case UNILATERALINPLANECONTACTQ4:
                                 case UNILATERALINPLANECONTACTQ8:
                                 case UNILATERALINPLANECONTACTQ9:
@@ -1060,16 +1076,20 @@ DataManager::ReadElems(MBDynParser& HP)
                                         case PENTAHEDRON15UPC:
                                         case TETRAHEDRON10:
                                         case TETRAHEDRON10UPC:
+                                        case TETRAHEDRON20:
+                                        case TETRAHEDRON20F:
                                         case PRESSUREQ4:
                                         case PRESSUREQ8:
                                         case PRESSUREQ9:
                                         case PRESSUREQ8R:
                                         case PRESSURET6:
+                                        case PRESSURET10:
                                         case TRACTIONQ4:
                                         case TRACTIONQ8:
                                         case TRACTIONQ9:
                                         case TRACTIONQ8R:
                                         case TRACTIONT6:
+                                        case TRACTIONT10:
                                         case UNILATERALINPLANECONTACTQ4:
                                         case UNILATERALINPLANECONTACTQ8:
                                         case UNILATERALINPLANECONTACTQ9:
@@ -1168,16 +1188,23 @@ DataManager::ReadElems(MBDynParser& HP)
 							break;
 
                                                 case HEXAHEDRON8:
+                                                case HEXAHEDRON8F:
                                                 case HEXAHEDRON8UPC:                                                     
                                                 case HEXAHEDRON20:
+                                                case HEXAHEDRON20F:
                                                 case HEXAHEDRON20UPC:
                                                 case HEXAHEDRON20UPCR:
                                                 case HEXAHEDRON20R:
                                                 case HEXAHEDRON27:
+                                                case HEXAHEDRON27F:
                                                 case PENTAHEDRON15:
+                                                case PENTAHEDRON15F:
                                                 case PENTAHEDRON15UPC:
                                                 case TETRAHEDRON10:
+                                                case TETRAHEDRON10F:
                                                 case TETRAHEDRON10UPC:
+                                                case TETRAHEDRON20:
+                                                case TETRAHEDRON20F:
                                                         ppE = ppFindElem(Elem::SOLID, uLabel);
                                                         break;
 
@@ -1186,11 +1213,13 @@ DataManager::ReadElems(MBDynParser& HP)
                                                 case PRESSUREQ9:
                                                 case PRESSUREQ8R:
                                                 case PRESSURET6:
+                                                case PRESSURET10:
                                                 case TRACTIONQ4:
                                                 case TRACTIONQ8:
                                                 case TRACTIONQ9:
                                                 case TRACTIONQ8R:
                                                 case TRACTIONT6:
+                                                case TRACTIONT10:
                                                 case UNILATERALINPLANECONTACTQ4:
                                                 case UNILATERALINPLANECONTACTQ8:
                                                 case UNILATERALINPLANECONTACTQ9:
@@ -1363,16 +1392,20 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case TETRAHEDRON10:
                                 case TETRAHEDRON10F:                                     
                                 case TETRAHEDRON10UPC:
+                                case TETRAHEDRON20:
+                                case TETRAHEDRON20F:
                                 case PRESSUREQ4:
                                 case PRESSUREQ8:
                                 case PRESSUREQ9:
                                 case PRESSUREQ8R:
                                 case PRESSURET6:
+                                case PRESSURET10:
                                 case TRACTIONQ4:
                                 case TRACTIONQ8:
                                 case TRACTIONQ9:
                                 case TRACTIONQ8R:
                                 case TRACTIONT6:
+                                case TRACTIONT10:
                                 case UNILATERALINPLANECONTACTQ4:
                                 case UNILATERALINPLANECONTACTQ8:
                                 case UNILATERALINPLANECONTACTQ9:
@@ -1901,7 +1934,9 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
         case PENTAHEDRON15UPC:
         case TETRAHEDRON10:
         case TETRAHEDRON10F:
-        case TETRAHEDRON10UPC: {
+        case TETRAHEDRON10UPC:
+        case TETRAHEDRON20:
+        case TETRAHEDRON20F: {
                 static constexpr char sType[][17] = {
                         "Hexahedron8",
                         "Hexahedron8f",
@@ -1919,7 +1954,9 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                         "Pentahedron15upc",
                         "Tetrahedron10",
                         "Tetrahedron10f",
-                        "Tetrahedron10upc"
+                        "Tetrahedron10upc",
+                        "Tetrahedron20",
+                        "Tetrahedron20f"
                 };
 
                 constexpr integer iNumElemTypes = sizeof(sType) / sizeof(sType[0]);
@@ -1940,7 +1977,9 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                 static_assert(TETRAHEDRON10 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON10F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON10UPC - HEXAHEDRON8 < iNumElemTypes, "index out of range");
-
+                static_assert(TETRAHEDRON20 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
+                static_assert(TETRAHEDRON20F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
+                
                 ASSERT(CurrType - HEXAHEDRON8 < iNumElemTypes);
 
                 silent_cout("Reading " << sType[CurrType - HEXAHEDRON8] << "(" << uLabel << ( sName.empty() ? "" : ( std::string(", \"") + sName + "\"" ) ) << ")\n");
@@ -2021,6 +2060,12 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                 case TETRAHEDRON10UPC:
                      pE = ReadSolid<Tetrahedron10upc, CollocTet10h>(this, HP, uLabel);
                      break;
+                case TETRAHEDRON20:
+                     pE = ReadSolid<Tetrahedron20, CollocTet20>(this, HP, uLabel);
+                     break;
+                case TETRAHEDRON20F:
+                     pE = ReadSolid<Tetrahedron20f, CollocTet20>(this, HP, uLabel);
+                     break;
                 default:
                      ASSERT(0);
                 }
@@ -2037,11 +2082,13 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
         case PRESSUREQ9:
         case PRESSUREQ8R:
         case PRESSURET6:
+        case PRESSURET10:
         case TRACTIONQ4:
         case TRACTIONQ8:
         case TRACTIONQ9:
         case TRACTIONQ8R:
         case TRACTIONT6:
+        case TRACTIONT10:
         case UNILATERALINPLANECONTACTQ4:
         case UNILATERALINPLANECONTACTQ8:
         case UNILATERALINPLANECONTACTQ9:
@@ -2058,11 +2105,13 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                         "Pressureq9",
                         "Pressureq8r",
                         "Pressuret6",
+                        "Pressuret10",
                         "Tractionq4",
                         "Tractionq8",
                         "Tractionq9",
                         "Tractionq8r",
                         "Tractiont6",
+                        "Tractiont10",
                         "Unilateralinplanecontactq4",
                         "Unilateralinplanecontactq8",
                         "Unilateralinplanecontactq9",
@@ -2122,6 +2171,9 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                 case PRESSURET6:
                      pE = ReadPressureLoad<Triangle6h, CollocTria6h>(this, HP, uLabel);
                      break;
+                case PRESSURET10:
+                     pE = ReadPressureLoad<Triangle10, CollocTria10>(this, HP, uLabel);
+                     break;
                 case TRACTIONQ4:
                      pE = ReadTractionLoad<Quadrangle4, Gauss2x2>(this, HP, uLabel);
                      break;
@@ -2137,7 +2189,9 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                 case TRACTIONT6:
                      pE = ReadTractionLoad<Triangle6h, CollocTria6h>(this, HP, uLabel);
                      break;
-
+                case TRACTIONT10:
+                     pE = ReadTractionLoad<Triangle10, CollocTria10>(this, HP, uLabel);
+                     break;
                 case UNILATERALINPLANECONTACTQ4:
                      pE = ReadUnilateralInPlaneContact<Quadrangle4, Gauss2x2>(this, HP, uLabel);
                      break;

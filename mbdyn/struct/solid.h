@@ -64,6 +64,8 @@ class Pentahedron15upc;
 class Tetrahedron10;
 class Tetrahedron10f;
 class Tetrahedron10upc;
+class Tetrahedron20;
+class Tetrahedron20f;
 
 // 3D collocation rules
 class Gauss2x2x2;
@@ -71,6 +73,7 @@ class Gauss3x3x3;
 class GaussH20r;
 class CollocPenta15;
 class CollocTet10h;
+class CollocTet20;
 
 // 3D base class
 class SolidElem: public InitialAssemblyElem, public GravityOwner {

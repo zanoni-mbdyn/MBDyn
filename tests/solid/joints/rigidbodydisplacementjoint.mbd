@@ -20,6 +20,7 @@ begin: initial value;
         derivatives coefficient: 1e-6;
     output: iterations;
     method: ms, 0.6;
+threads: disable;
 end: initial value;
 
 begin: control data;

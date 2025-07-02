@@ -90,6 +90,7 @@ begin: initial value;
 
 	# output: iterations;
 	output: none;
+threads: disable;
 end: initial value;
 
 begin: control data;

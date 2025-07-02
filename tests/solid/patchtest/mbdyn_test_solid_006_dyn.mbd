@@ -35,6 +35,7 @@ tolerance: 1e-4, test, norm, 1e-4, test, norm;
         threads: solver, 1;
         output: cpu time;
         method: implicit euler;
+threads: disable;
 end: initial value;
 begin: control data;
        output meter: closest next, t1 + t2, forever, dt;

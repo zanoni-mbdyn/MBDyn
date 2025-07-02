@@ -36,6 +36,7 @@ end: data;
 
 begin: initial value;
 include: "6barmech.inv";
+threads: disable;
 end: initial value;
 
 begin: control data;

@@ -194,7 +194,7 @@ InlineFriction::InlineFriction(
                 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
         }
 
-        pNode1 = dynamic_cast<StructNode*>(pDM->ReadNode(HP,Node::STRUCTURAL));
+        pNode1 = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
         if (!pNode1) {
                 silent_cerr("inline friction(" << GetLabel() << "): structural node expected at line " << HP.GetLineData() << std::endl);
@@ -216,7 +216,7 @@ InlineFriction::InlineFriction(
                 throw ErrGeneric(MBDYN_EXCEPT_ARGS);
         }
 
-        pNode2 = dynamic_cast<StructNode*>(pDM->ReadNode(HP,Node::STRUCTURAL));
+        pNode2 = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
         if (!pNode2) {
                 silent_cerr("inline friction(" << GetLabel() << "): structural node expected at line " << HP.GetLineData() << std::endl);

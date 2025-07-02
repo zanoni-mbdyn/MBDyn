@@ -19,6 +19,7 @@ begin: initial value;
                   time step, dt*1.e9,
                   reserve stack, 1000000,
                   hard real time;
+threads: disable;
 end: initial value;
 
 begin: control data;

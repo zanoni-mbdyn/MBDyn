@@ -41,6 +41,7 @@ begin: initial value;
 		output eigenvectors;
 
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 set: integer NBEAMS = 5;

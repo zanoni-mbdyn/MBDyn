@@ -3973,11 +3973,11 @@ ReadJoint(DataManager* pDM,
 	case POINT_SURFACE_CONTACT:  {
 		/* leggo i due nodi */
 		/* nodo collegato */
-		StructNode* pNode1 = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+                StructNode* pNode1 = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 
 
 		/* nodo superficie*/
-		StructNode* pSup = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+		StructNode* pSup = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 	
 		/* leggo posizione e direzione della superficie nel sistema del nodo*/
 		/* Normalizzo l'orientazione del terreno */
@@ -4004,7 +4004,7 @@ ReadJoint(DataManager* pDM,
 	
 	case SCREWJOINT: {
 		/* nodo collegato 1 */
-		StructNode* pNode1 = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+                StructNode* pNode1 = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
        
 		ReferenceFrame RF(pNode1);
 		Vec3 p(Zero3);
@@ -4040,7 +4040,7 @@ ReadJoint(DataManager* pDM,
 #endif /* MBDYN_X_COMPATIBLE_INPUT */
 
 		/* nodo collegato 2 */
-		StructNode* pNode2 = dynamic_cast<StructNode *>(pDM->ReadNode(HP, Node::STRUCTURAL));
+                StructNode* pNode2 = pDM->ReadNode<StructNode, Node::STRUCTURAL>(HP);
 		if (pNode2 == pNode1) {
 			silent_cerr("Joint(" << uLabel << "): the same node " << pNode1->GetLabel() << " cannot be connected twice at line "
 				<< HP.GetLineData() << std::endl);

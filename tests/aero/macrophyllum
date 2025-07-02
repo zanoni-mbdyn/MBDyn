@@ -43,6 +43,7 @@ begin: initial value;
 	max iterations: 20;
 
 	method: ms, .6;
+threads: disable;
 end: initial value;
 
 begin: control data;

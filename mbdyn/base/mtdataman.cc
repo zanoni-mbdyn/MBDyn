@@ -64,7 +64,7 @@ extern "C" {
 static inline void
 do_lock(volatile AO_TS_t *p)
 {
-        while (mbdyn_test_and_set(p) == AO_TS_SET);
+        while (AO_test_and_set_full(p) == AO_TS_SET);
 }
 
 static inline void
@@ -135,10 +135,10 @@ MultiThreadDataManager::MultiThreadDataManager(MBDynParser& HP,
 DataManager(HP, OF, pS, dInitialTime, sOutputFileName, sInputFileName, bAbortAfterInput),
 AssMode(ASS_UNKNOWN),
 CCReady(CC_NO),
-thread_data(0),
+thread_data(nullptr),
 op(MultiThreadDataManager::OP_UNKNOWN),
 thread_count(0),
-propagate_ErrMatrixRebuild(AO_TS_INITIALIZER)
+propagate_ErrMatrixRebuild(false)
 {
         DataManager::nThreads = nThreads;
 
@@ -173,31 +173,17 @@ propagate_ErrMatrixRebuild(AO_TS_INITIALIZER)
         }
 #endif
 
-        if (pthread_mutex_init(&thread_mutex, NULL)) {
-                silent_cerr("MultiThreadDataManager::MultiThreadDataManager(): "
-                                "mutex init failed" << std::endl);
-                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-        }
-
-        if (pthread_cond_init(&thread_cond, NULL)) {
-                silent_cerr("MultiThreadDataManager::MultiThreadDataManager(): "
-                                "cond init failed" << std::endl);
-                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-        }
-
         ThreadSpawn();
 }
 
 MultiThreadDataManager::~MultiThreadDataManager(void)
 {
         ThreadDestroy();
-        pthread_mutex_destroy(&thread_mutex);
-        pthread_cond_destroy(&thread_cond);
 }
 
 void MultiThreadDataManager::ThreadDestroy(void)
 {
-        if (thread_data == 0) {
+        if (!thread_data) {
                 return;
         }
 
@@ -205,34 +191,26 @@ void MultiThreadDataManager::ThreadDestroy(void)
         thread_count = nThreads - 1;
 
         for (unsigned i = 1; i < nThreads; i++) {
-                void *retval = NULL;
-
-                sem_post(&thread_data[i].sem);
-                if (pthread_join(thread_data[i].thread, &retval)) {
-                        silent_cerr("pthread_join() failed on thread " << i
-                                        << std::endl);
-                        /* already shutting down ... */
-                }
+                thread_data[i].sem.release();
+                thread_data[i].thread.join();
         }
-
+#ifdef USE_NAIVE_MULTITHREAD
         if (thread_data[0].lock) {
                 SAFEDELETEARR(thread_data[0].lock);
         }
+#endif
         thread_cleanup(&thread_data[0]);
 
         SAFEDELETEARR(thread_data);
-        thread_data = 0;
+        thread_data = nullptr;
 }
 
 
-void *
-MultiThreadDataManager::thread(void *p)
+void
+MultiThreadDataManager::thread(ThreadData *arg)
 {
-        MultiThreadDataManager::ThreadData *arg
-                = (MultiThreadDataManager::ThreadData *)p;
-
         silent_cout("MultiThreadDataManager: thread " << arg->threadNumber
-                        << " [self=" << pthread_self()
+                        << " [self=" << std::this_thread::get_id()
                         << ",pid=" << getpid() << "]"
                         << " starting..." << std::endl);
 
@@ -258,7 +236,7 @@ MultiThreadDataManager::thread(void *p)
               * - the appropriate operation args must be set
               * - the thread_count must be set to nThreads - 1
               */
-             sem_wait(&arg->sem);
+             arg->sem.acquire();
 
              try {
                   DEBUGCOUT("thread " << arg->threadNumber << ": "
@@ -279,7 +257,7 @@ MultiThreadDataManager::thread(void *p)
                                         << " caught ErrRebuildMatrix"
                                         << std::endl);
 
-                            mbdyn_test_and_set(&arg->pDM->propagate_ErrMatrixRebuild);
+                            arg->pDM->propagate_ErrMatrixRebuild.exchange(true);
 
                        } catch (...) {
                             throw;
@@ -373,7 +351,6 @@ MultiThreadDataManager::thread(void *p)
         }
 
         /* all threads are joined */
-        pthread_exit(NULL);
 }
 
 void
@@ -382,14 +359,19 @@ MultiThreadDataManager::thread_cleanup(ThreadData *arg)
         /* cleanup */
         SAFEDELETE(arg->pWorkMatA);
         SAFEDELETE(arg->pWorkMatB);
+        
+#ifdef MBDYN_X_MT_ASSRES
         SAFEDELETE(arg->pWorkVec);
-
+#endif
         if (arg->threadNumber > 0) {
                 if (arg->pJacHdl) {
                         SAFEDELETE(arg->pJacHdl);
                 }
 #ifdef MBDYN_X_MT_ASSRES
                 SAFEDELETE(arg->pResHdl);
+                if (arg->pAbsResHdl) {
+                     SAFEDELETE(arg->pAbsResHdl);
+                }                
 #endif
 #ifdef USE_NAIVE_MULTITHREAD
                 if (arg->ppNaiveJacHdl && arg->ppNaiveJacHdl[arg->threadNumber]) {
@@ -397,9 +379,6 @@ MultiThreadDataManager::thread_cleanup(ThreadData *arg)
                         arg->ppNaiveJacHdl[arg->threadNumber] = nullptr;
                 }
 #endif
-                if (arg->pAbsResHdl) {
-                     SAFEDELETE(arg->pAbsResHdl);
-                }
         } else {
 #ifdef USE_NAIVE_MULTITHREAD
                 if (arg->ppNaiveJacHdl) {
@@ -415,8 +394,6 @@ MultiThreadDataManager::thread_cleanup(ThreadData *arg)
         }
 
         ASSERT(!arg->pY);
-
-        sem_destroy(&arg->sem);
 
 #ifdef HAVE_SYS_TIMES_H
         /* Tempo di CPU impiegato */
@@ -434,20 +411,15 @@ MultiThreadDataManager::thread_cleanup(ThreadData *arg)
 void
 MultiThreadDataManager::EndOfOp(void)
 {
-        bool last;
+     /* decrement the thread counter */
+     std::unique_lock<std::mutex> thread_lock(thread_mutex);
+     thread_count--;
+     bool last = (thread_count == 0);
 
-        /* decrement the thread counter */
-        pthread_mutex_lock(&thread_mutex);
-        thread_count--;
-        last = (thread_count == 0);
-
-        /* if last thread, signal to restart */
-        if (last) {
-                pthread_cond_signal(&thread_cond);
-                // pthread_cond_broadcast(&thread_cond);
-        }
-
-        pthread_mutex_unlock(&thread_mutex);
+     /* if last thread, signal to restart */
+     if (last) {
+          thread_cond.notify_one();
+     }
 }
 
 /* starts the helper threads */
@@ -457,7 +429,7 @@ MultiThreadDataManager::ThreadSpawn(void)
         ASSERT(nThreads > 1);
 
         SAFENEWARRNOFILL(thread_data, MultiThreadDataManager::ThreadData, nThreads);
-
+        
         const Task2CPU& oCPUSet = Task2CPU::GetGlobalState();
         int iCPUIndex = oCPUSet.iGetFirstCPU();
         const unsigned uNumCPUs = oCPUSet.iGetCount();
@@ -465,7 +437,6 @@ MultiThreadDataManager::ThreadSpawn(void)
         for (unsigned i = 0; i < nThreads; i++) {
                 /* callback data */
                 thread_data[i].pDM = this;
-                sem_init(&thread_data[i].sem, 0, 0);
                 thread_data[i].threadNumber = i;
 
                 if (uNumCPUs >= nThreads) {
@@ -475,9 +446,10 @@ MultiThreadDataManager::ThreadSpawn(void)
                      thread_data[i].iCPUIndex = -1;
                 }
 
-                thread_data[i].ElemIter.Init(&Elems[0], Elems.size());
-                thread_data[i].lock = 0;
-
+                thread_data[i].ElemIter.Init(&Elems[0], Elems.size(), i, nThreads);
+#ifdef USE_NAIVE_MULTITHREAD
+                thread_data[i].lock = nullptr;
+#endif
                 /* SubMatrixHandlers */
                 thread_data[i].pWorkMatA = 0;
                 thread_data[i].pWorkMatB = 0;
@@ -509,12 +481,12 @@ MultiThreadDataManager::ThreadSpawn(void)
                 }
                 
                 thread_data[i].pWorkMat = thread_data[i].pWorkMatA;
-
+#ifdef MBDYN_X_MT_ASSRES
                 thread_data[i].pWorkVec = 0;
                 SAFENEWWITHCONSTRUCTOR(thread_data[i].pWorkVec,
                                 MySubVectorHandler,
                                 MySubVectorHandler(iMaxWorkNumRowsRes));
-
+#endif
                 /* set by AssJac when in CC form */
                 thread_data[i].pJacHdl = 0;
 #ifdef USE_NAIVE_MULTITHREAD
@@ -531,8 +503,8 @@ MultiThreadDataManager::ThreadSpawn(void)
 #ifdef MBDYN_X_MT_ASSRES
                 /* set below */
                 thread_data[i].pResHdl = 0;
+                thread_data[i].pAbsResHdl = 0;                
 #endif
-                thread_data[i].pAbsResHdl = 0;
 
                 /* to be sure... */
                 thread_data[i].pMatA = 0;
@@ -549,13 +521,7 @@ MultiThreadDataManager::ThreadSpawn(void)
                                 MyVectorHandler, MyVectorHandler(iTotDofs));
 #endif
                 /* create thread */
-                if (pthread_create(&thread_data[i].thread, NULL, thread,
-                                        &thread_data[i]) != 0) {
-                        silent_cerr("pthread_create() failed "
-                                        "for thread " << i
-                                        << " of " << nThreads << std::endl);
-                        throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-                }
+                thread_data[i].thread = std::thread(&thread, &thread_data[i]);
         }
 
 
@@ -605,7 +571,7 @@ void MultiThreadDataManager::AssJac(VectorHandler& JacY, const VectorHandler& Y,
 
 void MultiThreadDataManager::GradAssJacProd(VectorHandler& JacY, const VectorHandler& Y, doublereal dCoef)
 {
-        ASSERT(thread_data != NULL);
+        ASSERT(thread_data);
 
         thread_data[0].ElemIter.ResetAccessData();
         op = MultiThreadDataManager::OP_ASSJAC_PROD;
@@ -618,7 +584,7 @@ void MultiThreadDataManager::GradAssJacProd(VectorHandler& JacY, const VectorHan
         for (unsigned i = 1; i < nThreads; i++) {
                 thread_data[i].dCoef = dCoef;
                 thread_data[i].pY = &Y;
-                sem_post(&thread_data[i].sem);
+                thread_data[i].sem.release();
         }
 
         try {
@@ -626,15 +592,15 @@ void MultiThreadDataManager::GradAssJacProd(VectorHandler& JacY, const VectorHan
         } catch (...) {
              thread_data[0].except = std::current_exception();
         }
-        
-        pthread_mutex_lock(&thread_mutex);
 
-        if (thread_count > 0) {
-                pthread_cond_wait(&thread_cond, &thread_mutex);
+        {
+             std::unique_lock<std::mutex> thread_lock(thread_mutex);
+
+             if (thread_count > 0) {
+                  thread_cond.wait(thread_lock);
+             }
         }
-
-        pthread_mutex_unlock(&thread_mutex);
-
+        
         for (unsigned i = 1; i < nThreads; ++i) {
                 thread_data[i].pY = nullptr;
         }
@@ -653,9 +619,9 @@ void MultiThreadDataManager::GradAssJacProd(VectorHandler& JacY, const VectorHan
 void
 MultiThreadDataManager::CCAssJac(MatrixHandler& JacHdl, doublereal dCoef)
 {
-        ASSERT(thread_data != NULL);
+        ASSERT(thread_data);
 
-        AO_CLEAR(&propagate_ErrMatrixRebuild);
+        propagate_ErrMatrixRebuild.exchange(false);
 
         auto *pMH = dynamic_cast<CompactSparseMatrixHandler*>(&JacHdl);
 
@@ -721,7 +687,7 @@ retry:;
         for (unsigned i = 1; i < nThreads; i++) {
                 thread_data[i].dCoef = dCoef;
 
-                sem_post(&thread_data[i].sem);
+                thread_data[i].sem.release();
         }
 
         try {
@@ -733,20 +699,20 @@ retry:;
                                 << " caught ErrRebuildMatrix"
                                 << std::endl);
 
-                mbdyn_test_and_set(&propagate_ErrMatrixRebuild);
+                propagate_ErrMatrixRebuild.exchange(true);
         } catch (...) {
              thread_data[0].except = std::current_exception();
         }
 
-        pthread_mutex_lock(&thread_mutex);
+        {
+             std::unique_lock<std::mutex> thread_lock(thread_mutex);
 
-        if (thread_count > 0) {
-                pthread_cond_wait(&thread_cond, &thread_mutex);
+             if (thread_count > 0) {
+                  thread_cond.wait(thread_lock);
+             }
         }
 
-        pthread_mutex_unlock(&thread_mutex);
-
-        if (propagate_ErrMatrixRebuild == AO_TS_SET) {
+        if (propagate_ErrMatrixRebuild.load()) {
                 for (unsigned i = 1; i < nThreads; i++) {
                         SAFEDELETE(thread_data[i].pJacHdl);
                         thread_data[i].pJacHdl = 0;
@@ -857,7 +823,7 @@ void MultiThreadDataManager::NaiveAssJacInit(NaiveMatrixHandler& JacHdl, doubler
 void
 MultiThreadDataManager::NaiveAssJac(NaiveMatrixHandler& JacHdl, doublereal dCoef)
 {
-        ASSERT(thread_data != NULL);
+        ASSERT(thread_data);
 
         /* Assemble per-thread matrix */
         thread_data[0].ElemIter.ResetAccessData();
@@ -871,7 +837,7 @@ MultiThreadDataManager::NaiveAssJac(NaiveMatrixHandler& JacHdl, doublereal dCoef
         for (unsigned i = 1; i < nThreads; i++) {
                 thread_data[i].dCoef = dCoef;
 
-                sem_post(&thread_data[i].sem);
+                thread_data[i].sem.release();
         }
 
         /* FIXME Right now it's already done before calling AssJac;
@@ -887,13 +853,14 @@ MultiThreadDataManager::NaiveAssJac(NaiveMatrixHandler& JacHdl, doublereal dCoef
         } catch (...) {
              thread_data[0].except = std::current_exception();
         }
-        
-        pthread_mutex_lock(&thread_mutex);
-        if (thread_count > 0) {
-                pthread_cond_wait(&thread_cond, &thread_mutex);
-        }
-        pthread_mutex_unlock(&thread_mutex);
 
+        {
+             std::unique_lock<std::mutex> thread_lock(thread_mutex);
+        
+             if (thread_count > 0) {
+                  thread_cond.wait(thread_lock);
+             }
+        }
         for (unsigned i = 0; i < nThreads; ++i) {
              if (thread_data[i].except) {
                   std::rethrow_exception(thread_data[i].except);
@@ -904,7 +871,7 @@ MultiThreadDataManager::NaiveAssJac(NaiveMatrixHandler& JacHdl, doublereal dCoef
         op = MultiThreadDataManager::OP_SUM_NAIVE;
         thread_count = nThreads - 1;
         for (unsigned i = 1; i < nThreads; i++) {
-                sem_post(&thread_data[i].sem);
+             thread_data[i].sem.release();
         }
 
         NaiveMatrixHandler* to = thread_data[0].ppNaiveJacHdl[0];
@@ -920,19 +887,20 @@ MultiThreadDataManager::NaiveAssJac(NaiveMatrixHandler& JacHdl, doublereal dCoef
                                 iFrom, iTo, thread_data[0].lock);
         }
 
-        pthread_mutex_lock(&thread_mutex);
-        if (thread_count > 0) {
-                pthread_cond_wait(&thread_cond, &thread_mutex);
+        {
+             std::unique_lock thread_lock(thread_mutex);
+        
+             if (thread_count > 0) {
+                  thread_cond.wait(thread_lock);
+             }
         }
-
-        pthread_mutex_unlock(&thread_mutex);
 }
 #endif
 
 void
 MultiThreadDataManager::GradAssJac(SpGradientSparseMatrixHandler& JacHdl, doublereal dCoef)
 {
-        ASSERT(thread_data != NULL);
+        ASSERT(thread_data);
 
         JacHdl.Reset(); // FIXME: Matrix cannot be reset in parallel by DataManager::AssJac
 
@@ -948,7 +916,7 @@ MultiThreadDataManager::GradAssJac(SpGradientSparseMatrixHandler& JacHdl, double
         for (unsigned i = 1; i < nThreads; i++) {
                 thread_data[i].dCoef = dCoef;
                 thread_data[i].oGradJacHdl.SetMatrixHandler(&JacHdl);
-                sem_post(&thread_data[i].sem);
+                thread_data[i].sem.release();
         }
 
         try {
@@ -957,15 +925,15 @@ MultiThreadDataManager::GradAssJac(SpGradientSparseMatrixHandler& JacHdl, double
         } catch (...) {
              thread_data[0].except = std::current_exception();
         }
-        
-        pthread_mutex_lock(&thread_mutex);
 
-        if (thread_count > 0) {
-                pthread_cond_wait(&thread_cond, &thread_mutex);
+        {
+             std::unique_lock<std::mutex> thread_lock(thread_mutex);
+
+             if (thread_count > 0) {
+                  thread_cond.wait(thread_lock);
+             }
         }
-
-        pthread_mutex_unlock(&thread_mutex);
-
+        
         for (unsigned i = 0; i < nThreads; i++) {
                 thread_data[i].oGradJacHdl.SetMatrixHandler(nullptr);
         }
@@ -1007,17 +975,19 @@ MultiThreadDataManager::AssRes(VectorHandler& ResHdl, doublereal dCoef, const Ve
         for (unsigned i = 1; i < nThreads; i++) {
                 thread_data[i].dCoef = dCoef;
 
-                sem_post(&thread_data[i].sem);
+                thread_data[i].sem.release();
         }
 
         DataManager::AssRes(ResHdl, dCoef, thread_data[0].ElemIter,
                         *thread_data[0].pWorkVec, *thread_data[0].pAbsResHdl);
 
-        pthread_mutex_lock(&thread_mutex);
-        if (thread_count > 0) {
-                pthread_cond_wait(&thread_cond, &thread_mutex);
+        {
+             std::unique_lock<std::mutex> thread_lock(thread_mutex);
+
+             if (thread_count > 0) {
+                  thread_cond.wait(thread_lock);
+             }
         }
-        pthread_mutex_unlock(&thread_mutex);
 
         for (unsigned i = 1; i < nThreads; i++) {
                 ResHdl += *thread_data[i].pResHdl;

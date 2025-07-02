@@ -19,6 +19,7 @@ begin: initial value;
 	derivatives tolerance: 1.e-5;
 	derivatives max iterations: 50;
 	output: iterations, residual;
+threads: disable;
 end: initial value;
 
 begin: control data;

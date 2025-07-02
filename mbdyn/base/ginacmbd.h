@@ -34,7 +34,7 @@
 #include "myassert.h"
 
 #ifdef USE_MULTITHREAD
-#include <ac/pthread.h>
+#include <mutex>
 #endif
 
 class GiNaCEntity {
@@ -44,22 +44,18 @@ protected:
 
 #ifdef USE_MULTITHREAD
      friend class GiNaCGuard;
-     class GiNaCGuard {
+     class GiNaCGuard: std::unique_lock<std::mutex> {
      public:
-          GiNaCGuard() {
-               ASSERT(iInitMutex > 0);
-               pthread_mutex_lock(&GiNaCEntity::GiNaCMutex);
+          GiNaCGuard()
+               :std::unique_lock<std::mutex>(GiNaCMutex) {
           }
           ~GiNaCGuard() {
-               ASSERT(iInitMutex > 0);
-               pthread_mutex_unlock(&GiNaCEntity::GiNaCMutex);
           }
      };
 #endif
 private:
 #ifdef USE_MULTITHREAD
-     static int iInitMutex;
-     static pthread_mutex_t GiNaCMutex;
+     static std::mutex GiNaCMutex;
 #endif
 };
 

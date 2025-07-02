@@ -23,6 +23,7 @@ begin: initial value;
 	#output: residual, iterations;
 	output: iterations;
 	#enforce constraint equations: constraint violations;
+threads: disable;
 end: initial value;
 
 begin: control data;

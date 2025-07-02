@@ -19,6 +19,7 @@ begin: initial value;
 
 	threads: disable;
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;
@@ -49,10 +50,12 @@ begin: drivers;
 	file: INPUT, stream,
                 stream drive name, "SPRNGF",
                 create, yes,
-                path, "./mbdyn.spring.sock",
-                # port, 8005,
+                # path, "./mbdyn.spring.sock",
+                port, 8005,
 		# nonblocking,
-		timeout, 1.5,
+		socket type, udp,
+		# socket type, tcp,
+		timeout, 5.,
 		echo, "body-in.echo",
                 1;	# force
 end: drivers;
@@ -68,12 +71,15 @@ begin: elements;
 			single, reference, global, 1.,0.,0.,
 		file, INPUT, 1;
 	# stream output: OUTPUT,
-	output element: OUTPUT, socket stream,
+	# output element: OUTPUT, socket stream,
+	stream output: OUTPUT,
 		# send after, convergence,
                 stream name, "BODYXV",
-                create, yes,
-                path, "./mbdyn.body.sock",
-                # port, 10011,
+                # create, yes,
+		create, no,
+                # path, "./mbdyn.body.sock",
+                port, 10011,
+		socket type, udp,
 		echo, "body-out.echo",
                 values, 2,
                         drive, node, NODE, structural, string, "X[1]", direct,	# ch 1: x

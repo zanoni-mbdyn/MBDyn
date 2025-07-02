@@ -17,6 +17,7 @@ begin: initial value;
 	derivatives coefficient: 1e-9;
 
 	# output: iterations;
+threads: disable;
 end: initial value;
 
 begin: control data;

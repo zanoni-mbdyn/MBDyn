@@ -122,6 +122,7 @@ begin: initial value;
 		hard real time;
 		#real time log;
 */
+threads: disable;
 end: initial value;
 
 begin: control data;
