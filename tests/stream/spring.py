@@ -33,13 +33,19 @@ import socket
 import struct
 
 # create input socket (2 double: x, x_prime)
-s_in = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM);
-s_in.connect("./mbdyn.body.sock");
+# s_in = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM);
+# s_in.connect("./mbdyn.body.sock");
+s_in = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
+IN_PORT = 10011 
+s_in.bind(("127.0.0.1", IN_PORT))
+print(f"udpstream.py: UDP server up and listening on port {IN_PORT}")
 s_in_bufsize = 2*8
 
 # create output socket (1 double: f)
-s_out = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM);
-s_out.connect("./mbdyn.spring.sock");
+# s_out = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM);
+# s_out.connect("./mbdyn.spring.sock");
+OUT_PORT = 8005
+s_out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
 s_out_bufsize = 8
 
 # gains
@@ -51,29 +57,38 @@ f = 0.
 
 # step counter
 i = 0
+
+# Pedantic output
+DEBUG = True
+
 while 1:
-	# send force to body's file driver
-	buf_out = bytearray(struct.pack("d", f))
-	rc = s_out.send(buf_out, s_out_bufsize)
-	if (rc != s_out_bufsize):
-		print("sent %d bytes; closing..." % rc)
-		break
+    # send force to body's file driver
+        buf_out = bytearray(struct.pack("d", f))
+        # rc = s_out.send(buf_out, s_out_bufsize)
+        if DEBUG:
+            print(f"sending {s_out_bufsize} bytes to localhost on port {OUT_PORT}")
+        rc = s_out.sendto(buf_out, s_out_bufsize, ("127.0.0.1", OUT_PORT))	
+        if (rc != s_out_bufsize):
+            print(f"expecting to send {s_out_bufsize} bytes; closing...")
+            break
 
-	# read motion (x, x_prime) from body's output element
-	buf_in = bytearray(s_in_bufsize)
-	rc = s_in.recv_into(buf_in, s_in_bufsize)
-	if (rc != s_in_bufsize):
-		print("received %d bytes; closing..." % rc)
-		break
+        # read motion (x, x_prime) from body's output element
+        buf_in = bytearray(s_in_bufsize)
+        rc = s_in.recv_into(buf_in, s_in_bufsize)
+        if DEBUG:
+            print(f"received {rc} bytes to localhost on port {IN_PORT}")
+        if (rc != s_in_bufsize):
+            print(f"expecting {s_in_bufize} bytes; closing...")
+            break
 
-	x, xp = struct.unpack("dd", buf_in)
+        x, xp = struct.unpack("dd", buf_in)
 
-	# compute force for next step
-	f = -KP*x - KD*xp
+        # compute force for next step
+        f = -KP*x - KD*xp
 
-	# print("i=%d x=%e xp=%e f=%e" % (i, x, xp, f))
+        # print("i=%d x=%e xp=%e f=%e" % (i, x, xp, f))
 
-	i = i + 1
+        i = i + 1
 
 s_out.close()
 s_in.close()

@@ -266,7 +266,8 @@ UseSocket::Create(void) const
 bool
 UseSocket::Connected(void) const
 {
-	return connected;
+	// For UDP sockets, we always return true
+	return (socket_type == SOCK_DGRAM ? true : connected);
 }
 
 void

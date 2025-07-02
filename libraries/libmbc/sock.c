@@ -199,13 +199,17 @@ mbdyn_make_inet_socket_type(SOCKET* sock, struct sockaddr_in *name, const char *
 		return -1;
    	}
 
-   	/* disable Nagle's algorithm */
+   	/* disable Nagle's algorithm (only for TCP sockets) */
 	int flag = 1;
-	int result = setsockopt(*sock,           /* socket affected */
+	int result = 1;
+	if (socket_type == SOCK_DGRAM) {
+		result = setsockopt(*sock,           /* socket affected */
 				IPPROTO_TCP,     /* set option at TCP level */
 				TCP_NODELAY,     /* name of option */
 				(char *) &flag,  /* the cast is historical cruft */
 				sizeof(int));    /* length of option value */
+	} 	
+
 	if (result != 0) {
 		fprintf(stderr, "Unable to disable Nagle's algorithm, sockets may be slow\n");
 	}
