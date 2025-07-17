@@ -7,7 +7,7 @@ end: data;
 begin: initial value;
 	initial time: 0.;
 	final time: 10.;
-	time step: 1.e-4;
+	time step: 1.e-3;
 	tolerance: 1e-4;
 	derivatives coefficient: 1E-7;
 	derivatives max iterations: 10;

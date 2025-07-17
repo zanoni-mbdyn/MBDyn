@@ -8,7 +8,7 @@ begin: initial value;
 	initial time: 0.;
 	final time: 20.;
 	time step: 1.e-3;
-	tolerance: 1e-3;
+	tolerance: 1e-6;
 	derivatives coefficient: 1e-6;
 	derivatives max iterations: 10;
 	derivatives tolerance: 1e-3;
@@ -27,6 +27,9 @@ begin: control data;
 	gravity;
 
 #	skip initial joint assembly;
+#	jacobian check: step,  0.059, 1., 0., output, all;
+	print: dof description;
+	print: equation description;
 
 	# default output: none;
 end: control data;

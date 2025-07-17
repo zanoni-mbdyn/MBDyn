@@ -45,6 +45,8 @@ struct d2D {
 	d2D operator+(const d2D y) const {return d2D({x[0] + y.x[0], x[1] + y.x[1]});}
 };
 
+std::ostream& operator << (std::ostream& out, const d2D& y);
+
 /** Base class for friction models
  */
 class BasicFriction2D : public SimulationEntity{

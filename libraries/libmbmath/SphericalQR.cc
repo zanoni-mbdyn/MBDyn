@@ -176,6 +176,10 @@ std::vector<integer> sort_vector(Vec3& v) {
  * if(update) then minimize the rotation around r in ordert to match as mush a possible Qold
  */
 void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3) {
+    // std::cout << "QDOld: " << Qold << std::endl;
+    // std::cout << "QD: " << Q << std::endl;
+    // std::cout << "r: " << r << std::endl;
+
     Vec3 q1 = r / r.Norm();
     Vec3 q2 = q1;
     // std::cout << "q2: " << q2 << std::endl;
@@ -198,8 +202,8 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
 
     // std::cout << "update: " << update << std::endl;
     if (update) {
-        doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
-        if (phi < 0.785398163397448) {
+        // doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
+        // if (phi < 0.785398163397448) {
 
             // std::cout << "old: " << Qold << std::endl;
             doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
@@ -230,8 +234,9 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
             // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
             // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
             // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
-        }
+        // }
     }
+    // std::cout << "QD after: " << Q << std::endl;
 }
 
 // int main(void) {

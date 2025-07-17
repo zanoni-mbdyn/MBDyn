@@ -43,6 +43,10 @@
 //defined in friction.cc
 extern int sign(const doublereal x);
 
+std::ostream& operator << (std::ostream& out, const d2D& y) {
+	out << y.x[0] << " " << y.x[1];
+	return out;
+};
 
 doublereal d2DNorm(const d2D& z) {
 	return std::sqrt(z.x[0] * z.x[0] + z.x[1] * z.x[1]);
@@ -87,12 +91,18 @@ void d2DDirection_d(const d2D& z, ExpandableMatrix& mdz) {
 	mdz.SetBlockDim(1, 2);
 	if (zm < 1.E-6) {
 		mdz.Set(1., 1, 1, 1);
+		mdz.Set(0., 1, 1, 2);
+		mdz.Set(0., 2, 1, 1);
 		mdz.Set(1., 2, 1, 2);
 	} else {
-		mdz.Set(z.x[1]*z.x[1] / zm3, 1, 1, 1);
-		mdz.Set(-z.x[0]*z.x[1] / zm, 1, 1, 2);
-		mdz.Set(-z.x[0]*z.x[1] / zm, 2, 1, 1);
-		mdz.Set(z.x[0]*z.x[0] / zm3, 2, 1, 2);
+		// mdz.Set(z.x[1]*z.x[1] / zm3, 1, 1, 1);
+		// mdz.Set(-z.x[0]*z.x[1] / zm, 1, 1, 2);
+		// mdz.Set(-z.x[0]*z.x[1] / zm, 2, 1, 1);
+		// mdz.Set(z.x[0]*z.x[0] / zm3, 2, 1, 2);
+		mdz.Set(-z.x[0]*z.x[0] / zm3 + 1. / zm, 1, 1, 1);
+		mdz.Set(-z.x[0]*z.x[1] / zm3, 1, 1, 2);
+		mdz.Set(-z.x[0]*z.x[1] / zm3, 2, 1, 1);
+		mdz.Set(-z.x[1]*z.x[1] / zm3 + 1. / zm, 2, 1, 2);
 	}
 	return;
 }
@@ -256,7 +266,7 @@ doublereal ModLugreFriction2D::alphatilded_vm(const doublereal zm,
 	if (zm <= zba) {
 		return 0.;
 	} else if ((zba <= zm) && (zm <= zss)) {
-		return -M_PI/2*std::cos(M_PI*sigma0*zm/fs(vm)/(1.-kappa)
+		return -M_PI/2.*std::cos(M_PI*sigma0*zm/fs(vm)/(1.-kappa)
 			-M_PI*(1.+kappa)/2./(1.-kappa))
 			*sigma0*zm/std::pow(fs(vm),2)/(1.-kappa)
 			*fsd_vm(vm);
@@ -278,6 +288,9 @@ doublereal ModLugreFriction2D::alphatilded_vm(const doublereal zm,
 
 void ModLugreFriction2D::alphad_v(const d2D& z,
 	const d2D& v, ExpandableMatrix& alpha_v) const {
+
+	// epsilon = (v.x[0]*z.x[0] + v.x[1]*z.x[1] + 1.) / 2.;
+	// alpha = alphatilde * epsilon;
 
 	doublereal zm = d2DNorm(z);
 	doublereal vm = d2DNorm(v);
@@ -362,6 +375,7 @@ void ModLugreFriction2D::AssJac(
 
 	doublereal vm = d2DNorm(v);
 	//doublereal zp = XP(solution_startdof+1);
+
 /*
  * 	attrito
  */
@@ -370,14 +384,19 @@ void ModLugreFriction2D::AssJac(
 	dfc.SetBlockDim(2, 2);
 	dfc.SetBlockIdx(1, startdof+1);
 	dfc.Set(sigma0*dCoef+sigma1, 1, 1, 1);
+	dfc.Set(0., 1, 1, 2);
+	dfc.Set(0., 2, 1, 1);
 	dfc.Set(sigma0*dCoef+sigma1, 2, 1, 2);
 	dfc.Set(sigma2, 1, 2, 1);
+	dfc.Set(0., 1, 2, 2);
+	dfc.Set(0., 2, 2, 1);
 	dfc.Set(sigma2, 2, 2, 2);
 	dfc.Link(2, &dv);
 	
 /*
  * 	z
  */
+
 	doublereal alph = alpha(z,v);
 
 	ExpandableRowVector alpha_d_z;
@@ -391,6 +410,9 @@ void ModLugreFriction2D::AssJac(
 	doublereal fsvmd_vm = fsd_vm(vm);
 	d2D vmd_v;
 	d2DNorm_d(v, vmd_v);
+
+	// WorkVec.IncCoef(startdof+1, zp.x[0] - v.x[0] + alph * z.x[0] / fsvm * sigma0);
+	// WorkVec.IncCoef(startdof+2, zp.x[1] - v.x[1] + alph * z.x[1] / fsvm * sigma0);
 
 	// -dot(dz) - alpha * sigma0 / fss * dz
 	WorkMat.IncCoef(startdof+1, startdof+1, -1. - alph * sigma0 / fsvm * dCoef);
@@ -424,6 +446,7 @@ void ModLugreFriction2D::AssJac(
 	deq_dz.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 1);
 	deq_dz.Link(1, &alpha_d_z);
 	deq_dz.Add(WorkMat, startdof+1, dCoef);
+
 
 //	std::cout << alphad_z(z,v) << std::endl;
 /*
@@ -797,6 +820,8 @@ void SimpleShapeCoefficient2D::dSh_c(
 		dShc.ReDim(2, 1);
 		dShc.SetBlockDim(1, 2);
 		dShc.Set(1., 1, 1, 1);
+		dShc.Set(0., 1, 1, 2);
+		dShc.Set(0., 2, 1, 1);
 		dShc.Set(1., 2, 1, 2);
 		dShc.Link(1, &dfc);
 };

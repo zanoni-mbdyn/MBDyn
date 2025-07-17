@@ -449,8 +449,10 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 	  const Vec3& Omega1Ref(pNode1->GetWRef());
 	  const Vec3& Omega2Ref(pNode2->GetWRef());
       d2D v;
-      v.x[0] = (Omegar).Dot(Q.GetCol(2))*r;
-      v.x[1] = (Omegar).Dot(Q.GetCol(3))*r;
+      v.x[0] = (-Q.GetCol(1)).Cross(Omegar).Dot(Q.GetCol(2))*r;
+      v.x[1] = (-Q.GetCol(1)).Cross(Omegar).Dot(Q.GetCol(3))*r;
+      // v.x[0] = (Omegar).Dot(Q.GetCol(2))*r;
+      // v.x[1] = (Omegar).Dot(Q.GetCol(3))*r;
       ExpandableMatrix dF, dshc, dfc, dv, dQ1, dQ2, dQ3, dOmegar;
       ExpandableRowVector dmodF;
 
@@ -616,7 +618,7 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 	  dM2.Set(-Mat3x3(MatCross, Q.GetCol(3)) * shc.x[1] * r * modF, 1, 1, 1);
 	  dM2.Link(1, &dQ1);
 
-	  dM2.SetBlockDim(2, 3); //dM2/dQ2
+	  dM2.SetBlockDim(2, 3); //dM2/dQ3
 	  dM2.Set(Mat3x3(MatCross, Q.GetCol(1)) * shc.x[1] * r * modF, 1, 2, 1);
 	  dM2.Link(2, &dQ3);
 
@@ -716,10 +718,11 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
 		} else {
 			// std::cout << "Call Spherical" << std::endl;
+			// std::cout << "F: " << F << std::endl;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
 			SpericalQR(F, Q, !(reset_Q), Qold);
 			// std::cout << "Qold: " << Qold << std::endl;
-			// std::cout << "Q: " << Q << std::endl;
+			// std::cout << "Q   : " << Q << std::endl;
 		}
 		// std::cout << modF << " " << preF << std::endl;
 		if (reset_Q) {
