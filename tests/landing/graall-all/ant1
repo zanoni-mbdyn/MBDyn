@@ -33,7 +33,7 @@ end: initial value;
 
 begin: control data;
     	skip initial joint assembly;
-	adams res output: "ant";
+		# adams res output: "ant";
         
     	structural nodes:
     		1	# CG
