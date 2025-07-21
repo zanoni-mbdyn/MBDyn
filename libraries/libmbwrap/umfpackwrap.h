@@ -71,6 +71,7 @@
 
 #include <iostream>
 #include <vector>
+#include <omp.h>
 
 extern "C" {
 #include <umfpack.h>
