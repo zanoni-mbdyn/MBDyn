@@ -35,6 +35,7 @@
 #define SPHERJ_H
 
 #include "joint.h"
+#include "friction2D.h"
 
 
 /* SphericalHingeJoint - begin */
@@ -52,6 +53,31 @@ class SphericalHingeJoint : public Joint {
    Mat3x3 R2h;
    Vec3 F;
 
+   /* friction related data */
+   BasicShapeCoefficient2D *const Sh_c;
+   BasicFriction2D *const fc;
+   const doublereal preF;
+   const doublereal r;
+   Vec3 Ffrict1, Ffrict2;
+   Vec3 M1, M2;
+   static const unsigned int NumSelfDof;
+   static const unsigned int NumDof;
+   Mat3x3 Q, Qold;
+   Vec3 Fold;
+   bool reset_Q, compute_Q;
+#ifdef USE_NETCDF
+   MBDynNcVar Var_MFR;
+   MBDynNcVar Var_n;
+   MBDynNcVar Var_t1;
+   MBDynNcVar Var_t2;
+   MBDynNcVar Var_fc1;
+   MBDynNcVar Var_fc2;
+   MBDynNcVar Var_Fn;
+   MBDynNcVar Var_F1;
+   MBDynNcVar Var_F2;
+#endif // USE_NETCDF
+   /* end of friction related data */
+
  protected:
 	OrientationDescription od;
 
@@ -62,7 +88,11 @@ class SphericalHingeJoint : public Joint {
 		       const Vec3& dTmp1, const Mat3x3& RTmp1h,
 		       const Vec3& dTmp2, const Mat3x3& RTmp2h,
 		       const OrientationDescription& od,
-		       flag fOut);
+		       flag fOut,
+               const doublereal rr = 0.,
+               const doublereal pref = 0.,
+               BasicShapeCoefficient2D *const sh = 0,
+               BasicFriction2D *const f = 0);
    
    ~SphericalHingeJoint(void);
 
@@ -77,17 +107,46 @@ class SphericalHingeJoint : public Joint {
    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
    virtual unsigned int iGetNumDof(void) const { 
-      return 3;
+      unsigned int i = NumSelfDof;
+      if (fc) {
+          i+=fc->iGetNumDof();
+      }
+      return i;
    };
-   
+
+   virtual std::ostream& DescribeDof(std::ostream& out,
+		   const char *prefix = "",
+		   bool bInitial = false) const;
+
+   virtual void DescribeDof(std::vector<std::string>& desc,
+		   bool bInitial = false, int i = -1) const;
+
+   virtual std::ostream& DescribeEq(std::ostream& out,
+		   const char *prefix = "",
+		   bool bInitial = false) const;
+
+   virtual void DescribeEq(std::vector<std::string>& desc,
+		   bool bInitial = false, int i = -1) const;
+
    virtual DofOrder::Order GetDofType(unsigned int i) const {
-      ASSERT(i >= 0 && i < 3);
-      return DofOrder::ALGEBRAIC;
+      ASSERT(i >= 0 && i < iGetNumDof());
+      if (i<NumSelfDof) {
+          return DofOrder::ALGEBRAIC;
+      } else {
+          return fc->GetDofType(i-NumSelfDof);
+      }
    };
+
+   virtual void AfterConvergence(const VectorHandler& X,
+                        const VectorHandler& XP);
 
    virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const { 
       *piNumRows = 15; 
       *piNumCols = 15; 
+      if (fc) {
+          *piNumRows += fc->iGetNumDof();
+          *piNumCols += fc->iGetNumDof();
+      }
    };
    
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
@@ -149,10 +208,6 @@ class SphericalHingeJoint : public Joint {
    /* returns the dimension of the component */
 	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
 
-   /* describes the dimension of components of equation */
-   virtual std::ostream& DescribeEq(std::ostream& out,
-		  const char *prefix = "",
-		  bool bInitial = false) const;
 };
 
 /* SphericalHingeJoint - end */

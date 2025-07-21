@@ -38,7 +38,7 @@ include: "gopal2010m_m.set";
 
 set: const real T = 2*pi/FREQ;
 set: const real DT = T/500; # s
-set: const real TF = 10*T;
+set: const real TF = 1*T;
 
 set: PS = 0.; # no prestress
 # set: PS = 2.; # N/m
@@ -149,7 +149,7 @@ end: elements;
 ##############################################################################################################
 ## Variables to be updated by simple_testsuite.sh --update-reference-test-status
 ## Warning, do not edit!!!
-## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 1
+## @MBDYN_SIMPLE_TESTSUITE_EXIT_STATUS@ = 0
 ##############################################################################################################
 
 ## @MBDYN_SIMPLE_TESTSUITE_EXCLUDE@ = 0

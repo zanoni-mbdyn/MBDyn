@@ -112,13 +112,13 @@ public:
 		void ReDim(const integer nrows) {
 			rows.resize(nrows);
 		};
-		void SetBlockDim(const integer nrows, const integer ncols) {
-			for (std::vector<ExpandableRowVector>::iterator i = rows.begin();
-				i != rows.end(); ++i)
-			{
-				i->ReDim(ncols);
-			}
-		};
+		// void SetBlockDim(const integer nrows, const integer ncols) {
+		// 	for (std::vector<ExpandableRowVector>::iterator i = rows.begin();
+		// 		i != rows.end(); ++i)
+		// 	{
+		// 		i->ReDim(ncols);
+		// 	}
+		// };
 		integer GetBlockNRows() const {
 			return rows.size();
 		};
@@ -172,7 +172,7 @@ public:
 			}
 		};
 		void SetColIdx(integer iidx) {
-// 			std::cerr << "\tBloc::SetColIdx" << std::endl;
+// 			std::cerr << "\tBloc::SetColIdx ncols = " << GetBlockNCols() << std::endl;
 			for (integer col = 1; col <= GetBlockNCols(); col++, iidx++) {
 // 				std::cerr << "\t\tcol " << col << " iidx " << iidx << std::endl;
 				for (std::vector<ExpandableRowVector>::size_type eq = 0; eq < rows.size(); eq++) {
@@ -220,8 +220,9 @@ public:
 // 	void Set(doublereal xx, integer block, integer eq, integer iidx);
 // 	doublereal& operator ()(integer i);
 // 	const doublereal& operator ()(integer i) const;
-	void Set(const doublereal xx, const integer eq, const integer block, const integer block_col = 1);
-	void Set(const Vec3& xx, const integer eq, const integer block, const integer block_col = 1);
+	void Set(const doublereal xx, const integer eq, const integer block, const integer block_col);
+	void SetCol(const Vec3& xx, const integer eq, const integer block, const integer block_col);
+	void SetRow(const Vec3& xx, const integer eq, const integer block, const integer block_col);
 	void Set(const Mat3x3& xx, const integer eq, const integer block, const integer block_col = 1);
 	void Add(const doublereal xx, const integer eq, const integer block, const integer block_col = 1);
 	void Sub(const doublereal xx, const integer eq, const integer block, const integer block_col = 1);

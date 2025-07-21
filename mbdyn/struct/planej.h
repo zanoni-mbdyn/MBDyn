@@ -59,6 +59,7 @@ class PlaneHingeJoint : public Joint {
    Mat3x3 R2h;
    Vec3 F;
    Vec3 M;
+   Vec3 Ffrict;
 #ifdef USE_NETCDF
 	MBDynNcVar Var_Phi;
 	MBDynNcVar Var_Omega;
@@ -71,6 +72,9 @@ class PlaneHingeJoint : public Joint {
    mutable doublereal dTheta, dThetaWrapped;
 
    /* friction related data */
+ public:
+   enum ReactionComponentsForFriction {Full, Normal, Axial, OnlyPreload};
+ private:
    BasicShapeCoefficient *const Sh_c;
    BasicFriction *const fc;
    const doublereal preF;
@@ -78,6 +82,8 @@ class PlaneHingeJoint : public Joint {
    doublereal M3;
    static const unsigned int NumSelfDof;
    static const unsigned int NumDof;
+   ReactionComponentsForFriction ReactComp;
+   Vec3 FReactForFrict;
    /* end of friction related data */
 
  protected:
@@ -96,7 +102,8 @@ class PlaneHingeJoint : public Joint {
 		   const doublereal rr = 0.,
 		   const doublereal pref = 0.,
 		   BasicShapeCoefficient *const sh = 0,
-		   BasicFriction *const f = 0);
+		   BasicFriction *const f = 0,
+           ReactionComponentsForFriction rc = ReactionComponentsForFriction::Full);
    
    /* Distruttore */
    ~PlaneHingeJoint(void);
@@ -368,6 +375,7 @@ class AxialRotationJoint : public Joint, public DriveOwner {
    Mat3x3 R2h;
    Vec3 F;
    Vec3 M;
+   Vec3 Ffrict;
    mutable int NTheta;
    mutable doublereal dTheta, dThetaWrapped;
 

@@ -504,7 +504,7 @@ mbdyn_parse_arguments(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
                         }
                         mbp.bException = false;
 #else
-                        silent_cerr("option -G " << optarg << " is valid only with --with-gtest");
+                        silent_cerr("option -G is valid only with --with-gtest\n");
 #endif
                         break;
 		case int('h'):

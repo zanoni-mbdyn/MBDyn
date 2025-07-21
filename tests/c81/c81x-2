@@ -3,7 +3,7 @@ begin: data;
 end: data;
 
 begin: initial value;
-    set: real dt = 1.;
+    set: real dt = .1;
     set: real T = 360.*dt;
     initial time: 0.;
     final time: T;

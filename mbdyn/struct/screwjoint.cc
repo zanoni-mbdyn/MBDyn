@@ -744,9 +744,9 @@ ScrewJoint::AssMat(FullSubMatrixHandler& WM, doublereal dCoef,
 		dM3diff.SetBlockDim(3, 3);
 		dM3diff.SetBlockIdx(3, 4);
 		
-		dM3diff.Set(e1hz*shc, 1, 1); dM3diff.Link(1, &dF);
-		dM3diff.Set(e1hz*modF, 1, 2); dM3diff.Link(2, &dShc);
-		dM3diff.Set(Mat3x3(MatCross, e1hz * (-dCoef * shc * modF)), 1, 3); 
+		dM3diff.SetCol(e1hz*shc, 1, 1, 1); dM3diff.Link(1, &dF);
+		dM3diff.SetCol(e1hz*modF, 1, 2, 1); dM3diff.Link(2, &dShc);
+		dM3diff.Set(Mat3x3(MatCross, e1hz * (-dCoef * shc * modF)), 1, 3);
 		//dM3diff.Set(Mat3x3(1.) * shc * modF[0], 1, 3); 
 // 		std::cerr << "Ci siamo\n";
 		

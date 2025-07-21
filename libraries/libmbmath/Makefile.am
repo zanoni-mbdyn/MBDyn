@@ -40,12 +40,18 @@ MLS.cc \
 MLS.h \
 naivemh.cc \
 naivemh.h \
+polar_decomposition_3x3_matrix.h \
+polar_decomposition_3x3_impl.h \
+polar_decomposition_3x3.h \
+polar_decomposition_3x3.cc \
 Rot.cc \
 Rot.hh \
 RotCoeff.hc \
 RotCoeff.hh \
 solman.cc \
 solman.h \
+SphericalQR.h \
+SphericalQR.cc \
 spmapmh.cc \
 spmapmh.h \
 spmh.cc \
@@ -98,7 +104,7 @@ endif
 libmbmath_la_LIBADD = @LIBS@ @FCLIBS@ @ANN_LIBS@ @TRILINOS_LIBS@ @SICONOS_LIBS@
 libmbmath_la_LDFLAGS =
 
-noinst_PROGRAMS = matmultest itertest dgeequtest subtest sp_gradient_test
+noinst_PROGRAMS = matmultest itertest dgeequtest subtest sp_gradient_test polardecomp_test
 
 matmultest_SOURCES = matmultest.cc
 matmultest_LDADD = \
@@ -161,6 +167,16 @@ libmbmath.la \
 @BLAS_LIBS@ \
 @FCLIBS@ \
 @TRILINOS_LIBS@ \
+@LIBS@
+
+polardecomp_test_SOURCES = \
+polar_decomposition_3x3_matrix.h \
+polar_decomposition_3x3_impl.h \
+polar_decomposition_3x3.h \
+polardecomp_test.cc
+polardecomp_test_LDADD = \
+libmbmath.la \
+../libmbutil/libmbutil.la \
 @LIBS@
 
 subtest_SOURCES = subtest.cc

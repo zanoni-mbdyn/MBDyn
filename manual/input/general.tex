@@ -1,4 +1,4 @@
-% $Header$
+% % % $Header$
 % MBDyn (C) is a multibody analysis code.
 % http://www.mbdyn.org
 %
@@ -3629,12 +3629,13 @@ a \kw{sine} drive caller with the parameters illustrated above.
 
 
 \section{Friction}
+\label{sec:friction model}
 A friction-based element needs the definition of
 at least a \hty{friction model} and of a \hty{shape function}.
 
-\subsection{Friction models}
-\label{sec:friction model}
-The \kw{friction model} input format is:
+\subsection{1D Friction models}
+\label{sec:friction model 1D}
+The one dimensional \kw{friction model} input format is:
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{friction_model} ::= \bnt{friction_type} ,
@@ -3653,7 +3654,7 @@ known as `LuGre'.
 The input format is:
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
-    \bnt{friction_model} ::= \kw{modlugre}
+    \bnt{friction_type} ::= \kw{modlugre}
 
     \bnt{friction_arglist} ::=
         \bnt{sigma0} ,
@@ -3666,7 +3667,9 @@ The input format is:
 
     \item \kw{discrete coulomb}\\
     This is a Coulomb model with viscous friction and
-    internal states to resolve stick/slip conditions.
+    internal states to resolve stick/slip conditions.\\
+    This model, not making use of a cone complementary problem solver,
+    is \emph{experimental} and may lead to spurious convergence issue. Its use is \emph{discouraged}.
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{friction_model} ::= \kw{discrete coulomb}
@@ -3688,6 +3691,67 @@ The input format is:
     (see the documentation of the specific joint for details).
 \end{enumerate}
 
+\subsection{2D Friction models}
+\label{sec:friction model 2D}
+Two dimensional friction models, \kw{friction model 2D} are required whenever the sliding direction can change, as when sliding on a plane, or with a spherical hinge. The general syntax is:
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{friction_model_2D} ::= \bnt{friction_type_2D} ,
+        \bnt{friction_arglist_2D}
+\end{Verbatim}
+%\end{verbatim}
+where \nt{friction\_function} gives the static friction
+as a function of sliding velocity.
+
+Currently implemented friction models are:
+\begin{enumerate}
+    \item \kw{modlugre 2D}\\
+
+    The \kw{modlugre 2D} model is based on \cite{Waltersson_Karayiannidis_2024}, but
+    does not model the moment related to the rotation around the contact point normal.
+    In other words,it assumes pure sliding, without relative rotations, at the point of contact.
+    It is recommended to set \nt{sigma2} to a zero.
+
+    The input format is:
+%\begin{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{friction_type_2D} ::= \kw{modlugre 2D}
+
+    \bnt{friction_arglist_2D} ::=
+        \bnt{sigma0} ,
+        \bnt{sigma1} ,
+        \bnt{sigma2} ,
+        \bnt{kappa} ,
+        (\hty{ScalarFunction}) \bnt{friction_function}
+\end{Verbatim}
+%\end{verbatim}
+where arguments have the same meaning those defined for the \kw{modlugre} one dimensional friction model.
+
+    \item \kw{discrete coulomb 2D}\\
+    This is a Coulomb model with viscous friction and
+    internal states to resolve stick/slip conditions.\\
+    Just like the 1D Coulomb model, this model does not use a cone complementary problem solver (while it should),
+    thus is \emph{experimental} and may lead to spurious convergence issue. Its use is \emph{strongly discouraged}.
+%\begin{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{friction_model} ::= \kw{discrete coulomb 2D}
+
+    \bnt{friction_arglist} ::=
+        (\hty{ScalarFunction}) \bnt{friction_function}
+        [ , \kw{sigma2} , \bnt{sigma2} ]
+        [ , \kw{velocity ratio} , \bnt{vel_ratio} ]
+\end{Verbatim}
+%\end{verbatim}
+    where \nt{sigma2} gives the viscous friction;
+    \nt{vel\_ratio} defaults to 0.8, and is used
+    to discriminate stick/slip conditions.
+    Note that \kw{discrete coulomb 2D}
+    cannot handle stick conditions when the reaction force
+    in the constraint goes to zero (resulting in a singular Jacobian matrix).
+    The \kw{preload} parameter needs to be used to make sure
+    the joint is preloaded as appropriate
+    (see the documentation of the specific joint for details).
+\end{enumerate}
+
 \subsection{Shape functions}
 \label{sec:shape function}
 Implements the type \hty{shape function}.
@@ -3698,7 +3762,9 @@ The input format of shape functions is:
         [ , \bnt{shape_function_arglist} ]
 \end{Verbatim}
 %\end{verbatim}
-Currently implemented shape functions for friction models are:
+\subsubsection{1D shape functions}
+\label{sec:shape function 1D}
+Currently implemented shape functions for \hty{friction model 1D} are:
 \begin{enumerate}
     \item \kw{simple}\\
     This shape function is equal to one. It does not need arguments.
@@ -3740,6 +3806,22 @@ Currently implemented shape functions for friction models are:
     \caption{3D screw thread sketch.}
     \label{fig:screw_sketch_3D}
   \end{figure}
+
+\subsubsection{2D shape functions}
+\label{sec:shape function 2D}
+Two dimensional shape functions,
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{shape_function_2D} ::= \bnt{shape_function_type_2D}
+        [ , \bnt{shape_function_arglist_2D} ]
+\end{Verbatim}
+mat be required together with a \hty{friction model 2D}. The \kw{simple 2D} shape function
+syntax is:
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{shape_function_type_2D} ::= \kw{simple 2D}
+
+    \bnt{shape_function_arglist_2D} ::=
+\end{Verbatim}
+
 
 \end{enumerate}
 

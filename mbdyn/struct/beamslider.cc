@@ -416,8 +416,8 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		dF3.ReDim(3,2);
 		dF3.SetBlockDim(1,1);
 		dF3.SetBlockDim(2,1);
-		dF3.Set(-e3a*shc,1,1); dF3.Link(1,&dF); // dF3/dF * dF/d(pos1?)
-		dF3.Set(-e3a*modF,1,2); dF3.Link(2,&dShc); // dF3/dShc * dShc/d(?)
+		dF3.SetCol(-e3a*shc,1,1,1); dF3.Link(1,&dF); // dF3/dF * dF/d(pos1?)
+		dF3.SetCol(-e3a*modF,1,2,1); dF3.Link(2,&dShc); // dF3/dShc * dShc/d(?)
 	}
 
    /* vincolo in posizione */

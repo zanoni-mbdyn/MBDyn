@@ -99,7 +99,7 @@ ModLugreFriction::DescribeDof(std::vector<std::string>& desc, bool bInitial, int
 {
 	ASSERT(i == -1 || i == 0);
 	desc.resize(1);
-	desc[0] = "ModLugreFriction state";
+	desc[desc.size()-1] = "ModLugreFriction state";
 }
 
 std::ostream&
@@ -345,12 +345,12 @@ DiscreteCoulombFriction::DescribeEq(std::vector<std::string>& desc, bool bInitia
 }
 
 DofOrder::Order DiscreteCoulombFriction::GetDofType(unsigned int i) const {
-	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in ModLugreFriction::GetDofType");
+	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in DiscreteCoulombFriction::GetDofType");
 	return DofOrder::ALGEBRAIC;
 };
 
 DofOrder::Order DiscreteCoulombFriction::GetEqType(unsigned int i) const {
-	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in ModLugreFriction::GetEqType");
+	ASSERTMSGBREAK(i<iGetNumDof(), "INDEX ERROR in DiscreteCoulombFriction::GetEqType");
 	return DofOrder::DIFFERENTIAL;
 };
 
@@ -544,7 +544,7 @@ void DiscreteCoulombFriction::AssJac(
 		//WorkVec.IncCoef(startdof+1,f-current_friction_force);
 		WorkMat.IncCoef(startdof+1,startdof+1,-1);
 		dv.Add(WorkMat,startdof+1,
-			sign(current_friction_force)*fss.ComputeDiff(v)+sigma2);
+			sign(current_friction_force-sigma2*v)*fss.ComputeDiff(v)+sigma2);
 		dfc.ReDim(1);
 		dfc.Set(sign(current_friction_force-sigma2*v)*fss.ComputeDiff(v)+sigma2,1); dfc.Link(1, &dv);
 		break;
@@ -596,8 +596,8 @@ void SimpleShapeCoefficient::dSh_c(
 	const ExpandableRowVector& dF,
 	const ExpandableRowVector& dv) const {
 		dShc.ReDim(1);
-		dShc.Set(1. ,1);
-		dShc.Link(1,&dfc);
+		dShc.Set(1., 1);
+		dShc.Link(1, &dfc);
 };
 
 SimplePlaneHingeJointSh_c::SimplePlaneHingeJointSh_c()
@@ -611,7 +611,8 @@ doublereal SimplePlaneHingeJointSh_c::Sh_c(
 	const doublereal f,
 	const doublereal F,
 	const doublereal v) {
-	shc = f/std::sqrt(1.+f*f);
+	// shc = f/std::sqrt(1.+f*f);
+	shc = f;
 	return shc;
 };
 
@@ -623,16 +624,11 @@ void SimplePlaneHingeJointSh_c::dSh_c(
 	const ExpandableRowVector& dfc,
 	const ExpandableRowVector& dF,
 	const ExpandableRowVector& dv) const {
-//		doublereal dsh_fc = 1./std::sqrt(1.+f*f)-0.5*std::pow(1.+f*f,-3./2.)*f;
-		doublereal dsh_fc = 1./std::sqrt(1.+f*f)-f*f*std::pow(1.+f*f,-3./2.);
-// 		dShc.ReDim(2);
-// 		dShc.Set(0.,1);
-// 		dShc.Link(1,&dF);
-// 		dShc.Set(dsh_fc,2);
-// 		dShc.Link(2,&dfc);
+		// doublereal dsh_fc = 1./std::sqrt(1.+f*f)-f*f*std::pow(1.+f*f,-3./2.);
 		dShc.ReDim(1);
-		dShc.Set(dsh_fc,1);
-		dShc.Link(1,&dfc);
+		// dShc.Set(dsh_fc,1);
+		dShc.Set(1., 1);
+		dShc.Link(1, &dfc);
 };
 
 

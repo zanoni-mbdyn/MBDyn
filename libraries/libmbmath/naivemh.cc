@@ -740,6 +740,13 @@ void NaivePermMatrixHandler::Scale(const std::vector<doublereal>& oRowScale, con
 #endif
 }
 
+void NaivePermMatrixHandler::EnumerateNz(const std::function<EnumerateNzCallback>& func) const
+{
+        for (const auto& d: *this) {
+                func(d.iRow + 1, d.iCol + 1, d.dCoef);
+        }
+}
+
 #ifdef DEBUG
 void NaivePermMatrixHandler::IsValid(void) const
 {

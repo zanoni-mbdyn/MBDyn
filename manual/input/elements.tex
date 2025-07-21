@@ -3970,7 +3970,7 @@ The following data are available:
 
 
 
-\subsection{Modal}\label{sec:EL:STRUCT:JOINT:MODAL}
+\subsection{Modal}\label{sec:EL:STRUCT:JOINT:MODAL}\label{sec:ModalJoint}
 \emph{
 Original implementation: Felice Felippone; \\
 Initial review: Giuseppe Quaranta; \\
@@ -4421,7 +4421,9 @@ by the two \kw{orientation} statements.
         [ , \kw{friction} , \bnt{average_radius} , 
             [ \kw{preload} , \bnt{const_value} , ]
             \bnt{friction_model} , 
-            \bnt{shape_function} ]
+            \bnt{shape_function}
+            [ , \kw{reaction force components}, \{ \kw{full} | \kw{axial} | \kw{normal} | \kw{preload only} \} ]
+        ]
 \end{Verbatim}
 %\end{verbatim}
 The joint is shown in Figure~\ref{fig:el:joint:REV} where the axes shown are the those obtained after having applied the \nt{relative\_offset} and \nt{relative\_orientation\_matrix} transformations to the coordinate axes of \nt{node\_1} and \nt{node\_2}.
@@ -4447,6 +4449,24 @@ to constrain the position and orientation of two points,
 each attached to a node.
 This is what is typically known from the geometry of the components
 of a mechanism.
+
+\subsubsection{Friction}
+If \kw{friction} is specified then
+\begin{itemize}
+\item the \nt{average\_radius} $r$ is used to compute the friction-induced moment about the joint's axis as $M = frF_f$, where $f$ is the friction coefficient, computed from the 1-D \nt{friction\_model} and \nt{shape\_function}, and $F_f$ is a force, defined in the following;
+\item \nt{preload} is a preload force used to account for initial interference of the joint; even if there is no preload
+in the real joint, one should set it to a small number $\neq 0$ \textcolor{red}{[FIXME: should preload be $ > 0$ ? In that case, should we check for negative (or null) values? Should it be a drive caller?]} in order to deal with ill-conditioning of the friction computation occurring whenever the real joint reaction force is almost null;
+\item $F_f=\max(||\T{F}_r||,\ \nt{preload})$, where $\T{F}_r$ is some portion of the joint reaction force, % without friction,
+specified by \kw{reaction components}
+\item \kw{reaction force components} specifies which components of the reaction force should be used to compute $\T{F}_r$; more specifically
+    \begin{itemize}
+        \item \kw{full} (default behavior): use the whole reaction force (without friction) vector; friction will contribute not only to the torsional moment, but also to the overall force transmitted by the joint to the constrained nodes;
+        \item \kw{axial}: use the component along the joint axis of the reaction force (without friction); friction will contribute only to the torsional moment and not to the overall force transmitted by the joint to the constrained nodes, but will depend on the axial component of the reaction force;
+        \item \kw{normal}: use the component normal to the joint axis of the reaction force (without friction); friction will contribute not only to the torsional moment, but also to the overall force transmitted by the joint to the constrained nodes;
+        \item \kw{preload only}: assume that the friction comes only from the preload, thus $\T{F}_r=\T{0}$, and friction will only contribute to the torsional moment, not to the overall force transmitted by the joint to the constrained nodes, and will not depend on the joint reaction force.
+    \end{itemize}
+
+\end{itemize}
 
 \subsubsection{Output}
 The output occurs in the \texttt{.jnt} file, according to default joint output
@@ -4808,7 +4828,7 @@ for the first 13 columns; specific columns contain:
 \begin{itemize}
 \item column 14: the overall relative rotation angle between
         the two nodes, in degrees, along the prescribed screw direction,
-\item colums 15--17: the relative rotation vector
+\item columns 15--17: the relative rotation vector
 	$\mathrm{ax}(\log(\T{R}_{1}^T\T{R}_2)$;
 \end{itemize}
 If friction is present:
@@ -4834,6 +4854,9 @@ the relative orientation is not constrained.
         \bnt{node_2_label}
             [ , \kw{position} , (\hty{Vec3}) \bnt{relative_offset_2} ]
             [ , \kw{orientation} , (\hty{OrientationMatrix}) \bnt{relative_orientation_matrix_2} ]
+	[ , \kw{friction} ,
+            \bnt{friction_model_2D} ,
+            \bnt{shape_function_2D} ]
 \end{Verbatim}
 %\end{verbatim}
 The joint is shown in Figure~\ref{fig:el:joint:SPHERE} where the axes shown are the those obtained after having applied the \nt{relative\_offset} and \nt{relative\_orientation\_matrix} transformations to the coordinates of \nt{node\_1} and \nt{node\_2}.
@@ -4855,6 +4878,26 @@ with respect to node 1 is reset;
 \item \kw{offset\{2\}} the offset of the joint
 with respect to node 2 is reset;
 \end{itemize}
+\subsubsection{Output}
+The output occurs in the .jnt file, according to default joint output for the first 13 columns; specific
+columns contain:
+\begin{itemize}
+\item  columns 14–-16: the relative rotation vector (if the input file prescribe \kw{orientation matrix} output for the orientation then these would be columns 15--23, and the following columns would be shifted accordingly);
+\end{itemize}
+If friction is present, the output has some additional fields:
+\begin{itemize}
+\item columns 17--19: frictional moment;
+\item columns 20--22: direction $\T{n}$ of the normal (no friction) reaction force;
+\item columns 23--25: direction $\T{t}_1$ of the frictional force;
+\item columns 26--28: direction $\T{t}_2$ of the frictional force;
+\item column 29: friction coefficient $f_1$ in direction $\T{t}_1$;
+\item column 30: friction coefficient $f_2$ in direction $\T{t}_2$;
+\item columns 31--33: normal (no friction) reaction force $\T{F}$;
+\item columns 34--36: friction reaction force $\T{F}_1$ in direction $\T{t}_1$;
+\item columns 37--39: friction reaction force $\T{F}_2$ in direction $\T{t}_2$;
+\end{itemize}
+
+
 
 \subsection{Spherical pin}
 This joint constrains the absolute position of a node;

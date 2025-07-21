@@ -127,6 +127,7 @@ test: all
 		"libraries/libmbmath/dgeequtest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/itertest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/matmultest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
+		"libraries/libmbmath/polardecomp_test ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbmath/subtest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbwrap/cctest ${MBD_TEST_PROGS_GTEST_FLAGS}" \
 		"libraries/libmbwrap/wraptest ${MBD_TEST_PROGS_GTEST_FLAGS} -m naive" \

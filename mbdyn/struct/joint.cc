@@ -862,11 +862,24 @@ ReadJoint(DataManager* pDM,
 		/* allocazione e creazione cerniera sferica */
 		case SPHERICALHINGE:
 			{
+			doublereal r = 0.;
+			doublereal preload = 0.;
+			BasicFriction2D *bf = 0;
+			BasicShapeCoefficient2D *bsh = 0;
+			if (HP.IsKeyWord("friction")) {
+				r = HP.GetReal();
+				if (HP.IsKeyWord("preload")) {
+					preload = HP.GetReal();
+				}
+				bf = ParseFriction2D(HP, pDM);
+				bsh = ParseShapeCoefficient2D(HP);
+			}
 			SAFENEWWITHCONSTRUCTOR(pEl,
 				SphericalHingeJoint,
 				SphericalHingeJoint(uLabel, pDO,
 					pNode1, pNode2,
-					d1, R1h, d2, R2h, od, fOut));
+					d1, R1h, d2, R2h, od, fOut,
+					r, preload, bsh, bf));
 			std::ostream& out = pDM->GetLogFile();
 			out << "sphericalhinge: " << uLabel
 				<< " " << pNode1->GetLabel()
@@ -892,6 +905,7 @@ ReadJoint(DataManager* pDM,
 			doublereal preload = 0.;
 			BasicFriction *bf = 0;
 			BasicShapeCoefficient *bsh = 0;
+			PlaneHingeJoint::ReactionComponentsForFriction rc = PlaneHingeJoint::ReactionComponentsForFriction::Full;
 			if (HP.IsKeyWord("friction")) {
 				r = HP.GetReal();
 				if (HP.IsKeyWord("preload")) {
@@ -899,13 +913,30 @@ ReadJoint(DataManager* pDM,
 				}
 				bf = ParseFriction(HP,pDM);
 				bsh = ParseShapeCoefficient(HP);
+				if (HP.IsKeyWord("reaction" "force" "components")) {
+					if (HP.IsKeyWord("full")) {
+					} else if (HP.IsKeyWord("axial")) {
+						rc = PlaneHingeJoint::ReactionComponentsForFriction::Axial;
+					} else if (HP.IsKeyWord("normal")) {
+						rc = PlaneHingeJoint::ReactionComponentsForFriction::Normal;
+					} else if (HP.IsKeyWord("preload" "only")) {
+						rc = PlaneHingeJoint::ReactionComponentsForFriction::OnlyPreload;
+					} else {
+						silent_cerr("Error while parsing revolute rotation friction"
+							"reaction component : "
+							"unrecognized component specification "
+							"at line " << HP.GetLineData() << std::endl);
+						throw MBDynParser::ErrGeneric(MBDYN_EXCEPT_ARGS);
+					}
+				}
+
 			}
 			SAFENEWWITHCONSTRUCTOR(pEl,
 				PlaneHingeJoint,
 				PlaneHingeJoint(uLabel, pDO, pNode1, pNode2,
 					d1, d2, R1h, R2h, od, fOut,
 					calcInitdTheta, initDTheta,
-					r, preload, bsh, bf));
+					r, preload, bsh, bf, rc));
 			std::ostream& out = pDM->GetLogFile();
 			out << "revolutehinge: " << uLabel
 				<< " " << pNode1->GetLabel()

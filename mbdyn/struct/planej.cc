@@ -57,12 +57,13 @@ PlaneHingeJoint::PlaneHingeJoint(unsigned int uL, const DofOwner* pDO,
 		const doublereal rr,
 		const doublereal pref,
 		BasicShapeCoefficient *const sh,
-		BasicFriction *const f)
+		BasicFriction *const f,
+        ReactionComponentsForFriction rc)
 : Joint(uL, pDO, fOut), 
 pNode1(pN1), pNode2(pN2),
 d1(dTmp1), R1h(R1hTmp), d2(dTmp2), R2h(R2hTmp), F(Zero3), M(Zero3),
 calcInitdTheta(_calcInitdTheta), NTheta(0), dTheta(initDTheta), dThetaWrapped(initDTheta),
-Sh_c(sh), fc(f), preF(pref), r(rr),
+Sh_c(sh), fc(f), preF(pref), r(rr), ReactComp(rc),
 od(od)
 {
 	NO_OP;
@@ -151,7 +152,7 @@ PlaneHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, int 
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -288,7 +289,7 @@ PlaneHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -493,7 +494,7 @@ PlaneHingeJoint::AfterConvergence(const VectorHandler& X,
 		//relative velocity
 		doublereal v = (Omega1-Omega2).Dot(e3a)*r;
 		//reaction norm
-		doublereal modF = std::max(F.Norm(), preF);;
+		doublereal modF = std::max(F.Norm(), preF);
 		fc->AfterConvergence(modF,v,X,XP,iGetFirstIndex()+NumSelfDof);
 	}
 }
@@ -697,20 +698,40 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           //relative velocity
       doublereal v = (Omega1-Omega2).Dot(e3a)*r;
           //reaction norm
-      doublereal modF = std::max(F.Norm(), preF);
-          //reaction moment
+      doublereal modF;
+      ExpandableRowVector dF;
+      dF.ReDim(3);
+          //variation of reaction force
+      dF.Set(Vec3(Zero3), 1, 12+1);
+      modF = std::max(FReactForFrict.Norm(), preF);
+      Mat3x3 ForceProjector;
+      switch (ReactComp) {
+          case ReactionComponentsForFriction::Normal: {
+              ForceProjector = e1b.Tens(e1b) + e2b.Tens(e2b);
+              break;
+          }
+          case ReactionComponentsForFriction::Axial: {
+              ForceProjector = e3a.Tens(e3a);
+              break;
+          }
+          case ReactionComponentsForFriction::OnlyPreload: {
+              ForceProjector = Zero3x3;
+              break;
+          }
+          default: {
+              ForceProjector = Eye3;
+          }
+      }
+      if ((modF != 0.) && (FReactForFrict.Norm() > preF)) {
+          // (wrongly) assuming constant triad orientation!
+          dF.Set(ForceProjector.MulTV(ForceProjector * FReactForFrict)/modF, 1, 12+1);
+      }
+
+      //reaction moment
       //doublereal M3 = shc*modF*r;
       
       ExpandableRowVector dfc;
-      ExpandableRowVector dF;
       ExpandableRowVector dv;
-          //variation of reaction force
-      dF.ReDim(3);
-      if ((modF == 0.) or (F.Norm() < preF)) {
-          dF.Set(Vec3(Zero3),1,12+1);
-      } else {
-          dF.Set(F/modF,1,12+1);
-      }
           //variation of relative velocity
       dv.ReDim(6);
       
@@ -777,19 +798,69 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       dv.Set(-e3a*r,4, 6+4);
 
       //assemble friction states
-      fc->AssJac(WM,dfc,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,dCoef,modF,v,
-      		XCurr,XPrimeCurr,dF,dv);
+      fc->AssJac(WM, dfc, 12+NumSelfDof, iFirstReactionIndex+NumSelfDof, dCoef, modF, v,
+      		XCurr, XPrimeCurr, dF, dv);
       ExpandableMatrix dM3;
       ExpandableRowVector dShc;
       //compute 
           //variation of shape function
-      Sh_c->dSh_c(dShc,f,modF,v,dfc,dF,dv);
-          //variation of moment component
-      dM3.ReDim(3,2);
-      dM3.SetBlockDim(1,1);
-      dM3.SetBlockDim(2,1);
-      dM3.Set(e3a*shc*r,1,1); dM3.Link(1,&dF);
-      dM3.Set(e3a*modF*r,1,2); dM3.Link(2,&dShc);
+      Sh_c->dSh_c(dShc, f, modF, v, dfc, dF, dv);
+      if ((ReactComp == ReactionComponentsForFriction::Normal || ReactComp == ReactionComponentsForFriction::Full) && (FReactForFrict.Norm() > preF)) {
+          ExpandableMatrix dFreact;
+          dFreact.ReDim(3, 1);
+          dFreact.SetBlockDim(1, 3);
+          dFreact.Set(ForceProjector, 1, 1);
+          // switch (ReactComp) {
+          //     case ReactionComponentsForFriction::Normal: {
+          //         Mat3x3 Proj = e1b.Tens(e1b)  + e2b.Tens(e2b);
+          //         dFreact.Set(Proj, 1, 1);
+          //         break;
+          //     }
+          //     case ReactionComponentsForFriction::Full: {
+          //         dFreact.Set(Eye3, 1, 1);
+          //         break;
+          //     }
+          //     default: {
+          //         dFreact.Set(Zero3x3, 1, 1);
+          //         break;
+          //     }
+          // }
+          dFreact.SetBlockIdx(1, 12+1);
+          ExpandableMatrix dFfrict;
+          dFfrict.ReDim(3, 3);
+          dFfrict.SetBlockDim(1, 3);
+          dFfrict.SetBlockDim(2, 1);
+          dFfrict.SetBlockDim(3, 3);
+          dFfrict.SetBlockIdx(3, 4);
+          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc, 1, 1); dFfrict.Link(1, &dFreact);
+          dFfrict.SetCol(-e3a.Cross(FReactForFrict), 1, 2, 1); dFfrict.Link(2,&dShc);
+          dFfrict.Set(Mat3x3(MatCross, FReactForFrict)*Mat3x3(0., -1., 0., 1., 0., 0., 0., 0., 0.)*shc, 1, 3, 1);
+          dFfrict.Add(WM, 1, 1.);
+          dFfrict.Sub(WM, 7, 1.);
+          //WM.Add(4, 13, Mat3x3(MatCross, d1Tmp));
+          //WM.Sub(10, 13, Mat3x3(MatCross, d2Tmp));
+          ExpandableMatrix dMF1;
+          dMF1.ReDim(3, 1);
+          dMF1.SetBlockDim(1, 3);
+          dMF1.Set(Mat3x3(MatCross, d1Tmp), 1, 1, 1);
+          dMF1.Link(1, &dFfrict);
+          dMF1.Add(WM, 4);
+          ExpandableMatrix dMF2;
+          dMF2.ReDim(3, 1);
+          dMF2.SetBlockDim(1, 3);
+          dMF2.Set(Mat3x3(MatCross, d2Tmp), 1, 1, 1);
+          dMF2.Link(1, &dFfrict);
+          dMF2.Sub(WM, 10);
+      }
+      //variation of moment component
+      dM3.ReDim(3, 3);
+      dM3.SetBlockDim(1, 1);
+      dM3.SetBlockDim(2, 1);
+      dM3.SetBlockDim(3, 3);
+      dM3.SetBlockIdx(3, 4);
+      dM3.SetCol(e3a*shc*r, 1, 1, 1); dM3.Link(1, &dF);
+      dM3.SetCol(e3a*modF*r, 1, 2, 1); dM3.Link(2, &dShc);
+      dM3.Set(Mat3x3(0., -1., 0., 1., 0., 0., 0., 0., 0.)*M3, 1, 3, 1);
       //assemble first node
           //variation of moment component
       dM3.Add(WM, 4, 1.);
@@ -888,16 +959,47 @@ SubVectorHandler& PlaneHingeJoint::AssRes(SubVectorHandler& WorkVec,
       const Vec3& Omega1(pNode1->GetWCurr());
       const Vec3& Omega2(pNode2->GetWCurr());
       doublereal v = (Omega1-Omega2).Dot(e3a)*r;
-      doublereal modF = std::max(F.Norm(), preF);
+      doublereal modF;
+      FReactForFrict = Zero3;
+      switch (ReactComp) {
+          case ReactionComponentsForFriction::Normal: {
+              Vec3 FReactForFrict = e1b * (F.Dot(e1b)) + e2b * (F.Dot(e2b));
+              modF = std::max(FReactForFrict.Norm(), preF);
+              break;
+          }
+          case ReactionComponentsForFriction::Axial: {
+              FReactForFrict = e3a * F.Dot(e3a);
+              modF = std::max(F * e3a, preF);
+              break;
+          }
+          case ReactionComponentsForFriction::OnlyPreload: {
+              modF = preF;
+              FReactForFrict = Zero3;
+              break;
+          }
+          default: {
+              FReactForFrict = F;
+              modF = std::max(FReactForFrict.Norm(), preF);
+          }
+      }
+
       try {
-          fc->AssRes(WorkVec,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,modF,v,XCurr,XPrimeCurr);
+          fc->AssRes(WorkVec, 12+NumSelfDof, iFirstReactionIndex+NumSelfDof, modF, v, XCurr, XPrimeCurr);
       }
       catch (Elem::ChangedEquationStructure& err) {
           ChangeJac = true;
       }
       doublereal f = fc->fc();
       doublereal shc = Sh_c->Sh_c(f,modF,v);
+      Ffrict = Zero3;
+      if ((ReactComp == ReactionComponentsForFriction::Normal || ReactComp == ReactionComponentsForFriction::Full) && FReactForFrict.Norm() > preF) {
+          Ffrict = -e3a.Cross(FReactForFrict)*shc;
+      }
       M3 = shc*modF*r;
+      WorkVec.Sub(1,Ffrict);
+      WorkVec.Add(7,Ffrict);
+      WorkVec.Add(4, Ffrict.Cross(dTmp1)); /* Sfrutto  F/\d = -d/\F */
+      WorkVec.Add(10, dTmp2.Cross(Ffrict));
       WorkVec.Sub(4,e3a*M3);
       WorkVec.Add(10,e3a*M3);
 //!!!!!!!!!!!!!!
@@ -1004,7 +1106,7 @@ void PlaneHingeJoint::Output(OutputHandler& OH) const
 
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
-			Joint::NetCDFOutput(OH, R2Tmp.MulTV(F), M, F, R2Tmp*M);
+			Joint::NetCDFOutput(OH, R2Tmp.MulTV(F+Ffrict), M, F+Ffrict, R2Tmp*M);
 			switch (od) {
 			case EULER_123:
 			case EULER_313:
@@ -1032,7 +1134,7 @@ void PlaneHingeJoint::Output(OutputHandler& OH) const
 #endif // USE_NETCDF
 		if (OH.UseText(OutputHandler::JOINTS)) {
 			  std::ostream &of = Joint::Output(OH.Joints(), "PlaneHinge", GetLabel(),
-					R2Tmp.MulTV(F), M, F, R2Tmp*M)
+					R2Tmp.MulTV(F+Ffrict), M, F+Ffrict, R2Tmp*M)
 			<< " ";
 
 			switch (od) {
@@ -2631,7 +2733,7 @@ AxialRotationJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, i
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -2771,7 +2873,7 @@ AxialRotationJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, in
 		}
 		desc.resize(nfc + nself);
 		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[nfc];
+			desc[nself + i] = os.str() + ": " + desc[i];
 		}
 
 		std::string name = os.str();
@@ -3236,6 +3338,21 @@ AxialRotationJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       dM3.Set(modF * r,2); dM3.Link(2,&dShc);
       //assemble first node
           //variation of moment component
+      if (F.Norm() > preF) {
+          ExpandableMatrix dFreact;
+          dFreact.ReDim(3, 1);
+          dFreact.SetBlockDim(1, 3);
+          dFreact.Set(Eye3, 1, 1);
+          dFreact.SetBlockIdx(1, 12+1);
+          ExpandableMatrix dFfrict;
+          dFfrict.ReDim(3,2);
+          dFfrict.SetBlockDim(1,3);
+          dFfrict.SetBlockDim(2,1);
+          dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1,&dFreact);
+          dFfrict.SetCol(-e3a.Cross(F),1,2,1); dFfrict.Link(2,&dShc);
+          dFfrict.Add(WM, 1, 1.);
+          dFfrict.Sub(WM, 7, 1.);
+      }
       dM3.Add(WM,0+4,e3a.dGet(1));
       dM3.Add(WM,0+5,e3a.dGet(2));
       dM3.Add(WM,0+6,e3a.dGet(3));
@@ -3340,7 +3457,13 @@ SubVectorHandler& AxialRotationJoint::AssRes(SubVectorHandler& WorkVec,
       }
       doublereal f = fc->fc();
       doublereal shc = Sh_c->Sh_c(f,modF,v);
+      Ffrict = Vec3(0., 0., 0.);
+      if (F.Norm() > preF) {
+          Ffrict = -e3a.Cross(F)*shc;
+      }
       M3 = shc*modF*r;
+      WorkVec.Sub(1,Ffrict);
+      WorkVec.Add(7,Ffrict);
       WorkVec.Sub(4,e3a*M3);
       WorkVec.Add(10,e3a*M3);
 //!!!!!!!!!!!!!!
@@ -3430,7 +3553,7 @@ void AxialRotationJoint::Output(OutputHandler& OH) const
       
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
-			Joint::NetCDFOutput(OH, R2Tmp.MulTV(F), M, F, R2Tmp*M);
+			Joint::NetCDFOutput(OH, R2Tmp.MulTV(F+Ffrict), M, F+Ffrict, R2Tmp*M);
 			switch (od) {
 			case EULER_123:
 			case EULER_313:
@@ -3457,7 +3580,7 @@ void AxialRotationJoint::Output(OutputHandler& OH) const
 #endif // USE_NETCDF
 		if (OH.UseText(OutputHandler::JOINTS)) {
 		  std::ostream &of = Joint::Output(OH.Joints(), "AxialRotation", GetLabel(),
-				R2Tmp.MulTV(F), M, F, R2Tmp*M)
+				R2Tmp.MulTV(F+Ffrict), M, F+Ffrict, R2Tmp*M)
 		  << " ";
 
 			switch (od) {
