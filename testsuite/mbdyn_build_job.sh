@@ -298,10 +298,14 @@ if test -d "${TRILINOS_INSTALL_PREFIX}"; then
     TRILINOS_INC_DIR="${TRILINOS_INC_DIR:-${TRILINOS_INSTALL_PREFIX}/include}"
 
     if test -d "${TRILINOS_INC_DIR}"; then
-        CPPFLAGS="-I${TRILINOS_INC_DIR} ${CPPFLAGS}"
+        CPPFLAGS="-I${TRILINOS_INC_DIR} -I${TRILINOS_INC_DIR}/kokkos ${CPPFLAGS}"
     fi
 
     TRILINOS_LIB_DIR="${TRILINOS_LIB_DIR:-${TRILINOS_INSTALL_PREFIX}/lib}"
+
+    if ! test -d "${TRILINOS_LIB_DIR}"; then
+        TRILINOS_LIB_DIR="${TRILINOS_INSTALL_PREFIX}/lib64"
+    fi
 
     if test -d "${TRILINOS_LIB_DIR}"; then
         LDFLAGS="-L${TRILINOS_LIB_DIR} -Wl,-rpath=${TRILINOS_LIB_DIR} ${LDFLAGS}"
