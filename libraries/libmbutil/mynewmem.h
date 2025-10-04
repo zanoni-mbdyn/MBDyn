@@ -305,13 +305,13 @@ mbdyn_operator_new_flags_type mbdyn_operator_new_get_flags();
 
 void* mbdyn_operator_new(size_t size);
 
-void mbdyn_operator_delete(void* pMem);
+void mbdyn_operator_delete(void* pMem) noexcept;
 
 #define MBDYN_DEFINE_OPERATOR_NEW_DELETE \
      void* operator new(size_t size) { \
          return mbdyn_operator_new(size); \
      } \
-     void operator delete(void* pMem) { \
+     void operator delete(void* pMem) noexcept { \
          mbdyn_operator_delete(pMem); \
      }
 #else
