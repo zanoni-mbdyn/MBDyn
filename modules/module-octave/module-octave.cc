@@ -43,6 +43,8 @@
 
 #ifdef USE_OCTAVE
 
+#define HAVE_PRAGMA_GCC_DIAGNOSTIC
+
 #if OCTAVE_MAJOR_VERSION < 5
 // FIXME: there is a conflict between the MBDyn and octave real type
 #define real mbdyn_real_type

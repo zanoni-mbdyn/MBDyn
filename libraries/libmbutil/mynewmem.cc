@@ -114,7 +114,7 @@ void* mbdyn_operator_new(size_t size)
      return pMem;
 }
 
-void mbdyn_operator_delete(void* pMem)
+void mbdyn_operator_delete(void* pMem) noexcept
 {
      free(pMem);
 }
