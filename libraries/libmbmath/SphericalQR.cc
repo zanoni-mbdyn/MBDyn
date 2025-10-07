@@ -221,6 +221,10 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
             u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
             u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
             u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
+            // std::cout << "old: " << Qold << std::endl;
+            // std::cout << "old1: " << Qold.GetVec(1) << std::endl;
+            // std::cout << "old2: " << Qold.GetVec(2) << std::endl;
+            // std::cout << "old3: " << Qold.GetVec(3) << std::endl;
             // std::cout << "bef: " << Q << std::endl;
             // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
             // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
@@ -234,6 +238,20 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
             // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
             // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
             // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+            doublereal phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+            if (phi > 1.5) {
+                // std::cout << "phi before " << phi << std::endl;
+                Vec3 p(0., 0., std::numbers::pi);
+                Mat3x3 R = RotManip::Rot(p);
+                Q = Q * R;
+                // std::cout << "aftaft: " << Q << std::endl;
+                // std::cout << "aftaft1: " << Q.GetVec(1) << std::endl;
+                // std::cout << "aftaft2: " << Q.GetVec(2) << std::endl;
+                // std::cout << "aftaft3: " << Q.GetVec(3) << std::endl;
+                // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+                phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+                // std::cout << "phi after " << phi << std::endl;
+            }
         // }
     }
     // std::cout << "QD after: " << Q << std::endl;
