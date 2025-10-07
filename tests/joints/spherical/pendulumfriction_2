@@ -27,6 +27,9 @@ begin: control data;
 	gravity;
 
 #	skip initial joint assembly;
+#	jacobian check: step,  0.059, 1., 0., output, all;
+	print: dof description;
+	print: equation description;
 
 	# default output: none;
 end: control data;
@@ -70,26 +73,8 @@ scalar function: "constfriction", const, 0.3;
 
 begin: elements;
 	joint: 0, clamp, 0, node, node;
-/*
-	joint: 1, 
-		revolute hinge,
-		0,
-			position, reference, node, null,
-			orientation, reference, node,
-				3, 0., 1., 0.,
-				1, 1., 0., 0.,
-		1,
-			position, reference, other node, null,
-			orientation, reference, node,
-				3, 0., 1., 0.,
-				1, 1., 0., 0.,
-		friction, 0.2,
-			preload, .1,
-			modlugre, 2000, 2.8, 0., 0.71, "constfriction",
-			simple;
-*/
-#/*
-	joint: 1, 
+
+	joint: 1,
 		spherical hinge,
 		0,
 			position, reference, node, null,
@@ -103,9 +88,8 @@ begin: elements;
 				1, 1., 0., 0.,
 		friction, 0.2,
 			preload, .1,
-			modlugre 2D, 2000, 2.8, 0., 0.71, "constfriction",
+			modlugre 2D, 2000, 1., 0., 0.71, "constfriction",
 			simple 2D;
-#*/
 
 	body: 1, 1,
 		10,
