@@ -172,6 +172,11 @@ DeformableHingeJoint::Restart(std::ostream& out) const
 	return pDC->Restart(out) << ';' << std::endl;
 }
 
+void DeformableHingeJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     pDC->Restart(oData, RestartData::ELEM_JOINTS, GetLabel(), 1, eAction);
+}
+
 void
 DeformableHingeJoint::OutputPrepare(OutputHandler& OH)
 {
