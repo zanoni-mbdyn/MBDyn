@@ -44,7 +44,7 @@
  *
  * a[0] = A(1,1)
  * a[1] = A(1,2)
- * a[2] = A[2,2]
+ * a[2] = A(2,2)
  *
  * u[0][0] = U(1,1)
  * u[0][1] = U(1,2)
@@ -93,24 +93,34 @@
 //     return;
 // }
 
+/*
+ * Compute the determinant of the symmetric matrix A, d = det(A)
+ *
+ * a[0] = A(1,1)
+ * a[1] = A(1,2)
+ * a[2] = A(2,2)
+*/
+doublereal det2x2S(const doublereal a[3]) {
+    return a[0] * a[2] - a[1] * a[1];
+}
 
 /*
  * Compute the square root of the symmetric matrix A, B = sqrtm(A)
  *
  * a[0] = A(1,1)
  * a[1] = A(1,2)
- * a[2] = A[2,2]
+ * a[2] = A(2,2)
  *
  * b[0] = B(1,1)
  * b[1] = B(1,2)
- * b[2] = B[2,2]
+ * b[2] = B(2,2)
  *
  * Formulae taken from https://en.wikipedia.org/wiki/Square_root_of_a_2_by_2_matrix
  *
  */
 void sqrtm2x2S(const doublereal a[3], doublereal b[3]) {
 
-    doublereal det = a[0] * a[2] - a[1] * a[1];
+    doublereal det = det2x2S(a);
     doublereal trace = a[0] + a[2];
     doublereal s = std::sqrt(det);
     doublereal t = std::sqrt(trace + 2. * s);
@@ -201,39 +211,66 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
     // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
 
     // std::cout << "update: " << update << std::endl;
-    if (update) {
+    if (update ){
         // doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
         // if (phi < 0.785398163397448) {
 
             // std::cout << "old: " << Qold << std::endl;
             doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
+            // std::cout << "c" << std::endl;
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < 2; j++) {
                     c[i][j] = Qold.GetCol(i+2).Dot(Q.GetCol(j+2));
+                    // std::cout << c[i][j] << " ";
                 }
+                // std::cout << std::endl;
             }
             cct[0] = c[0][0] * c[0][0] + c[0][1] * c[0][1];
             cct[1] = c[0][0] * c[1][0] + c[0][1] * c[1][1];
             cct[2] = c[1][0] * c[1][0] + c[1][1] * c[1][1];
-            sqrtm2x2S(cct, sqrtc);
-            inv2x2S(sqrtc, isqrtc);
-            u[0][0] = c[0][0] * isqrtc[0] + c[1][0] * isqrtc[1];
-            u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
-            u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
-            u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
-            // std::cout << "bef: " << Q << std::endl;
-            // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
-            // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
-            // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
-            Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
-            Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
-            Q.PutVec(2, q1);
-            Q.PutVec(3, q2);
-            // std::cout << "aft: " << Q << std::endl;
-            // std::cout << "aft1: " << Q.GetVec(1) << std::endl;
-            // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
-            // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
-            // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+            if (std::abs(det2x2S(cct)) > 0.) {
+                sqrtm2x2S(cct, sqrtc);
+                inv2x2S(sqrtc, isqrtc);
+                u[0][0] = c[0][0] * isqrtc[0] + c[1][0] * isqrtc[1];
+                u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
+                u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
+                u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
+                // std::cout << "old: " << Qold << std::endl;
+                // std::cout << "old1: " << Qold.GetVec(1) << std::endl;
+                // std::cout << "old2: " << Qold.GetVec(2) << std::endl;
+                // std::cout << "old3: " << Qold.GetVec(3) << std::endl;
+                // std::cout << "bef: " << Q << std::endl;
+                // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
+                // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
+                // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
+                Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
+                Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
+                Q.PutVec(2, q1);
+                Q.PutVec(3, q2);
+                // std::cout << "aft: " << Q << std::endl;
+                // std::cout << "aft1: " << Q.GetVec(1) << std::endl;
+                // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
+                // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
+                // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+                doublereal phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+                if (phi > std::numbers::pi / 2.) {
+                    std::cout << "phi before " << phi << std::endl;
+                    Vec3 p = Q.GetVec(1) * std::numbers::pi;
+                    Mat3x3 R = RotManip::Rot(p);
+                    Q = Q * R;
+                    // std::cout << "aftaft: " << Q << std::endl;
+                    // std::cout << "aftaft1: " << Q.GetVec(1) << std::endl;
+                    // std::cout << "aftaft2: " << Q.GetVec(2) << std::endl;
+                    // std::cout << "aftaft3: " << Q.GetVec(3) << std::endl;
+                    // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+                    phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+                    // std::cout << "phi after " << phi << std::endl;
+                }
+            } else {
+                // std::cout << "________________________________" << std::endl;
+                // std::cout << det2x2S(cct) << std::endl;
+                // std::cout << "________________________________" << std::endl;
+            }
         // }
     }
     // std::cout << "QD after: " << Q << std::endl;
