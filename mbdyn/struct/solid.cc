@@ -30,7 +30,7 @@
 
 /*
  AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-        Copyright (C) 2022(-2023) all rights reserved.
+        Copyright (C) 2022(-2025) all rights reserved.
 
         The copyright of this code is transferred
         to Pierangelo Masarati and Paolo Mantegazza
@@ -313,7 +313,7 @@ public:
      using SolidElem::InitialAssRes;
      using SolidElem::InitialAssJac;
      using SolidElem::Restart;
-     
+
      typedef IncomprSolidElemStatic<SolidCSLType::eConstLawType == ConstLawType::ELASTICINCOMPR, ElementType::ElemTypePressure::iNumNodes> IncomprSolidElemType;
 
      static constexpr ConstLawType::Type eConstLawType = SolidCSLType::eConstLawType;
@@ -435,7 +435,7 @@ public:
      virtual doublereal dGetRequestedTimeStep() const override;
 
      virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
-     
+
 protected:
      template <typename T>
      inline void
@@ -1957,24 +1957,23 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Gau
 #ifdef HAVE_DGELSD
      using namespace sp_grad;
 
-     static_assert(iNumNodesExtrap <= iNumNodes, "invalid number of nodes");
-     static_assert(iNumNodesExtrap <= iNumEvalPointsStiffness, "invalid number of nodes");
+     static_assert(iNumEvalPointsStiffness >= 4, "invalid number of points");
 
-     SpMatrixA<doublereal, iNumEvalPointsStiffness, iNumNodesExtrap> H;
+     SpMatrixA<doublereal, iNumEvalPointsStiffness, 4> H;
      SpColVectorA<doublereal, 3> r;
-     SpColVectorA<doublereal, iNumNodesExtrap> h;
 
      for (index_type i = 1; i <= iNumEvalPointsStiffness; ++i) {
           CollocationType::GetPositionStiffness(i - 1, r);
-          ElementType::ElemTypeDisplacement::ShapeFunctionExtrap(r, h);
 
-          for (index_type j = 1; j <= iNumNodesExtrap; ++j) {
-               H(i, j) = h(j); // FIXME: select only a subset of available nodes
+          H(i, 1) = 1.;
+
+          for (index_type j = 1; j <= 3; ++j) {
+               H(i, j + 1) = r(j);
           }
      }
 
      constexpr integer M = iNumEvalPointsStiffness;
-     constexpr integer N = iNumNodesExtrap;
+     constexpr integer N = 4;
      constexpr integer MINMN = M < N ? M : N;
      constexpr integer NRHS = iNumComp;
      constexpr integer LDB = M;
@@ -2003,7 +2002,17 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Gau
           throw ErrGeneric(MBDYN_EXCEPT_ARGS);
      }
 
-     ElementType::ElemTypeDisplacement::GaussToNodalInterp(taun, B);
+     for (index_type j = 1; j <= iNumComp; ++j) {
+          for (index_type i = 1; i <= iNumNodes; ++i) {
+               ElementType::ElemTypeDisplacement::NodalPosition(i, r);
+
+               taun(i, j) = B(1, j);
+
+               for (index_type k = 1; k <= 3; ++k) {
+                    taun(i, j) += B(k + 1, j) * r(k);
+               }
+          }
+     }
 #else
      silent_cerr("Output of solid element data is not available because LAPACK's dgelsd function was not found.\n"
                  "It may be disabled by means of a \"default output:\" statement within the control data section.\n");
