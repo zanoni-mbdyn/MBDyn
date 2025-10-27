@@ -30,12 +30,12 @@
 
 /*
  AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-        Copyright (C) 2024(-2025) all rights reserved.
+	Copyright (C) 2024(-2025) all rights reserved.
 
-        The copyright of this code is transferred
-        to Pierangelo Masarati and Paolo Mantegazza
-        for use in the software MBDyn as described
-        in the GNU Public License version 2.1
+	The copyright of this code is transferred
+	to Pierangelo Masarati and Paolo Mantegazza
+	for use in the software MBDyn as described
+	in the GNU Public License version 2.1
 */
 
 #include <cassert>
@@ -60,17 +60,17 @@ template<typename function_t>
 doublereal quad(const function_t& f, const doublereal a, const doublereal b, integer N)
 {
      if ( a == b )
-          return 0.;
+	  return 0.;
 
      N += N & 1;
 
      doublereal Y2n0 = 0., Y2n1 = 0.;
 
      for (integer i = 1; i <= N - 1; i += 2)
-          Y2n1 += f(a + (b - a) * i / N);
+	  Y2n1 += f(a + (b - a) * i / N);
 
      for (integer i = 2; i <= N - 2; i += 2)
-          Y2n0 += f(a + (b - a) * i / N);
+	  Y2n0 += f(a + (b - a) * i / N);
 
      return (b - a) / (3 * N) * (f(a) + f(b) + 4 * Y2n1 + 2 * Y2n0);
 }
@@ -193,38 +193,38 @@ struct IsotropicElasticityHelper;
 template<>
 struct IsotropicElasticityHelper<ConstitutiveLaw6D> {
      static Mat6x6 TangentOperator(doublereal E, doublereal nu) {
-          const doublereal a = nu / (1 - nu);
-          const doublereal b = (1 - 2 * nu) / (2 * (1 - nu));
-          const doublereal c = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu));
-          const doublereal d = a * c;
-          const doublereal e = b * c;
+	  const doublereal a = nu / (1 - nu);
+	  const doublereal b = (1 - 2 * nu) / (2 * (1 - nu));
+	  const doublereal c = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu));
+	  const doublereal d = a * c;
+	  const doublereal e = b * c;
 
-          return Mat6x6(c, d, d, 0, 0, 0,
-                        d, c, d, 0, 0, 0,
-                        d, d, c, 0, 0, 0,
-                        0, 0, 0, e, 0, 0,
-                        0, 0, 0, 0, e, 0,
-                        0, 0, 0, 0, 0, e);
+	  return Mat6x6(c, d, d, 0, 0, 0,
+			d, c, d, 0, 0, 0,
+			d, d, c, 0, 0, 0,
+			0, 0, 0, e, 0, 0,
+			0, 0, 0, 0, e, 0,
+			0, 0, 0, 0, 0, e);
      }
 };
 
 template<>
 struct IsotropicElasticityHelper<ConstitutiveLaw9D> {
      static Mat9x9 TangentOperator(doublereal E, doublereal nu) {
-          const doublereal c = (E*(nu-1))/((nu+1)*(2*nu-1));
-          const doublereal d = -(E*nu)/((nu+1)*(2*nu-1));
-          const doublereal e = E/(2*(nu+1));
-          const doublereal n = 0.;
+	  const doublereal c = (E*(nu-1))/((nu+1)*(2*nu-1));
+	  const doublereal d = -(E*nu)/((nu+1)*(2*nu-1));
+	  const doublereal e = E/(2*(nu+1));
+	  const doublereal n = 0.;
 
-          return Mat9x9{c, d, d, n, n, n, n, n, n,
-                    d, c, d, n, n, n, n, n, n,
-                    d, d, c, n, n, n, n, n, n,
-                    n, n, n, e, e, n, n, n, n,
-                    n, n, n, e, e, n, n, n, n,
-                    n, n, n, n, n, e, e, n, n,
-                    n, n, n, n, n, e, e, n, n,
-                    n, n, n, n, n, n, n, e, e,
-                    n, n, n, n, n, n, n, e, e};
+	  return Mat9x9{c, d, d, n, n, n, n, n, n,
+		    d, c, d, n, n, n, n, n, n,
+		    d, d, c, n, n, n, n, n, n,
+		    n, n, n, e, e, n, n, n, n,
+		    n, n, n, e, e, n, n, n, n,
+		    n, n, n, n, n, e, e, n, n,
+		    n, n, n, n, n, e, e, n, n,
+		    n, n, n, n, n, n, n, e, e,
+		    n, n, n, n, n, n, n, e, e};
      }
 };
 
@@ -239,9 +239,9 @@ void CheckConstitutiveLaw(ConstitutiveLawType& oMaterial, const typename Constit
      StrainType Eps = mb_zero<StrainType>(), EpsP = mb_zero<StrainType>();
 
      if constexpr(StrainType::iNumRowsStatic == 9) {
-               for (integer i = 1; i <= 3; ++i) {
-                    Eps(i) = 1.;
-               }
+	       for (integer i = 1; i <= 3; ++i) {
+		    Eps(i) = 1.;
+	       }
      }
 
      const doublereal deltaEps = std::pow(std::numeric_limits<doublereal>::epsilon(), 0.8);
@@ -280,29 +280,29 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
      std::array<doublereal, iNumSteps + 1> N, M, Nref, Mref, lambda, D;
 
      for (integer i = 0; i <= iNumSteps; ++i) {
-          D[i] = i * Dmax / iNumSteps;
-          lambda[i] = i * (lambdamax - lambdamin) / iNumSteps + lambdamin;
+	  D[i] = i * Dmax / iNumSteps;
+	  lambda[i] = i * (lambdamax - lambdamin) / iNumSteps + lambdamin;
 
-          const double ra = Ra / sqrt(lambda[i]);
+	  const double ra = Ra / sqrt(lambda[i]);
 
-          auto dM = [&](const double r) {
-            return SedlanTorque(oCSL, r, D[i], lambda[i]);
-          };
+	  auto dM = [&](const double r) {
+	    return SedlanTorque(oCSL, r, D[i], lambda[i]);
+	  };
 
-          auto dN = [&](const double r) {
-                          return SedlanForce(oCSL, r, D[i], lambda[i]);
-          };
+	  auto dN = [&](const double r) {
+			  return SedlanForce(oCSL, r, D[i], lambda[i]);
+	  };
 
-          M[i] = quad(dM, 0., ra, iNumInteg);
-          N[i] = quad(dN, 0., ra, iNumInteg);
+	  M[i] = quad(dM, 0., ra, iNumInteg);
+	  N[i] = quad(dN, 0., ra, iNumInteg);
 
-          if (oCSL.GetName() == "NeoHookean6D") {
-               Nref[i] = NeoHookeanForceReference(mu, Ra, D[i], lambda[i]);
-               Mref[i] = NeoHookeanTorqueReference(mu, Ra, D[i], lambda[i]);
-          } else {
-               Nref[i] = SedlanForceReference(C1, C2, Ra, D[i], lambda[i]);
-               Mref[i] = SedlanTorqueReference(C1, C2, Ra, D[i], lambda[i]);
-          }
+	  if (oCSL.GetName() == "NeoHookean6D") {
+	       Nref[i] = NeoHookeanForceReference(mu, Ra, D[i], lambda[i]);
+	       Mref[i] = NeoHookeanTorqueReference(mu, Ra, D[i], lambda[i]);
+	  } else {
+	       Nref[i] = SedlanForceReference(C1, C2, Ra, D[i], lambda[i]);
+	       Mref[i] = SedlanTorqueReference(C1, C2, Ra, D[i], lambda[i]);
+	  }
      }
 
      constexpr doublereal dTol = 1e-8;
@@ -314,28 +314,28 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
 
      std::cout << "\n-------------------------------------------------------------\n";
      std::cout << std::setw(14) << std::left << "D" << " |" << std::setw(14) << std::left << "lambda" << " |"
-               << std::setw(14) << std::left << "M" << " |" << std::setw(14) << std::left << "N" << "\n";
+	       << std::setw(14) << std::left << "M" << " |" << std::setw(14) << std::left << "N" << "\n";
      std::cout << "-------------------------------------------------------------\n";
 
      for (integer i = 0; i <= iNumSteps; ++i) {
-          std::cout << std::setw(14) << std::right << std::fixed << std::setprecision(2) << D[i] << " |"
-                    << std::setw(14) << std::right << std::fixed << std::setprecision(2) << lambda[i] << " |"
-                    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << M[i] << " |"
-                    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << N[i] << "\n";
+	  std::cout << std::setw(14) << std::right << std::fixed << std::setprecision(2) << D[i] << " |"
+		    << std::setw(14) << std::right << std::fixed << std::setprecision(2) << lambda[i] << " |"
+		    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << M[i] << " |"
+		    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << N[i] << "\n";
      }
 
      std::cout << oCSL.GetName() << ": reference values\n";
 
      std::cout << "\n-------------------------------------------------------------\n";
      std::cout << std::setw(14) << std::left << "D" << " |" << std::setw(14) << std::left << "lambda" << " |"
-               << std::setw(14) << std::left << "M" << " |" << std::setw(14) << std::left << "N" << "\n";
+	       << std::setw(14) << std::left << "M" << " |" << std::setw(14) << std::left << "N" << "\n";
      std::cout << "-------------------------------------------------------------\n";
 
      for (integer i = 0; i <= iNumSteps; ++i) {
-          std::cout << std::setw(14) << std::right << std::fixed << std::setprecision(2) << D[i] << " |"
-                    << std::setw(14) << std::right << std::fixed << std::setprecision(2) << lambda[i] << " |"
-                    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << Mref[i] << " |"
-                    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << Nref[i] << "\n";
+	  std::cout << std::setw(14) << std::right << std::fixed << std::setprecision(2) << D[i] << " |"
+		    << std::setw(14) << std::right << std::fixed << std::setprecision(2) << lambda[i] << " |"
+		    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << Mref[i] << " |"
+		    << std::fixed << std::right << std::setprecision(4) << std::setw(14) << Nref[i] << "\n";
      }
 
      std::cout << "-------------------------------------------------------------\n";
@@ -344,8 +344,8 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
      std::cout.precision(precision);
 
      for (integer i = 1; i <= iNumSteps; ++i) {
-          MBDYN_TESTSUITE_ASSERT(std::fabs(M[i] / Mref[i] - 1.) < dTol);
-          MBDYN_TESTSUITE_ASSERT(std::fabs(N[i] / Nref[i] - 1.) < dTol);
+	  MBDYN_TESTSUITE_ASSERT(std::fabs(M[i] / Mref[i] - 1.) < dTol);
+	  MBDYN_TESTSUITE_ASSERT(std::fabs(N[i] / Nref[i] - 1.) < dTol);
      }
 
      typedef ConstitutiveLaw<TStress, TStressDerStrain, TStrain> ConstLawType;
@@ -359,7 +359,7 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
 
 MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestMooneyRivlin6D)
 {
-     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
+     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::CSL_PRE_NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
 
      constexpr doublereal E = 100e6;
@@ -379,7 +379,7 @@ MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestMooneyRivlin6D)
 
 MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestMooneyRivlin9D)
 {
-     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
+     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::CSL_PRE_NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
 
      constexpr doublereal E = 100e6;
@@ -416,9 +416,9 @@ MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestSignorini9D)
      oFiniteStrainOpt.tangent_operator = mgis::behaviour::FiniteStrainBehaviourOptions::DPK1_DF;
 
      mgis::behaviour::Behaviour oBehaviour = mgis::behaviour::load(oFiniteStrainOpt,
-                                                                   szMFrontLibPath,
-                                                                   "Signorini",
-                                                                   mgis::behaviour::Hypothesis::TRIDIMENSIONAL);
+								   szMFrontLibPath,
+								   "Signorini",
+								   mgis::behaviour::Hypothesis::TRIDIMENSIONAL);
 
      MFrontGenericInterfaceCSL<Vec9, Mat9x9> oSignorini(oBehaviour, new NullDriveCaller);
 
@@ -434,7 +434,7 @@ MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestSignorini9D)
 
 MBDYN_TESTSUITE_TEST(solidcsltest, SedlanTestNeoHookean6D)
 {
-     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
+     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::CSL_PRE_NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
 
      constexpr doublereal E = 100e6;
@@ -462,55 +462,55 @@ void CheckTangentOperator(ConstitutiveLawType& oMaterial, typename ConstitutiveL
      auto D = oMaterial.GetFDEPrime();
 
      for (integer i = 1; i <= Kref.iGetNumRows(); ++i) {
-          for (integer j = 1; j <= Kref.iGetNumCols(); ++j) {
-               std::cout << std::setw(10) << std::setprecision(4) << Kref(i, j) << " ";
-          }
-          std::cout << "\n";
+	  for (integer j = 1; j <= Kref.iGetNumCols(); ++j) {
+	       std::cout << std::setw(10) << std::setprecision(4) << Kref(i, j) << " ";
+	  }
+	  std::cout << "\n";
      }
 
      std::cout << "\n";
 
      for (integer i = 1; i <= K.iGetNumRows(); ++i) {
-          for (integer j = 1; j <= K.iGetNumCols(); ++j) {
-               std::cout << std::setw(10) << std::setprecision(4) << K(i, j) << " ";
-          }
-          std::cout << "\n";
+	  for (integer j = 1; j <= K.iGetNumCols(); ++j) {
+	       std::cout << std::setw(10) << std::setprecision(4) << K(i, j) << " ";
+	  }
+	  std::cout << "\n";
      }
 
      for (integer i = 1; i <= K.iGetNumRows(); ++i) {
-          for (integer j = 1; j <= K.iGetNumCols(); ++j) {
-               MBDYN_TESTSUITE_ASSERT(fabs(K(i, j) - Kref(i, j)) < dTol);
-               MBDYN_TESTSUITE_ASSERT(fabs(D(i, j) - beta * Kref(i, j)) < dTol);
-          }
+	  for (integer j = 1; j <= K.iGetNumCols(); ++j) {
+	       MBDYN_TESTSUITE_ASSERT(fabs(K(i, j) - Kref(i, j)) < dTol);
+	       MBDYN_TESTSUITE_ASSERT(fabs(D(i, j) - beta * Kref(i, j)) < dTol);
+	  }
      }
 
      for (integer j = 1; j <= Eps.iGetNumRows(); ++j) {
-          const doublereal dEps0 = Eps(j);
-          Eps(j) = dEps0 + deltaEps;
+	  const doublereal dEps0 = Eps(j);
+	  Eps(j) = dEps0 + deltaEps;
 
-          oMaterial.Update(Eps, EpsP);
+	  oMaterial.Update(Eps, EpsP);
 
-          const auto F = oMaterial.GetF();
+	  const auto F = oMaterial.GetF();
 
-          for (integer i = 1; i <= F.iGetNumRows(); ++i) {
-               MBDYN_TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEps * Kref(i, j)) < dTol);
-          }
+	  for (integer i = 1; i <= F.iGetNumRows(); ++i) {
+	       MBDYN_TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEps * Kref(i, j)) < dTol);
+	  }
 
-          Eps(j) = dEps0;
+	  Eps(j) = dEps0;
      }
 
      for (integer j = 1; j <= EpsP.iGetNumRows(); ++j) {
-          EpsP(j) = deltaEpsP;
+	  EpsP(j) = deltaEpsP;
 
-          oMaterial.Update(Eps, EpsP);
+	  oMaterial.Update(Eps, EpsP);
 
-          const auto F = oMaterial.GetF();
+	  const auto F = oMaterial.GetF();
 
-          for (integer i = 1; i <= F.iGetNumRows(); ++i) {
-               MBDYN_TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEpsP * beta * Kref(i, j)) < dTol);
-          }
+	  for (integer i = 1; i <= F.iGetNumRows(); ++i) {
+	       MBDYN_TESTSUITE_ASSERT(std::fabs(F(i) - F0(i) - deltaEpsP * beta * Kref(i, j)) < dTol);
+	  }
 
-          EpsP(j) = 0.;
+	  EpsP(j) = 0.;
      }
 
      oMaterial.Update(Eps, EpsP);
@@ -549,7 +549,7 @@ MBDYN_TESTSUITE_TEST(solidcsltest, SmallStrainTest)
      oMFrontMaterial6D.PutName("MFrontSmallStrain");
 #endif
 
-     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::NONE> PreStressNone;
+     typedef ConstLawPreStress<Vec6, ConstLawPreStressType::CSL_PRE_NONE> PreStressNone;
      constexpr PreStressNone oPreStressNone;
 
      MooneyRivlinElastic<PreStressNone, PreStressNone> oMooneyRivlin6D(C1, C2, kappa, oPreStressNone, oPreStressNone);
@@ -599,21 +599,21 @@ bool bCheckShapeFunction()
      SpColVectorA<doublereal, ElementType::iNumNodes> h;
 
      const doublereal dTol = std::pow(std::numeric_limits<doublereal>::epsilon(), 0.9);
-     
+
      for (index_type i = 1; i <= ElementType::iNumNodes; ++i) {
-          std::cout << "node: " << i << "\n";
+	  std::cout << "node: " << i << "\n";
 
-          ElementType::NodalPosition(i, r);
-          ElementType::ShapeFunction(r, h);
+	  ElementType::NodalPosition(i, r);
+	  ElementType::ShapeFunction(r, h);
 
-          std::cout << "r = {" << r << "}\n";
-          std::cout << "h = {" << h << "}\n";
+	  std::cout << "r = {" << r << "}\n";
+	  std::cout << "h = {" << h << "}\n";
 
-          for (index_type j = 1; j <= ElementType::iNumNodes; ++j) {
-               if (fabs(h(j) - (i == j)) > dTol) {
-                    bRes = false;
-               }
-          }
+	  for (index_type j = 1; j <= ElementType::iNumNodes; ++j) {
+	       if (fabs(h(j) - (i == j)) > dTol) {
+		    bRes = false;
+	       }
+	  }
      }
 
      return bRes;
@@ -632,27 +632,27 @@ bool bCheckShapeFunctionUPC()
      SpColVectorA<doublereal, ElementType::ElemTypePressure::iNumNodes> g;
 
      for (index_type i = 1; i <= ElementType::ElemTypeDisplacement::iNumNodes; ++i) {
-          std::cout << "node: " << i << "\n";
+	  std::cout << "node: " << i << "\n";
 
-          ElementType::ElemTypeDisplacement::NodalPosition(i, r);
-          ElementType::ElemTypeDisplacement::ShapeFunction(r, h);
-          ElementType::ElemTypePressure::ShapeFunction(r, g);
+	  ElementType::ElemTypeDisplacement::NodalPosition(i, r);
+	  ElementType::ElemTypeDisplacement::ShapeFunction(r, h);
+	  ElementType::ElemTypePressure::ShapeFunction(r, g);
 
-          std::cout << "r = {" << r << "}\n";
-          std::cout << "h = {" << h << "}\n";
-          std::cout << "g = {" << g << "}\n";
+	  std::cout << "r = {" << r << "}\n";
+	  std::cout << "h = {" << h << "}\n";
+	  std::cout << "g = {" << g << "}\n";
 
-          for (index_type j = 1; j <= ElementType::ElemTypeDisplacement::iNumNodes; ++j) {
-               if (h(j) != (i == j)) {
-                    bRes = false;
-               }
+	  for (index_type j = 1; j <= ElementType::ElemTypeDisplacement::iNumNodes; ++j) {
+	       if (h(j) != (i == j)) {
+		    bRes = false;
+	       }
 
-               if (i <= ElementType::ElemTypePressure::iNumNodes && j <= ElementType::ElemTypePressure::iNumNodes) {
-                    if (g(j) != (i == j)) {
-                         bRes = false;
-                    }
-               }
-          }
+	       if (i <= ElementType::ElemTypePressure::iNumNodes && j <= ElementType::ElemTypePressure::iNumNodes) {
+		    if (g(j) != (i == j)) {
+			 bRes = false;
+		    }
+	       }
+	  }
      }
 
      return bRes;
