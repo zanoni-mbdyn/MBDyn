@@ -528,6 +528,11 @@ PlaneHingeJoint::Restart(std::ostream& out) const
    return out;
 }
 
+void PlaneHingeJoint::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "F", F, eAction);
+     oData.Sync(RestartData::ELEM_JOINTS, GetLabel(), "M", M, eAction);
+}
 
 /* Assemblaggio jacobiano */
 VariableSubMatrixHandler& 

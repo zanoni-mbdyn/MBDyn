@@ -1540,6 +1540,10 @@ class LinearViscousGenericConstitutiveLaw
       return ElasticConstitutiveLaw<T, Tder>::Restart_int(out);
    };
 
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+          NO_OP;
+     }
+     
    using ConstitutiveLawAd<T, Tder>::Update;
    virtual void Update(const T& /* Eps */ , const T& EpsPrime = mb_zero<T>()) {
       ConstitutiveLaw<T, Tder>::EpsilonPrime = EpsPrime;

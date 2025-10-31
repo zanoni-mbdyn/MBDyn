@@ -139,7 +139,7 @@ begin: control data;
 	#~ print: dof description;
 	#~ print: element connection;
 	print: node connection;	
-	#~ make restart file;
+	make restart file: format, binary;
 end: control data;
 
 #FIXME: cannot load user defined modules at runtime on cygwin!
