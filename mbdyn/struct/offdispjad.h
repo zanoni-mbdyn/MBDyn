@@ -56,7 +56,7 @@ public:
                        const StructDispNodeAd* pNode2,
                        flag fOut);
      virtual ~OffsetDispJointAd();
-
+     virtual void OutputPrepare(OutputHandler &OH) override;
      virtual void Output(OutputHandler& OH) const override;
      virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
      virtual unsigned int iGetNumDof(void) const override;
