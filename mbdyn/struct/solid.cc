@@ -340,6 +340,7 @@ public:
                      flag fOut);
      virtual ~SolidElemStatic();
 
+     virtual void OutputPrepare(OutputHandler& OH) override;
      virtual void Output(OutputHandler& OH) const override;
 
      virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
@@ -657,6 +658,9 @@ protected:
      const sp_grad::SpColVectorA<doublereal, iNumNodes> rhon;
      std::array<CollocData, iNumEvalPointsStiffness> rgCollocData;
      const RigidBodyKinematics* const pRBK;
+#ifdef USE_NETCDF
+     MBDynNcVar Var_taun, Var_epsilonn;
+#endif
 };
 
 enum class MassMatrixType {
@@ -1024,11 +1028,25 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::~So
 }
 
 template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
+void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::OutputPrepare(OutputHandler& OH)
+{
+#ifdef USE_NETCDF
+     if (OH.UseNetCDF(OutputHandler::SOLIDS)) {
+          using namespace std::string_literals;
+          const std::string strPrefix = "elem.solid."s + std::to_string(GetLabel());
+
+          Var_taun = OH.CreateVar<sp_grad::SpMatrix<doublereal, iNumNodes, 6>>(strPrefix + ".taun", OutputHandler::Dimensions::Pressure, "Cauchy stress at element nodes");
+          Var_epsilonn = OH.CreateVar<sp_grad::SpMatrix<doublereal, iNumNodes, 6>>(strPrefix + ".epsilonn", OutputHandler::Dimensions::Dimensionless, "Strain at element nodes");
+     }
+#endif
+}
+
+template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
 void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Output(OutputHandler& OH) const
 {
      using namespace sp_grad;
 
-     if (bToBeOutput() && OH.UseText(OutputHandler::SOLIDS)) {
+     if (bToBeOutput()) {
           sp_grad::SpMatrixA<doublereal, iNumEvalPointsStiffness, 6> epsilone;
           sp_grad::SpMatrixA<doublereal, iNumEvalPointsStiffness, 6> taue;
           sp_grad::SpMatrixA<doublereal, iNumNodes, 6> epsilonn;
@@ -1038,6 +1056,12 @@ void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>
           GaussToNodal(epsilonn, epsilone);
           GaussToNodal(taun, taue);
 
+#ifdef USE_NETCDF
+          if (OH.UseNetCDF(OutputHandler::SOLIDS)) {
+               OH.WriteNcVar(Var_taun, taun);
+               OH.WriteNcVar(Var_epsilonn, epsilonn);
+          }
+#endif
           if (OH.UseText(OutputHandler::SOLIDS)) {
                std::ostream& of = OH.Solids();
 

@@ -65,13 +65,34 @@ OffsetDispJointAd::~OffsetDispJointAd()
 {
 }
 
+void OffsetDispJointAd::OutputPrepare(OutputHandler &OH)
+{
+     if (bToBeOutput()) {
+#ifdef USE_NETCDF
+          if (OH.UseNetCDF(OutputHandler::JOINTS)) {
+               Joint::OutputPrepare_int("Offset displacement joint", OH);
+          }
+#endif
+     }
+}
+
 void OffsetDispJointAd::Output(OutputHandler& OH) const
 {
      using namespace sp_grad;
 
-     if (bToBeOutput() && OH.UseText(OutputHandler::JOINTS)) {
+     if (bToBeOutput()) {
           const Mat3x3& R1 = pNode1->GetRCurr();
-          Joint::Output(OH.Joints(), "OffsetDispJoint", GetLabel(), -R1.MulTV(F1Tmp), -R1.MulTV(M1Tmp), -F1Tmp, -M1Tmp) << '\n';
+          const Vec3 F = -R1.MulTV(F1Tmp);
+          const Vec3 M = -R1.MulTV(M1Tmp);
+
+#ifdef USE_NETCDF
+          if (OH.UseNetCDF(OutputHandler::JOINTS)) {
+               Joint::NetCDFOutput(OH, F, M, -F1Tmp, -M1Tmp);
+          }
+#endif // USE_NETCDF
+          if (OH.UseText(OutputHandler::JOINTS)) {
+               Joint::Output(OH.Joints(), "OffsetDispJoint", GetLabel(), F, M, -F1Tmp, -M1Tmp) << '\n';
+          }
      }
 }
 
