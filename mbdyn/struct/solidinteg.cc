@@ -43,7 +43,7 @@
 #include "solidinteg.h"
 
 constexpr doublereal fabs_ce(doublereal x) {
-	return x>=0.?x:-x;
+        return x >= 0. ? x : -x;
 }
 
 namespace {
@@ -62,7 +62,6 @@ namespace {
      }
 
      constexpr bool bCollocationTest1D(const doublereal r[], const doublereal alpha[], const int N, const doublereal dTol = 0.) {
-          //return std::fabs(dCollocationTest1DRec(r, alpha, N) / dCollocationFunction1DRes() - 1.) <= dTol1D;
           return fabs_ce(dCollocationTest1DRec(r, alpha, N) / dCollocationFunction1DRes() - 1.) <= dTol;
      }
 
@@ -77,11 +76,10 @@ namespace {
 
      constexpr doublereal dCollocationTest2DRec(const doublereal r[], const doublereal s[], const doublereal alpha[], const int N) {
           return dCollocationFunction2D(r[0], s[0]) * alpha[0]
-               + ((N > 1) ? dCollocationTest2DRec(r + 1, s + 1, alpha + 1, N - 1) : 0.); // allow use to use -std=c++11
+               + ((N > 1) ? dCollocationTest2DRec(r + 1, s + 1, alpha + 1, N - 1) : 0.); // allow us to use -std=c++11
      }
 
      constexpr bool bCollocationTest2D(const doublereal r[], const doublereal s[], const doublereal alpha[], const int N, const doublereal dTol = 0.) {
-          //return std::fabs(dCollocationTest2DRec(r, s, alpha, N) / dCollocationFunction2DRes() - 1.) <= dTol2D;
           return fabs_ce(dCollocationTest2DRec(r, s, alpha, N) / dCollocationFunction2DRes() - 1.) <= dTol;
      }
 
@@ -91,28 +89,33 @@ namespace {
 
      constexpr doublereal dCollocationTest3DRec(const doublereal r[], const doublereal s[], const doublereal t[], const doublereal alpha[], const int N) {
           return dCollocationFunction3D(r[0], s[0], t[0]) * alpha[0]
-               + ((N > 1) ? dCollocationTest3DRec(r + 1, s + 1, t + 1, alpha + 1, N - 1) : 0.); // allow use to use -std=c++11
+               + ((N > 1) ? dCollocationTest3DRec(r + 1, s + 1, t + 1, alpha + 1, N - 1) : 0.); // allow us to use -std=c++11
      }
 
-     constexpr doublereal dCollocationFunction3DRes() {
+     constexpr doublereal dCollocationFunction3DResTet() {
           // maxima: integrate(subst([zi=z], integrate(subst([yi=y], integrate(1. + x + y + z + x * x + y * y + z * z, x, 0, 1 - yi - zi)), y, 0, 1 - zi)), z, 0, 1);
           return 41. / 120.;
      }
 
-     constexpr bool bCollocationTest3D(const doublereal r[], const doublereal s[], const doublereal t[], const doublereal alpha[], const int N, const doublereal dTol = 0.) {
-          //return std::fabs(dCollocationTest3DRec(r, s, t, alpha, N) / dCollocationFunction3DRes() - 1.) <= dTol3D;
-          return fabs_ce(dCollocationTest3DRec(r, s, t, alpha, N) / dCollocationFunction3DRes() - 1.) <= dTol;
+     constexpr doublereal dCollocationFunction3DResPenta() {
+          // maxima: integrate(subst([zi=z], integrate(subst([yi=y], integrate(1. + x + y + z + x * x + y * y + z * z, x, -1, 1)), y, 0, 1 - zi)), z, 0, 1);
+          return 7. / 3.;
      }
-     
+
+     constexpr bool bCollocationTest3D(const doublereal r[], const doublereal s[], const doublereal t[], const doublereal alpha[], const int N, const double dRes, const doublereal dTol = 0.) {
+          return fabs_ce(dCollocationTest3DRec(r, s, t, alpha, N) / dRes - 1.) <= dTol;
+     }
+
      static_assert(bCollocationTest1D(Gauss2_1D::ri, Gauss2_1D::alphai, Gauss2_1D::iGaussOrder), "unit test for collocation rule failed");
      static_assert(bCollocationTest1D(Gauss3_1D::ri, Gauss3_1D::alphai, Gauss3_1D::iGaussOrder), "unit test for collocation rule failed");
      static_assert(bCollocationTest2D(CollocTria6h::zeta, CollocTria6h::eta, CollocTria6h::w, CollocTria6h::iNumEvalPoints), "unit test for collocation rule failed");
      static_assert(bCollocationTest2D(CollocTria10::r1, CollocTria10::r2, CollocTria10::w, CollocTria10::iNumEvalPoints, 5 * std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
-     static_assert(bCollocationTest3D(CollocTet10h::r1, CollocTet10h::s1, CollocTet10h::t1, CollocTet10h::w1, CollocTet10h::N1), "unit test for collocation rule failed");
-     static_assert(bCollocationTest3D(CollocTet10h::r2, CollocTet10h::s2, CollocTet10h::t2, CollocTet10h::w2, CollocTet10h::N2, std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
-     static_assert(bCollocationTest3D(CollocTet10h::r3, CollocTet10h::s3, CollocTet10h::t3, CollocTet10h::w3, CollocTet10h::N3, 5 * std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
-     static_assert(bCollocationTest3D(CollocTet20::ri1, CollocTet20::si1, CollocTet20::ti1, CollocTet20::wi1, CollocTet20::N1, std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
-     static_assert(bCollocationTest3D(CollocTet20::ri3, CollocTet20::si3, CollocTet20::ti3, CollocTet20::wi3, CollocTet20::N3, 15 * std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
+     static_assert(bCollocationTest3D(CollocTet10h::r1, CollocTet10h::s1, CollocTet10h::t1, CollocTet10h::w1, CollocTet10h::N1, dCollocationFunction3DResTet()), "unit test for collocation rule failed");
+     static_assert(bCollocationTest3D(CollocTet10h::r2, CollocTet10h::s2, CollocTet10h::t2, CollocTet10h::w2, CollocTet10h::N2, dCollocationFunction3DResTet(), std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
+     static_assert(bCollocationTest3D(CollocTet10h::r3, CollocTet10h::s3, CollocTet10h::t3, CollocTet10h::w3, CollocTet10h::N3, dCollocationFunction3DResTet(), 5 * std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
+     static_assert(bCollocationTest3D(CollocTet20::ri1, CollocTet20::si1, CollocTet20::ti1, CollocTet20::wi1, CollocTet20::N1, dCollocationFunction3DResTet(), std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
+     static_assert(bCollocationTest3D(CollocTet20::ri3, CollocTet20::si3, CollocTet20::ti3, CollocTet20::wi3, CollocTet20::N3, dCollocationFunction3DResTet(), 15 * std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
+     static_assert(bCollocationTest3D(CollocPenta18::ri, CollocPenta18::si, CollocPenta18::ti, CollocPenta18::wi, CollocPenta18::iNumEvalPointsStiffness, dCollocationFunction3DResPenta(), std::numeric_limits<doublereal>::epsilon()), "unit test for collocation rule failed");
 }
 
 constexpr sp_grad::index_type Gauss2_1D::iGaussOrder;
@@ -167,6 +170,19 @@ constexpr doublereal CollocPenta15::si_lumped[];
 constexpr doublereal CollocPenta15::wi_lumped[];
 constexpr doublereal CollocPenta15::ti_lumped[];
 constexpr doublereal CollocPenta15::alphai_lumped[];
+
+constexpr sp_grad::index_type CollocPenta18::iNumEvalPointsStiffness;
+constexpr sp_grad::index_type CollocPenta18::iNumEvalPointsMass;
+constexpr sp_grad::index_type CollocPenta18::iNumEvalPointsMassLumped;
+
+constexpr doublereal CollocPenta18::ri[];
+constexpr doublereal CollocPenta18::si[];
+constexpr doublereal CollocPenta18::ti[];
+constexpr doublereal CollocPenta18::wi[];
+
+constexpr doublereal CollocPenta18::ri_lumped[];
+constexpr doublereal CollocPenta18::si_lumped[];
+constexpr doublereal CollocPenta18::ti_lumped[];
 
 constexpr sp_grad::index_type CollocTet10h::iNumEvalPointsStiffness;
 constexpr sp_grad::index_type CollocTet10h::iNumEvalPointsMass;

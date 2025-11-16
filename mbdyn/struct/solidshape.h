@@ -362,6 +362,27 @@ private:
      static constexpr doublereal ti[] = {-1, -1, -1, 1, 1, 1,    -1,    -1,    -1,     1,     1,     1,  0, 0, 0};
 };
 
+class Pentahedron18u {
+public:
+     static constexpr sp_grad::index_type iNumNodes = 18;
+
+     static inline void
+     ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
+                        sp_grad::SpMatrix<doublereal, iNumNodes, 3>& h0d1);
+
+     static inline void
+     ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
+                   sp_grad::SpColVector<doublereal, iNumNodes>& h);
+
+     static inline void
+     NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
+
+private:
+     static constexpr doublereal ri[] = {- 1, - 1, - 1, 1, 1, 1, - 1, - 1, - 1, 0, 0, 0, 1, 1, 1, 0, 0, 0};
+     static constexpr doublereal si[] = {1, 0, 0, 1, 0, 0, 0.5, 0, 0.5, 1, 0, 0, 0.5, 0, 0.5, 0.5, 0, 0.5};
+     static constexpr doublereal ti[] = {0, 1, 0, 0, 1, 0, 0.5, 0.5, 0, 0, 1, 0, 0.5, 0.5, 0, 0.5, 0.5, 0};
+};
+
 class Tetrahedron4u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 4;
@@ -611,6 +632,30 @@ public:
      typedef Pentahedron6u ElemTypePressure;
 
      static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PRESSURE_PK2GL;
+};
+
+class Pentahedron18 {
+public:
+     static constexpr const char* ElementName() {
+          return "pentahedron18";
+     }
+
+     typedef Pentahedron18u ElemTypeDisplacement;
+     typedef EmptyElement ElemTypePressure;
+
+     static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK2GL;
+};
+
+class Pentahedron18f {
+public:
+     static constexpr const char* ElementName() {
+          return "pentahedron18f";
+     }
+
+     typedef Pentahedron18u ElemTypeDisplacement;
+     typedef EmptyElement ElemTypePressure;
+
+     static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK1F;
 };
 
 class Tetrahedron10 {
@@ -1715,6 +1760,115 @@ Pentahedron15u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
 
 void
 Pentahedron15u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
+{
+     ASSERT(iNode >= 1);
+     ASSERT(iNode <= iNumNodes);
+
+     r(1) = ri[iNode - 1];
+     r(2) = si[iNode - 1];
+     r(3) = ti[iNode - 1];
+}
+
+void
+Pentahedron18u::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
+                                   sp_grad::SpMatrix<doublereal, iNumNodes, 3>& h0d1)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+     const doublereal r3 = r(3);
+     const doublereal r1_2 = r1 * r1;
+
+     static_assert(iNumNodes == 18, "invalid number of nodes");
+
+     h0d1(1,1) = (r1*r2*(2*r2-1))/2.0E+0+((r1-1)*r2*(2*r2-1))/2.0E+0;
+     h0d1(1,2) = ((r1-1)*r1*(2*r2-1))/2.0E+0+(r1-1)*r1*r2;
+     h0d1(1,3) = 0;
+     h0d1(2,1) = (r1*r3*(2*r3-1))/2.0E+0+((r1-1)*r3*(2*r3-1))/2.0E+0;
+     h0d1(2,2) = 0;
+     h0d1(2,3) = ((r1-1)*r1*(2*r3-1))/2.0E+0+(r1-1)*r1*r3;
+     h0d1(3,1) = (r1*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0+((r1-1)*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h0d1(3,2) = ((r1-1)*r1*(2*r3+2*r2-1))/2.0E+0+(r1-1)*r1*(r3+r2-1);
+     h0d1(3,3) = ((r1-1)*r1*(2*r3+2*r2-1))/2.0E+0+(r1-1)*r1*(r3+r2-1);
+     h0d1(4,1) = ((r1+1)*r2*(2*r2-1))/2.0E+0+(r1*r2*(2*r2-1))/2.0E+0;
+     h0d1(4,2) = (r1*(r1+1)*(2*r2-1))/2.0E+0+r1*(r1+1)*r2;
+     h0d1(4,3) = 0;
+     h0d1(5,1) = ((r1+1)*r3*(2*r3-1))/2.0E+0+(r1*r3*(2*r3-1))/2.0E+0;
+     h0d1(5,2) = 0;
+     h0d1(5,3) = (r1*(r1+1)*(2*r3-1))/2.0E+0+r1*(r1+1)*r3;
+     h0d1(6,1) = ((r1+1)*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0+(r1*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h0d1(6,2) = (r1*(r1+1)*(2*r3+2*r2-1))/2.0E+0+r1*(r1+1)*(r3+r2-1);
+     h0d1(6,3) = (r1*(r1+1)*(2*r3+2*r2-1))/2.0E+0+r1*(r1+1)*(r3+r2-1);
+     h0d1(7,1) = 2*r1*r2*r3+2*(r1-1)*r2*r3;
+     h0d1(7,2) = 2*(r1-1)*r1*r3;
+     h0d1(7,3) = 2*(r1-1)*r1*r2;
+     h0d1(8,1) = (-2*r1*r3*(r3+r2-1))-2*(r1-1)*r3*(r3+r2-1);
+     h0d1(8,2) = -2*(r1-1)*r1*r3;
+     h0d1(8,3) = (-2*(r1-1)*r1*(r3+r2-1))-2*(r1-1)*r1*r3;
+     h0d1(9,1) = (-2*r1*r2*(r3+r2-1))-2*(r1-1)*r2*(r3+r2-1);
+     h0d1(9,2) = (-2*(r1-1)*r1*(r3+r2-1))-2*(r1-1)*r1*r2;
+     h0d1(9,3) = -2*(r1-1)*r1*r2;
+     h0d1(10,1) = -2*r1*r2*(2*r2-1);
+     h0d1(10,2) = (1-r1_2)*(2*r2-1)+2*(1-r1_2)*r2;
+     h0d1(10,3) = 0;
+     h0d1(11,1) = -2*r1*r3*(2*r3-1);
+     h0d1(11,2) = 0;
+     h0d1(11,3) = (1-r1_2)*(2*r3-1)+2*(1-r1_2)*r3;
+     h0d1(12,1) = -2*r1*(r3+r2-1)*(2*r3+2*r2-1);
+     h0d1(12,2) = (1-r1_2)*(2*r3+2*r2-1)+2*(1-r1_2)*(r3+r2-1);
+     h0d1(12,3) = (1-r1_2)*(2*r3+2*r2-1)+2*(1-r1_2)*(r3+r2-1);
+     h0d1(13,1) = 2*(r1+1)*r2*r3+2*r1*r2*r3;
+     h0d1(13,2) = 2*r1*(r1+1)*r3;
+     h0d1(13,3) = 2*r1*(r1+1)*r2;
+     h0d1(14,1) = (-2*(r1+1)*r3*(r3+r2-1))-2*r1*r3*(r3+r2-1);
+     h0d1(14,2) = -2*r1*(r1+1)*r3;
+     h0d1(14,3) = (-2*r1*(r1+1)*(r3+r2-1))-2*r1*(r1+1)*r3;
+     h0d1(15,1) = (-2*(r1+1)*r2*(r3+r2-1))-2*r1*r2*(r3+r2-1);
+     h0d1(15,2) = (-2*r1*(r1+1)*(r3+r2-1))-2*r1*(r1+1)*r2;
+     h0d1(15,3) = -2*r1*(r1+1)*r2;
+     h0d1(16,1) = -8*r1*r2*r3;
+     h0d1(16,2) = 4*(1-r1_2)*r3;
+     h0d1(16,3) = 4*(1-r1_2)*r2;
+     h0d1(17,1) = 8*r1*r3*(r3+r2-1);
+     h0d1(17,2) = 4*(r1_2-1)*r3;
+     h0d1(17,3) = 4*(r1_2-1)*(r3+r2-1)+4*(r1_2-1)*r3;
+     h0d1(18,1) = 8*r1*r2*(r3+r2-1);
+     h0d1(18,2) = 4*(r1_2-1)*(r3+r2-1)+4*(r1_2-1)*r2;
+     h0d1(18,3) = 4*(r1_2-1)*r2;
+}
+
+void
+Pentahedron18u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
+                              sp_grad::SpColVector<doublereal, iNumNodes>& h)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+     const doublereal r3 = r(3);
+     const doublereal r1_2 = r1 * r1;
+
+     static_assert(iNumNodes == 18, "invalid number of nodes");
+
+     h(1) = ((r1-1)*r1*r2*(2*r2-1))/2.0E+0;
+     h(2) = ((r1-1)*r1*r3*(2*r3-1))/2.0E+0;
+     h(3) = ((r1-1)*r1*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h(4) = (r1*(r1+1)*r2*(2*r2-1))/2.0E+0;
+     h(5) = (r1*(r1+1)*r3*(2*r3-1))/2.0E+0;
+     h(6) = (r1*(r1+1)*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h(7) = 2*(r1-1)*r1*r2*r3;
+     h(8) = -2*(r1-1)*r1*r3*(r3+r2-1);
+     h(9) = -2*(r1-1)*r1*r2*(r3+r2-1);
+     h(10) = (1-r1_2)*r2*(2*r2-1);
+     h(11) = (1-r1_2)*r3*(2*r3-1);
+     h(12) = (1-r1_2)*(r3+r2-1)*(2*r3+2*r2-1);
+     h(13) = 2*r1*(r1+1)*r2*r3;
+     h(14) = -2*r1*(r1+1)*r3*(r3+r2-1);
+     h(15) = -2*r1*(r1+1)*r2*(r3+r2-1);
+     h(16) = 4*(1-r1_2)*r2*r3;
+     h(17) = 4*(r1_2-1)*r3*(r3+r2-1);
+     h(18) = 4*(r1_2-1)*r2*(r3+r2-1);
+}
+
+void
+Pentahedron18u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
 {
      ASSERT(iNode >= 1);
      ASSERT(iNode <= iNumNodes);

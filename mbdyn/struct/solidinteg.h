@@ -282,6 +282,56 @@ private:
      static constexpr doublereal alphai_lumped[] = {2./3., 2./3., 2./3.};
 };
 
+class CollocPenta18 {
+public:
+     static constexpr sp_grad::index_type iNumEvalPointsStiffness = 21;
+     static constexpr sp_grad::index_type iNumEvalPointsMass = 21;
+     static constexpr sp_grad::index_type iNumEvalPointsMassLumped = 18;
+
+     static inline void
+     GetPositionStiffness(sp_grad::index_type i, sp_grad::SpColVector<doublereal, 3>& r);
+
+     static inline doublereal
+     dGetWeightStiffness(sp_grad::index_type i);
+
+     static inline void
+     GetPositionMass(sp_grad::index_type i, sp_grad::SpColVector<doublereal, 3>& r) {
+          GetPositionStiffness(i, r);
+     }
+
+     static inline doublereal
+     dGetWeightMass(sp_grad::index_type i) {
+          return dGetWeightStiffness(i);
+     }
+
+     static inline void
+     GetPositionMassLumped(sp_grad::index_type i, sp_grad::SpColVector<doublereal, 3>& r);
+
+     static inline doublereal
+     dGetWeightMassLumped(sp_grad::index_type i);
+
+private:
+     static constexpr double w4 = 1. / 18.;
+     static constexpr double alpha = constexpr_math::sqrt(3. / 5.);
+     static constexpr double c1 = 5. / 9.;
+     static constexpr double c2 = 8. / 9.;
+     static constexpr double c3 = (155. + constexpr_math::sqrt(15.)) / 2400.;
+     static constexpr double c4 = (155. - constexpr_math::sqrt(15.)) / 2400.;
+     static constexpr double c5 = 9. / 80.;
+     static constexpr double a2 = (6. + constexpr_math::sqrt(15.)) / 21.;
+     static constexpr double b2 = (6. - constexpr_math::sqrt(15.)) / 21.;
+
+public:
+     static constexpr double ri[] = {-alpha, -alpha, -alpha, -alpha, -alpha, -alpha, -alpha, 0., 0., 0., 0., 0., 0., 0., alpha, alpha, alpha, alpha, alpha, alpha, alpha};
+     static constexpr double si[] = {1./3, a2, 1. - 2. * a2, a2, b2, 1. - 2. * b2, b2, 1. / 3., a2, 1. - 2. * a2, a2, b2, 1. - 2. * b2, b2, 1. / 3., a2, 1. - 2. * a2, a2, b2, 1. - 2. * b2, b2};
+     static constexpr double ti[] = {1./3., a2, a2, 1. - 2. * a2, b2, b2, 1. - 2. * b2, 1./3., a2, a2, 1. - 2. * a2, b2, b2, 1. - 2. * b2, 1./3., a2, a2, 1. - 2. * a2, b2, b2, 1. - 2. * b2};
+     static constexpr double wi[] = {c1 * c5, c1 * c3, c1 * c3, c1 * c3, c1 * c4, c1 * c4, c1 * c4, c2 * c5, c2 * c3, c2 * c3, c2 * c3, c2 * c4, c2 * c4, c2 * c4, c1 * c5, c1 * c3, c1 * c3, c1 * c3, c1 * c4, c1 * c4, c1 * c4};
+
+     static constexpr double ri_lumped[] = {-1., -1., -1., 1., 1., 1., -1., -1., -1., 0., 0., 0., 1., 1., 1., 0., 0., 0.};
+     static constexpr double si_lumped[] = {1., 0., 0., 1., 0., 0., 0.5, 0., 0.5, 1., 0., 0., 0.5, 0., 0.5, 0.5, 0., 0.5};
+     static constexpr double ti_lumped[] = {0., 1., 0., 0., 1., 0., 0.5, 0.5, 0., 0., 1., 0., 0.5, 0.5, 0., 0.5, 0.5, 0.};
+};
+
 class CollocTet10h {
 public:
      static constexpr sp_grad::index_type iNumEvalPointsStiffness = 5;
@@ -621,7 +671,61 @@ CollocPenta15::dGetWeightMassLumped(sp_grad::index_type idx)
      return 0.5 * wi_lumped[i] * alphai_lumped[j];
 }
 
+void
+CollocPenta18::GetPositionStiffness(sp_grad::index_type idx, sp_grad::SpColVector<doublereal, 3>& r)
+{
+     ASSERT(idx >= 0);
+     ASSERT(idx < iNumEvalPointsStiffness);
 
+     using namespace sp_grad;
+
+     static_assert(sizeof(ri) / sizeof(ri[0]) == iNumEvalPointsStiffness, "invalid array size");
+     static_assert(sizeof(si) / sizeof(si[0]) == iNumEvalPointsStiffness, "invalid array size");
+     static_assert(sizeof(ti) / sizeof(ti[0]) == iNumEvalPointsStiffness, "invalid array size");
+
+     r(1) = ri[idx];
+     r(2) = si[idx];
+     r(3) = ti[idx];
+}
+
+doublereal
+CollocPenta18::dGetWeightStiffness(sp_grad::index_type idx)
+{
+     ASSERT(idx >= 0);
+     ASSERT(idx < iNumEvalPointsStiffness);
+
+     using namespace sp_grad;
+
+     static_assert(sizeof(wi) / sizeof(wi[0]) == iNumEvalPointsStiffness, "invalid array size");
+
+     return wi[idx];
+}
+
+void
+CollocPenta18::GetPositionMassLumped(sp_grad::index_type idx, sp_grad::SpColVector<doublereal, 3>& r)
+{
+     ASSERT(idx >= 0);
+     ASSERT(idx < iNumEvalPointsMassLumped);
+
+     using namespace sp_grad;
+
+     static_assert(sizeof(ri_lumped) / sizeof(ri_lumped[0]) == iNumEvalPointsMassLumped, "invalid array size");
+     static_assert(sizeof(si_lumped) / sizeof(si_lumped[0]) == iNumEvalPointsMassLumped, "invalid array size");
+     static_assert(sizeof(ti_lumped) / sizeof(ti_lumped[0]) == iNumEvalPointsMassLumped, "invalid array size");
+
+     r(1) = ri_lumped[idx];
+     r(2) = si_lumped[idx];
+     r(3) = ti_lumped[idx];
+}
+
+doublereal
+CollocPenta18::dGetWeightMassLumped(sp_grad::index_type idx)
+{
+     ASSERT(idx >= 0);
+     ASSERT(idx < iNumEvalPointsMassLumped);
+
+     return w4;
+}
 
 void
 CollocTet10h::GetPositionStiffness(sp_grad::index_type i, sp_grad::SpColVector<doublereal, 3>& r)

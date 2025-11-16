@@ -3201,6 +3201,7 @@ template SolidElem* ReadSolid<Hexahedron20, Gauss3x3x3>(DataManager*, MBDynParse
 template SolidElem* ReadSolid<Hexahedron27, Gauss3x3x3>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Hexahedron20r, GaussH20r>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Pentahedron15, CollocPenta15>(DataManager*, MBDynParser&, unsigned int);
+template SolidElem* ReadSolid<Pentahedron18, CollocPenta18>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron10, CollocTet10h>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron20, CollocTet20>(DataManager*, MBDynParser&, unsigned int);
 
@@ -3210,6 +3211,7 @@ template SolidElem* ReadSolid<Hexahedron20f, Gauss3x3x3>(DataManager*, MBDynPars
 template SolidElem* ReadSolid<Hexahedron27f, Gauss3x3x3>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Hexahedron20fr, GaussH20r>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Pentahedron15f, CollocPenta15>(DataManager*, MBDynParser&, unsigned int);
+template SolidElem* ReadSolid<Pentahedron18f, CollocPenta18>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron10f, CollocTet10h>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron20f, CollocTet20>(DataManager*, MBDynParser&, unsigned int);
 

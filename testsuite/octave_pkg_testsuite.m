@@ -153,7 +153,9 @@ try
   test_data.test_args = {"normal"};
 
   opts.number_of_parameters = numel(test_data.pkg_functions);
-  opts.gtest_output_junit_xml = fullfile(test_data.octave_pkg_test_dir, '%d', 'junit_xml_report_octave_assert.xml');
+
+  ## JUnit XML files must have a unique filename. Otherwise only the last error will be displayed in GitLab CI/CD.
+  opts.gtest_output_junit_xml = fullfile(test_data.octave_pkg_test_dir, 'junit_xml_report_octave_assert_%03d.xml');
   opts.redirect_stdout = fullfile(test_data.octave_pkg_test_dir, '%d', 'fntests.out');
 
   putenv("MBD_NUM_THREADS", sprintf("%d", thread_data.number_of_threads));
