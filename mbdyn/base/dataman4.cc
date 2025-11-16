@@ -129,6 +129,8 @@ enum KeyWords {
         PENTAHEDRON15,
         PENTAHEDRON15F,        
         PENTAHEDRON15UPC,
+        PENTAHEDRON18,
+        PENTAHEDRON18F,
         TETRAHEDRON10,
         TETRAHEDRON10F,      
         TETRAHEDRON10UPC,
@@ -239,6 +241,8 @@ DataManager::ReadElems(MBDynParser& HP)
                 "pentahedron15",
                 "pentahedron15f",                
                 "pentahedron15upc",
+                "pentahedron18",
+                "pentahedron18f",
                 "tetrahedron10",
                 "tetrahedron10f",
                 "tetrahedron10upc",
@@ -475,6 +479,8 @@ DataManager::ReadElems(MBDynParser& HP)
                         case PENTAHEDRON15:
                         case PENTAHEDRON15F:                             
                         case PENTAHEDRON15UPC:
+                        case PENTAHEDRON18:
+                        case PENTAHEDRON18F:
                         case TETRAHEDRON10:
                         case TETRAHEDRON10F:                             
                         case TETRAHEDRON10UPC:
@@ -715,6 +721,8 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case PENTAHEDRON15:
                                 case PENTAHEDRON15F:                                   
                                 case PENTAHEDRON15UPC:
+                                case PENTAHEDRON18:
+                                case PENTAHEDRON18F:
                                 case TETRAHEDRON10:
                                 case TETRAHEDRON10F:
                                 case TETRAHEDRON10UPC:
@@ -1066,15 +1074,23 @@ DataManager::ReadElems(MBDynParser& HP)
 					case SHELL4EAS:
 					case SHELL4EASANS:
                                         case HEXAHEDRON8:
+                                        case HEXAHEDRON8F:
                                         case HEXAHEDRON8UPC:                                             
                                         case HEXAHEDRON20:
+                                        case HEXAHEDRON20F:
                                         case HEXAHEDRON20UPC:
-                                        case HEXAHEDRON20UPCR:
                                         case HEXAHEDRON20R:
+                                        case HEXAHEDRON20FR:
+                                        case HEXAHEDRON20UPCR:
                                         case HEXAHEDRON27:
+                                        case HEXAHEDRON27F:
                                         case PENTAHEDRON15:
+                                        case PENTAHEDRON15F:
                                         case PENTAHEDRON15UPC:
+                                        case PENTAHEDRON18:
+                                        case PENTAHEDRON18F:
                                         case TETRAHEDRON10:
+                                        case TETRAHEDRON10F:
                                         case TETRAHEDRON10UPC:
                                         case TETRAHEDRON20:
                                         case TETRAHEDRON20F:
@@ -1200,6 +1216,8 @@ DataManager::ReadElems(MBDynParser& HP)
                                                 case PENTAHEDRON15:
                                                 case PENTAHEDRON15F:
                                                 case PENTAHEDRON15UPC:
+                                                case PENTAHEDRON18:
+                                                case PENTAHEDRON18F:
                                                 case TETRAHEDRON10:
                                                 case TETRAHEDRON10F:
                                                 case TETRAHEDRON10UPC:
@@ -1389,6 +1407,8 @@ DataManager::ReadElems(MBDynParser& HP)
                                 case PENTAHEDRON15:
                                 case PENTAHEDRON15F:                                     
                                 case PENTAHEDRON15UPC:
+                                case PENTAHEDRON18:
+                                case PENTAHEDRON18F:
                                 case TETRAHEDRON10:
                                 case TETRAHEDRON10F:                                     
                                 case TETRAHEDRON10UPC:
@@ -1932,6 +1952,8 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
         case PENTAHEDRON15:
         case PENTAHEDRON15F:
         case PENTAHEDRON15UPC:
+        case PENTAHEDRON18:
+        case PENTAHEDRON18F:
         case TETRAHEDRON10:
         case TETRAHEDRON10F:
         case TETRAHEDRON10UPC:
@@ -1952,6 +1974,8 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                         "Pentahedron15",
                         "Pentahedron15f",
                         "Pentahedron15upc",
+                        "Pentahedron18",
+                        "Pentahedron18f",
                         "Tetrahedron10",
                         "Tetrahedron10f",
                         "Tetrahedron10upc",
@@ -1974,12 +1998,14 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                 static_assert(PENTAHEDRON15 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(PENTAHEDRON15F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(PENTAHEDRON15UPC - HEXAHEDRON8 < iNumElemTypes, "index out of range");
+                static_assert(PENTAHEDRON18 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
+                static_assert(PENTAHEDRON18F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON10 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON10F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON10UPC - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON20 - HEXAHEDRON8 < iNumElemTypes, "index out of range");
                 static_assert(TETRAHEDRON20F - HEXAHEDRON8 < iNumElemTypes, "index out of range");
-                
+
                 ASSERT(CurrType - HEXAHEDRON8 < iNumElemTypes);
 
                 silent_cout("Reading " << sType[CurrType - HEXAHEDRON8] << "(" << uLabel << ( sName.empty() ? "" : ( std::string(", \"") + sName + "\"" ) ) << ")\n");
@@ -2050,6 +2076,12 @@ DataManager::ReadOneElem(MBDynParser& HP, unsigned int uLabel, const std::string
                      break;
                 case PENTAHEDRON15UPC:
                      pE = ReadSolid<Pentahedron15upc, CollocPenta15>(this, HP, uLabel);
+                     break;
+                case PENTAHEDRON18:
+                     pE = ReadSolid<Pentahedron18, CollocPenta18>(this, HP, uLabel);
+                     break;
+                case PENTAHEDRON18F:
+                     pE = ReadSolid<Pentahedron18f, CollocPenta18>(this, HP, uLabel);
                      break;
                 case TETRAHEDRON10:
                      pE = ReadSolid<Tetrahedron10, CollocTet10h>(this, HP, uLabel);

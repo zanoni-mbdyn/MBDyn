@@ -733,6 +733,11 @@ MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP15u)
      MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron15u, 3>()));
 }
 
+MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP18u)
+{
+     MBDYN_TESTSUITE_ASSERT((bCheckShapeFunction<Pentahedron18u, 3>()));
+}
+
 MBDYN_TESTSUITE_TEST(solidshapetest, bCheckShapeFunctionP15upc)
 {
      MBDYN_TESTSUITE_ASSERT((bCheckShapeFunctionUPC<Pentahedron15upc, 3>()));
