@@ -1671,6 +1671,7 @@ EndOfUse:
                 OutHdl.SetNetCDF(OutputHandler::INERTIA_ELEMENTS);
                 OutHdl.SetNetCDF(OutputHandler::MODAL);
 		// OutHdl.SetNetCDF(OutputHandler::PLATES);
+                OutHdl.SetNetCDF(OutputHandler::SOLIDS);
 	}
 
 	integer iOutputFrequency = 0;

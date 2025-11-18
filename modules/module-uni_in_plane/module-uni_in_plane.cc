@@ -267,7 +267,8 @@ public:
                    const VectorHandler& XCurr) override;
      SubVectorHandler&
      InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr) override;
-
+     virtual void
+     Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 private:
      static const int iNumDofGradient = 15;
 
@@ -1267,6 +1268,25 @@ UniInPlaneFriction<StructNodeType1>::InitialAssRes(
      WorkVec.ResizeReset(0);
 
      return WorkVec;
+}
+
+template <typename StructNodeType1>
+void
+UniInPlaneFriction<StructNodeType1>::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     int i = 0;
+
+     for (auto& ContactPoint: ContactPoints1)
+     {
+          ++i;
+
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "lambda", ContactPoint.lambda, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "lambdaPrev", ContactPoint.lambdaPrev, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "z", ContactPoint.z, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "zP", ContactPoint.zP, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "tCurr", tCurr, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "tPrev", tPrev, eAction);
+     }
 }
 
 bool uni_in_plane_set(void)

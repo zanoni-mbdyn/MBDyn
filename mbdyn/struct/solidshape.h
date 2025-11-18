@@ -30,7 +30,7 @@
 
 /*
  AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-        Copyright (C) 2022(-2023) all rights reserved.
+        Copyright (C) 2022(-2025) all rights reserved.
 
         The copyright of this code is transferred
         to Pierangelo Masarati and Paolo Mantegazza
@@ -197,7 +197,6 @@ enum class SolidElemFlags: unsigned {
 class Hexahedron1p {
 public:
      static constexpr sp_grad::index_type iNumNodes = 1;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -206,15 +205,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -228,7 +218,6 @@ private:
 class Hexahedron8u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 8;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -237,15 +226,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumNodesExtrap, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -259,7 +239,6 @@ private:
 class Hexahedron8p {
 public:
      static constexpr sp_grad::index_type iNumNodes = 8;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -268,15 +247,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumNodesExtrap, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -290,7 +260,6 @@ private:
 class Hexahedron20u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 20;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -299,15 +268,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -321,7 +281,6 @@ private:
 class Hexahedron27u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 27;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -330,15 +289,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -352,7 +302,6 @@ private:
 class Hexahedron20ur {
 public:
      static constexpr sp_grad::index_type iNumNodes = 20;
-     static constexpr sp_grad::index_type iNumNodesExtrap = 8;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -361,15 +310,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -383,7 +323,6 @@ private:
 class Pentahedron6u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 6;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -392,15 +331,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -414,7 +344,6 @@ private:
 class Pentahedron15u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 15;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -423,15 +352,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -442,10 +362,9 @@ private:
      static constexpr doublereal ti[] = {-1, -1, -1, 1, 1, 1,    -1,    -1,    -1,     1,     1,     1,  0, 0, 0};
 };
 
-class Tetrahedron4u {
+class Pentahedron18u {
 public:
-     static constexpr sp_grad::index_type iNumNodes = 4;
-     static constexpr sp_grad::index_type iNumNodesExtrap = iNumNodes;
+     static constexpr sp_grad::index_type iNumNodes = 18;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -456,13 +375,25 @@ public:
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
 
      static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
+     NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
 
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
+private:
+     static constexpr doublereal ri[] = {- 1, - 1, - 1, 1, 1, 1, - 1, - 1, - 1, 0, 0, 0, 1, 1, 1, 0, 0, 0};
+     static constexpr doublereal si[] = {1, 0, 0, 1, 0, 0, 0.5, 0, 0.5, 1, 0, 0, 0.5, 0, 0.5, 0.5, 0, 0.5};
+     static constexpr doublereal ti[] = {0, 1, 0, 0, 1, 0, 0.5, 0.5, 0, 0, 1, 0, 0.5, 0.5, 0, 0.5, 0.5, 0};
+};
+
+class Tetrahedron4u {
+public:
+     static constexpr sp_grad::index_type iNumNodes = 4;
+
      static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
+     ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
+                        sp_grad::SpMatrix<doublereal, iNumNodes, 3>& h0d1);
+
+     static inline void
+     ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
+                   sp_grad::SpColVector<doublereal, iNumNodes>& h);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -476,7 +407,6 @@ private:
 class Tetrahedron10u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 10;
-     static constexpr sp_grad::index_type iNumNodesExtrap = 4;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -485,15 +415,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -507,7 +428,6 @@ private:
 class Tetrahedron20u {
 public:
      static constexpr sp_grad::index_type iNumNodes = 20;
-     static constexpr sp_grad::index_type iNumNodesExtrap = 4;
 
      static inline void
      ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
@@ -516,15 +436,6 @@ public:
      static inline void
      ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                    sp_grad::SpColVector<doublereal, iNumNodes>& h);
-
-     static inline void
-     ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                         sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h);
-
-     template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-     static inline void
-     GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                        const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune);
 
      static inline void
      NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r);
@@ -546,19 +457,12 @@ public:
      EmptyElement()=delete;
 
      static constexpr sp_grad::index_type iNumNodes = 0;
-     static constexpr sp_grad::index_type iNumNodesExtrap = 0;
 
      static inline void
      ShapeFunctionDeriv()=delete;
 
      static inline void
      ShapeFunction()=delete;
-
-     static inline void
-     ShapeFunctionExtrap()=delete;
-
-     static inline void
-     GaussToNodalInterp()=delete;
 
      static inline void
      NodalPosition()=delete;
@@ -728,6 +632,30 @@ public:
      typedef Pentahedron6u ElemTypePressure;
 
      static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PRESSURE_PK2GL;
+};
+
+class Pentahedron18 {
+public:
+     static constexpr const char* ElementName() {
+          return "pentahedron18";
+     }
+
+     typedef Pentahedron18u ElemTypeDisplacement;
+     typedef EmptyElement ElemTypePressure;
+
+     static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK2GL;
+};
+
+class Pentahedron18f {
+public:
+     static constexpr const char* ElementName() {
+          return "pentahedron18f";
+     }
+
+     typedef Pentahedron18u ElemTypeDisplacement;
+     typedef EmptyElement ElemTypePressure;
+
+     static constexpr SolidElemFlags eElemFlags = SolidElemFlags::DISPLACEMENT_PK1F;
 };
 
 class Tetrahedron10 {
@@ -1223,21 +1151,6 @@ Hexahedron8u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
 }
 
 void
-Hexahedron8u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                  sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-template <sp_grad::index_type iNumComp>
-void
-Hexahedron8u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                 const sp_grad::SpMatrix<doublereal, iNumNodesExtrap, iNumComp>& taune)
-{
-     tauni = taune;
-}
-
-void
 Hexahedron8u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
 {
      ASSERT(iNode >= 1);
@@ -1302,21 +1215,6 @@ Hexahedron8p::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
      h(6) = 1.25E-1*(r1+1.0E+0)*(1.0E+0-r2)*(r3+1.0E+0);
      h(7) = 1.25E-1*(r1+1.0E+0)*(r2+1.0E+0)*(r3+1.0E+0);
      h(8) = 1.25E-1*(1.0E+0-r1)*(r2+1.0E+0)*(r3+1.0E+0);
-}
-
-void
-Hexahedron8p::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                  sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-template <sp_grad::index_type iNumComp>
-void
-Hexahedron8p::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                 const sp_grad::SpMatrix<doublereal, iNumNodesExtrap, iNumComp>& taune)
-{
-     tauni = taune;
 }
 
 void
@@ -1438,28 +1336,6 @@ Hexahedron20u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
      h(18) = ((1-r1)*(r2+1)*(1-r3_2))/4.0E+0;
      h(19) = ((1-r1)*(1-r2)*(1-r3_2))/4.0E+0;
      h(20) = ((r1+1)*(1-r2)*(1-r3_2))/4.0E+0;
-}
-
-void
-Hexahedron20u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                   sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Hexahedron20u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                  const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune)
-{
-     static_assert(iNumRhs >= iNumNodes, "extrapolation is not possible");
-     using namespace sp_grad;
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodes; ++i) {
-               tauni(i, j) = taune(i, j);
-          }
-     }
 }
 
 void
@@ -1612,28 +1488,6 @@ Hexahedron27u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
 }
 
 void
-Hexahedron27u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                   sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Hexahedron27u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                  const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune)
-{
-     static_assert(iNumRhs >= iNumNodes, "extrapolation is not possible");
-     using namespace sp_grad;
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodes; ++i) {
-               tauni(i, j) = taune(i, j);
-          }
-     }
-}
-
-void
 Hexahedron27u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
 {
      ASSERT(iNode >= 1);
@@ -1749,65 +1603,6 @@ Hexahedron20ur::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
 }
 
 void
-Hexahedron20ur::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                    sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     const doublereal r1 = r(1);
-     const doublereal r2 = r(2);
-     const doublereal r3 = r(3);
-
-     static_assert(iNumNodesExtrap == 8, "invalid number of nodes");
-
-     h(1) = 1.25E-1*(1.0E+0-r1)*(1.0E+0-r2)*(1.0E+0-r3);
-     h(2) = 1.25E-1*(r1+1.0E+0)*(1.0E+0-r2)*(1.0E+0-r3);
-     h(3) = 1.25E-1*(r1+1.0E+0)*(r2+1.0E+0)*(1.0E+0-r3);
-     h(4) = 1.25E-1*(1.0E+0-r1)*(r2+1.0E+0)*(1.0E+0-r3);
-     h(5) = 1.25E-1*(1.0E+0-r1)*(1.0E+0-r2)*(r3+1.0E+0);
-     h(6) = 1.25E-1*(r1+1.0E+0)*(1.0E+0-r2)*(r3+1.0E+0);
-     h(7) = 1.25E-1*(r1+1.0E+0)*(r2+1.0E+0)*(r3+1.0E+0);
-     h(8) = 1.25E-1*(1.0E+0-r1)*(r2+1.0E+0)*(r3+1.0E+0);
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Hexahedron20ur::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                   const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune)
-{
-     using namespace sp_grad;
-
-     static_assert(iNumRhs >= iNumNodesExtrap, "invalid number of nodes");
-
-     static constexpr struct {
-          index_type ico1, ico2, imid;
-     } idxint[] = {
-          {1, 2,  9},
-          {2, 3, 10},
-          {3, 4, 11},
-          {4, 1, 12},
-          {5, 6, 13},
-          {6, 7, 14},
-          {7, 8, 15},
-          {8, 5, 16},
-          {1, 5, 17},
-          {2, 6, 18},
-          {3, 7, 19},
-          {4, 8, 20}
-     };
-
-     constexpr index_type iNumNodesInterp = sizeof(idxint) / sizeof(idxint[0]);
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodesExtrap; ++i) {
-               tauni(i, j) = taune(i, j);
-          }
-          for (index_type i = 0; i < iNumNodesInterp; ++i) {
-               tauni(idxint[i].imid, j) = 0.5 * (taune(idxint[i].ico1, j)
-                                                 +  taune(idxint[i].ico2, j));
-          }
-     }
-}
-
-void
 Hexahedron20ur::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
 {
      ASSERT(iNode >= 1);
@@ -1849,13 +1644,6 @@ Pentahedron6u::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
 }
 
 void
-Pentahedron6u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                   sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-void
 Pentahedron6u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                              sp_grad::SpColVector<doublereal, iNumNodes>& h)
 {
@@ -1871,21 +1659,6 @@ Pentahedron6u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
      h(4) = (((-r2)-r1+1)*(r3+1))/2.0E+0;
      h(5) = (r1*(r3+1))/2.0E+0;
      h(6) = (r2*(r3+1))/2.0E+0;
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Pentahedron6u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                  const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune) {
-     using namespace sp_grad;
-
-     static_assert(iNumRhs >= iNumNodes, "invalid number of nodes");
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodes; ++i) {
-               tauni(i, j) = taune(i, j);
-          }
-     }
 }
 
 void
@@ -1958,13 +1731,6 @@ Pentahedron15u::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
 }
 
 void
-Pentahedron15u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                    sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-void
 Pentahedron15u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
                               sp_grad::SpColVector<doublereal, iNumNodes>& h)
 {
@@ -1992,23 +1758,117 @@ Pentahedron15u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
      h(15) = r2*(1-r3_2);
 }
 
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
 void
-Pentahedron15u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                   const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune) {
-     using namespace sp_grad;
+Pentahedron15u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
+{
+     ASSERT(iNode >= 1);
+     ASSERT(iNode <= iNumNodes);
 
-     static_assert(iNumRhs >= iNumNodes, "invalid number of nodes");
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodes; ++i) {
-               tauni(i, j) = taune(i, j);
-          }
-     }
+     r(1) = ri[iNode - 1];
+     r(2) = si[iNode - 1];
+     r(3) = ti[iNode - 1];
 }
 
 void
-Pentahedron15u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
+Pentahedron18u::ShapeFunctionDeriv(const sp_grad::SpColVector<doublereal, 3>& r,
+                                   sp_grad::SpMatrix<doublereal, iNumNodes, 3>& h0d1)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+     const doublereal r3 = r(3);
+     const doublereal r1_2 = r1 * r1;
+
+     static_assert(iNumNodes == 18, "invalid number of nodes");
+
+     h0d1(1,1) = (r1*r2*(2*r2-1))/2.0E+0+((r1-1)*r2*(2*r2-1))/2.0E+0;
+     h0d1(1,2) = ((r1-1)*r1*(2*r2-1))/2.0E+0+(r1-1)*r1*r2;
+     h0d1(1,3) = 0;
+     h0d1(2,1) = (r1*r3*(2*r3-1))/2.0E+0+((r1-1)*r3*(2*r3-1))/2.0E+0;
+     h0d1(2,2) = 0;
+     h0d1(2,3) = ((r1-1)*r1*(2*r3-1))/2.0E+0+(r1-1)*r1*r3;
+     h0d1(3,1) = (r1*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0+((r1-1)*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h0d1(3,2) = ((r1-1)*r1*(2*r3+2*r2-1))/2.0E+0+(r1-1)*r1*(r3+r2-1);
+     h0d1(3,3) = ((r1-1)*r1*(2*r3+2*r2-1))/2.0E+0+(r1-1)*r1*(r3+r2-1);
+     h0d1(4,1) = ((r1+1)*r2*(2*r2-1))/2.0E+0+(r1*r2*(2*r2-1))/2.0E+0;
+     h0d1(4,2) = (r1*(r1+1)*(2*r2-1))/2.0E+0+r1*(r1+1)*r2;
+     h0d1(4,3) = 0;
+     h0d1(5,1) = ((r1+1)*r3*(2*r3-1))/2.0E+0+(r1*r3*(2*r3-1))/2.0E+0;
+     h0d1(5,2) = 0;
+     h0d1(5,3) = (r1*(r1+1)*(2*r3-1))/2.0E+0+r1*(r1+1)*r3;
+     h0d1(6,1) = ((r1+1)*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0+(r1*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h0d1(6,2) = (r1*(r1+1)*(2*r3+2*r2-1))/2.0E+0+r1*(r1+1)*(r3+r2-1);
+     h0d1(6,3) = (r1*(r1+1)*(2*r3+2*r2-1))/2.0E+0+r1*(r1+1)*(r3+r2-1);
+     h0d1(7,1) = 2*r1*r2*r3+2*(r1-1)*r2*r3;
+     h0d1(7,2) = 2*(r1-1)*r1*r3;
+     h0d1(7,3) = 2*(r1-1)*r1*r2;
+     h0d1(8,1) = (-2*r1*r3*(r3+r2-1))-2*(r1-1)*r3*(r3+r2-1);
+     h0d1(8,2) = -2*(r1-1)*r1*r3;
+     h0d1(8,3) = (-2*(r1-1)*r1*(r3+r2-1))-2*(r1-1)*r1*r3;
+     h0d1(9,1) = (-2*r1*r2*(r3+r2-1))-2*(r1-1)*r2*(r3+r2-1);
+     h0d1(9,2) = (-2*(r1-1)*r1*(r3+r2-1))-2*(r1-1)*r1*r2;
+     h0d1(9,3) = -2*(r1-1)*r1*r2;
+     h0d1(10,1) = -2*r1*r2*(2*r2-1);
+     h0d1(10,2) = (1-r1_2)*(2*r2-1)+2*(1-r1_2)*r2;
+     h0d1(10,3) = 0;
+     h0d1(11,1) = -2*r1*r3*(2*r3-1);
+     h0d1(11,2) = 0;
+     h0d1(11,3) = (1-r1_2)*(2*r3-1)+2*(1-r1_2)*r3;
+     h0d1(12,1) = -2*r1*(r3+r2-1)*(2*r3+2*r2-1);
+     h0d1(12,2) = (1-r1_2)*(2*r3+2*r2-1)+2*(1-r1_2)*(r3+r2-1);
+     h0d1(12,3) = (1-r1_2)*(2*r3+2*r2-1)+2*(1-r1_2)*(r3+r2-1);
+     h0d1(13,1) = 2*(r1+1)*r2*r3+2*r1*r2*r3;
+     h0d1(13,2) = 2*r1*(r1+1)*r3;
+     h0d1(13,3) = 2*r1*(r1+1)*r2;
+     h0d1(14,1) = (-2*(r1+1)*r3*(r3+r2-1))-2*r1*r3*(r3+r2-1);
+     h0d1(14,2) = -2*r1*(r1+1)*r3;
+     h0d1(14,3) = (-2*r1*(r1+1)*(r3+r2-1))-2*r1*(r1+1)*r3;
+     h0d1(15,1) = (-2*(r1+1)*r2*(r3+r2-1))-2*r1*r2*(r3+r2-1);
+     h0d1(15,2) = (-2*r1*(r1+1)*(r3+r2-1))-2*r1*(r1+1)*r2;
+     h0d1(15,3) = -2*r1*(r1+1)*r2;
+     h0d1(16,1) = -8*r1*r2*r3;
+     h0d1(16,2) = 4*(1-r1_2)*r3;
+     h0d1(16,3) = 4*(1-r1_2)*r2;
+     h0d1(17,1) = 8*r1*r3*(r3+r2-1);
+     h0d1(17,2) = 4*(r1_2-1)*r3;
+     h0d1(17,3) = 4*(r1_2-1)*(r3+r2-1)+4*(r1_2-1)*r3;
+     h0d1(18,1) = 8*r1*r2*(r3+r2-1);
+     h0d1(18,2) = 4*(r1_2-1)*(r3+r2-1)+4*(r1_2-1)*r2;
+     h0d1(18,3) = 4*(r1_2-1)*r2;
+}
+
+void
+Pentahedron18u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
+                              sp_grad::SpColVector<doublereal, iNumNodes>& h)
+{
+     const doublereal r1 = r(1);
+     const doublereal r2 = r(2);
+     const doublereal r3 = r(3);
+     const doublereal r1_2 = r1 * r1;
+
+     static_assert(iNumNodes == 18, "invalid number of nodes");
+
+     h(1) = ((r1-1)*r1*r2*(2*r2-1))/2.0E+0;
+     h(2) = ((r1-1)*r1*r3*(2*r3-1))/2.0E+0;
+     h(3) = ((r1-1)*r1*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h(4) = (r1*(r1+1)*r2*(2*r2-1))/2.0E+0;
+     h(5) = (r1*(r1+1)*r3*(2*r3-1))/2.0E+0;
+     h(6) = (r1*(r1+1)*(r3+r2-1)*(2*r3+2*r2-1))/2.0E+0;
+     h(7) = 2*(r1-1)*r1*r2*r3;
+     h(8) = -2*(r1-1)*r1*r3*(r3+r2-1);
+     h(9) = -2*(r1-1)*r1*r2*(r3+r2-1);
+     h(10) = (1-r1_2)*r2*(2*r2-1);
+     h(11) = (1-r1_2)*r3*(2*r3-1);
+     h(12) = (1-r1_2)*(r3+r2-1)*(2*r3+2*r2-1);
+     h(13) = 2*r1*(r1+1)*r2*r3;
+     h(14) = -2*r1*(r1+1)*r3*(r3+r2-1);
+     h(15) = -2*r1*(r1+1)*r2*(r3+r2-1);
+     h(16) = 4*(1-r1_2)*r2*r3;
+     h(17) = 4*(r1_2-1)*r3*(r3+r2-1);
+     h(18) = 4*(r1_2-1)*r2*(r3+r2-1);
+}
+
+void
+Pentahedron18u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
 {
      ASSERT(iNode >= 1);
      ASSERT(iNode <= iNumNodes);
@@ -2079,48 +1939,6 @@ Tetrahedron10u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
 }
 
 void
-Tetrahedron10u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                    sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     h(1) = r(2);
-     h(2) = r(3);
-     h(3) = 1. - r(1) - r(2) - r(3);
-     h(4) = r(1);
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Tetrahedron10u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                   const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune) {
-     using namespace sp_grad;
-
-     static_assert(iNumRhs >= iNumNodesExtrap, "invalid number of nodes");
-
-     static constexpr struct {
-          index_type ico1, ico2, imid;
-     } idxint[] = {
-          {0, 1, 4},
-          {1, 2, 5},
-          {2, 0, 6},
-          {0, 3, 7},
-          {1, 3, 8},
-          {2, 3, 9}
-     };
-
-     constexpr index_type iNumNodesInterp = sizeof(idxint) / sizeof(idxint[0]);
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodesExtrap; ++i) {
-               tauni(i, j) = taune(i, j);
-          }
-          for (index_type i = 0; i < iNumNodesInterp; ++i) {
-               tauni(idxint[i].imid + 1, j) = 0.5 * (taune(idxint[i].ico1 + 1, j)
-                                                     +  taune(idxint[i].ico2 + 1, j));
-          }
-     }
-}
-
-void
 Tetrahedron10u::NodalPosition(sp_grad::index_type iNode, sp_grad::SpColVector<doublereal, 3>& r)
 {
      ASSERT(iNode >= 1);
@@ -2161,28 +1979,6 @@ Tetrahedron4u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
      h(2) = r3;
      h(3) = -r3-r2-r1+1;
      h(4) = r1;
-}
-
-void
-Tetrahedron4u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                   sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     ShapeFunction(r, h);
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Tetrahedron4u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                  const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune) {
-     using namespace sp_grad;
-
-     static_assert(iNumRhs == 1);
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          for (index_type i = 1; i <= iNumNodes; ++i) {
-               tauni(i, j) = taune(1, j);
-          }
-     }
 }
 
 void
@@ -2294,57 +2090,6 @@ Tetrahedron20u::ShapeFunction(const sp_grad::SpColVector<doublereal, 3>& r,
      h(18) = (9.0E+0*r2*r3*(3*r3-1))/2.0E+0;
      h(19) = (9.0E+0*((-r3)-r2-r1+1)*r3*(3*r3-1))/2.0E+0;
      h(20) = (r3*(3*r3-2)*(3*r3-1))/2.0E+0;
-}
-
-void
-Tetrahedron20u::ShapeFunctionExtrap(const sp_grad::SpColVector<doublereal, 3>& r,
-                                   sp_grad::SpColVector<doublereal, iNumNodesExtrap>& h)
-{
-     h(1) = 1 - r(1) - r(2) - r(3);
-     h(2) = r(1);
-     h(3) = r(2);
-     h(4) = r(3);
-}
-
-template <sp_grad::index_type iNumComp, sp_grad::index_type iNumRhs>
-void
-Tetrahedron20u::GaussToNodalInterp(sp_grad::SpMatrix<doublereal, iNumNodes, iNumComp>& tauni,
-                                   const sp_grad::SpMatrix<doublereal, iNumRhs, iNumComp>& taune)
-{
-     static_assert(iNumRhs >= iNumNodesExtrap, "extrapolation is not possible");
-
-     using namespace sp_grad;
-
-     for (index_type j = 1; j <= iNumComp; ++j) {
-          tauni(1, j) = taune(1, j);
-          tauni(4, j) = taune(2, j);
-          tauni(7, j) = taune(3, j);
-          tauni(20, j) = taune(4, j);
-
-          tauni(2, j) = 2./3. * tauni(1, j) + 1./3. * tauni(4, j);
-          tauni(3, j) = 1./3. * tauni(1, j) + 2./3. * tauni(4, j);
-
-          tauni(5, j) = 2./3. * tauni(4, j) + 1./3. * tauni(7, j);
-          tauni(6, j) = 1./3. * tauni(4, j) + 2./3. * tauni(7, j);
-
-          tauni(8, j) = 2./3. * tauni(7, j) + 1./3. * tauni(1, j);
-          tauni(9, j) = 1./3. * tauni(7, j) + 2./3. * tauni(1, j);
-
-          tauni(11, j) = 2./3. * tauni(4, j) + 1./3. * tauni(20, j);
-          tauni(17, j) = 1./3. * tauni(4, j) + 2./3. * tauni(20, j);
-
-          tauni(13, j) = 2./3. * tauni(7, j) + 1./3. * tauni(20, j);
-          tauni(18, j) = 1./3. * tauni(7, j) + 2./3. * tauni(20, j);
-
-          tauni(15, j) = 2./3. * tauni(1, j) + 1./3. * tauni(20, j);
-          tauni(19, j) = 1./3. * tauni(1, j) + 2./3. * tauni(20, j);
-
-          tauni(12, j) = 0.5 * (tauni(11, j) + tauni(13, j));
-          tauni(14, j) = 0.5 * (tauni(13, j) + tauni(15, j));
-          tauni(16, j) = 0.5 * (tauni(11, j) + tauni(15, j));
-
-          tauni(10, j) = (tauni(1, j) + tauni(4, j) + tauni(7, j)) / 3.;
-     }
 }
 
 void

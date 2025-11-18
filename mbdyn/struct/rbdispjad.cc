@@ -65,13 +65,34 @@ RigidBodyDispJointAd::~RigidBodyDispJointAd()
 {
 }
 
+void RigidBodyDispJointAd::OutputPrepare(OutputHandler &OH)
+{
+     if (bToBeOutput()) {
+#ifdef USE_NETCDF
+          if (OH.UseNetCDF(OutputHandler::JOINTS)) {
+               Joint::OutputPrepare_int("Rigid body displacement joint", OH);
+          }
+#endif
+     }
+}
+
 void RigidBodyDispJointAd::Output(OutputHandler& OH) const
 {
      using namespace sp_grad;
 
-     if (bToBeOutput() && OH.UseText(OutputHandler::JOINTS)) {
+     if (bToBeOutput()) {
           const Mat3x3& Rm = pNodeMaster->GetRCurr();
-          Joint::Output(OH.Joints(), "OffsetDispJoint", GetLabel(), -Rm.MulTV(FmTmp), -Rm.MulTV(MmTmp), -FmTmp, -MmTmp) << '\n';
+          const Vec3 F = -Rm.MulTV(FmTmp);
+          const Vec3 M = -Rm.MulTV(MmTmp);
+
+#ifdef USE_NETCDF
+          if (OH.UseNetCDF(OutputHandler::JOINTS)) {
+               Joint::NetCDFOutput(OH, F, M, -FmTmp, -MmTmp);
+          }
+#endif // USE_NETCDF
+          if (OH.UseText(OutputHandler::JOINTS)) {
+               Joint::Output(OH.Joints(), "RigidBodyDispJoint", GetLabel(), F, M, -FmTmp, -MmTmp) << '\n';
+          }
      }
 }
 

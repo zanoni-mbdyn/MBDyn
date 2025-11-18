@@ -1447,7 +1447,7 @@ DriveCallerRead::~DriveCallerRead(void)
 
 void DriveCallerRead::ReadOutput(DriveCaller* pDC, const DataManager* pDM, MBDynParser& HP)
 {
-	flag fOutput = pDM->bOutputDriveCallers()
+	flag fOutput = pDM && pDM->bOutputDriveCallers()
 					? DriveCaller::OUTPUT_VALUE
 					: 0;
 
@@ -1660,11 +1660,11 @@ OneDCR::Read(const DataManager* /* pDM */ , MBDynParser& /* HP */ , bool /* bDef
 
 struct ConstDCR : public DriveCallerRead {
 	DriveCaller *
-	Read(const DataManager* pDM, MBDynParser& HP, bool /* bDeferred */ );
+	Read(const DataManager* /* pDM */ , MBDynParser& HP , bool /* bDeferred */ );
 };
 
 DriveCaller *
-ConstDCR::Read(const DataManager* pDM, MBDynParser& HP, bool /* bDeferred */ )
+ConstDCR::Read(const DataManager* /* pDM */ , MBDynParser& HP , bool /* bDeferred */ )
 {
 	DriveCaller *pDC = 0;
 
@@ -1802,6 +1802,7 @@ struct FunctionDCR : public DriveCallerRead {
 DriveCaller *
 FunctionDCR::Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred)
 {
+	NeedDM(pDM, HP, bDeferred, "scalar function");
 	return HP.GetDriveCaller(bDeferred);
 }
 

@@ -68,7 +68,7 @@ public:
                           std::vector<SlaveNodeData>&& rgNodesSlave,
                           flag fOut);
      virtual ~RigidBodyDispJointAd();
-
+     virtual void OutputPrepare(OutputHandler &OH) override;
      virtual void Output(OutputHandler& OH) const override;
      virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
      virtual unsigned int iGetNumDof(void) const override;

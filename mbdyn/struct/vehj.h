@@ -125,6 +125,8 @@ public:
 	/* Contributo al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
 
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
 	void OutputPrepare(OutputHandler& OH);
 	virtual void Output(OutputHandler& OH) const;
 

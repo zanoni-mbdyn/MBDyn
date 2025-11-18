@@ -116,6 +116,7 @@ public:
 	virtual void SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
 			SimulationEntity::Hints *ph);
 	virtual std::ostream& Restart(std::ostream& out) const;
+        virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 	virtual unsigned int iGetInitialNumDof(void) const;
 	virtual void
 	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const;
@@ -1004,9 +1005,9 @@ asynchronous_machine::SetValue(DataManager *pDM,
 {
 	const integer intFirstIndex = iGetFirstIndex();
 
-	//                             1        2        3
-	X.Put( intFirstIndex + 1, Vec3(m_dM_dt, m_M,     m_omega) );
-	XP.Put(intFirstIndex + 1, Vec3(     0., m_dM_dt,      0.) );
+	//                             1        2         3
+	X.Put( intFirstIndex + 1, Vec3(m_dM_dt, m_M,      m_omega) );
+	XP.Put(intFirstIndex + 1, Vec3(m_dM_dt2, m_dM_dt, m_domega_dt) );
 }
 
 /**
@@ -1032,6 +1033,15 @@ asynchronous_machine::Restart(std::ostream& out) const
 		"MP0, " << m_dM_dt * copysign(1., m_OmegaS.dGet())  << ";" << std::endl;
 	
 	return out;
+}
+
+void asynchronous_machine::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "M", m_M, eAction);
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "dM_dt", m_dM_dt, eAction);
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "dM_dt2", m_dM_dt2, eAction);
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "omega", m_omega, eAction);
+     oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), "domega_dt", m_domega_dt, eAction);
 }
 
 /**

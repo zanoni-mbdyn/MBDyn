@@ -61,6 +61,8 @@ class Pentahedron6;
 class Pentahedron15;
 class Pentahedron15f;
 class Pentahedron15upc;
+class Pentahedron18;
+class Pentahedron18f;
 class Tetrahedron10;
 class Tetrahedron10f;
 class Tetrahedron10upc;
@@ -72,6 +74,7 @@ class Gauss2x2x2;
 class Gauss3x3x3;
 class GaussH20r;
 class CollocPenta15;
+class CollocPenta18;
 class CollocTet10h;
 class CollocTet20;
 

@@ -30,7 +30,7 @@
 
 /*
  AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-        Copyright (C) 2022(-2023) all rights reserved.
+        Copyright (C) 2022(-2025) all rights reserved.
 
         The copyright of this code is transferred
         to Pierangelo Masarati and Paolo Mantegazza
@@ -313,7 +313,7 @@ public:
      using SolidElem::InitialAssRes;
      using SolidElem::InitialAssJac;
      using SolidElem::Restart;
-     
+
      typedef IncomprSolidElemStatic<SolidCSLType::eConstLawType == ConstLawType::ELASTICINCOMPR, ElementType::ElemTypePressure::iNumNodes> IncomprSolidElemType;
 
      static constexpr ConstLawType::Type eConstLawType = SolidCSLType::eConstLawType;
@@ -340,6 +340,7 @@ public:
                      flag fOut);
      virtual ~SolidElemStatic();
 
+     virtual void OutputPrepare(OutputHandler& OH) override;
      virtual void Output(OutputHandler& OH) const override;
 
      virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
@@ -435,7 +436,7 @@ public:
      virtual doublereal dGetRequestedTimeStep() const override;
 
      virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
-     
+
 protected:
      template <typename T>
      inline void
@@ -657,6 +658,9 @@ protected:
      const sp_grad::SpColVectorA<doublereal, iNumNodes> rhon;
      std::array<CollocData, iNumEvalPointsStiffness> rgCollocData;
      const RigidBodyKinematics* const pRBK;
+#ifdef USE_NETCDF
+     MBDynNcVar Var_taun, Var_epsilonn;
+#endif
 };
 
 enum class MassMatrixType {
@@ -1024,11 +1028,25 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::~So
 }
 
 template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
+void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::OutputPrepare(OutputHandler& OH)
+{
+#ifdef USE_NETCDF
+     if (OH.UseNetCDF(OutputHandler::SOLIDS)) {
+          using namespace std::string_literals;
+          const std::string strPrefix = "elem.solid."s + std::to_string(GetLabel());
+
+          Var_taun = OH.CreateVar<sp_grad::SpMatrix<doublereal, iNumNodes, 6>>(strPrefix + ".taun", OutputHandler::Dimensions::Pressure, "Cauchy stress at element nodes");
+          Var_epsilonn = OH.CreateVar<sp_grad::SpMatrix<doublereal, iNumNodes, 6>>(strPrefix + ".epsilonn", OutputHandler::Dimensions::Dimensionless, "Strain at element nodes");
+     }
+#endif
+}
+
+template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
 void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Output(OutputHandler& OH) const
 {
      using namespace sp_grad;
 
-     if (bToBeOutput() && OH.UseText(OutputHandler::SOLIDS)) {
+     if (bToBeOutput()) {
           sp_grad::SpMatrixA<doublereal, iNumEvalPointsStiffness, 6> epsilone;
           sp_grad::SpMatrixA<doublereal, iNumEvalPointsStiffness, 6> taue;
           sp_grad::SpMatrixA<doublereal, iNumNodes, 6> epsilonn;
@@ -1038,6 +1056,12 @@ void SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>
           GaussToNodal(epsilonn, epsilone);
           GaussToNodal(taun, taue);
 
+#ifdef USE_NETCDF
+          if (OH.UseNetCDF(OutputHandler::SOLIDS)) {
+               OH.WriteNcVar(Var_taun, taun);
+               OH.WriteNcVar(Var_epsilonn, epsilonn);
+          }
+#endif
           if (OH.UseText(OutputHandler::SOLIDS)) {
                std::ostream& of = OH.Solids();
 
@@ -1957,24 +1981,23 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Gau
 #ifdef HAVE_DGELSD
      using namespace sp_grad;
 
-     static_assert(iNumNodesExtrap <= iNumNodes, "invalid number of nodes");
-     static_assert(iNumNodesExtrap <= iNumEvalPointsStiffness, "invalid number of nodes");
+     static_assert(iNumEvalPointsStiffness >= 4, "invalid number of points");
 
-     SpMatrixA<doublereal, iNumEvalPointsStiffness, iNumNodesExtrap> H;
+     SpMatrixA<doublereal, iNumEvalPointsStiffness, 4> H;
      SpColVectorA<doublereal, 3> r;
-     SpColVectorA<doublereal, iNumNodesExtrap> h;
 
      for (index_type i = 1; i <= iNumEvalPointsStiffness; ++i) {
           CollocationType::GetPositionStiffness(i - 1, r);
-          ElementType::ElemTypeDisplacement::ShapeFunctionExtrap(r, h);
 
-          for (index_type j = 1; j <= iNumNodesExtrap; ++j) {
-               H(i, j) = h(j); // FIXME: select only a subset of available nodes
+          H(i, 1) = 1.;
+
+          for (index_type j = 1; j <= 3; ++j) {
+               H(i, j + 1) = r(j);
           }
      }
 
      constexpr integer M = iNumEvalPointsStiffness;
-     constexpr integer N = iNumNodesExtrap;
+     constexpr integer N = 4;
      constexpr integer MINMN = M < N ? M : N;
      constexpr integer NRHS = iNumComp;
      constexpr integer LDB = M;
@@ -2003,7 +2026,17 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Gau
           throw ErrGeneric(MBDYN_EXCEPT_ARGS);
      }
 
-     ElementType::ElemTypeDisplacement::GaussToNodalInterp(taun, B);
+     for (index_type j = 1; j <= iNumComp; ++j) {
+          for (index_type i = 1; i <= iNumNodes; ++i) {
+               ElementType::ElemTypeDisplacement::NodalPosition(i, r);
+
+               taun(i, j) = B(1, j);
+
+               for (index_type k = 1; k <= 3; ++k) {
+                    taun(i, j) += B(k + 1, j) * r(k);
+               }
+          }
+     }
 #else
      silent_cerr("Output of solid element data is not available because LAPACK's dgelsd function was not found.\n"
                  "It may be disabled by means of a \"default output:\" statement within the control data section.\n");
@@ -3168,6 +3201,7 @@ template SolidElem* ReadSolid<Hexahedron20, Gauss3x3x3>(DataManager*, MBDynParse
 template SolidElem* ReadSolid<Hexahedron27, Gauss3x3x3>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Hexahedron20r, GaussH20r>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Pentahedron15, CollocPenta15>(DataManager*, MBDynParser&, unsigned int);
+template SolidElem* ReadSolid<Pentahedron18, CollocPenta18>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron10, CollocTet10h>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron20, CollocTet20>(DataManager*, MBDynParser&, unsigned int);
 
@@ -3177,6 +3211,7 @@ template SolidElem* ReadSolid<Hexahedron20f, Gauss3x3x3>(DataManager*, MBDynPars
 template SolidElem* ReadSolid<Hexahedron27f, Gauss3x3x3>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Hexahedron20fr, GaussH20r>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Pentahedron15f, CollocPenta15>(DataManager*, MBDynParser&, unsigned int);
+template SolidElem* ReadSolid<Pentahedron18f, CollocPenta18>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron10f, CollocTet10h>(DataManager*, MBDynParser&, unsigned int);
 template SolidElem* ReadSolid<Tetrahedron20f, CollocTet20>(DataManager*, MBDynParser&, unsigned int);
 
