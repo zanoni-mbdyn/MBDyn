@@ -50,6 +50,8 @@ test_data.octave_pkg_prefix = [];
 thread_data.number_of_threads = 1;
 
 try
+  pkg load mboct-octave-pkg;
+
   [prog_dir, prog_name, prog_ext] = fileparts(__FILE__);
 
   addpath(prog_dir);
@@ -133,8 +135,6 @@ try
     pkg(pkg_list_type, test_data.octave_pkg_prefix);
   endif
 
-  pkg load mboct-octave-pkg;
-
   sigterm_dumps_octave_core(false);
 
   test_data.pkg_functions = {};
@@ -154,9 +154,8 @@ try
 
   opts.number_of_parameters = numel(test_data.pkg_functions);
 
-  ## JUnit XML files must have a unique filename. Otherwise only the last error will be displayed in GitLab CI/CD.
-  opts.gtest_output_junit_xml = fullfile(test_data.octave_pkg_test_dir, 'junit_xml_report_octave_assert_%03d.xml');
-  opts.redirect_stdout = fullfile(test_data.octave_pkg_test_dir, '%d', 'fntests.out');
+  opts.gtest_output_junit_xml = fullfile(test_data.octave_pkg_test_dir, '%03d', 'junit_xml_report_octave_assert.xml');
+  opts.redirect_stdout = fullfile(test_data.octave_pkg_test_dir, '%03d', 'fntests.out');
 
   putenv("MBD_NUM_THREADS", sprintf("%d", thread_data.number_of_threads));
 
