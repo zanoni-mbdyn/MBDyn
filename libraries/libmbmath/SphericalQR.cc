@@ -252,9 +252,14 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
                 // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
                 // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
                 // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
-                doublereal phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+                // doublereal phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+                doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
+                // std::cerr << "phi: " << RotManip::VecRot(Qold.MulTM(Q)) << std::endl
+                //     << "\t" << RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)) << std::endl
+                //     << "\t" << std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1))) << std::endl
+                //     << "\t" << RotManip::VecRot(Qold.MulTM(Q)).Norm() << std::endl;
                 if (phi > std::numbers::pi / 2.) {
-                    std::cout << "phi before " << phi << std::endl;
+                    // std::cout << "phi before " << phi << std::endl;
                     Vec3 p = Q.GetVec(1) * std::numbers::pi;
                     Mat3x3 R = RotManip::Rot(p);
                     Q = Q * R;

@@ -314,11 +314,20 @@ void SphericalHingeJoint::AfterConvergence(const VectorHandler& X,
 		Vec3 Omega1(pNode1->GetWCurr());
 		Vec3 Omega2(pNode2->GetWCurr());
 		Vec3 Omegar = Omega1 - Omega2;
+		F = Vec3(X, iGetFirstIndex()+1);
+		doublereal modF = F.Norm();
+		if (modF <= preF / 2.) {
+			// std::cout << "Condition 3" << std::endl;
+			compute_Q = false;
+			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
+		} else {
+			SpericalQR(F, Q, !(reset_Q), Qold);
+		}
 		d2D v;
 		v.x[0] = (-Q.GetCol(1)).Cross(Omegar).Dot(Q.GetCol(2))*r;
 		v.x[1] = (-Q.GetCol(1)).Cross(Omegar).Dot(Q.GetCol(3))*r;
 		//reaction norm
-		doublereal modF = std::max(F.Norm(), preF);
+		modF = std::max(modF, preF);
 		fc->AfterConvergence(modF, v, X, XP, iGetFirstIndex()+NumSelfDof);
 	}
 }
@@ -743,7 +752,7 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			// std::cout << "Call Spherical" << std::endl;
 			// std::cout << "F: " << F << std::endl;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
-			SpericalQR(F, Q, !(reset_Q), Qold);
+			// SpericalQR(F, Q, !(reset_Q), Qold);
 			// std::cout << "Qold: " << Qold << std::endl;
 			// std::cout << "Q   : " << Q << std::endl;
 		}
@@ -794,6 +803,15 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			WorkVec.Add(7, Ffrict2);
 			WorkVec.Sub(4, dTmp1.Cross(Ffrict1)); /* Sfrutto  F/\d = -d/\F */
 			WorkVec.Sub(4, dTmp1.Cross(Ffrict2)); /* Sfrutto  F/\d = -d/\F */
+			// std::cerr << "F: " << F << std::endl;
+			// std::cerr << "Ffrict1: " << Ffrict1 << std::endl;
+			// std::cerr << "Ffrict2: " << Ffrict2 << std::endl;
+			// std::cerr << "modF: " << modF << std::endl;
+			// std::cerr << "Q1: " << Q.GetCol(1) << std::endl;
+			// std::cerr << "Q2: " << Q.GetCol(2) << std::endl;
+			// std::cerr << "Q3: " << Q.GetCol(3) << std::endl;
+			// std::cerr << "m1 0: " << dTmp2.Cross(Ffrict1) << std::endl;
+			// std::cerr << "m2 0: " << dTmp2.Cross(Ffrict2) << std::endl;
 			WorkVec.Add(10, dTmp2.Cross(Ffrict1));
 			WorkVec.Add(10, dTmp2.Cross(Ffrict2));
 		// }
@@ -820,6 +838,8 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 		// std::cout << "M2: " << M2 << std::endl;
 		WorkVec.Sub(4, M1);
 		WorkVec.Sub(4, M2);
+		// std::cerr << "M1: " << M1 << std::endl;
+		// std::cerr << "M2: " << M2 << std::endl;
 		WorkVec.Add(10, M1);
 		WorkVec.Add(10, M2);
 
