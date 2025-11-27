@@ -40,7 +40,7 @@
 
 #include "mbconfig.h"
 
-#ifdef HAVE_FEENABLEEXCEPT
+#ifdef HAVE_FENV_H
 #define _GNU_SOURCE 1
 #include <fenv.h>
 #endif // HAVE_FENV_H
