@@ -481,7 +481,7 @@ variables:
     description: "Repository of the Trilinos library (https://github.com/trilinos/Trilinos.git) to be cloned"
 
   TRILINOS_BRANCH:
-    value: "master"
+    value: "trilinos-release-16-1-0"
     options:
       - "master"
       - "trilinos-release-14-4-0"
