@@ -752,7 +752,7 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			// std::cout << "Call Spherical" << std::endl;
 			// std::cout << "F: " << F << std::endl;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
-			// SphericalQR(F, Q, !(reset_Q), Qold);
+			SphericalQR(F, Q, !(reset_Q), Qold);
 			// std::cout << "Qold: " << Qold << std::endl;
 			// std::cout << "Q   : " << Q << std::endl;
 		}

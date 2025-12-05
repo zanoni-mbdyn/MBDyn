@@ -224,9 +224,9 @@ void SphericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat
         Vec3 n1 = Qold.GetCol(1); n1 = n1 / n1.Norm();
         Vec3 n2 = q1;
         doublereal costheta = n1.Dot(n2);
-        if (costheta >= 1.) {
+        if (costheta >= 1. - std::numeric_limits<doublereal>::epsilon() * 10.) {
             Q = Qold;
-        } else if (costheta <= -1.) {
+        } else if (costheta <= -1. + std::numeric_limits<doublereal>::epsilon() * 10.) {
             Mat3x3 R = RotManip::Rot(Qold.GetCol(2) * std::numbers::pi);
             Q = R * Qold;
         } else {
@@ -236,6 +236,10 @@ void SphericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat
             Mat3x3 R = RotManip::Rot(k * theta);
             Q = R * Qold;
         }
+        // std::cerr << "q1: " << Q.GetCol(1) << std::endl;
+        // std::cerr << "Q1: " << Q.GetCol(1) << std::endl;
+        // std::cerr << "Q2: " << Q.GetCol(2) << std::endl;
+        // std::cerr << "Q3: " << Q.GetCol(3) << std::endl;
     }
 }
 

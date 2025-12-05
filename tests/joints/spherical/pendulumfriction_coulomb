@@ -15,7 +15,7 @@ begin: initial value;
 	max iterations: 200;
 	linear solver: naive, colamd;
 	#abort after: derivatives;
-	output: iterations;
+	#output: iterations;
 	#output: residual;
 	#output: residual, jacobian, solution;
 end: initial value;
