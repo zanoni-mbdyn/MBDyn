@@ -321,13 +321,13 @@ void SphericalHingeJoint::AfterConvergence(const VectorHandler& X,
 			compute_Q = false;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
 		} else {
-			SpericalQR(F, Q, !(reset_Q), Qold);
+			SphericalQR(F, Q, !(reset_Q), Qold);
 		}
 		d2D v;
 		v.x[0] = (-Q.GetCol(1)).Cross(Omegar).Dot(Q.GetCol(2))*r;
 		v.x[1] = (-Q.GetCol(1)).Cross(Omegar).Dot(Q.GetCol(3))*r;
 		//reaction norm
-		modF = std::max(modF, preF);
+		// doublereal modF = std::max(modF, preF);
 		fc->AfterConvergence(modF, v, X, XP, iGetFirstIndex()+NumSelfDof);
 	}
 }
@@ -585,10 +585,10 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		  // WorkVec.Sub(1, Ffrict2);
 		  // WorkVec.Add(7, Ffrict1);
 		  // WorkVec.Add(7, Ffrict2);
-		  dF1.Add(WM, 1, 1.);
-		  dF2.Add(WM, 1, 1.);
-		  dF1.Sub(WM, 7, 1.);
-		  dF2.Sub(WM, 7, 1.);
+		  dF1.AddTo(WM, 1, 1.);
+		  dF2.AddTo(WM, 1, 1.);
+		  dF1.SubFrom(WM, 7, 1.);
+		  dF2.SubFrom(WM, 7, 1.);
 
 		  // WorkVec.Sub(4, dTmp1.Cross(Ffrict1)); /* Sfrutto  F/\d = -d/\F */
 		  // WorkVec.Sub(4, dTmp1.Cross(Ffrict2)); /* Sfrutto  F/\d = -d/\F */
@@ -600,18 +600,18 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dMF1.SetBlockDim(1, 3);
           dMF1.Set(Mat3x3(MatCross, dTmp1), 1, 1, 1);
           dMF1.Link(1, &dF1);
-          dMF1.Add(WM, 4);
+          dMF1.AddTo(WM, 4);
           dMF1.Link(1, &dF2);
-          dMF1.Add(WM, 4);
+          dMF1.AddTo(WM, 4);
 
 		  ExpandableMatrix dMF2;
           dMF2.ReDim(3, 1);
           dMF2.SetBlockDim(1, 3);
           dMF2.Set(Mat3x3(MatCross, dTmp2), 1, 1, 1);
           dMF2.Link(1, &dF1);
-          dMF2.Sub(WM, 10);
+          dMF2.SubFrom(WM, 10);
           dMF2.Link(1, &dF2);
-          dMF2.Sub(WM, 10);
+          dMF2.SubFrom(WM, 10);
 
 
 		  // WM.Put(4, 4, Mat3x3(MatCrossCross, FTmp, dTmp1));
@@ -663,10 +663,10 @@ SphericalHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 	  dM2.SetCol(Q.GetCol(1).Cross(Q.GetCol(3)) * r * shc.x[1], 1, 4, 1);
 	  dM2.Link(4, &dmodF);
 
-	  dM1.Add(WM, 4, 1.);
-	  dM2.Add(WM, 4, 1.);
-	  dM1.Sub(WM, 10, 1.);
-	  dM2.Sub(WM, 10, 1.);
+	  dM1.AddTo(WM, 4, 1.);
+	  dM2.AddTo(WM, 4, 1.);
+	  dM1.SubFrom(WM, 10, 1.);
+	  dM2.SubFrom(WM, 10, 1.);
    }
 
    return WorkMat;
@@ -752,7 +752,7 @@ SubVectorHandler& SphericalHingeJoint::AssRes(SubVectorHandler& WorkVec,
 			// std::cout << "Call Spherical" << std::endl;
 			// std::cout << "F: " << F << std::endl;
 			// std::cout << "reset_Q: " << reset_Q << "; compute_Q: " << compute_Q << std::endl;
-			// SpericalQR(F, Q, !(reset_Q), Qold);
+			// SphericalQR(F, Q, !(reset_Q), Qold);
 			// std::cout << "Qold: " << Qold << std::endl;
 			// std::cout << "Q   : " << Q << std::endl;
 		}

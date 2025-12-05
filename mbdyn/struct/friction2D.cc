@@ -465,7 +465,7 @@ void ModLugreFriction2D::AssJac(
 					- z.x[1] * alph * sigma0 / fsvm * vmd_v.x[1], 2, 2, 2);
 	deq_dv.Link(2, &dv);
 
-	deq_dv.Add(WorkMat, startdof+1);
+	deq_dv.AddTo(WorkMat, startdof+1);
 
 	// -z sigma0/fss * alpha_{/z} * dz
 	ExpandableMatrix deq_dz;
@@ -475,7 +475,7 @@ void ModLugreFriction2D::AssJac(
 	deq_dz.Set(-z.x[0] * sigma0 / fsvm * vm, 1, 1, 1);
 	deq_dz.Set(-z.x[1] * sigma0 / fsvm * vm, 2, 1, 1);
 	deq_dz.Link(1, &alpha_d_z);
-	deq_dz.Add(WorkMat, startdof+1, dCoef);
+	deq_dz.AddTo(WorkMat, startdof+1, dCoef);
 
 
 //	std::cout << alphad_z(z,v) << std::endl;
@@ -637,7 +637,7 @@ void DiscreteCoulombFriction2D::AssRes(
 		status = sliding;
 	}
 	if (status == sliding) {
-		// std::cerr << "v*current_velocity: " << v*current_velocity << std::endl;
+		std::cerr << "v*current_velocity: " << v*current_velocity << std::endl;
 		if (v*current_velocity < 0.) {
 			if (((transition_type != from_sticked_to_sliding) &&
 				(transition_type != from_sticking_to_sliding)) &&
@@ -658,64 +658,64 @@ void DiscreteCoulombFriction2D::AssRes(
 		case sticking: {
 			//switch to sticking: null velocity at the end of time step
 			current_friction_force = f;
-			// std::cerr << "sticking"  << std::endl;
+			std::cerr << "sticking"  << std::endl;
 			WorkVec.IncCoef(startdof+1, v.x[0]);
 			WorkVec.IncCoef(startdof+2, v.x[1]);
 			break;
 		}
 		case sliding: {
-			// std::cerr << "sliding"  << std::endl;
+			std::cerr << "sliding"  << std::endl;
 			doublereal vm = d2DNorm(v);
 			//still sliding
 			switch (transition_type) {
 				case from_sticked_to_sliding: {
-					// std::cerr << "from_sticked_to_sliding"  << std::endl;
+					std::cerr << "from_sticked_to_sliding"  << std::endl;
 					current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 					break;
 				}
 				case from_sticking_to_sliding: {
-					// std::cerr << "from_sticking_to_sliding"  << std::endl;
+					std::cerr << "from_sticking_to_sliding"  << std::endl;
 					current_friction_force = fss(vm) * d2DDirection(saved_sliding_friction) + sigma2 * v;
 					break;
 				}
 				default: {
 					if (vm >= 1.E-6) {
 						if (Dot(v, current_velocity) > 0.) {
-							// std::cerr << "xx1"  << std::endl;
-							// std::cerr << "v: "  << v << std::endl;
-							// std::cerr << "curr v: " << current_velocity << std::endl;
+							std::cerr << "xx1"  << std::endl;
+							std::cerr << "v: "  << v << std::endl;
+							std::cerr << "curr v: " << current_velocity << std::endl;
 							current_friction_force = fss(vm)*d2DDirection(v)+sigma2*v;
 							use_sliding_v = true;
 						} else {
-							// std::cerr << "xx2"  << std::endl;
-							// std::cerr << "v: "  << v << std::endl;
-							// std::cerr << "curr v: " << current_velocity << std::endl;
+							std::cerr << "xx2"  << std::endl;
+							std::cerr << "v: "  << v << std::endl;
+							std::cerr << "curr v: " << current_velocity << std::endl;
 							current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 						}
 					} else {
-						// std::cerr << "xx3"  << std::endl;
-						// std::cerr << "v: "  << v << std::endl;
-						// std::cerr << "curr v: " << current_velocity << std::endl;
+						std::cerr << "xx3"  << std::endl;
+						std::cerr << "v: "  << v << std::endl;
+						std::cerr << "curr v: " << current_velocity << std::endl;
 						//limit the force value while taking the sticking force d2DDirection
 						current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 					}
 					if (vm < d2DNorm(current_velocity) && !first_iter) {
-						// std::cerr << "xx4"  << std::endl;
-						// std::cerr << "v: "  << v << std::endl;
-						// std::cerr << "curr v: " << current_velocity << std::endl;
+						std::cerr << "xx4"  << std::endl;
+						std::cerr << "v: "  << v << std::endl;
+						std::cerr << "curr v: " << current_velocity << std::endl;
 						current_velocity = v;
 					}
 					break;
 				}
 			}
 			//save friction force value in the (algebric) state
-			// std::cerr << "current_friction_force " << current_friction_force << std::endl;
+			std::cerr << "current_friction_force " << current_friction_force << std::endl;
 			WorkVec.IncCoef(startdof+1, f.x[0] - current_friction_force.x[0]);
 			WorkVec.IncCoef(startdof+2, f.x[1] - current_friction_force.x[1]);
 			break;
 		}
 		case sticked: {
-			// std::cerr << "sticked"  << std::endl;
+			std::cerr << "sticked"  << std::endl;
 			current_friction_force = f;
 			WorkVec.IncCoef(startdof+1, v.x[0]);
 			WorkVec.IncCoef(startdof+2, v.x[1]);
@@ -751,7 +751,7 @@ void DiscreteCoulombFriction2D::AssJac(
 		case sticking:
 		case sticked: {
 			//null velocity at the end of time step
-			dv.Sub(WorkMat,startdof+1);
+			dv.SubFrom(WorkMat,startdof+1);
 			dfc.ReDim(2, 1);
 			dfc.SetBlockDim(1, 2);
 			dfc.SetBlockIdx(1, startdof+1);
@@ -811,7 +811,7 @@ void DiscreteCoulombFriction2D::AssJac(
 			dfc.Set(fssd * dir.x[1] * vm_d.x[0]         , 2, 1, 1);
 			dfc.Set(fssd * dir.x[1] * vm_d.x[1] + sigma2, 2, 1, 2);
 			dfc.Link(1, &dv);
-			dfc.Add(WorkMat, startdof+1, 1.);
+			dfc.AddTo(WorkMat, startdof+1, 1.);
 	
 			// d2D diff = fss.ComputeDiff(vm)*d2DDirection(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
 			// dv.Add(WorkMat,startdof+1, diff.x[0]);

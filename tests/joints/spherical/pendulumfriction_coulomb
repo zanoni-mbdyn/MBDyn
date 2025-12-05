@@ -12,10 +12,10 @@ begin: initial value;
 	derivatives coefficient: 1e-6;
 	derivatives max iterations: 10;
 	derivatives tolerance: 1e-3;
-	max iterations: 10;
+	max iterations: 200;
 	linear solver: naive, colamd;
 	#abort after: derivatives;
-	#output: iterations;
+	output: iterations;
 	#output: residual;
 	#output: residual, jacobian, solution;
 end: initial value;
@@ -86,7 +86,7 @@ begin: elements;
 			orientation, reference, node,
 				3, 0., 1., 0.,
 				1, 1., 0., 0.,
-		friction, 0.2,
+		friction, 0.1,
 			preload, .1,
 			discrete coulomb 2D, "constfriction", sigma2, 0.71,
 			simple 2D;

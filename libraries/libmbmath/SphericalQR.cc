@@ -38,7 +38,16 @@
 #include <algorithm>
 #include <cmath>
 
+#ifdef HAVE_FENV_H
+#include <fenv.h>
+static void __attribute__ ((constructor))
+trapfpe ()
+{
+        /* Enable some exceptions.  At startup all exceptions are masked.  */
 
+        feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
+}
+#endif
 /*
  * Compute the SVD of the symmetric matrix A, U Sigma V^T = svd(A)
  *
@@ -185,7 +194,7 @@ std::vector<integer> sort_vector(Vec3& v) {
  *
  * if(update) then minimize the rotation around r in ordert to match as mush a possible Qold
  */
-void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3) {
+void SphericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3) {
     // std::cout << "QDOld: " << Qold << std::endl;
     // std::cout << "QD: " << Q << std::endl;
     // std::cout << "r: " << r << std::endl;
@@ -211,83 +220,129 @@ void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3
     // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
 
     // std::cout << "update: " << update << std::endl;
-    if (update ){
-        // doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
-        // if (phi < 0.785398163397448) {
-
-            // std::cout << "old: " << Qold << std::endl;
-            doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
-            // std::cout << "c" << std::endl;
-            for (int i = 0; i < 2; i++) {
-                for (int j = 0; j < 2; j++) {
-                    c[i][j] = Qold.GetCol(i+2).Dot(Q.GetCol(j+2));
-                    // std::cout << c[i][j] << " ";
-                }
-                // std::cout << std::endl;
-            }
-            cct[0] = c[0][0] * c[0][0] + c[0][1] * c[0][1];
-            cct[1] = c[0][0] * c[1][0] + c[0][1] * c[1][1];
-            cct[2] = c[1][0] * c[1][0] + c[1][1] * c[1][1];
-            if (std::abs(det2x2S(cct)) > 0.) {
-                sqrtm2x2S(cct, sqrtc);
-                inv2x2S(sqrtc, isqrtc);
-                u[0][0] = c[0][0] * isqrtc[0] + c[1][0] * isqrtc[1];
-                u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
-                u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
-                u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
-                // std::cout << "old: " << Qold << std::endl;
-                // std::cout << "old1: " << Qold.GetVec(1) << std::endl;
-                // std::cout << "old2: " << Qold.GetVec(2) << std::endl;
-                // std::cout << "old3: " << Qold.GetVec(3) << std::endl;
-                // std::cout << "bef: " << Q << std::endl;
-                // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
-                // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
-                // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
-                Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
-                Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
-                Q.PutVec(2, q1);
-                Q.PutVec(3, q2);
-                // std::cout << "aft: " << Q << std::endl;
-                // std::cout << "aft1: " << Q.GetVec(1) << std::endl;
-                // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
-                // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
-                // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
-                // doublereal phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
-                doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
-                // std::cerr << "phi: " << RotManip::VecRot(Qold.MulTM(Q)) << std::endl
-                //     << "\t" << RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)) << std::endl
-                //     << "\t" << std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1))) << std::endl
-                //     << "\t" << RotManip::VecRot(Qold.MulTM(Q)).Norm() << std::endl;
-                if (phi > std::numbers::pi / 2.) {
-                    // std::cout << "phi before " << phi << std::endl;
-                    Vec3 p = Q.GetVec(1) * std::numbers::pi;
-                    Mat3x3 R = RotManip::Rot(p);
-                    Q = Q * R;
-                    // std::cout << "aftaft: " << Q << std::endl;
-                    // std::cout << "aftaft1: " << Q.GetVec(1) << std::endl;
-                    // std::cout << "aftaft2: " << Q.GetVec(2) << std::endl;
-                    // std::cout << "aftaft3: " << Q.GetVec(3) << std::endl;
-                    // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
-                    phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
-                    // std::cout << "phi after " << phi << std::endl;
-                }
-            } else {
-                // std::cout << "________________________________" << std::endl;
-                // std::cout << det2x2S(cct) << std::endl;
-                // std::cout << "________________________________" << std::endl;
-            }
-        // }
+    if (update ) {
+        Vec3 n1 = Qold.GetCol(1); n1 = n1 / n1.Norm();
+        Vec3 n2 = q1;
+        doublereal costheta = n1.Dot(n2);
+        if (costheta >= 1.) {
+            Q = Qold;
+        } else if (costheta <= -1.) {
+            Mat3x3 R = RotManip::Rot(Qold.GetCol(2) * std::numbers::pi);
+            Q = R * Qold;
+        } else {
+            Vec3 k = n1.Cross(n2);
+            doublereal theta = std::acos(costheta);
+            k = k / k.Norm();
+            Mat3x3 R = RotManip::Rot(k * theta);
+            Q = R * Qold;
+        }
     }
-    // std::cout << "QD after: " << Q << std::endl;
 }
+
+// void SphericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3) {
+//     // std::cout << "QDOld: " << Qold << std::endl;
+//     // std::cout << "QD: " << Q << std::endl;
+//     // std::cout << "r: " << r << std::endl;
+//
+//     Vec3 q1 = r / r.Norm();
+//     Vec3 q2 = q1;
+//     // std::cout << "q2: " << q2 << std::endl;
+//     std::vector<integer> sort_idx = sort_vector(q2);
+//     // std::cout << "sort_idx: " << sort_idx[0] << " " << sort_idx[1] << " " << sort_idx[2] << std::endl;
+//
+//     // std::cout << q1 << "\n\n" << q2 << "\n\n" << sort_idx[0] <<
+//     //     " " << sort_idx[1] << " " << sort_idx[2] << std::endl;
+//
+//     Vec3 v2;
+//     v2(sort_idx[2]) = q2(2);
+//     v2(sort_idx[1]) = -q2(3);
+//     v2(sort_idx[0]) = 0.;
+//     // std::cout << "v2: " << v2 << std::endl;
+//     v2 = v2 / v2.Norm();
+//     // std::cout << q1.Dot(v2) << std::endl;
+//     Vec3 v3 = q1.Cross(v2);
+//     Q = Mat3x3(q1, v2, v3);
+//     // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+//
+//     // std::cout << "update: " << update << std::endl;
+//     if (update ) {
+//         // doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
+//         // if (phi < 0.785398163397448) {
+//
+//             // std::cout << "old: " << Qold << std::endl;
+//             doublereal c[2][2], cct[3], sqrtc[3], isqrtc[3], u[2][2];
+//             // std::cout << "c" << std::endl;
+//             for (int i = 0; i < 2; i++) {
+//                 for (int j = 0; j < 2; j++) {
+//                     c[i][j] = Qold.GetCol(i+2).Dot(Q.GetCol(j+2));
+//                     // std::cout << c[i][j] << " ";
+//                 }
+//                 // std::cout << std::endl;
+//             }
+//             cct[0] = c[0][0] * c[0][0] + c[0][1] * c[0][1];
+//             cct[1] = c[0][0] * c[1][0] + c[0][1] * c[1][1];
+//             cct[2] = c[1][0] * c[1][0] + c[1][1] * c[1][1];
+//             if (std::abs(det2x2S(cct)) > 0.) {
+//                 sqrtm2x2S(cct, sqrtc);
+//                 inv2x2S(sqrtc, isqrtc);
+//                 u[0][0] = c[0][0] * isqrtc[0] + c[1][0] * isqrtc[1];
+//                 u[1][0] = c[0][0] * isqrtc[1] + c[1][0] * isqrtc[2];
+//                 u[0][1] = c[0][1] * isqrtc[0] + c[1][1] * isqrtc[1];
+//                 u[1][1] = c[0][1] * isqrtc[1] + c[1][1] * isqrtc[2];
+//                 // std::cout << "old: " << Qold << std::endl;
+//                 // std::cout << "old1: " << Qold.GetVec(1) << std::endl;
+//                 // std::cout << "old2: " << Qold.GetVec(2) << std::endl;
+//                 // std::cout << "old3: " << Qold.GetVec(3) << std::endl;
+//                 // std::cout << "bef: " << Q << std::endl;
+//                 // std::cout << "bef1: " << Q.GetVec(1) << std::endl;
+//                 // std::cout << "bef2: " << Q.GetVec(2) << std::endl;
+//                 // std::cout << "bef3: " << Q.GetVec(3) << std::endl;
+//                 Vec3 q1 = Q.GetCol(2) * u[0][0] + Q.GetCol(3) * u[1][0];
+//                 Vec3 q2 = Q.GetCol(2) * u[0][1] + Q.GetCol(3) * u[1][1];
+//                 Q.PutVec(2, q1);
+//                 Q.PutVec(3, q2);
+//                 // std::cout << "aft: " << Q << std::endl;
+//                 // std::cout << "aft1: " << Q.GetVec(1) << std::endl;
+//                 // std::cout << "aft2: " << Q.GetVec(2) << std::endl;
+//                 // std::cout << "aft3: " << Q.GetVec(3) << std::endl;
+//                 // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+//                 // doublereal phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+//                 doublereal phi = RotManip::VecRot(Qold.MulTM(Q)).Norm();
+//                 // std::cerr << "phi: " << RotManip::VecRot(Qold.MulTM(Q)) << std::endl
+//                 //     << "\t" << RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)) << std::endl
+//                 //     << "\t" << std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1))) << std::endl
+//                 //     << "\t" << RotManip::VecRot(Qold.MulTM(Q)).Norm() << std::endl;
+//                 if (phi > std::numbers::pi / 2.) {
+//                     // std::cout << "phi before " << phi << std::endl;
+//                     // Vec3 p = Q.GetVec(1) * std::numbers::pi;
+//                     Vec3 p = Vec3(1., 0., 0.) * std::numbers::pi;
+//                     Mat3x3 R = RotManip::Rot(p);
+//                     Q = Q * R;
+//                     // std::cout << "aftaft: " << Q << std::endl;
+//                     // std::cout << "aftaft1: " << Q.GetVec(1) << std::endl;
+//                     // std::cout << "aftaft2: " << Q.GetVec(2) << std::endl;
+//                     // std::cout << "aftaft3: " << Q.GetVec(3) << std::endl;
+//                     // std::cout << "\nortocheck: " << Q.MulMT(Q) << std::endl;
+//                     phi = std::abs(RotManip::VecRot(Qold.MulTM(Q)).Dot(Q.GetVec(1)));
+//                     // std::cout << "phi after " << phi << std::endl;
+//                 }
+//             } else {
+//                 // std::cout << "________________________________" << std::endl;
+//                 // std::cout << det2x2S(cct) << std::endl;
+//                 // std::cout << "________________________________" << std::endl;
+//             }
+//         // }
+//     }
+//     // std::cout << "QD after: " << Q << std::endl;
+// }
 
 // int main(void) {
 //     Vec3 r(878., 234., 1123.); r = r / r.Norm();
 //     Mat3x3 Q;
-//     SpericalQR(r, Q);
+//     SphericalQR(r, Q);
 //     Mat3x3 Qold = Q;
 //     r = r + Vec3(0.08, 0.0158, 0.0038);
-//     SpericalQR(r, Q, true, Qold);
+//     SphericalQR(r, Q, true, Qold);
 //
 //     return 0;
 // }

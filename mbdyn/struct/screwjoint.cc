@@ -754,10 +754,10 @@ ScrewJoint::AssMat(FullSubMatrixHandler& WM, doublereal dCoef,
 		//assemble first node
 			 //variation of moment component
 // 		std::cerr << "Ci risiamo\n";
-		dM3diff.Add(WM, 4, 1.);
+		dM3diff.AddTo(WM, 4, 1.);
 		//assemble second node
 			 //variation of moment component
-		dM3diff.Sub(WM, 6+4, 1.);
+		dM3diff.SubFrom(WM, 6+4, 1.);
 	}
 
 }

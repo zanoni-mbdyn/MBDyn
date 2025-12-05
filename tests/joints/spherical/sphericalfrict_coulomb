@@ -12,7 +12,7 @@ begin: initial value;
 	derivatives coefficient: 1E-7;
 	derivatives max iterations: 10;
 	derivatives tolerance: 1e3;
-	max iterations: 10;
+	max iterations: 40;
 	#newton raphson: modified, 1;
 	newton raphson: true;
 	#linear solver: naive, colamd;
@@ -62,7 +62,7 @@ begin: elements;
 		friction, 0.1,
 			preload, 1.,
 			#modlugre 2D, 2000, 0.1, 0., 0.71, "constfriction",
-			discrete coulomb 2D, "constfriction",
+			discrete coulomb 2D, "constfriction", sigma2, 0.71,
 			simple 2D
 	;
 	body: 2, 2, 1., null, diag, 1.,1.,1.;

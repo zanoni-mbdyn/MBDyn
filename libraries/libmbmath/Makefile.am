@@ -104,7 +104,8 @@ endif
 libmbmath_la_LIBADD = @LIBS@ @FCLIBS@ @ANN_LIBS@ @TRILINOS_LIBS@ @SICONOS_LIBS@
 libmbmath_la_LDFLAGS =
 
-noinst_PROGRAMS = matmultest itertest dgeequtest subtest sp_gradient_test polardecomp_test
+noinst_PROGRAMS = matmultest itertest dgeequtest subtest sp_gradient_test polardecomp_test \
+SphericalQR_test
 
 matmultest_SOURCES = matmultest.cc
 matmultest_LDADD = \
@@ -226,6 +227,32 @@ libmbmath.la \
 @TRILINOS_LIBS@ \
 @RT_LIBS@ \
 @GTEST_LIBS@
+
+SphericalQR_test_SOURCES = \
+SphericalQR_test.cc
+
+SphericalQR_test_LDADD = \
+libmbmath.la \
+../libmbutil/libmbutil.la \
+../libcolamd/libmbdyncolamd.la \
+../libnaive/libnaive.la \
+@UMFPACK_LIBS@ \
+@HARWELL_LIBS@ \
+@SUPERLU_LIBS@ \
+@TAUCS_LIBS@ \
+@LAPACK_LIBS@ \
+@Y12_LIBS@ \
+@PASTIX_LIBS@ \
+@QRUPDATE_LIBS@ \
+@SUITESPARSEQR_LIBS@ \
+@METIS_LIBS@ \
+@BLAS_LIBS@ \
+@FCLIBS@ \
+@LIBS@ \
+@TRILINOS_LIBS@ \
+@RT_LIBS@ \
+@GTEST_LIBS@
+
 
 if INSTALL_TEST_PROGRAMS
 bin_PROGRAMS = $(noinst_PROGRAMS)

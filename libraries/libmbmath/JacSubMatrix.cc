@@ -139,7 +139,7 @@ void ExpandableRowVector::Sub(const Vec3& xx, const integer i) {
 	v[i - 0].x -= xx[1];
 	v[i + 1].x -= xx[2];
 }
-void ExpandableRowVector::Add(SubVectorHandler& WorkVec, const doublereal c) const {
+void ExpandableRowVector::AddTo(SubVectorHandler& WorkVec, const doublereal c) const {
 	for (std::vector<ExpandableRowElement>::size_type i = 0; i < v.size(); i++) {
 		if (v[i].x == 0.) {
 			continue;
@@ -150,12 +150,12 @@ void ExpandableRowVector::Add(SubVectorHandler& WorkVec, const doublereal c) con
 		} else {
 			for (std::vector<const ExpandableRowVector *>::size_type rhs_block = 0; rhs_block < v[i].xm.size(); rhs_block++) {
 				ASSERTMSGBREAK(v[i].xm[rhs_block] != 0, "ExpandableRowVector::Add() null pointer to ExpandableRowVector");
-				v[i].xm[rhs_block]->Add(WorkVec, c*v[i].x);
+				v[i].xm[rhs_block]->AddTo(WorkVec, c*v[i].x);
 			}	
 		}
 	}
 }
-void ExpandableRowVector::Sub(SubVectorHandler& WorkVec, const doublereal c) const {
+void ExpandableRowVector::SubFrom(SubVectorHandler& WorkVec, const doublereal c) const {
 	for (std::vector<ExpandableRowElement>::size_type i = 0; i < v.size(); i++) {
 		if (v[i].x == 0.) {
 			continue;
@@ -166,12 +166,12 @@ void ExpandableRowVector::Sub(SubVectorHandler& WorkVec, const doublereal c) con
 		} else {
 			for (std::vector<const ExpandableRowVector *>::size_type rhs_block = 0; rhs_block < v[i].xm.size(); rhs_block++) {
 				ASSERTMSGBREAK(v[i].xm[rhs_block] != 0, "ExpandableRowVector::Sub() null pointer to ExpandableRowVector");
-				v[i].xm[rhs_block]->Sub(WorkVec, c*v[i].x);
+				v[i].xm[rhs_block]->SubFrom(WorkVec, c*v[i].x);
 			}
 		}
 	}
 }
-void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
+void ExpandableRowVector::AddTo(FullSubMatrixHandler& WM,
 	const integer eq,
 	const doublereal c) const {
 	for (std::vector<ExpandableRowElement>::size_type i = 0; i < v.size(); i++) {
@@ -185,12 +185,12 @@ void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
 		} else {
 			for (std::vector<const ExpandableRowVector *>::size_type rhs_block = 0; rhs_block < v[i].xm.size(); rhs_block++) {
 				ASSERTMSGBREAK(v[i].xm[rhs_block] != 0, "ExpandableRowVector::Add() null pointer to ExpandableRowVector");
-				v[i].xm[rhs_block]->Add(WM, eq, c*v[i].x);
+				v[i].xm[rhs_block]->AddTo(WM, eq, c*v[i].x);
 			}
 		}
 	}
 }
-void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
+void ExpandableRowVector::AddTo(FullSubMatrixHandler& WM,
 	const std::vector<integer>& eq,
 	const std::vector<doublereal>& cc,
 	const doublereal c) const
@@ -209,12 +209,12 @@ void ExpandableRowVector::Add(FullSubMatrixHandler& WM,
 		} else {
 			for (std::vector<const ExpandableRowVector *>::size_type rhs_block = 0; rhs_block < v[i].xm.size(); rhs_block++) {
 				ASSERTMSGBREAK(v[i].xm[rhs_block] != 0, "ExpandableRowVector::Add() null pointer to ExpandableRowVector");
-				v[i].xm[rhs_block]->Add(WM, eq, cc, c*v[i].x);
+				v[i].xm[rhs_block]->AddTo(WM, eq, cc, c*v[i].x);
 			}
 		}
 	}
 }
-void ExpandableRowVector::Sub(FullSubMatrixHandler& WM,
+void ExpandableRowVector::SubFrom(FullSubMatrixHandler& WM,
 	const integer eq,
 	const doublereal c) const {
 	for (std::vector<ExpandableRowElement>::size_type i = 0 ; i < v.size(); i++) {
@@ -227,12 +227,12 @@ void ExpandableRowVector::Sub(FullSubMatrixHandler& WM,
 		} else {
 			for (std::vector<const ExpandableRowVector *>::size_type rhs_block = 0; rhs_block < v[i].xm.size(); rhs_block++) {
 				ASSERTMSGBREAK(v[i].xm[rhs_block] != 0, "ExpandableRowVector::Sub() null pointer to ExpandableRowVector");
-				v[i].xm[rhs_block]->Sub(WM, eq, c*v[i].x);
+				v[i].xm[rhs_block]->SubFrom(WM, eq, c*v[i].x);
 			}
 		}
 	}
 }
-void ExpandableRowVector::Sub(FullSubMatrixHandler& WM,
+void ExpandableRowVector::SubFrom(FullSubMatrixHandler& WM,
 	const std::vector<integer>& eq,
 	const std::vector<doublereal>& cc,
 	const doublereal c) const
@@ -251,7 +251,7 @@ void ExpandableRowVector::Sub(FullSubMatrixHandler& WM,
 		} else {
 			for (std::vector<const ExpandableRowVector *>::size_type rhs_block = 0; rhs_block < v[i].xm.size(); rhs_block++) {
 				ASSERTMSGBREAK(v[i].xm[rhs_block] != 0, "ExpandableRowVector::Add() null pointer to ExpandableRowVector");
-				v[i].xm[rhs_block]->Sub(WM, eq, cc, c*v[i].x);
+				v[i].xm[rhs_block]->SubFrom(WM, eq, cc, c*v[i].x);
 			}
 		}
 	}
@@ -491,7 +491,7 @@ void ExpandableMatrix::Sub(const Mat3x3& xx, const integer eq, const integer blo
 // 		}
 // 	}
 // }
-void ExpandableMatrix::Add(FullSubMatrixHandler& WM,
+void ExpandableMatrix::AddTo(FullSubMatrixHandler& WM,
 	const integer eq,
 	const doublereal c) const {
 	for (integer block = 0; block < GetNBlocks(); block++) {
@@ -520,7 +520,7 @@ void ExpandableMatrix::Add(FullSubMatrixHandler& WM,
 // 		}
 // 	}
 // }
-void ExpandableMatrix::Sub(FullSubMatrixHandler& WM,
+void ExpandableMatrix::SubFrom(FullSubMatrixHandler& WM,
 	const integer eq,
 	const doublereal c) const {
 	for (integer block = 0; block < GetNBlocks(); block++) {
