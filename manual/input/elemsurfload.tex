@@ -37,7 +37,7 @@ in the opposite direction of the surface normal vector. So, it is important, tha
 when creating the mesh (e.g. use \emph{ReorientMesh} in \htmladdnormallink{\texttt{Gmsh}}{https://gmsh.info/}).
 See also table~\ref{sec:EL:SURFLOAD:elemtypes} for a list of supported elements.
 \begin{Verbatim}[commandchars=\\\{\}]
-  \bnt{elem_type} ::= \{ \kw{pressureq4} | \kw{pressureq8} | \kw{pressureq8r} | \kw{pressureq9} | \kw{pressuret6} \}
+  \bnt{elem_type} ::= \{ \kw{pressureq4} | \kw{pressureq8} | \kw{pressureq8r} | \kw{pressureq9} | \kw{pressuret6} | \kw{pressuret10} \}
 
   \bnt{normal_arglist} ::=
   \bnt{struct_node_data} , \bnt{pressure_load_data} ;
@@ -91,7 +91,7 @@ or deformed during the simulation. In contradiction to that, relative surface tr
 to the global reference frame, but their direction and magnitude is changed similar to pressure loads, if the surface is deformed or moved.
 See also table~\ref{sec:EL:SURFLOAD:elemtypes} for a list of supported elements.
 \begin{Verbatim}[commandchars=\\\{\}]
-  \bnt{elem_type} ::= \{ \kw{tractionq4} | \kw{tractionq8} | \kw{tractionq8r} | \kw{tractionq9} | \kw{tractiont6} \}
+  \bnt{elem_type} ::= \{ \kw{tractionq4} | \kw{tractionq8} | \kw{tractionq8r} | \kw{tractionq9} | \kw{tractiont6} | \kw{tractiont10} \}
 
   \bnt{normal_arglist} ::=
       [ \kw{absolute} , ] \bnt{struct_node_data} , \kw{from drives} , \bnt{traction_load_data}
@@ -166,6 +166,8 @@ See also table~\ref{sec:EL:SURFLOAD:elemtypes} for a list of supported elements.
     \hline
     \kw{pressuret6} & \kw{tractiont6} & 6 & \ref{fig:EL:SURFLOAD:TRIANGLE6H} & 7 & 2 & \cite{CODEASTERR30301} \tabularnewline
     \hline
+    \kw{pressuret10} & \kw{tractiont10} & 10 & \ref{fig:EL:SURFLOAD:TRIANGLE10} & 25 & 3 & ? \tabularnewline
+    \hline
   \end{tabular}
   \caption{Finite Element Types for surface loads}
   \label{sec:EL:SURFLOAD:elemtypes}
@@ -202,6 +204,12 @@ See also table~\ref{sec:EL:SURFLOAD:elemtypes} for a list of supported elements.
     \caption{\kw{pressuret6}, \kw{tractiont6}}
     \label{fig:EL:SURFLOAD:TRIANGLE6H}
   \end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \includegraphics[width=0.5\textwidth]{triangle10}
+    \caption{\kw{pressuret10}, \kw{tractiont10}}
+    \label{fig:EL:SURFLOAD:TRIANGLE10}
+  \end{subfigure}  
   \caption{Node order: surface loads}
   \label{fig:EL:SURFLOAD:NODE_ORDER}
 \end{figure}
