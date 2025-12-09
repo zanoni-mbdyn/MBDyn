@@ -38,16 +38,17 @@
 #include <algorithm>
 #include <cmath>
 
-#ifdef HAVE_FENV_H
-#include <fenv.h>
-static void __attribute__ ((constructor))
-trapfpe ()
-{
-        /* Enable some exceptions.  At startup all exceptions are masked.  */
+// #ifdef HAVE_FENV_H
+// #include <fenv.h>
+// static void __attribute__ ((constructor))
+// trapfpe ()
+// {
+//         /* Enable some exceptions.  At startup all exceptions are masked.  */
+//
+//         feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
+// }
+// #endif
 
-        feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
-}
-#endif
 /*
  * Compute the SVD of the symmetric matrix A, U Sigma V^T = svd(A)
  *
