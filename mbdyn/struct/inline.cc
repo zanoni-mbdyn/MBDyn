@@ -212,9 +212,9 @@ InLineJoint::AssJac(VariableSubMatrixHandler& WorkMat,
        dF3.SetCol(e3a*shc,1,1,1); dF3.Link(1,&dF); // dF3/dF * dF/d(pos1?)
        dF3.SetCol(e3a*modF,1,2,1); dF3.Link(2,&dShc); // dF3/dShc * dShc/d(?)
        //assemble first node variation of force component
-       dF3.Add(WM, 1, 1.);
+       dF3.AddTo(WM, 1, 1.);
        //assemble second node variation of force component
-       dF3.Sub(WM, 6+1, 1.);
+       dF3.SubFrom(WM, 6+1, 1.);
    }
    
    return WorkMat;

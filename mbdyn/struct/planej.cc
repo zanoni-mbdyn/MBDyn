@@ -840,8 +840,8 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dFfrict.Set(-Mat3x3(MatCross, e3a)*shc, 1, 1); dFfrict.Link(1, &dFreact);
           dFfrict.SetCol(-e3a.Cross(FReactForFrict), 1, 2, 1); dFfrict.Link(2,&dShc);
           dFfrict.Set(Mat3x3(MatCross, FReactForFrict)*Mat3x3(0., -1., 0., 1., 0., 0., 0., 0., 0.)*shc, 1, 3, 1);
-          dFfrict.Add(WM, 1, 1.);
-          dFfrict.Sub(WM, 7, 1.);
+          dFfrict.AddTo(WM, 1, 1.);
+          dFfrict.SubFrom(WM, 7, 1.);
           //WM.Add(4, 13, Mat3x3(MatCross, d1Tmp));
           //WM.Sub(10, 13, Mat3x3(MatCross, d2Tmp));
           ExpandableMatrix dMF1;
@@ -849,13 +849,13 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dMF1.SetBlockDim(1, 3);
           dMF1.Set(Mat3x3(MatCross, d1Tmp), 1, 1, 1);
           dMF1.Link(1, &dFfrict);
-          dMF1.Add(WM, 4);
+          dMF1.AddTo(WM, 4);
           ExpandableMatrix dMF2;
           dMF2.ReDim(3, 1);
           dMF2.SetBlockDim(1, 3);
           dMF2.Set(Mat3x3(MatCross, d2Tmp), 1, 1, 1);
           dMF2.Link(1, &dFfrict);
-          dMF2.Sub(WM, 10);
+          dMF2.SubFrom(WM, 10);
       }
       //variation of moment component
       dM3.ReDim(3, 3);
@@ -868,10 +868,10 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
       dM3.Set(Mat3x3(0., -1., 0., 1., 0., 0., 0., 0., 0.)*M3, 1, 3, 1);
       //assemble first node
           //variation of moment component
-      dM3.Add(WM, 4, 1.);
+      dM3.AddTo(WM, 4, 1.);
       //assemble second node
           //variation of moment component
-      dM3.Sub(WM, 6+4, 1.);
+      dM3.SubFrom(WM, 6+4, 1.);
    }
    
    return WorkMat;
@@ -3355,17 +3355,17 @@ AxialRotationJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           dFfrict.SetBlockDim(2,1);
           dFfrict.Set(-Mat3x3(MatCross, e3a)*shc,1,1); dFfrict.Link(1,&dFreact);
           dFfrict.SetCol(-e3a.Cross(F),1,2,1); dFfrict.Link(2,&dShc);
-          dFfrict.Add(WM, 1, 1.);
-          dFfrict.Sub(WM, 7, 1.);
+          dFfrict.AddTo(WM, 1, 1.);
+          dFfrict.SubFrom(WM, 7, 1.);
       }
-      dM3.Add(WM,0+4,e3a.dGet(1));
-      dM3.Add(WM,0+5,e3a.dGet(2));
-      dM3.Add(WM,0+6,e3a.dGet(3));
+      dM3.AddTo(WM,0+4,e3a.dGet(1));
+      dM3.AddTo(WM,0+5,e3a.dGet(2));
+      dM3.AddTo(WM,0+6,e3a.dGet(3));
       //assemble second node
           //variation of moment component
-      dM3.Sub(WM,6+4,e3a.dGet(1));
-      dM3.Sub(WM,6+5,e3a.dGet(2));
-      dM3.Sub(WM,6+6,e3a.dGet(3));
+      dM3.SubFrom(WM,6+4,e3a.dGet(1));
+      dM3.SubFrom(WM,6+5,e3a.dGet(2));
+      dM3.SubFrom(WM,6+6,e3a.dGet(3));
    }
    
    return WorkMat;

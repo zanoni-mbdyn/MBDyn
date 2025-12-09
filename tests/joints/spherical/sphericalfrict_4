@@ -12,7 +12,7 @@ begin: initial value;
 	derivatives coefficient: 1E-7;
 	derivatives max iterations: 10;
 	derivatives tolerance: 1e3;
-	max iterations: 10;
+	max iterations: 20;
 	#newton raphson: modified, 1;
 	method: ms, 0.6;
 	newton raphson: true;

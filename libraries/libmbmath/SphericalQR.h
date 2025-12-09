@@ -32,6 +32,6 @@
 #define SPHERICALQR_H
 
 #include "matvec3.h"
-extern void SpericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3);
+extern void SphericalQR(const Vec3 & r, Mat3x3 &Q, const bool update = false, const Mat3x3& Qold = Eye3);
 
 #endif //SPHERICALQR_H

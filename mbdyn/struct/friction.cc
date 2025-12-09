@@ -252,7 +252,7 @@ void ModLugreFriction::AssJac(
 	WorkMat.IncCoef(startdof+1,startdof+1,
 		-alphad_z(z,v)*v*z/fsc*sigma0*dCoef-
 		alph*v/fsc*sigma0*dCoef);
-	dv.Add(WorkMat,startdof+1,
+	dv.AddTo(WorkMat,startdof+1,
 		1.-
 		alphad_v(z,v)*v*z/fsc*sigma0-
 		alph*z/fsc*sigma0+
@@ -531,7 +531,7 @@ void DiscreteCoulombFriction::AssJac(
 	case sticked: {
 		//null velocity at the end of time step
 		//WorkVec.IncCoef(startdof+1,v);
-		dv.Sub(WorkMat,startdof+1);
+		dv.SubFrom(WorkMat,startdof+1);
 		dfc.ReDim(1);
 		dfc.Set(1.,1,startdof+1);
 		break;
@@ -543,7 +543,7 @@ void DiscreteCoulombFriction::AssJac(
 		//save friction force value in the (algebric) state
 		//WorkVec.IncCoef(startdof+1,f-current_friction_force);
 		WorkMat.IncCoef(startdof+1,startdof+1,-1);
-		dv.Add(WorkMat,startdof+1,
+		dv.AddTo(WorkMat,startdof+1,
 			sign(current_friction_force-sigma2*v)*fss.ComputeDiff(v)+sigma2);
 		dfc.ReDim(1);
 		dfc.Set(sign(current_friction_force-sigma2*v)*fss.ComputeDiff(v)+sigma2,1); dfc.Link(1, &dv);

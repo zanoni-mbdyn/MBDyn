@@ -472,8 +472,8 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		WM.IncCoef(6*activeNode+i, 6*(1+Beam::NUMNODES)+1+i, dW[0]);
 	}
 	if (fc) {
-		dF3.Sub(WM, 1, 1.);
-		dF3.Add(WM, 6*activeNode+1, dW[0]);
+		dF3.SubFrom(WM, 1, 1.);
+		dF3.AddTo(WM, 6*activeNode+1, dW[0]);
 	}
 
 	/* corpo: Delta F (momento) */
@@ -484,7 +484,7 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		dM3.ReDim(3,1);
 		dM3.SetBlockDim(1,3);
 		dM3.Set(MTmp, 1, 1, 1); dM3.Link(1, &dF3);
-		dM3.Sub(WM, 4, 1.);
+		dM3.SubFrom(WM, 4, 1.);
 	}
 
 	/* vincolo posizione: Delta gb */
@@ -503,7 +503,7 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 	WM.Add(6*activeNode+3+1, 6*(1+Beam::NUMNODES)+1+1, MCross);
 	if (fc) {
 		dM3.Set(MCross, 1, 1, 1); dM3.Link(1, &dF3);
-		dM3.Add(WM, 6*activeNode+3+1);
+		dM3.AddTo(WM, 6*activeNode+3+1);
 	}
 
 	WM.Sub(6*activeNode+3+1, 1, MTmp);
@@ -529,7 +529,7 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 			WM.IncCoef(6*(activeNode+1)+i, 
 					6*(1+Beam::NUMNODES)+1+i, dW[1]);
 			if (fc) {
-				dF3.Add(WM, 6*(activeNode+1)+1, dW[1]);
+				dF3.AddTo(WM, 6*(activeNode+1)+1, dW[1]);
 			}
 
 #ifdef DELTADW
@@ -556,7 +556,7 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		WM.Add(6*(activeNode+1)+3+1, 6*(1+Beam::NUMNODES)+1+1, MCross);
 		if (fc) {
 			dM3.Set(MCross, 1, 1, 1); dM3.Link(1, &dF3);
-			dM3.Add(WM, 6*(activeNode+1)+3+1);
+			dM3.AddTo(WM, 6*(activeNode+1)+3+1);
 		}
 
 		WM.Sub(6*(activeNode+1)+3+1, 1, MTmp);

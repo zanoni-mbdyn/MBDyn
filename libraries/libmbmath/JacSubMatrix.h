@@ -73,13 +73,13 @@ public:
 	void Sub(const doublereal xx, const integer i);
 	void Add(const Vec3& xx, const integer i);
 	void Sub(const Vec3& xx, const integer i);
-	void Add(SubVectorHandler& WorkVec, const doublereal c = 1.) const;
-	void Sub(SubVectorHandler& WorkVec, const doublereal c = 1.) const;
-	void Add(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
-	void Add(FullSubMatrixHandler& WM, const std::vector<integer>& eq,
+	void AddTo(SubVectorHandler& WorkVec, const doublereal c = 1.) const;
+	void SubFrom(SubVectorHandler& WorkVec, const doublereal c = 1.) const;
+	void AddTo(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
+	void AddTo(FullSubMatrixHandler& WM, const std::vector<integer>& eq,
 		const std::vector<doublereal>& cc, const doublereal c = 1.) const;
-	void Sub(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
-	void Sub(FullSubMatrixHandler& WM, const std::vector<integer>& eq,
+	void SubFrom(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
+	void SubFrom(FullSubMatrixHandler& WM, const std::vector<integer>& eq,
 		const std::vector<doublereal>& cc, const doublereal c = 1.) const;
 	std::ostream & Write(std::ostream &out, const char *sFill = "") const;
 };
@@ -185,12 +185,12 @@ public:
 // 			std::cerr << "\t\tBlock::Add " << std::endl;
 			for (integer e = 0; e < GetBlockNRows(); e++) {
 // 				std::cerr << "\t\t\te " << e << " eq+e " << eq+e << std::endl;
-				rows[e].Add(WM, eq + e, c);
+				rows[e].AddTo(WM, eq + e, c);
 			}
 		};
 		void Sub(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const {
 			for (integer e = 0; e < GetBlockNRows(); e++) {
-				rows[e].Sub(WM, eq + e, c);
+				rows[e].SubFrom(WM, eq + e, c);
 			}
 		};
 		std::ostream & Write(std::ostream &out, const char *sFill) const {
@@ -232,10 +232,10 @@ public:
 	void Sub(const Mat3x3& xx, const integer eq, const integer block, const integer block_col = 1);
 // 	void Add(SubVectorHandler& WorkVec, const doublereal c = 1.) const;
 // 	void Sub(SubVectorHandler& WorkVec, const doublereal c = 1.) const;
-	void Add(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
+	void AddTo(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
 // 	void Add(FullSubMatrixHandler& WM, const std::vector<integer>& eq,
 // 		const std::vector<doublereal>& cc, const doublereal c = 1.) const;
-	void Sub(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
+	void SubFrom(FullSubMatrixHandler& WM, const integer eq, const doublereal c = 1.) const;
 // 	void Sub(FullSubMatrixHandler& WM, const std::vector<integer>& eq,
 // 		const std::vector<doublereal>& cc, const doublereal c = 1.) const;
 	std::ostream & Write(std::ostream &out, const char *sFill = "") const;

@@ -308,14 +308,14 @@ Brake::AssJac(VariableSubMatrixHandler& WorkMat,
       
       //assemble first node
       //variation of moment component
-      dM3.Add(WM, 3 + 1, e3a(1));
-      dM3.Add(WM, 3 + 2, e3a(2));
-      dM3.Add(WM, 3 + 3, e3a(3));
+      dM3.AddTo(WM, 3 + 1, e3a(1));
+      dM3.AddTo(WM, 3 + 2, e3a(2));
+      dM3.AddTo(WM, 3 + 3, e3a(3));
       //assemble second node
       //variation of moment component
-      dM3.Sub(WM, 9 + 1, e3a(1));
-      dM3.Sub(WM, 9 + 2, e3a(2));
-      dM3.Sub(WM, 9 + 3, e3a(3));
+      dM3.SubFrom(WM, 9 + 1, e3a(1));
+      dM3.SubFrom(WM, 9 + 2, e3a(2));
+      dM3.SubFrom(WM, 9 + 3, e3a(3));
    
    return WorkMat;
 }

@@ -651,7 +651,7 @@ and so $\Delta \T \omega = \Delta \dot{\T g}-
 
 \section{Integrators}
 Most of MBDyn's integrators are documented in \cite{zhang_optimization_2020, zhang_performance_2022}, 
-that are distributed verbatim in Appendix~\ref{appendix:integrators1, appendix:integrators2}, 
+that are distributed verbatim in Appendix~\ref{appendix:integrators1},~\ref{appendix:integrators2},
 respectively.
 
 \chapter{Solution Phases}
@@ -1203,7 +1203,7 @@ to a specific equation (row) of a Jacobian matrix.
 For example, calling the method
 \begin{verbatim}
     void
-    Add(FullSubMatrixHandler& WM,
+    AddTo(FullSubMatrixHandler& WM,
         const integer eq,
         const doublereal c = 1.) const
 \end{verbatim}
@@ -1216,6 +1216,9 @@ of vector \texttt{v} corresponds to
 where \texttt{idx} is the vector that contains the submatrix indexes
 of the elements of $\T{v}$, as set by the \texttt{SetIdx()} method.
 
+The \texttt{SubFrom} method takes the same arguments of \texttt{AddTo},
+but subtracts instead of adding.
+
 If another \texttt{ExpandableRowVector} is linked
 to the \texttt{i}-th element of vector $\T{v}$,
 the related operation on the submatrix is propagated recursively as
@@ -1223,7 +1226,7 @@ the related operation on the submatrix is propagated recursively as
     for (integer j = 1; j <= n; j++) {
         if ( /* linked to another ExpandableRowVector */ ) {
             // propagate operation
-            xm(j)->Add(WM, eq, c*v(j));
+            xm(j)->AddTo(WM, eq, c*v(j));
         } else {
             WM(eq, idx(j)) += c*v(j);
         }
@@ -1235,7 +1238,7 @@ where \texttt{xm} is the container of the pointers to the linked
 Blocks of equations can be added simultaneously using the method
 \begin{verbatim}
     void
-    Add(FullSubMatrixHandler& WM,
+    AddTo(FullSubMatrixHandler& WM,
         const std::vector<integer>& eq,
         const std::vector<doublereal>& cc,
         const doublereal c = 1.) const
@@ -1262,7 +1265,7 @@ Its use is currently undocumented.
     v.Set(10., 4);
     v.Link(4, &w);
 
-    v.Add(m, 5, 1.);
+    v.AddTo(m, 5, 1.);
 
     //       col.  1   2   3   4   5   6   7     8     9
     // m(5, :) = { 0., 0., 0., 1., 2., 3., 0., 100., 200. }
@@ -1273,14 +1276,13 @@ Its use is currently undocumented.
     eq[1] = 2; cc[1] = 2.;
     eq[2] = 3; cc[2] = 3.;
 
-    v.Add(m, eq, cc, 1.);
+    v.AddTo(m, eq, cc, 1.);
 
     //       col.  1   2   3   4   5   6   7     8     9
     // m(1, :) = { 0., 0., 0., 1., 2., 3., 0., 100., 200. }
     // m(2, :) = { 0., 0., 0., 2., 4., 6., 0., 200., 400. }
     // m(3, :) = { 0., 0., 0., 3., 6., 9., 0., 300., 600. }
 \end{verbatim}
-
 
 
 

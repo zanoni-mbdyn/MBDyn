@@ -209,10 +209,17 @@ doublereal ModLugreFriction2D::alphatilde(const doublereal zm,
 	doublereal zss = fs(vm)/sigma0;
 	doublereal zba = kappa*zss;
 
+	// std::cout << "zss: " << zss << std::endl;
+	// std::cout << "zba: " << zba << std::endl;
+	// std::cout << "zm: " << zm << std::endl;
 	if (zm <= zba) {
 	} else if ((zba <= zm) && (zm <= zss)) {
-		return (0.5*std::sin(M_PI*sigma0*zm/(fs(vm)*(1.-kappa))
-			-M_PI*(1.+kappa)/(2*(1.-kappa)))+0.5);
+		// std::cout << "xxx: " << 0.5*std::sin(
+		// 			M_PI*sigma0*zm/(fs(vm)*(1.-kappa))-M_PI*(1.+kappa)/(2*(1.-kappa))
+		// 		) + 0.5 << std::endl;
+		return 0.5*std::sin(
+					M_PI*sigma0*zm/(fs(vm)*(1.-kappa))-M_PI*(1.+kappa)/(2*(1.-kappa))
+				) + 0.5;
 	} else {
 		return 1.;
 	}
@@ -221,8 +228,12 @@ doublereal ModLugreFriction2D::alphatilde(const doublereal zm,
 
 doublereal ModLugreFriction2D::epsilon(const d2D& z,
 	const d2D& v) const {
-
-	doublereal eps = (v.x[0]*z.x[0] + v.x[1]*z.x[1] + 1.) / 2.;
+	doublereal zn = d2DNorm(z);
+	doublereal vn = d2DNorm(v);
+	doublereal eps = 1;
+	if (zn > 0. && vn > 0.) {
+		eps = (v.x[0]*z.x[0] / zn / vn + v.x[1]*z.x[1] / zn / vn + 1.) / 2.;
+	}
 	return eps;
 };
 
@@ -230,6 +241,9 @@ doublereal ModLugreFriction2D::alpha(const d2D& z,
 	const d2D& v) const {
 	doublereal zm = d2DNorm(z);
 	doublereal vm = d2DNorm(v);
+	// doublereal at = alphatilde(zm, vm);
+	// std::cout << "alphatilde: " << at << std::endl;
+	// std::cout << "epsilon: " << epsilon(z, v) << std::endl;
 	return alphatilde(zm, vm) * epsilon(z, v);
 }
 
@@ -352,10 +366,22 @@ void ModLugreFriction2D::AssRes(
 	f = sigma0*z + sigma1*zp + sigma2*v;
 	// f.x[0] = sigma0*z.x[0] + sigma1*zp.x[0] + sigma2*v.x[0];
 	// f.x[1] = sigma0*z.x[1] + sigma1*zp.x[1] + sigma2*v.x[1];
-	// std::cout << "z.x[0]:" << z.x[0] << "; << zp.x[0]: " << zp.x[0] << "; v.x[0]: " << v.x[0] << std::endl;
-	// std::cout << "z.x[1]:" << z.x[1] << "; << zp.x[1]: " << zp.x[1] << "; v.x[1]: " << v.x[1] << std::endl;
-	WorkVec.IncCoef(startdof+1, zp.x[0] - v.x[0] + alph * z.x[0] / fsvm * sigma0);
-	WorkVec.IncCoef(startdof+2, zp.x[1] - v.x[1] + alph * z.x[1] / fsvm * sigma0);
+	// std::cout << "sigma0: " << sigma0 << std::endl;
+	// std::cout << "sigma1: " << sigma1 << std::endl;
+	// std::cout << "sigma2: " << sigma2 << std::endl;
+	// std::cout << "f: " << f << std::endl;
+	// std::cout << "alph: " << alph << std::endl;
+	// std::cout << "fsvm: " << fsvm << std::endl;
+	// std::cout << "sigma0*z.x[0]: " << sigma0*z.x[0] << std::endl;
+	// std::cout << "sigma1*zp.x[0]: " << sigma1*zp.x[0] << std::endl;
+	// std::cout << "sigma2*v.x[0]: " << sigma2*v.x[0] << std::endl;
+	// std::cout << "z.x[0]:" << z.x[0] << "; zp.x[0]: " << zp.x[0] << "; v.x[0]: " << v.x[0] << std::endl;
+	// std::cout << "z.x[1]:" << z.x[1] << "; zp.x[1]: " << zp.x[1] << "; v.x[1]: " << v.x[1] << std::endl;
+	// std::cout << "zp: " << zp << std::endl;
+	// std::cout << "v: " << v << std::endl;
+	// std::cout << "z * alph / fsvm * sigma0: " << alph * z.x[0] / fsvm * sigma0 << " " << alph * z.x[1] / fsvm * sigma0 << std::endl;
+	WorkVec.IncCoef(startdof+1, zp.x[0] - v.x[0] + alph * z.x[0] / fsvm * sigma0 * vm);
+	WorkVec.IncCoef(startdof+2, zp.x[1] - v.x[1] + alph * z.x[1] / fsvm * sigma0 * vm);
 };
 
 void ModLugreFriction2D::AssJac(
@@ -392,7 +418,7 @@ void ModLugreFriction2D::AssJac(
 	dfc.Set(0., 2, 2, 1);
 	dfc.Set(sigma2, 2, 2, 2);
 	dfc.Link(2, &dv);
-	
+
 /*
  * 	z
  */
@@ -415,37 +441,41 @@ void ModLugreFriction2D::AssJac(
 	// WorkVec.IncCoef(startdof+2, zp.x[1] - v.x[1] + alph * z.x[1] / fsvm * sigma0);
 
 	// -dot(dz) - alpha * sigma0 / fss * dz
-	WorkMat.IncCoef(startdof+1, startdof+1, -1. - alph * sigma0 / fsvm * dCoef);
-	WorkMat.IncCoef(startdof+2, startdof+2, -1. - alph * sigma0 / fsvm * dCoef);
+	WorkMat.IncCoef(startdof+1, startdof+1, -1. - alph * sigma0 / fsvm * vm * dCoef);
+	WorkMat.IncCoef(startdof+2, startdof+2, -1. - alph * sigma0 / fsvm * vm * dCoef);
 
 	ExpandableMatrix deq_dv;
 	deq_dv.ReDim(2, 2);
 
 	// -z * sigma0 / fss * alpha_{/v} * dv
 	deq_dv.SetBlockDim(1, 1);
-	deq_dv.Set(-z.x[0] * sigma0 / fsvm, 1, 1, 1);
-	deq_dv.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 1);
+	deq_dv.Set(-z.x[0] * sigma0 / fsvm * vm, 1, 1, 1);
+	deq_dv.Set(-z.x[1] * sigma0 / fsvm * vm, 2, 1, 1);
 	deq_dv.Link(1, &alpha_d_v);
 
 	// dv + z * alpha * sigma0 / fss^2 * fss_{/vm} vm_{/v} * dv
 	deq_dv.SetBlockDim(2, 2);
-	deq_dv.Set(1. + z.x[0] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[0], 1, 2, 1);
-	deq_dv.Set(   + z.x[0] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[1], 1, 2, 2);
-	deq_dv.Set(   + z.x[1] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[0], 2, 2, 1);
-	deq_dv.Set(1. + z.x[1] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[1], 2, 2, 2);
+	deq_dv.Set(1. + z.x[0] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[0] * vm
+					- z.x[0] * alph * sigma0 / fsvm * vmd_v.x[0], 1, 2, 1);
+	deq_dv.Set(   + z.x[0] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[1] * vm
+					- z.x[0] * alph * sigma0 / fsvm * vmd_v.x[1], 1, 2, 2);
+	deq_dv.Set(   + z.x[1] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[0] * vm
+					- z.x[1] * alph * sigma0 / fsvm * vmd_v.x[0], 2, 2, 1);
+	deq_dv.Set(1. + z.x[1] * alph * sigma0 / fsvm2 * fsvmd_vm * vmd_v.x[1] * vm
+					- z.x[1] * alph * sigma0 / fsvm * vmd_v.x[1], 2, 2, 2);
 	deq_dv.Link(2, &dv);
 
-	deq_dv.Add(WorkMat, startdof+1);
+	deq_dv.AddTo(WorkMat, startdof+1);
 
 	// -z sigma0/fss * alpha_{/z} * dz
 	ExpandableMatrix deq_dz;
 	deq_dz.ReDim(2, 1);
 	deq_dz.SetBlockDim(1, 1);
 	//deq_dz.SetBlockIdx(1, startdof+1);
-	deq_dz.Set(-z.x[0] * sigma0 / fsvm, 1, 1, 1);
-	deq_dz.Set(-z.x[1] * sigma0 / fsvm, 2, 1, 1);
+	deq_dz.Set(-z.x[0] * sigma0 / fsvm * vm, 1, 1, 1);
+	deq_dz.Set(-z.x[1] * sigma0 / fsvm * vm, 2, 1, 1);
 	deq_dz.Link(1, &alpha_d_z);
-	deq_dz.Add(WorkMat, startdof+1, dCoef);
+	deq_dz.AddTo(WorkMat, startdof+1, dCoef);
 
 
 //	std::cout << alphad_z(z,v) << std::endl;
@@ -589,6 +619,9 @@ void DiscreteCoulombFriction2D::AssRes(
 	f.x[1] = X(solution_startdof+2);
 	transition_type = null;
 	use_sliding_v = false;
+	// std::cerr << "f: " << f << std::endl;
+	// std::cerr << "fss(0): " << fss(0) << std::endl;
+	// std::cerr << "d2DNorm(f): " << d2DNorm(f) << std::endl;
 	if (d2DNorm(f)-fss(0) > 1.0E-6*fss(0)) {
 		//unconditionally switch to sliding
 		if (status == sticked) {
@@ -604,11 +637,13 @@ void DiscreteCoulombFriction2D::AssRes(
 		status = sliding;
 	}
 	if (status == sliding) {
+		// std::cerr << "v*current_velocity: " << v*current_velocity << std::endl;
 		if (v*current_velocity < 0.) {
 			if (((transition_type != from_sticked_to_sliding) &&
 				(transition_type != from_sticking_to_sliding)) &&
 				((d2DNorm(v-current_velocity) < d2DNorm(previous_switch_v)) ||
 					(first_switch == true))) {
+				// std::cerr << "XXXX" << std::endl;
 				first_switch = false;
 				status = sticking;
 				transition_type = from_sliding_to_sticking;
@@ -623,46 +658,64 @@ void DiscreteCoulombFriction2D::AssRes(
 		case sticking: {
 			//switch to sticking: null velocity at the end of time step
 			current_friction_force = f;
+			// std::cerr << "sticking"  << std::endl;
 			WorkVec.IncCoef(startdof+1, v.x[0]);
 			WorkVec.IncCoef(startdof+2, v.x[1]);
 			break;
 		}
 		case sliding: {
+			// std::cerr << "sliding"  << std::endl;
 			doublereal vm = d2DNorm(v);
 			//still sliding
 			switch (transition_type) {
 				case from_sticked_to_sliding: {
+					// std::cerr << "from_sticked_to_sliding"  << std::endl;
 					current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 					break;
 				}
 				case from_sticking_to_sliding: {
+					// std::cerr << "from_sticking_to_sliding"  << std::endl;
 					current_friction_force = fss(vm) * d2DDirection(saved_sliding_friction) + sigma2 * v;
 					break;
 				}
 				default: {
 					if (vm >= 1.E-6) {
 						if (Dot(v, current_velocity) > 0.) {
+							// std::cerr << "xx1"  << std::endl;
+							// std::cerr << "v: "  << v << std::endl;
+							// std::cerr << "curr v: " << current_velocity << std::endl;
 							current_friction_force = fss(vm)*d2DDirection(v)+sigma2*v;
 							use_sliding_v = true;
 						} else {
+							// std::cerr << "xx2"  << std::endl;
+							// std::cerr << "v: "  << v << std::endl;
+							// std::cerr << "curr v: " << current_velocity << std::endl;
 							current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 						}
 					} else {
+						// std::cerr << "xx3"  << std::endl;
+						// std::cerr << "v: "  << v << std::endl;
+						// std::cerr << "curr v: " << current_velocity << std::endl;
 						//limit the force value while taking the sticking force d2DDirection
 						current_friction_force = fss(vm)*d2DDirection(f)+sigma2*v;
 					}
 					if (vm < d2DNorm(current_velocity) && !first_iter) {
+						// std::cerr << "xx4"  << std::endl;
+						// std::cerr << "v: "  << v << std::endl;
+						// std::cerr << "curr v: " << current_velocity << std::endl;
 						current_velocity = v;
 					}
 					break;
 				}
 			}
 			//save friction force value in the (algebric) state
-			WorkVec.IncCoef(startdof+1,f.x[0] - current_friction_force.x[0]);
-			WorkVec.IncCoef(startdof+2,f.x[1] - current_friction_force.x[1]);
+			// std::cerr << "current_friction_force " << current_friction_force << std::endl;
+			WorkVec.IncCoef(startdof+1, f.x[0] - current_friction_force.x[0]);
+			WorkVec.IncCoef(startdof+2, f.x[1] - current_friction_force.x[1]);
 			break;
 		}
 		case sticked: {
+			// std::cerr << "sticked"  << std::endl;
 			current_friction_force = f;
 			WorkVec.IncCoef(startdof+1, v.x[0]);
 			WorkVec.IncCoef(startdof+2, v.x[1]);
@@ -698,7 +751,7 @@ void DiscreteCoulombFriction2D::AssJac(
 		case sticking:
 		case sticked: {
 			//null velocity at the end of time step
-			dv.Sub(WorkMat,startdof+1);
+			dv.SubFrom(WorkMat,startdof+1);
 			dfc.ReDim(2, 1);
 			dfc.SetBlockDim(1, 2);
 			dfc.SetBlockIdx(1, startdof+1);
@@ -758,7 +811,7 @@ void DiscreteCoulombFriction2D::AssJac(
 			dfc.Set(fssd * dir.x[1] * vm_d.x[0]         , 2, 1, 1);
 			dfc.Set(fssd * dir.x[1] * vm_d.x[1] + sigma2, 2, 1, 2);
 			dfc.Link(1, &dv);
-			dfc.Add(WorkMat, startdof+1, 1.);
+			dfc.AddTo(WorkMat, startdof+1, 1.);
 	
 			// d2D diff = fss.ComputeDiff(vm)*d2DDirection(current_friction_force-sigma2*v)+sigma2*d2D({1., 1.});
 			// dv.Add(WorkMat,startdof+1, diff.x[0]);
