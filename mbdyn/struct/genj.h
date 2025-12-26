@@ -295,122 +295,122 @@ class ClampJoint : public Joint {
    virtual ~ClampJoint(void);
 
    /* Tipo di Joint */
-   virtual Joint::Type GetJointType(void) const {
+   virtual Joint::Type GetJointType(void) const override {
       return Joint::CLAMP;
    };
 
    /*Funzione che legge lo stato iniziale dal file di input*/
-   void ReadInitialState(MBDynParser& HP);
+   void ReadInitialState(MBDynParser& HP) override;
 
    /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
+   virtual std::ostream& Restart(std::ostream& out) const override;
 
    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
    /* Funzioni obbligatorie, per la gestione dei dof */
-   virtual unsigned int iGetNumDof(void) const {
+   virtual unsigned int iGetNumDof(void) const override {
       return 6;
    };
    virtual std::ostream& DescribeDof(std::ostream& out,
                    const char *prefix = "",
-                   bool bInitial = false) const;
+                   bool bInitial = false) const override;
    virtual void DescribeDof(std::vector<std::string>& desc,
-                   bool bInitial = false, int i = -1) const;
+                   bool bInitial = false, int i = -1) const override;
    virtual std::ostream& DescribeEq(std::ostream& out,
                    const char *prefix = "",
-                   bool bInitial = false) const;
+                   bool bInitial = false) const override;
    virtual void DescribeEq(std::vector<std::string>& desc,
-                   bool bInitial = false, int i = -1) const;
-   virtual DofOrder::Order GetDofType(unsigned int i) const
+                   bool bInitial = false, int i = -1) const override;
+   virtual DofOrder::Order GetDofType(unsigned int i) const override
    {
       ASSERT(i >= 0 && i < 6);
       return DofOrder::ALGEBRAIC;
    };
 
-   virtual DofOrder::Order GetEqType(unsigned int i) const {
+   virtual DofOrder::Order GetEqType(unsigned int i) const override {
       ASSERT(i >= 0 && i < iGetNumDof());
       return DofOrder::ALGEBRAIC;
    }
 
-   virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const
+   virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override
      { *piNumRows = 12; *piNumCols = 12; };
 
    /* Assemblaggio matrice jacobiana */
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
                                     doublereal dCoef,
                                     const VectorHandler& XCurr,
-                                    const VectorHandler& XPrimeCurr);
+                                    const VectorHandler& XPrimeCurr) override;
 
 
    /* Inverse Dynamics: AssJac() */
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
-                                    const VectorHandler& XCurr);
+                                    const VectorHandler& XCurr) override;
 
    /* assemblaggio matrici per autovalori */
    void AssMats(VariableSubMatrixHandler& WorkMatA,
                VariableSubMatrixHandler& WorkMatB,
                const VectorHandler& XCurr,
-               const VectorHandler& XPrimeCurr);
+               const VectorHandler& XPrimeCurr) override;
 
    /* Assemblaggio residuo */
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
                             doublereal dCoef,
                             const VectorHandler& XCurr,
-                            const VectorHandler& XPrimeCurr);
+                            const VectorHandler& XPrimeCurr) override;
 
    /* inverse dynamics capable element */
-   virtual bool bInverseDynamics(void) const;
+   virtual bool bInverseDynamics(void) const override;
 
    /* Inverse Dynamics: AssRes */
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
                             const VectorHandler& XCurr,
                             const VectorHandler& XPrimeCurr,
                             const VectorHandler& XPrimePrimeCurr,
-                            InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+                            InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
    /* Inverse Dynamics update */
-   void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+   void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
-   void OutputPrepare(OutputHandler& OH);
-   virtual void Output(OutputHandler& OH) const;
+   void OutputPrepare(OutputHandler& OH) override;
+   virtual void Output(OutputHandler& OH) const override;
 
 
    /* funzioni usate nell'assemblaggio iniziale */
 
-   virtual unsigned int iGetInitialNumDof(void) const { return 12; };
+   virtual unsigned int iGetInitialNumDof(void) const override { return 12; };
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-                                    integer* piNumCols) const
+                                    integer* piNumCols) const override
      { *piNumRows = 24; *piNumCols = 24; };
 
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-                                           const VectorHandler& XCurr);
+                                           const VectorHandler& XCurr) override;
 
    /* Contributo al residuo durante l'assemblaggio iniziale */
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-                                   const VectorHandler& XCurr);
+                                   const VectorHandler& XCurr) override;
 
    virtual void SetValue(DataManager *pDM,
                    VectorHandler& X, VectorHandler& XP,
-                   SimulationEntity::Hints *ph = 0);
+                   SimulationEntity::Hints *ph = 0) override;
    /* Metodi per l'estrazione di dati "privati".
     * Si suppone che l'estrattore li sappia interpretare.
     * Come default non ci sono dati privati estraibili */
-   virtual unsigned int iGetNumPrivData(void) const;
-   virtual unsigned int iGetPrivDataIdx(const char *s) const;
-   virtual doublereal dGetPrivData(unsigned int i) const;
+   virtual unsigned int iGetNumPrivData(void) const override;
+   virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+   virtual doublereal dGetPrivData(unsigned int i) const override;
 
    /* *******PER IL SOLUTORE PARALLELO******** */
    /* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
       utile per l'assemblaggio della matrice di connessione fra i dofs */
-   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
      connectedNodes.resize(1);
      connectedNodes[0] = pNode;
    };
    /* ************************************************ */
 
    /* returns the dimension of the component */
-   const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+   const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* ClampJoint - end */

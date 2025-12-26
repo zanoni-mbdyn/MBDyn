@@ -123,28 +123,28 @@ AutomaticStructDispElemAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      const integer iFirstPositionIndex = pNode->iGetFirstPositionIndex();
      const integer iFirstMomentumIndex = pNode->iGetFirstMomentumIndex();
 
-     SpColVector<T, 3> B(3, 1), BP(3, 1), V(3, 1);
+     SpColVector<T, 3> B_sp(3, 1), BP_sp(3, 1), V(3, 1);
 
      pNode->GetVCurr(V, dCoef, func);
 
-     XCurr.GetVec(iFirstMomentumIndex + 1, B, dCoef);
-     XPrimeCurr.GetVec(iFirstMomentumIndex + 1, BP, 1.);
+     XCurr.GetVec(iFirstMomentumIndex + 1, B_sp, dCoef);
+     XPrimeCurr.GetVec(iFirstMomentumIndex + 1, BP_sp, 1.);
 
-     WorkVec.AddItem(iFirstPositionIndex + 1, B);
+     WorkVec.AddItem(iFirstPositionIndex + 1, B_sp);
 
-     SpColVector<T, 3> F = -BP;
+     SpColVector<T, 3> F = -BP_sp;
 
      const RigidBodyKinematics *pRBK = pNode->pGetRBK();
 
      if (pRBK) {
           const Vec3& W0 = pRBK->GetW();
 
-          F -= 2. * Cross(W0, B);
+          F -= 2. * Cross(W0, B_sp);
      }
 
      WorkVec.AddItem(iFirstPositionIndex + 4, F);
 
-     UpdateState(B, BP);
+     UpdateState(B_sp, BP_sp);
 }
 
 inline void
@@ -251,14 +251,14 @@ AutomaticStructElemAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      const integer iFirstPositionIndex = pNode->iGetFirstPositionIndex();
      const integer iFirstMomentumIndex = pNode->iGetFirstMomentumIndex();
 
-     SpColVector<T, 3> B(3, 1), G(3, 1), BP(3, 1), GP(3, 1), V(3, 1);
+     SpColVector<T, 3> B_sp(3, 1), G_sp(3, 1), BP_sp(3, 1), GP_sp(3, 1), V(3, 1);
 
      pNode->GetVCurr(V, dCoef, func);
 
-     XCurr.GetVec(iFirstMomentumIndex + 1, B, dCoef);
-     XCurr.GetVec(iFirstMomentumIndex + 4, G, dCoef);
-     XPrimeCurr.GetVec(iFirstMomentumIndex + 1, BP, 1.);
-     XPrimeCurr.GetVec(iFirstMomentumIndex + 4, GP, 1.);
+     XCurr.GetVec(iFirstMomentumIndex + 1, B_sp, dCoef);
+     XCurr.GetVec(iFirstMomentumIndex + 4, G_sp, dCoef);
+     XPrimeCurr.GetVec(iFirstMomentumIndex + 1, BP_sp, 1.);
+     XPrimeCurr.GetVec(iFirstMomentumIndex + 4, GP_sp, 1.);
 
      /*
       * Momentum and momenta moment (about node):
@@ -271,11 +271,11 @@ AutomaticStructElemAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
       *
       * Gp + V /\ B = M
       */
-     WorkVec.AddItem(iFirstPositionIndex + 1, B);
-     WorkVec.AddItem(iFirstPositionIndex + 4, G);
+     WorkVec.AddItem(iFirstPositionIndex + 1, B_sp);
+     WorkVec.AddItem(iFirstPositionIndex + 4, G_sp);
 
-     SpColVector<T, 3> F = -BP;
-     SpColVector<T, 3> M = -Cross(V, B) - GP;
+     SpColVector<T, 3> F = -BP_sp;
+     SpColVector<T, 3> M = -Cross(V, B_sp) - GP_sp;
 
      // relative frame dynamics contribution
      // (see tecman, "Dynamics in a Relative Reference Frame")
@@ -284,14 +284,14 @@ AutomaticStructElemAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      if (pRBK) {
           const Vec3& W0 = pRBK->GetW();
 
-          F -= 2. * Cross(W0, B);
-          M -= Cross(W0, G);
+          F -= 2. * Cross(W0, B_sp);
+          M -= Cross(W0, G_sp);
      }
 
      WorkVec.AddItem(iFirstPositionIndex + 7, F);
      WorkVec.AddItem(iFirstPositionIndex + 10, M);
 
-     UpdateState(B, BP, G, GP);
+     UpdateState(B_sp, BP_sp, G_sp, GP_sp);
 }
 
 inline void

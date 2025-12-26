@@ -41,10 +41,10 @@
 
 StreamDrive::StreamDrive(unsigned int uL,
 	const DriveHandler* pDH,
-	const std::string& sFileName,
+	const std::string& sFileName_a,
 	integer nd, const std::vector<doublereal>& v0,
 	bool c, StreamDrive::Modifier *pmod)
-: FileDrive(uL, pDH, sFileName, nd, v0),
+: FileDrive(uL, pDH, sFileName_a, nd, v0),
 create(c),
 pMod(pmod)
 {
@@ -205,11 +205,11 @@ ReadStreamDriveModifier(MBDynParser& HP, integer nDrives)
 
 /* StreamDriveEcho - begin */
 
-StreamDriveEcho::StreamDriveEcho(const DriveHandler *pDrvHdl, std::string& sOutFileName, int iPrecision, doublereal dShift)
-: pDrvHdl(pDrvHdl),
-sOutFileName(sOutFileName),
-iPrecision(iPrecision),
-dShift(dShift)
+StreamDriveEcho::StreamDriveEcho(const DriveHandler *pDrvHdl_a, std::string& sOutFileName_a, int iPrecision_a, doublereal dShift_a)
+: pDrvHdl(pDrvHdl_a),
+sOutFileName(sOutFileName_a),
+iPrecision(iPrecision_a),
+dShift(dShift_a)
 {
 	NO_OP;
 }

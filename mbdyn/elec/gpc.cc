@@ -353,7 +353,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 	    			/* a_j^l = a_1^(l-1)*a_j^0+a_(j+1)^(l-1) */
 
 				/* a_j^l */
-	    			doublereal* dest = 
+	    			dest =
 					A+nout*(i-1)+ndimA*(nout*(j-1));
 
 				/* a_j^0 */
@@ -373,7 +373,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 			/* FIXME: move declarations at top to make this C */
 
 			/* a_pa^l */
-	 		doublereal* dest = A+nout*(i-1)+ndimA*(nout*(pa-1));
+	 		dest = A+nout*(i-1)+ndimA*(nout*(pa-1));
 
 			/* a_pa^0 */
 	 		doublereal* m2 = A+nout*(s-1)+ndimA*(nout*(pa-1));
@@ -388,7 +388,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 	    			/* b_j^l = a_1^(l-1)*b_j^0+b_(j+1)^(l-1) */
 				
 				/* b_j^l */
-	    			doublereal* dest = 
+	    			dest =
 					B+nout*(i-1)+ndimB*(nin*(j-1));
 				
 				/* b_j^0 */
@@ -408,7 +408,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 			/* FIXME: move declarations at top to make this C */
 			
 			/* b_pb^l */
-	 		doublereal* dest = B+nout*(i-1)+ndimB*(nin*(pb-1));
+	 		dest = B+nout*(i-1)+ndimB*(nin*(pb-1));
 
 			/* b_pb^0 */
 	 		doublereal* m2 = B+nout*(s-1)+ndimB*(nin*(pb-1));
@@ -423,7 +423,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 	    			/* c_j^l = a_1^(l-1)*c_j^0+c_(j+1)^(l-1) */
 
 				/* c_j^l */
-	    			doublereal* dest = 
+	    			dest =
 					C+nout*(i-1)+ndimC*(nout*(j-1));
 				
 				/* c_j^0 */
@@ -443,7 +443,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 			/* FIXME: move declarations at top to make this C */
 			
 			/* c_pa^l */
-	 		doublereal* dest = C+nout*(i-1)+ndimC*(nout*(pa-1));
+	 		dest = C+nout*(i-1)+ndimC*(nout*(pa-1));
 
 			/* c_pa^0 */
 	 		doublereal* m2 = C+nout*(s-1)+ndimC*(nout*(pa-1));
@@ -459,10 +459,10 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 				 *	p_(l+1)^(l-1) .. p_s^(l-1) */
 
 				/* p_(l+1)^(l-1) .. p_s^(l-1) */
-	    			doublereal* source = P+nout*i+ndimP*(nin*i);
+	    			source = P+nout*i+ndimP*(nin*i);
 
 				/* p_l^l .. p_(s-1)^l */
-	    			doublereal* dest = 
+	    			dest =
 					P+nout*(i-1)+ndimP*(nin*(i-1));
 				
 	    			gpc_mcopy(ndimP, nout, nin*(s-i), source,
@@ -473,7 +473,7 @@ gpc_build_matrices(integer ndimA, doublereal* A,
 			/* FIXME: move declarations at top to make this C */
 			
 			/* p_s^l */
-	 		doublereal* dest = P+nout*(i-1)+ndimP*(nin*(s-1));
+	 		dest = P+nout*(i-1)+ndimP*(nin*(s-1));
 			
 			/* p_s^0 */
 	 		doublereal* m2 = P+nout*(s-1)+ndimP*(nin*(s-1));
@@ -597,9 +597,9 @@ GPCInv::~GPCInv(void)
 
 /* GPC_LAPACK_pinv - begin */
 
-GPC_LAPACK_pinv::GPC_LAPACK_pinv(integer m, integer n)
+GPC_LAPACK_pinv::GPC_LAPACK_pinv(integer m_a, integer n_a)
 : GPCInv(), 
-m(m), n(n), 
+m(m_a), n(n_a),
 iMin(0), 
 iMax(0), 
 iWork(0),
@@ -867,7 +867,7 @@ DeadBeat::DesignControl(const doublereal* pdTheta,
       		doublereal* pm = pdmd+iTmpRows*i;
 
       		/* ac = -md*A */
-      		doublereal* p = pdac+i*iNumOutputs*iOrderA;
+      		p = pdac+i*iNumOutputs*iOrderA;
       		for (integer j = iNumOutputs*iOrderA; j-- > 0; ) {
 	 		doublereal* pa = pdA+iDim*j;
 
@@ -1153,7 +1153,7 @@ GPC::DesignControl(const doublereal* pdTheta,
       		doublereal* pm = pdmd+iTmpRows*i;
 
       		/* ac = -md*A */
-      		doublereal* p = pdac+i*iNumOutputs*iOrderA;
+      		p = pdac+i*iNumOutputs*iOrderA;
       		for (integer j = iNumOutputs*iOrderA; j-- > 0; ) {
 	 		doublereal* pa = pdA+iDim*j;
 			p[j] = pm[j]*cc;

@@ -452,8 +452,8 @@ template class KLUSparseSolutionManager<SpGradientSparseMatrixHandler>;
 template <class CC>
 KLUSparseCCSolutionManager<CC>::KLUSparseCCSolutionManager(integer Dim,
 		doublereal dPivot,
-		const ScaleOpt& scale)
-     : KLUSparseSolutionManager<SpMapMatrixHandler>(Dim, dPivot, scale),
+		const ScaleOpt& scale_a)
+     : KLUSparseSolutionManager<SpMapMatrixHandler>(Dim, dPivot, scale_a),
 CCReady(false),
 Ac(0)
 {

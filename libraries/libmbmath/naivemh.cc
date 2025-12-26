@@ -510,8 +510,8 @@ NaiveMatrixHandler::const_iterator::reset(bool is_end)
         }
 }
 
-NaiveMatrixHandler::const_iterator::const_iterator(const NaiveMatrixHandler& m, bool is_end)
-: m(m)
+NaiveMatrixHandler::const_iterator::const_iterator(const NaiveMatrixHandler& m_a, bool is_end)
+: m(m_a)
 {
         reset(is_end);
 }
@@ -577,10 +577,10 @@ NaiveMatrixHandler* NaiveMatrixHandler::Copy() const
 
 /* NaivePermMatrixHandler begin */
 
-NaivePermMatrixHandler::NaivePermMatrixHandler(integer iSize,
+NaivePermMatrixHandler::NaivePermMatrixHandler(integer iSize_a,
                 const std::vector<integer>& tperm,
                 const std::vector<integer>& tinvperm)
-: NaiveMatrixHandler(iSize), perm(tperm), invperm(tinvperm), m_end(*this, true)
+: NaiveMatrixHandler(iSize_a), perm(tperm), invperm(tinvperm), m_end(*this, true)
 {
 #ifdef DEBUG
         IsValid();
@@ -786,8 +786,8 @@ NaivePermMatrixHandler::const_iterator::reset(bool is_end)
 #endif
 }
 
-NaivePermMatrixHandler::const_iterator::const_iterator(const NaivePermMatrixHandler& m)
-: m(m), i_row(0), elem(0, 0, 0.)
+NaivePermMatrixHandler::const_iterator::const_iterator(const NaivePermMatrixHandler& m_a)
+: m(m_a), i_row(0), elem(0, 0, 0.)
 {
 #ifdef DEBUG
         m.IsValid();
@@ -807,8 +807,8 @@ NaivePermMatrixHandler::const_iterator::const_iterator(const NaivePermMatrixHand
 #endif
 }
 
-NaivePermMatrixHandler::const_iterator::const_iterator(const NaivePermMatrixHandler& m, bool)
-: m(m), i_row(0), elem(m.iSize, m.iSize, 0.)
+NaivePermMatrixHandler::const_iterator::const_iterator(const NaivePermMatrixHandler& m_a, bool)
+: m(m_a), i_row(0), elem(m.iSize, m.iSize, 0.)
 {
 
 }

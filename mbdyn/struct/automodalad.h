@@ -41,7 +41,7 @@ public:
 
      virtual ~AutomaticModalElemAd();
 
-     virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const;
+     virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
 
      virtual VariableSubMatrixHandler&
      AssJac(VariableSubMatrixHandler& WorkMat,

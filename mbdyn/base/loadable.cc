@@ -234,11 +234,11 @@ int_destroy(LoadableElem* /* pEl */ )
 
 /* metodi della classe */
 
-LoadableElem::LoadableElem(unsigned int uLabel,
+LoadableElem::LoadableElem(unsigned int uLabel_a,
 			   const DofOwner* pDO,
 			   DataManager* pDM,
 			   MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 priv_data(0),
 module_name(0),
 #ifdef USE_RUNTIME_LOADING
@@ -252,12 +252,12 @@ calls(0)
 	BindCalls(pDM, HP);
 }
 
-LoadableElem::LoadableElem(unsigned int uLabel,
+LoadableElem::LoadableElem(unsigned int uLabel_a,
 			   const DofOwner* pDO,
 			   const LoadableCalls *c,
 			   DataManager* pDM,
 			   MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 priv_data(0),
 module_name(0),
 #ifdef USE_RUNTIME_LOADING

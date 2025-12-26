@@ -78,9 +78,9 @@
 InverseSolver::InverseSolver(MBDynParser& HPar,
 		const std::string& sInFName,
 		const std::string& sOutFName,
-		unsigned int nThreads,
+		unsigned int nThreads_a,
 		bool bPar)
-: Solver(HPar, sInFName, sOutFName, nThreads, bPar),
+: Solver(HPar, sInFName, sOutFName, nThreads_a, bPar),
 ProblemType(InverseDynamics::FULLY_ACTUATED_COLLOCATED),
 pXPrimePrime(0), pLambda(0),
 bFullResTest(false)
@@ -102,7 +102,7 @@ InverseSolver::Prepare(void)
 	mbdyn_signal_init(1);
 
 	/* Legge i dati relativi al metodo di integrazione */
-	ReadData(HP);
+	ReadData();
 
 /*FIXME:*/
 //	bParallel = false;
@@ -314,10 +314,10 @@ InverseSolver::Prepare(void)
 	pNLS = AllocateNonlinearSolver();
 
 	/* FIXME: Serve?*/
-	MyVectorHandler Scale(iNumDofs);
+	MyVectorHandler Scale_inv(iNumDofs);
 	if (bScale) {
 		/* collects scale factors from data manager */
-		pDM->SetScale(Scale);
+		pDM->SetScale(Scale_inv);
 	}
 
 
@@ -346,7 +346,7 @@ InverseSolver::Prepare(void)
 		}
 
 		/* registers scale factors at nonlinear solver */
-		pResTestScale->SetScale(&Scale);
+		pResTestScale->SetScale(&Scale_inv);
 
 		pResTest = dynamic_cast<NonlinearSolverTest*>(pResTestScale);
 
@@ -549,7 +549,7 @@ InverseSolver::Advance(void)
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
-	StepIntegrator::StepChange CurrStep = StepIntegrator::NEWSTEP;
+	StepIntegrator::StepChange CurrStep_inv = StepIntegrator::NEWSTEP;
 
 	if (dTime >= dFinalTime) {
 		if (pRTSolver) {
@@ -624,7 +624,7 @@ IfStepIsToBeRepeated:
 			silent_cout("Step(" << lStep << ':' << retries << ") t=" << dTime + dCurrTimeStep << " dt=" << dCurrTimeStep << std::endl);
 		}
 		dTest = dynamic_cast<InverseDynamicsStepSolver *>(pRegularSteps)->Advance(this, dRefTimeStep,
-				CurrStep, pX, pXPrime, pXPrimePrime, pLambda,
+				CurrStep_inv, pX, pXPrime, pXPrimePrime, pLambda,
 				iStIter, dTest, dSolTest);
 	}
 
@@ -896,17 +896,17 @@ InverseSolver::GetProblemType(void) const
 }
 
 void
-InverseSolver::GetWeight(InverseDynamics::Order iOrder, doublereal& dw1, doublereal& dw2) const
+InverseSolver::GetWeight(InverseDynamics::Order iOrder, doublereal& dw1_a, doublereal& dw2_a) const
 {
 	switch (iOrder) {
 	case InverseDynamics::POSITION:
-		dw1 = this->dw1[0];
-		dw2 = this->dw2[0];
+		dw1_a = this->dw1[0];
+		dw2_a = this->dw2[0];
 		break;
 
 	case InverseDynamics::VELOCITY:
-		dw1 = this->dw1[1];
-		dw2 = this->dw2[1];
+		dw1_a = this->dw1[1];
+		dw2_a = this->dw2[1];
 		break;
 
 	case InverseDynamics::ACCELERATION:
@@ -914,8 +914,8 @@ InverseSolver::GetWeight(InverseDynamics::Order iOrder, doublereal& dw1, doubler
 		dw1 = 0.;
 		dw2 = this->dw1[2] + this->dw2[2];
 #endif
-		dw1 = this->dw1[2];
-		dw2 = this->dw2[2];
+		dw1_a = this->dw1[2];
+		dw2_a = this->dw2[2];
 		break;
 
 	default:
@@ -925,7 +925,7 @@ InverseSolver::GetWeight(InverseDynamics::Order iOrder, doublereal& dw1, doubler
 
 /* Dati dell'integratore */
 void
-InverseSolver::ReadData(MBDynParser& HP)
+InverseSolver::ReadData()
 {
 	DEBUGCOUTFNAME("InverseDynamics::ReadData");
 

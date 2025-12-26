@@ -58,7 +58,7 @@
 
 SiconosMCPSolver::SiconosMCPSolver(const NonlinearSolverTestOptions& options,
                                    const LineSearchParameters& oLineSearch,
-                                   integer iSolverId)
+                                   integer iSolverId_a)
      :NonlinearSolver(options),
       LineSearchParameters(oLineSearch),
       pIndexMap(nullptr),
@@ -71,7 +71,7 @@ SiconosMCPSolver::SiconosMCPSolver(const NonlinearSolverTestOptions& options,
       pOptions(nullptr),
       iJacPrev(-1),
       iIterCurr(-1),
-      iSolverId(iSolverId)
+      iSolverId(iSolverId_a)
 {
 }
 

@@ -46,9 +46,9 @@
 /* HydraulicFluid - begin */
 
 HydraulicFluid::HydraulicFluid(unsigned int Label,
-	const doublereal dPres0,
-	const doublereal dTemp0)
-: WithLabel(Label), dPres0(dPres0), dTemp0(dTemp0)
+	const doublereal dPres0_a,
+	const doublereal dTemp0_a)
+: WithLabel(Label), dPres0(dPres0_a), dTemp0(dTemp0_a)
 {
 	NO_OP;
 }

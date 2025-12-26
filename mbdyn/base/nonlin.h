@@ -300,10 +300,10 @@ struct CommonNonlinearSolverParam
           PRINT_CONVERGENCE_INFO = 0x2
      };
      
-     CommonNonlinearSolverParam(unsigned uFlags = 0u,
+     CommonNonlinearSolverParam(unsigned uFlags_a = 0u,
                                 integer iIterBeforeAss = 0,
                                 bool bKeepJac = false)
-          :uFlags(uFlags),
+          :uFlags(uFlags_a),
            iIterationsBeforeAssembly(iIterBeforeAss),
            bKeepJacAcrossSteps(bKeepJac) {
      }
@@ -395,9 +395,9 @@ protected:
                 
     class CPUStopWatch  {
     public:
-        explicit CPUStopWatch(const NonlinearSolver& oSolver, CPUTimeType eType)
-            :oSolver(oSolver),
-             eType(eType),
+        explicit CPUStopWatch(const NonlinearSolver& oSolver_a, CPUTimeType eType_a)
+            :oSolver(oSolver_a),
+             eType(eType_a),
 	     eStatus(SWST_INACTIVE),	     
              dStartTimeCPU(std::chrono::nanoseconds(0)),
              dElapsedCPU(std::chrono::nanoseconds(0)) {

@@ -113,72 +113,72 @@ public:
 	virtual ~DeformableHingeJoint(void);
 
 	/* Tipo di Joint */
-	virtual Joint::Type GetJointType(void) const {
+	virtual Joint::Type GetJointType(void) const override {
 		return Joint::DEFORMABLEHINGE;
 	};
     
 	/* Deformable element */
-	virtual bool bIsDeformable() const {
+	virtual bool bIsDeformable() const override {
 		return true;
 	};
 
 	/* Contributo al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
-	void OutputPrepare(OutputHandler& OH);
-	virtual void Output(OutputHandler& OH) const;
+	void OutputPrepare(OutputHandler& OH) override;
+	virtual void Output(OutputHandler& OH) const override;
 
 	/* Aggiorna le deformazioni ecc. */
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 
 	void SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
-	virtual void SetInitialValue(VectorHandler& /* X */ );
+		SimulationEntity::Hints *ph = 0) override;
+	virtual void SetInitialValue(VectorHandler& /* X */ ) override;
 
 	virtual Hint *
-	ParseHint(DataManager *pDM, const char *s) const;
+	ParseHint(DataManager *pDM, const char *s) const override;
 	         
 	/* Tipo di DeformableHinge */
 	virtual ConstLawType::Type GetConstLawType(void) const = 0;
 
-	virtual unsigned int iGetNumDof(void) const {
+	virtual unsigned int iGetNumDof(void) const override {
 		return 0;
 	};
 
 	virtual void
-	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 6;
 		*piNumCols = 6;
 	};
 
 	/* inverse dynamics capable element */
-	virtual bool bInverseDynamics(void) const;
+	virtual bool bInverseDynamics(void) const override;
  
 	/* funzioni usate nell'assemblaggio iniziale */
 
-	virtual unsigned int iGetInitialNumDof(void) const {
+	virtual unsigned int iGetInitialNumDof(void) const override {
 		return 0;
 	};
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
-	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(2);
 		connectedNodes[0] = pNode1;
 		connectedNodes[1] = pNode2;
 	};
 	/* ************************************************ */
 
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* DeformableHingeJoint - end */

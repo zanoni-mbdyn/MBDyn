@@ -44,8 +44,8 @@
 #include "mynewmem.h"
 
 
-Shell::Shell(unsigned uLabel, const DofOwner* pDO, flag fOut)
-: InitialAssemblyElem(uLabel, fOut),
+Shell::Shell(unsigned uLabel_a, const DofOwner* pDO, flag fOut)
+: InitialAssemblyElem(uLabel_a, fOut),
 DofOwnerOwner(pDO)
 {
 	NO_OP;

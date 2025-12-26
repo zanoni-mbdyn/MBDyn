@@ -687,12 +687,12 @@ NonlinearSolverTestRange::SetRange(integer iFirstIndex, integer iLastIndex)
 	m_iLastIndex = iLastIndex;
 }
 
-NonlinearSolverTestOptions::NonlinearSolverTestOptions(bool bHonorJacRequest,
-                                                       enum ScaleFlags eScaleFlags,
-                                                       doublereal dScaleAlgebraic)
-:bHonorJacRequest(bHonorJacRequest),
- eScaleFlags(eScaleFlags),
- dScaleAlgebraic(dScaleAlgebraic)
+NonlinearSolverTestOptions::NonlinearSolverTestOptions(bool bHonorJacRequest_a,
+                                                       enum ScaleFlags eScaleFlags_a,
+                                                       doublereal dScaleAlgebraic_a)
+:bHonorJacRequest(bHonorJacRequest_a),
+ eScaleFlags(eScaleFlags_a),
+ dScaleAlgebraic(dScaleAlgebraic_a)
 {
 
 }

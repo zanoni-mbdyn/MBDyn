@@ -86,8 +86,8 @@ void SiconosIndexMap::SetIndex(std::vector<integer>&& rgIndex)
 #endif
 }
 
-SiconosVectorHandler::SiconosVectorHandler(integer iSize, doublereal* pdTmpVec, const SiconosIndexMap* pIndexMap)
-     :MyVectorHandler(iSize, pdTmpVec), pIndexMap(pIndexMap)
+SiconosVectorHandler::SiconosVectorHandler(integer iSize, doublereal* pdTmpVec, const SiconosIndexMap* pIndexMap_a)
+     :MyVectorHandler(iSize, pdTmpVec), pIndexMap(pIndexMap_a)
 {
 
 }
@@ -232,8 +232,8 @@ SiconosMatrixHandler::SiconosMatrixHandler(const SiconosMatrixHandler& oMH)
      NM_copy(oMH.pMatrix, pMatrix);
 }
 
-SiconosMatrixHandler::SiconosMatrixHandler(NM_types eStorageType, integer iNumRows, integer iNumCols, integer iNumNz, const SiconosIndexMap* pIndexMap)
-     :iNumNz(iNumNz), pIndexMap(pIndexMap)
+SiconosMatrixHandler::SiconosMatrixHandler(NM_types eStorageType, integer iNumRows, integer iNumCols, integer iNumNz_a, const SiconosIndexMap* pIndexMap_a)
+     :iNumNz(iNumNz_a), pIndexMap(pIndexMap_a)
 {
      pMatrix = NM_create(eStorageType, iNumRows, iNumCols);
 

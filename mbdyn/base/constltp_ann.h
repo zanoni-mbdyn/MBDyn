@@ -317,7 +317,7 @@ protected:
 
 		doublereal E = ConstitutiveLaw<doublereal, doublereal>::Epsilon;
 
-		ANN *net = AnnElasticConstitutiveLaw<doublereal, doublereal>::net;
+		net = AnnElasticConstitutiveLaw<doublereal, doublereal>::net;
 		net->input.vec[0] = E;
 		net->input.vec[1] = EpsPrime;
 		if (net->N_input == 3) {

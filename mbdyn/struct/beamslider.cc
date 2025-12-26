@@ -76,14 +76,14 @@ BeamSliderJoint::BeamSliderJoint(unsigned int uL, const DofOwner* pDO,
 		unsigned int nB, const BeamConn *const * ppB,
 		unsigned int uIB, unsigned int uIN,
 		doublereal dl,
-		const Vec3& fTmp, const Mat3x3& RTmp, flag fOut,
+		const Vec3& offset_a, const Mat3x3& RTmp, flag fOut,
           const doublereal pref,
           BasicShapeCoefficient *const sh,
-          BasicFriction *const f)
+          BasicFriction *const f_a)
 : Joint(uL, pDO, fOut),
 nRotConstr(0), nBeams(nB), iCurrBeam(0), iType(iT),
 pNode(pN), ppBeam(ppB),
-f(fTmp), R(RTmp),
+offset(offset_a), R(RTmp),
 F(Zero3), F_res(Zero3), m(Zero3), M(Zero3),
 sRef(0.), s(0.),
 dL(dl),
@@ -97,7 +97,7 @@ dNpp{0.},
 x(Zero3), l(Zero3), lp(Zero3), fb(Zero3), xc(Zero3), Rb(Zero3x3),
 VNod{Zero3, Zero3, Zero3},
 Sh_c(sh),
-fc(f),
+fc(f_a),
 preF(pref),
 F3(0.),
 v_rel(Zero3),
@@ -551,8 +551,8 @@ BeamSliderJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		}
 
 		/* trave: Delta F (momento) */
-		Mat3x3 MTmp(MatCross, F_res*(dCoef*dW[1]));
-		Mat3x3 MCross(MatCross, (xc-xNod[activeNode])*dW[1]);
+		MTmp = Mat3x3(MatCross, F_res*(dCoef*dW[1]));
+		MCross = Mat3x3(MatCross, (xc-xNod[activeNode])*dW[1]);
 		WM.Add(6*(activeNode+1)+3+1, 6*(1+Beam::NUMNODES)+1+1, MCross);
 		if (fc) {
 			dM3.Set(MCross, 1, 1, 1); dM3.Link(1, &dF3);
@@ -873,7 +873,7 @@ BeamSliderJoint::AssRes(SubVectorHandler& WorkVec,
 	}
 	
 	Rb = pNode->GetRCurr()*R;
-	fb = pNode->GetRCurr()*f;
+	fb = pNode->GetRCurr()*offset;
 	xc = pNode->GetXCurr()+fb;
 	if (fc) {
 		v_rel += pNode->GetVCurr() + pNode->GetWCurr().Cross(fb);

@@ -214,8 +214,8 @@ public:
 
      static constexpr sp_grad::index_type iDim = ConstLawHelper<T>::iDim;
 
-     explicit ConstLawPreStress(const T& f0)
-	  :f0(f0) {
+     explicit ConstLawPreStress(const T& f0_a)
+	  :f0(f0_a) {
      }
 
      ConstLawPreStress(const ConstLawPreStress& oCslDrive)
@@ -250,8 +250,8 @@ public:
 
 class IsotropicElasticity: public ConstitutiveLaw6D {
 protected:
-     IsotropicElasticity(const doublereal mu, const doublereal lambda)
-	  :mu(mu), lambda(lambda) {
+     IsotropicElasticity(const doublereal mu_a, const doublereal lambda_a)
+	  :mu(mu_a), lambda(lambda_a) {
      }
 
      const doublereal mu, lambda;
@@ -263,8 +263,8 @@ public:
      static_assert(PreStress::iDim == 6);
      static_assert(PreStrain::iDim == 6);
 
-     HookeanLinearElasticIsotropic(const doublereal mu, const doublereal lambda, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :IsotropicElasticity(mu, lambda), sigma0(sigma0), epsilon0(epsilon0) {
+     HookeanLinearElasticIsotropic(const doublereal mu_a, const doublereal lambda_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :IsotropicElasticity(mu_a, lambda_a), sigma0(sigma0_a), epsilon0(epsilon0_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -332,7 +332,7 @@ public:
 	  }
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 protected:
@@ -349,8 +349,8 @@ public:
      static_assert(PreStress::iDim == 6);
      static_assert(PreStrain::iDim == 6);
 
-     HookeanLinearElasticIsotropicIncompressible(const doublereal mu, const doublereal kappa, const doublereal gamma, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :mu(mu), kappa(kappa), gamma(gamma), sigma0(sigma0), epsilon0(epsilon0) {
+     HookeanLinearElasticIsotropicIncompressible(const doublereal mu_a, const doublereal kappa_a, const doublereal gamma_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :mu(mu_a), kappa(kappa_a), gamma(gamma_a), sigma0(sigma0_a), epsilon0(epsilon0_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -418,7 +418,7 @@ public:
 					       - (epsilon0(1) + epsilon0(2) + epsilon0(3))) - ptilde / kappa); // (pbar - ptilde) / kappa
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 private:
@@ -439,8 +439,8 @@ class HookeanLinearViscoelasticIsotropic: public HookeanLinearElasticIsotropic<P
      static_assert(PreStress::iDim == 6);
      static_assert(PreStrain::iDim == 6);
 public:
-     HookeanLinearViscoelasticIsotropic(const doublereal mu, const doublereal lambda, const doublereal beta, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :BaseType(mu, lambda, sigma0, epsilon0), beta(beta) {
+     HookeanLinearViscoelasticIsotropic(const doublereal mu_a, const doublereal lambda_a, const doublereal beta_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :BaseType(mu_a, lambda_a, sigma0_a, epsilon0_a), beta(beta_a) {
 	  ASSERT(beta > 0.);
      }
 
@@ -513,7 +513,7 @@ public:
 	  }
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 private:
@@ -643,8 +643,8 @@ protected:
 template <typename PreStress, typename PreStrain>
 class NeoHookeanElastic: public IsotropicElasticity, public HyperElasticity  {
 public:
-     NeoHookeanElastic(const doublereal mu, const doublereal lambda, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :IsotropicElasticity(mu, lambda), sigma0(sigma0), epsilon0(epsilon0) {
+     NeoHookeanElastic(const doublereal mu_a, const doublereal lambda_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :IsotropicElasticity(mu_a, lambda_a), sigma0(sigma0_a), epsilon0(epsilon0_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -711,7 +711,7 @@ public:
 	  }
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 protected:
@@ -742,8 +742,8 @@ class NeoHookeanViscoelastic: public NeoHookeanElastic<PreStress, PreStrain> {
      using NeoHookeanElastic<PreStress, PreStrain>::sigma0;
      using NeoHookeanElastic<PreStress, PreStrain>::epsilon0;
 public:
-     NeoHookeanViscoelastic(const doublereal mu, const doublereal lambda, const doublereal beta, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :NeoHookeanElastic<PreStress, PreStrain>(mu, lambda, sigma0, epsilon0), beta(beta) {
+     NeoHookeanViscoelastic(const doublereal mu_a, const doublereal lambda_a, const doublereal beta_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :NeoHookeanElastic<PreStress, PreStrain>(mu_a, lambda_a, sigma0_a, epsilon0_a), beta(beta_a) {
 	  ASSERT(beta > 0.);
      }
 
@@ -822,7 +822,7 @@ public:
 	  }
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 private:
@@ -832,8 +832,8 @@ private:
 template <typename PreStress, typename PreStrain>
 class MooneyRivlinElasticBase: public HyperElasticity {
 public:
-     MooneyRivlinElasticBase(const doublereal C1, const doublereal C2, const doublereal kappa, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :C1(C1), C2(C2), kappa(kappa), sigma0(sigma0), epsilon0(epsilon0) {
+     MooneyRivlinElasticBase(const doublereal C1_a, const doublereal C2_a, const doublereal kappa_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :C1(C1_a), C2(C2_a), kappa(kappa_a), sigma0(sigma0_a), epsilon0(epsilon0_a) {
      }
 
      template <typename T, sp_grad::index_type iDim>
@@ -928,8 +928,8 @@ class MooneyRivlinElastic: public ConstitutiveLaw6D, private MooneyRivlinElastic
      using MooneyRivlinBase::sigma0;
      using MooneyRivlinBase::epsilon0;
 public:
-     MooneyRivlinElastic(const doublereal C1, const doublereal C2, const doublereal kappa, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :MooneyRivlinBase(C1, C2, kappa, sigma0, epsilon0) {
+     MooneyRivlinElastic(const doublereal C1_a, const doublereal C2_a, const doublereal kappa_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :MooneyRivlinBase(C1_a, C2_a, kappa_a, sigma0_a, epsilon0_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -977,7 +977,7 @@ public:
 	  this->template MooneyRivlinStressTensor<ConstLawType::ELASTIC>(epsilon, sigma, oDofMap);
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 };
@@ -991,8 +991,8 @@ class MooneyRivlinElasticDefGrad: public ConstitutiveLaw9D, private MooneyRivlin
      using MooneyRivlinBase::sigma0;
      using MooneyRivlinBase::epsilon0;
 public:
-     MooneyRivlinElasticDefGrad(const doublereal C1, const doublereal C2, const doublereal kappa, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :MooneyRivlinBase(C1, C2, kappa, sigma0, epsilon0) {
+     MooneyRivlinElasticDefGrad(const doublereal C1_a, const doublereal C2_a, const doublereal kappa_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :MooneyRivlinBase(C1_a, C2_a, kappa_a, sigma0_a, epsilon0_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -1040,7 +1040,7 @@ public:
 	  this->template MooneyRivlinStressTensor<ConstLawType::ELASTIC>(epsilon, sigma, oDofMap);
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 };
@@ -1058,8 +1058,8 @@ public:
      using ConstitutiveLaw7D::iDimStress;
      using ConstitutiveLawAd<Vec7, Mat7x7>::Update;
 
-     MooneyRivlinElasticIncompressible(const doublereal C1, const doublereal C2, const doublereal kappa, const PreStress& sigma0, const PreStrain& epsilon0)
-	  :MooneyRivlinBase(C1, C2, kappa, sigma0, epsilon0) {
+     MooneyRivlinElasticIncompressible(const doublereal C1_a, const doublereal C2_a, const doublereal kappa_a, const PreStress& sigma0_a, const PreStrain& epsilon0_a)
+	  :MooneyRivlinBase(C1_a, C2_a, kappa_a, sigma0_a, epsilon0_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -1109,7 +1109,7 @@ public:
 	  this->template MooneyRivlinStressTensor<ConstLawType::ELASTICINCOMPR>(epsilon, sigma, oDofMap);
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  NO_OP;
      }
 };
@@ -1333,8 +1333,8 @@ struct NeoHookeanReadViscoelastic: ConstitutiveLawRead<Vec6, Mat6x6>, IsotropicE
 struct MooneyRivlinReadElasticBase: PreStressRead {
 protected:
      struct MooneyRivlinParam {
-	  MooneyRivlinParam(doublereal C1, doublereal C2, doublereal kappa, doublereal nu)
-	       :C1(C1), C2(C2), kappa(kappa), nu(nu) {
+	  MooneyRivlinParam(doublereal C1_a, doublereal C2_a, doublereal kappa_a, doublereal nu_a)
+	       :C1(C1_a), C2(C2_a), kappa(kappa_a), nu(nu_a) {
 	  }
 
 	  const doublereal C1, C2, kappa, nu;
@@ -1456,17 +1456,17 @@ public:
 
      static constexpr ConstLawType::Type eConstLawType = CSLType;
 
-     BilinearIsotropicHardening(const doublereal E, const doublereal nu, const doublereal ET, const doublereal sigmayv, const PreStrain& epsilon0)
-	  :E(E),
-	   nu(nu),
-	   ET(ET),
-	   sigmayv(sigmayv),
+     BilinearIsotropicHardening(const doublereal E_a, const doublereal nu_a, const doublereal ET_a, const doublereal sigmayv_a, const PreStrain& epsilon0_a)
+	  :E(E_a),
+	   nu(nu_a),
+	   ET(ET_a),
+	   sigmayv(sigmayv_a),
 	   kappa(E / (3. * (1. - 2. * nu))),
 	   sigmay_prev(sigmayv),
 	   sigmay_curr(sigmayv),
 	   aE((1. + nu) / E),
 	   EP(E * ET / (E - ET)),
-	   epsilon0(epsilon0) {
+	   epsilon0(epsilon0_a) {
      }
 
      virtual CSLBaseType* pCopy() const override {
@@ -1607,11 +1607,11 @@ public:
 	  UpdatePlasticStrain(eP, sigmay);
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
-	  oData.Sync(eOwner, uLabel, iIndex, "eP_prev", eP_prev, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "eP_curr", eP_curr, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "sigmay_prev", sigmay_prev, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "sigmay_curr", sigmay_curr, eAction);
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
+	  oData.Sync(eOwner, uLabel_a, iIndex, "eP_prev", eP_prev, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "eP_curr", eP_curr, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "sigmay_prev", sigmay_prev, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "sigmay_curr", sigmay_curr, eAction);
      }
 private:
      void UpdatePlasticStrain(const sp_grad::SpMatrix<doublereal, 3, 3>& eP, doublereal sigmay) {
@@ -1727,8 +1727,8 @@ public:
      static constexpr sp_grad::index_type iDim = ConstitutiveLaw<T, Tder>::iDimStrain;
      static_assert(ConstitutiveLaw<T, Tder>::iDimStress == ConstitutiveLaw<T, Tder>::iDimStrain); // C must be invertible
 
-     LinearViscoelasticMaxwellBase(doublereal E0, const sp_grad::SpMatrix<doublereal, iDim, iDim>& C, DriveCaller* pTimeStepDrv)
-	  :E0(E0), C(C), pTimeStepDrv(pTimeStepDrv) {
+     LinearViscoelasticMaxwellBase(doublereal E0_a, const sp_grad::SpMatrix<doublereal, iDim, iDim>& C_a, DriveCaller* pTimeStepDrv_a)
+	  :E0(E0_a), C(C_a), pTimeStepDrv(pTimeStepDrv_a) {
      }
 
      virtual ConstLawType::Type GetConstLawType() const override {
@@ -1752,9 +1752,9 @@ class LinearViscoelasticMaxwell1: public LinearViscoelasticMaxwellBase<T, Tder> 
 public:
      using BaseClassType::iDim;
 
-     LinearViscoelasticMaxwell1(doublereal E0, doublereal E1, doublereal eta1, const sp_grad::SpMatrix<doublereal, iDim, iDim>& C, DriveCaller* pTimeStepDrive)
-	  :BaseClassType(E0, C, pTimeStepDrive), E1(E1), eta1(eta1), EpsVPrev(iDim, 0), EpsVCurr(iDim, 0) {
-	  FDE = C * (E0 + E1);
+     LinearViscoelasticMaxwell1(doublereal E0_a, doublereal E1_a, doublereal eta1_a, const sp_grad::SpMatrix<doublereal, iDim, iDim>& C_a, DriveCaller* pTimeStepDrive)
+	  :BaseClassType(E0_a, C_a, pTimeStepDrive), E1(E1_a), eta1(eta1_a), EpsVPrev(iDim, 0), EpsVCurr(iDim, 0) {
+	  FDE = C_a * (E0_a + E1);
      }
 
      virtual ConstitutiveLaw<T, Tder>* pCopy() const override {
@@ -1842,9 +1842,9 @@ public:
 	  EpsVPrev = EpsVCurr;
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
-	  oData.Sync(eOwner, uLabel, iIndex, "EpsVPrev", EpsVPrev, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "EpsVCurr", EpsVCurr, eAction);
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
+	  oData.Sync(eOwner, uLabel_a, iIndex, "EpsVPrev", EpsVPrev, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "EpsVCurr", EpsVCurr, eAction);
      }
 private:
      const doublereal E1, eta1;
@@ -1863,16 +1863,16 @@ public:
      using BaseClassType::iDim;
 
      struct MaxwellData {
-	  MaxwellData(doublereal E1, doublereal eta1)
-	       :E1(E1), eta1(eta1), EpsVPrev(iDim, 0), EpsVCurr(iDim, 0) {
+	  MaxwellData(doublereal E1_a, doublereal eta1_a)
+	       :E1(E1_a), eta1(eta1_a), EpsVPrev(iDim, 0), EpsVCurr(iDim, 0) {
 	  }
 
 	  doublereal E1, eta1;
 	  sp_grad::SpColVector<doublereal, iDim> EpsVPrev, EpsVCurr;
      };
 
-     LinearViscoelasticMaxwellN(doublereal E0, const sp_grad::SpMatrix<doublereal, iDim, iDim>& C, DriveCaller* pTimeStepDrv, std::vector<MaxwellData>&& rgMaxwellData)
-	  :BaseClassType(E0, C, pTimeStepDrv), rgMaxwellData(std::move(rgMaxwellData)) {
+     LinearViscoelasticMaxwellN(doublereal E0_a, const sp_grad::SpMatrix<doublereal, iDim, iDim>& C_a, DriveCaller* pTimeStepDrv_a, std::vector<MaxwellData>&& rgMaxwellData_a)
+	  :BaseClassType(E0_a, C_a, pTimeStepDrv_a), rgMaxwellData(std::move(rgMaxwellData_a)) {
      }
 
      virtual ConstitutiveLaw<T, Tder>* pCopy() const override {
@@ -1983,14 +1983,14 @@ public:
 	  }
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 	  using namespace std::string_literals;
 
 	  for (size_t i = 0; i < rgMaxwellData.size(); ++i) {
 	       const std::string strPrefix = "maxwell."s + std::to_string(i);
 
-	       oData.Sync(eOwner, uLabel, iIndex, strPrefix + ".EpsVPrev", rgMaxwellData[i].EpsVPrev, eAction);
-	       oData.Sync(eOwner, uLabel, iIndex, strPrefix + ".EpsVCurr", rgMaxwellData[i].EpsVCurr, eAction);
+	       oData.Sync(eOwner, uLabel_a, iIndex, strPrefix + ".EpsVPrev", rgMaxwellData[i].EpsVPrev, eAction);
+	       oData.Sync(eOwner, uLabel_a, iIndex, strPrefix + ".EpsVCurr", rgMaxwellData[i].EpsVCurr, eAction);
 	  }
      }
 private:
@@ -2149,11 +2149,11 @@ public:
      using ConstitutiveLaw<Tstress, Tder, Tstrain>::FDE;
      using ConstitutiveLaw<Tstress, Tder, Tstrain>::Update;
 
-     explicit MFrontGenericInterfaceCSL(const mgis::behaviour::Behaviour& oBehaviourTmp, DriveCaller* pTimeStepDrv)
+     explicit MFrontGenericInterfaceCSL(const mgis::behaviour::Behaviour& oBehaviourTmp, DriveCaller* pTimeStepDrv_a)
 	  :oBehaviour(oBehaviourTmp),
 	   oBehaviourData(oBehaviour),
 	   oView(mgis::behaviour::make_view(oBehaviourData)),
-	   pTimeStepDrv(pTimeStepDrv) {
+	   pTimeStepDrv(pTimeStepDrv_a) {
      }
 
      void operator=(const MFrontGenericInterfaceCSL&)=delete;
@@ -2273,27 +2273,27 @@ public:
 	  return 3u;
      }
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
 
 	  const size_t iNumIntStates = oBehaviourData.s0.internal_state_variables.size();
 	  const size_t iNumExtStates = oBehaviourData.s0.external_state_variables.size();
 
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.stored_energy", oBehaviourData.s0.stored_energy, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.dissipated_energy", oBehaviourData.s0.dissipated_energy, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.mass_density", oBehaviourData.s0.mass_density, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.stored_energy", oBehaviourData.s0.stored_energy, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.dissipated_energy", oBehaviourData.s0.dissipated_energy, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.mass_density", oBehaviourData.s0.mass_density, eAction);
 
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.gradients", oBehaviourData.s0.gradients, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.thermodynamic_forces", oBehaviourData.s0.thermodynamic_forces, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.internal_state_variables", oBehaviourData.s0.internal_state_variables, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s0.external_state_variables", oBehaviourData.s0.external_state_variables, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.gradients", oBehaviourData.s0.gradients, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.thermodynamic_forces", oBehaviourData.s0.thermodynamic_forces, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.internal_state_variables", oBehaviourData.s0.internal_state_variables, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s0.external_state_variables", oBehaviourData.s0.external_state_variables, eAction);
 
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.stored_energy", oBehaviourData.s1.stored_energy, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.dissipated_energy", oBehaviourData.s1.dissipated_energy, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.mass_density", oBehaviourData.s1.mass_density, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.gradients", oBehaviourData.s1.gradients, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.thermodynamic_forces", oBehaviourData.s1.thermodynamic_forces, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.internal_state_variables", oBehaviourData.s1.internal_state_variables, eAction);
-	  oData.Sync(eOwner, uLabel, iIndex, "s1.external_state_variables", oBehaviourData.s1.external_state_variables, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.stored_energy", oBehaviourData.s1.stored_energy, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.dissipated_energy", oBehaviourData.s1.dissipated_energy, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.mass_density", oBehaviourData.s1.mass_density, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.gradients", oBehaviourData.s1.gradients, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.thermodynamic_forces", oBehaviourData.s1.thermodynamic_forces, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.internal_state_variables", oBehaviourData.s1.internal_state_variables, eAction);
+	  oData.Sync(eOwner, uLabel_a, iIndex, "s1.external_state_variables", oBehaviourData.s1.external_state_variables, eAction);
 
 	  static constexpr size_t iNumStrain = ConstLawHelper<Tstrain>::iDim1;
 	  static constexpr size_t iNumStress = ConstLawHelper<Tstress>::iDim1;
@@ -2396,12 +2396,12 @@ struct MFrontGenericInterfaceCSLRead: ConstitutiveLawRead<Tstress, Tder, Tstrain
 	       }
 	  }
 
-	  typedef MFrontGenericInterfaceCSL<Tstress, Tder, Tstrain> ConstLawType;
-	  ConstLawType* pCL = nullptr;
+	  typedef MFrontGenericInterfaceCSL<Tstress, Tder, Tstrain> MFConstLawType;
+	  MFConstLawType* pCL = nullptr;
 
 	  SAFENEWWITHCONSTRUCTOR(pCL,
-				 ConstLawType,
-				 ConstLawType(oBehaviour, new TimeStepDriveCaller(pDM->pGetDrvHdl())));
+				 MFConstLawType,
+				 MFConstLawType(oBehaviour, new TimeStepDriveCaller(pDM->pGetDrvHdl())));
 
 	  if (HP.IsKeyWord("properties")) {
 	      const integer iNumProp = HP.GetInt();

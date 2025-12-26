@@ -78,10 +78,10 @@ public:
 	void Init(const Vec3& b, const Vec3& bp);
 
 	/* Scrive il contributo dell'elemento al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 	/* Tipo dell'elemento (usato per debug ecc.) */
-	virtual Elem::Type GetElemType(void) const {
+	virtual Elem::Type GetElemType(void) const override {
 		return Elem::AUTOMATICSTRUCTURAL;
 	};
 
@@ -126,7 +126,7 @@ public:
 	/* funzioni proprie */
 
 	/* Dimensioni del workspace */
-	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 6;
 		*piNumCols = 3;
 	};
@@ -136,45 +136,45 @@ public:
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio eig */
 	void AssMats(VariableSubMatrixHandler& WorkMatA,
 		VariableSubMatrixHandler& WorkMatB,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio residuo */
 	virtual SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* output; si assume che ogni tipo di elemento sappia, attraverso
 	 * l'OutputHandler, dove scrivere il proprio output */
-	void OutputPrepare(OutputHandler &OH);
-	virtual void Output(OutputHandler& OH) const;
+	void OutputPrepare(OutputHandler &OH) override;
+	virtual void Output(OutputHandler& OH) const override;
 
 	/* Setta i valori iniziali delle variabili (e fa altre cose)
 	 * prima di iniziare l'integrazione */
 	virtual void SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
-	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(1);
 		connectedNodes[0] = pNode;
-	};
+	}
 	/* ************************************************ */
 
 	/* Dati privati */
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 };
 
 /* AutomaticStructDispElem - end */
@@ -189,8 +189,8 @@ protected:
 	Vec3 GP;
 
 	/* Accesso ai suoi dati */
-	virtual inline const Vec3& GetGCurr(void) const { return G; };
-	virtual inline const Vec3& GetGPCurr(void) const { return GP; };
+	virtual inline const Vec3& GetGCurr(void) const override { return G; };
+	virtual inline const Vec3& GetGPCurr(void) const override { return GP; };
 
 	mutable Vec3 S;
 	mutable Mat3x3 J;
@@ -211,18 +211,18 @@ public:
 	void Init(const Vec3& b, const Vec3& g, const Vec3& bp, const Vec3& gp);
 
 	/* Scrive il contributo dell'elemento al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
 	using AutomaticStructDispElem::AddInertia;
 	virtual void AddInertia(const doublereal& dm, const Vec3& dS,
 		const Mat3x3& dJ);
 
-	virtual const Vec3& GetS(void) const {
+	virtual const Vec3& GetS(void) const override {
 		return S;
 	};
 
-	virtual const Mat3x3& GetJ(void) const {
+	virtual const Mat3x3& GetJ(void) const override {
 		return J;
 	};
 
@@ -246,7 +246,7 @@ public:
 	/* funzioni proprie */
 
 	/* Dimensioni del workspace */
-	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
 		*piNumCols = 6;
 	};
@@ -256,45 +256,45 @@ public:
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio eig */
 	void AssMats(VariableSubMatrixHandler& WorkMatA,
 		VariableSubMatrixHandler& WorkMatB,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio residuo */
 	virtual SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* output; si assume che ogni tipo di elemento sappia, attraverso
 	 * l'OutputHandler, dove scrivere il proprio output */
-	void OutputPrepare(OutputHandler &OH);
-	virtual void Output(OutputHandler& OH) const;
+	void OutputPrepare(OutputHandler &OH) override;
+	virtual void Output(OutputHandler& OH) const override;
 
 	/* Setta i valori iniziali delle variabili (e fa altre cose)
 	 * prima di iniziare l'integrazione */
 	virtual void SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
-	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(1);
 		connectedNodes[0] = pNode;
 	};
 	/* ************************************************ */
 
 	/* Dati privati */
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 };
 
 /* AutomaticStructElem - end */

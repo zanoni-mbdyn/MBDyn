@@ -37,15 +37,15 @@
 
 SHDriveCaller::SHDriveCaller(const DriveHandler* pDH,
 	const DriveCaller *pFunc, const DriveCaller *pTrigger,
-	const doublereal dVal0)
-: DriveCaller(pDH), dVal0(dVal0)
+	const doublereal dVal0_a)
+: DriveCaller(pDH), dVal0(dVal0_a)
 {
 	iSHDriveNumber = pDrvHdl->iSHInit(pFunc, pTrigger, dVal0);
 }
 
 SHDriveCaller::SHDriveCaller(const DriveHandler* pDH,
-	integer iSHDriveNumber)
-: DriveCaller(pDH), iSHDriveNumber(iSHDriveNumber)
+	integer iSHDriveNumber_a)
+: DriveCaller(pDH), iSHDriveNumber(iSHDriveNumber_a)
 {
 	dVal0 = pDrvHdl->dGetSHVal0(iSHDriveNumber);
 }

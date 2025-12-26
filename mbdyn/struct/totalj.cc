@@ -294,11 +294,11 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
                 unsigned int cnt = 0;
 
                 if (nPosConstraints > 0 || nVelConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                                if (bPosActive[i] || bVelActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                                if (bPosActive[ii] || bVelActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": dof(" << cnt + 1 << ") F" << idx2xyz[i];
+                                        os << ": dof(" << cnt + 1 << ") F" << idx2xyz[ii];
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -306,11 +306,11 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
                 }
 
                 if (nRotConstraints > 0 || nAgvConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                                if (bRotActive[i] || bAgvActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                                if (bRotActive[ii] || bAgvActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": dof(" << cnt + 1 << ") M" << idx2xyz[i];
+                                        os << ": dof(" << cnt + 1 << ") M" << idx2xyz[ii];
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -319,11 +319,11 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
 
                 if (bInitial) {
                         if (nPosConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bPosActive[i] || bVelActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bPosActive[ii] || bVelActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": dof(" << cnt + 1 << ") FP" << idx2xyz[i];
+                                                os << ": dof(" << cnt + 1 << ") FP" << idx2xyz[ii];
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -331,11 +331,11 @@ TotalJoint::DescribeDof(std::vector<std::string>& desc,
                         }
 
                         if (nRotConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bRotActive[i] || bAgvActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bRotActive[ii] || bAgvActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": dof(" << cnt + 1 << ") MP" << idx2xyz[i];
+                                                os << ": dof(" << cnt + 1 << ") MP" << idx2xyz[ii];
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -485,20 +485,20 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
                 unsigned int cnt = 0;
 
                 if (nPosConstraints > 0 || nVelConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                                ASSERT(!(bPosActive[i] && bVelActive[i]));
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                                ASSERT(!(bPosActive[ii] && bVelActive[ii]));
 
-                                if (bPosActive[i]) {
+                                if (bPosActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") P" << idx2xyz[i] << "1=P" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") P" << idx2xyz[ii] << "1=P" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
 
-                                } else if (bVelActive[i]) {
+                                } else if (bVelActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") V" << idx2xyz[i] << "1=V" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") V" << idx2xyz[ii] << "1=V" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -507,18 +507,18 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 
                 if (nRotConstraints > 0 || nAgvConstraints > 0) {
                         ASSERT(!(bRotActive[i] && bAgvActive[i]));
-                        for (unsigned int i = 0; i < 3; i++) {
-                                if (bRotActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                                if (bRotActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") theta" << idx2xyz[i] << "1=theta" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") theta" << idx2xyz[ii] << "1=theta" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
 
-                                } else if (bAgvActive[i]) {
+                                } else if (bAgvActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") W" << idx2xyz[i] << "1=W" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") W" << idx2xyz[ii] << "1=W" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -527,11 +527,11 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
 
                 if (bInitial) {
                         if (nPosConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bPosActive[i] || bVelActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bPosActive[ii] || bVelActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": equation(" << cnt + 1 << ") v" << idx2xyz[i] << "1=v" << idx2xyz[i] << "2";
+                                                os << ": equation(" << cnt + 1 << ") v" << idx2xyz[ii] << "1=v" << idx2xyz[ii] << "2";
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -539,11 +539,11 @@ TotalJoint::DescribeEq(std::vector<std::string>& desc,
                         }
 
                         if (nRotConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bRotActive[i] || bAgvActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bRotActive[ii] || bAgvActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": equation(" << cnt + 1 << ") w" << idx2xyz[i] << "1=w" << idx2xyz[i] << "2";
+                                                os << ": equation(" << cnt + 1 << ") w" << idx2xyz[ii] << "1=w" << idx2xyz[ii] << "2";
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -2414,12 +2414,12 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
                 unsigned int cnt = 0;
 
                 if (nPosConstraints > 0 || nVelConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                             ASSERT(!(bPosActive[i] && bVelActive[i]));
-                                if (bPosActive[i] || bVelActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                             ASSERT(!(bPosActive[ii] && bVelActive[ii]));
+                                if (bPosActive[ii] || bVelActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": dof(" << cnt + 1 << ") F" << idx2xyz[i];
+                                        os << ": dof(" << cnt + 1 << ") F" << idx2xyz[ii];
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -2427,12 +2427,12 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
                 }
 
                 if (nRotConstraints > 0 || nAgvConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                             ASSERT(!(bRotActive[i] && bAgvActive[i]));
-                                if (bRotActive[i] || bAgvActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                             ASSERT(!(bRotActive[ii] && bAgvActive[ii]));
+                                if (bRotActive[ii] || bAgvActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": dof(" << cnt + 1 << ") M" << idx2xyz[i];
+                                        os << ": dof(" << cnt + 1 << ") M" << idx2xyz[ii];
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -2441,11 +2441,11 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
 
                 if (bInitial) {
                         if (nPosConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bPosActive[i] || bVelActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bPosActive[ii] || bVelActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": dof(" << cnt + 1 << ") FP" << idx2xyz[i];
+                                                os << ": dof(" << cnt + 1 << ") FP" << idx2xyz[ii];
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -2453,11 +2453,11 @@ TotalPinJoint::DescribeDof(std::vector<std::string>& desc,
                         }
 
                         if (nRotConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bRotActive[i] || bAgvActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bRotActive[ii] || bAgvActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": dof(" << cnt + 1 << ") MP" << idx2xyz[i];
+                                                os << ": dof(" << cnt + 1 << ") MP" << idx2xyz[ii];
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -2601,18 +2601,18 @@ TotalPinJoint::DescribeEq(std::vector<std::string>& desc,
                 unsigned int cnt = 0;
 
                 if (nPosConstraints > 0 || nVelConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                                if (bPosActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                                if (bPosActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") P" << idx2xyz[i] << "1=P" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") P" << idx2xyz[ii] << "1=P" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
 
-                                } else if (bVelActive[i]) {
+                                } else if (bVelActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") V" << idx2xyz[i] << "1=V" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") V" << idx2xyz[ii] << "1=V" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -2620,18 +2620,18 @@ TotalPinJoint::DescribeEq(std::vector<std::string>& desc,
                 }
 
                 if (nRotConstraints > 0 || nAgvConstraints > 0) {
-                        for (unsigned int i = 0; i < 3; i++) {
-                                if (bRotActive[i]) {
+                        for (unsigned int ii = 0; ii < 3; ii++) {
+                                if (bRotActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") theta" << idx2xyz[i] << "1=theta" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") theta" << idx2xyz[ii] << "1=theta" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
 
-                                } else if (bAgvActive[i]) {
+                                } else if (bAgvActive[ii]) {
                                         os.str(name);
                                         os.seekp(0, std::ios_base::end);
-                                        os << ": equation(" << cnt + 1 << ") W" << idx2xyz[i] << "1=W" << idx2xyz[i] << "2";
+                                        os << ": equation(" << cnt + 1 << ") W" << idx2xyz[ii] << "1=W" << idx2xyz[ii] << "2";
                                         desc[cnt] = os.str();
                                         cnt++;
                                 }
@@ -2640,11 +2640,11 @@ TotalPinJoint::DescribeEq(std::vector<std::string>& desc,
 
                 if (bInitial) {
                         if (nPosConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bPosActive[i] || bVelActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bPosActive[ii] || bVelActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": equation(" << cnt + 1 << ") v" << idx2xyz[i] << "1=v" << idx2xyz[i] << "2";
+                                                os << ": equation(" << cnt + 1 << ") v" << idx2xyz[ii] << "1=v" << idx2xyz[ii] << "2";
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }
@@ -2652,11 +2652,11 @@ TotalPinJoint::DescribeEq(std::vector<std::string>& desc,
                         }
 
                         if (nRotConstraints > 0) {
-                                for (unsigned int i = 0; i < 3; i++) {
-                                        if (bRotActive[i] || bAgvActive[i]) {
+                                for (unsigned int ii = 0; ii < 3; ii++) {
+                                        if (bRotActive[ii] || bAgvActive[ii]) {
                                                 os.str(name);
                                                 os.seekp(0, std::ios_base::end);
-                                                os << ": equation(" << cnt + 1 << ") w" << idx2xyz[i] << "1=w" << idx2xyz[i] << "2";
+                                                os << ": equation(" << cnt + 1 << ") w" << idx2xyz[ii] << "1=w" << idx2xyz[ii] << "2";
                                                 desc[cnt] = os.str();
                                                 cnt++;
                                         }

@@ -42,14 +42,14 @@
 
 /* RTPOSIXSolver - begin */
 
-RTPOSIXSolver::RTPOSIXSolver(Solver *pS,
-	RTMode eRTMode,
-	unsigned long lRTPeriod,
-	unsigned long RTStackSize,
-	bool bRTAllowNonRoot,
-	int RTCpuMap,
-	bool bNoOutput)
-: RTSolverBase(pS, eRTMode, lRTPeriod, RTStackSize, bRTAllowNonRoot, RTCpuMap, bNoOutput),
+RTPOSIXSolver::RTPOSIXSolver(Solver *pS_a,
+	RTMode eRTMode_a,
+	unsigned long lRTPeriod_a,
+	unsigned long RTStackSize_a,
+	bool bRTAllowNonRoot_a,
+	int RTCpuMap_a,
+	bool bNoOutput_a)
+: RTSolverBase(pS_a, eRTMode_a, lRTPeriod_a, RTStackSize_a, bRTAllowNonRoot_a, RTCpuMap_a, bNoOutput_a),
 clock_flags(TIMER_ABSTIME)
 {
 	NO_OP;

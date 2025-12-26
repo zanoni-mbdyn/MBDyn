@@ -45,9 +45,9 @@
 
 /* ExtFileHandlerBase - begin */
 
-ExtFileHandlerBase::ExtFileHandlerBase(mbsleep_t SleepTime,
-	std::streamsize Precision)
-: Precision(Precision), SleepTime(SleepTime), bOK(true)
+ExtFileHandlerBase::ExtFileHandlerBase(mbsleep_t SleepTime_a,
+	std::streamsize Precision_a)
+: Precision(Precision_a), SleepTime(SleepTime_a), bOK(true)
 {
 	NO_OP;
 }
@@ -111,15 +111,15 @@ ExtFileHandlerBase::GetRecvFlags(void) const
 
 /* ExtFileHandler - begin */
 
-ExtFileHandler::ExtFileHandler(std::string& fin,
-	bool bRemoveIn,
-        std::string& fout,
-	bool bNoClobberOut,
-	mbsleep_t SleepTime,
-	std::streamsize Precision)
-: ExtFileHandlerBase(SleepTime, Precision),
-fin(fin), fout(fout), tmpout(fout + ".tmp"),
-bRemoveIn(bRemoveIn), bNoClobberOut(bNoClobberOut)
+ExtFileHandler::ExtFileHandler(std::string& fin_a,
+	bool bRemoveIn_a,
+        std::string& fout_a,
+	bool bNoClobberOut_a,
+	mbsleep_t SleepTime_a,
+	std::streamsize Precision_a)
+: ExtFileHandlerBase(SleepTime_a, Precision_a),
+fin(fin_a), fout(fout_a), tmpout(fout + ".tmp"),
+bRemoveIn(bRemoveIn_a), bNoClobberOut(bNoClobberOut_a)
 {
 	NO_OP;
 }
@@ -328,9 +328,9 @@ ExtRemoteHandler::cmd2str(ESCmd cmd) const
 	return ESCmd2str[cmd];
 }
 
-ExtRemoteHandler::ExtRemoteHandler(mbsleep_t SleepTime, bool bReadForces, bool bLastReadForce)
-: ExtFileHandlerBase(SleepTime, 0),
-bReadForces(bReadForces), bLastReadForce(bLastReadForce)
+ExtRemoteHandler::ExtRemoteHandler(mbsleep_t SleepTime_a, bool bReadForces_a, bool bLastReadForce_a)
+: ExtFileHandlerBase(SleepTime_a, 0),
+bReadForces(bReadForces_a), bLastReadForce(bLastReadForce_a)
 {
 	NO_OP;
 }
@@ -436,15 +436,15 @@ ExtRemoteHandler::Recv_post(void)
 /* Costruttore */
 ExtForce::ExtForce(unsigned int uL,
 	DataManager *pDM,
-	ExtFileHandlerBase *pEFH,
-	bool bSendAfterPredict,
-	int iCoupling,
+	ExtFileHandlerBase *pEFH_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
 	flag fOut)
 : Force(uL, fOut),
-c(iCoupling > COUPLING_LOOSE ? pDM : NULL),
-pEFH(pEFH),
-bSendAfterPredict(bSendAfterPredict),
-iCoupling(iCoupling),
+c(iCoupling_a > COUPLING_LOOSE ? pDM : NULL),
+pEFH(pEFH_a),
+bSendAfterPredict(bSendAfterPredict_a),
+iCoupling(iCoupling_a),
 iCouplingCounter(0),
 bFirstSend(true),
 bFirstRecv(true)

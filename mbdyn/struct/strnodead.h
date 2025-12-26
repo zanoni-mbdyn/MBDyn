@@ -412,7 +412,7 @@ inline void StructDispNodeAd::GetXCurr(sp_grad::SpColVector<sp_grad::SpGradient,
 
      X.ResizeReset(3, 1);
 
-     const Vec3& XCurr = StructDispNode::GetXCurr();
+     // const Vec3& XCurr = StructDispNode::GetXCurr();
 
      for (sp_grad::index_type i = 1; i <= 3; ++i) {
           X(i).Reset(XCurr(i), iFirstDofIndex + i, -dCoef);
@@ -423,7 +423,7 @@ inline void StructDispNodeAd::GetXCurr(sp_grad::SpColVector<sp_grad::GpGradProd,
 {
      X.ResizeReset(3, 1);
 
-     const Vec3& XCurr = StructDispNode::GetXCurr();
+     // const Vec3& XCurr = StructDispNode::GetXCurr();
 
      for (sp_grad::index_type i = 1; i <= 3; ++i) {
           X(i).Reset(XCurr(i), -dCoef * XY(i));
@@ -456,7 +456,7 @@ inline void StructDispNodeAd::GetVCurr(sp_grad::SpColVector<sp_grad::SpGradient,
 
      V.ResizeReset(3, 1);
 
-     const Vec3& VCurr = StructDispNode::GetVCurr();
+     // const Vec3& VCurr = StructDispNode::GetVCurr();
 
      for (sp_grad::index_type i = 1; i <= 3; ++i) {
           V(i).Reset(VCurr(i), iFirstDofIndex + i, -1.);
@@ -467,7 +467,7 @@ inline void StructDispNodeAd::GetVCurr(sp_grad::SpColVector<sp_grad::GpGradProd,
 {
      V.ResizeReset(3, 1);
 
-     const Vec3& VCurr = StructDispNode::GetVCurr();
+     // const Vec3& VCurr = StructDispNode::GetVCurr();
 
      for (sp_grad::index_type i = 1; i <= 3; ++i) {
           V(i).Reset(VCurr(i), -XY(i));

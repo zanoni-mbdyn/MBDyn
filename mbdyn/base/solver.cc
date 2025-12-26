@@ -292,9 +292,9 @@ mbdyn_reserve_stack(unsigned long size)
 #endif /* !HAVE_MLOCKALL */
 }
 
-Solver::FakeStepIntegrator::FakeStepIntegrator(doublereal dCoef)
-     :StepIntegrator(-1, dCoef, -1., 1, 1),
-      dCoef(dCoef)
+Solver::FakeStepIntegrator::FakeStepIntegrator(doublereal dCoef_a)
+     :StepIntegrator(-1, dCoef_a, -1., 1, 1),
+      dCoef(dCoef_a)
 {
 }
 
@@ -308,10 +308,10 @@ Solver::FakeStepIntegrator::Advance(Solver* pS,
                                     const doublereal TStep,
                                     const doublereal dAlph,
                                     const StepChange StType,
-                                    std::deque<VectorHandler*>& qX,
-                                    std::deque<VectorHandler*>& qXPrime,
-                                    MyVectorHandler*const pX,
-                                    MyVectorHandler*const pXPrime,
+                                    std::deque<VectorHandler*>& qX_a,
+                                    std::deque<VectorHandler*>& qXPrime_a,
+                                    MyVectorHandler*const pX_a,
+                                    MyVectorHandler*const pXPrime_a,
                                     integer& EffIter,
                                     doublereal& Err,
                                     doublereal& SolErr)
@@ -325,11 +325,11 @@ Solver::FakeStepIntegrator::Advance(Solver* pS,
 Solver::Solver(MBDynParser& HPar,
 		const std::string& sInFName,
 		const std::string& sOutFName,
-		unsigned int nThreads,
+		unsigned int nThreads_a,
 		bool bPar)
 :
 #ifdef USE_MULTITHREAD
-nThreads(nThreads),
+nThreads(nThreads_a),
 #endif /* USE_MULTITHREAD */
 pTSC(0),
 dCurrTimeStep(0.),
@@ -476,7 +476,7 @@ Solver::Prepare(void)
 	mbdyn_signal_init(1);
 
 	/* Legge i dati relativi al metodo di integrazione */
-	ReadData(HP);
+	ReadData();
 
 #ifdef USE_MULTITHREAD
 	ThreadPrepare();
@@ -2764,7 +2764,7 @@ void Solver::Restart(RestartData& oData, RestartData::RestartAction eAction)
 }
 /* Dati dell'integratore */
 void
-Solver::ReadData(MBDynParser& HP)
+Solver::ReadData()
 {
 	DEBUGCOUTFNAME("MultiStepIntegrator::ReadData");
 
@@ -3537,7 +3537,7 @@ Solver::ReadData(MBDynParser& HP)
 				RegularType = INT_IMPLICITEULER;
 				break;
 			case HYBRID: {
-				const KeyWords KMethod = KeyWords(HP.GetWord());
+				KMethod = KeyWords(HP.GetWord());
 
 				switch (KMethod) {
 				case IMPLICITEULER:
@@ -6060,8 +6060,8 @@ do_eig(const doublereal& b, const doublereal& re,
 
 namespace {
      struct EigenValue {
-          EigenValue(doublereal sigma, doublereal omega, doublereal csi, doublereal freq)
-               :sigma(sigma), omega(omega), csi(csi), freq(freq) {
+          EigenValue(doublereal sigma_a, doublereal omega_a, doublereal csi_a, doublereal freq_a)
+               :sigma(sigma_a), omega(omega_a), csi(csi_a), freq(freq_a) {
           }
 
           bool operator<(const EigenValue& rhs) const {
@@ -7020,7 +7020,7 @@ Solver::Eig(bool bNewLine)
 
 	integer iSize = iNumDofs;
 	
-        SolutionManager *pSM = nullptr;
+	SolutionManager *eig_pSM = nullptr;
 	MatrixHandler *pMatA = nullptr;
 	MatrixHandler *pMatB = nullptr;
 
@@ -7041,8 +7041,8 @@ Solver::Eig(bool bNewLine)
                         iNLD = iNumLocDofs*iStates;
                 }
 
-                pSM = AllocateSolman(iNLD, iLWS);                
-		pMatB = pSM->pMatHdl();
+                eig_pSM = AllocateSolman(iNLD, iLWS);
+                pMatB = eig_pSM->pMatHdl();
                 pMatA = pMatB->Copy();
 
 	} else if (EigAn.uFlags & EigenAnalysis::EIG_USE_JDQZ) {
@@ -7143,7 +7143,7 @@ Solver::Eig(bool bNewLine)
 
 #ifdef USE_ARPACK
 	case EigenAnalysis::EIG_USE_ARPACK:
-		eig_arpack(pMatA, pSM, pDM, &EigAn, bNewLine, uCurr);
+		eig_arpack(pMatA, eig_pSM, pDM, &EigAn, bNewLine, uCurr);
 		break;
 #endif // USE_ARPACK
 
@@ -7164,9 +7164,9 @@ Solver::Eig(bool bNewLine)
 
 	pDM->OutputEigClose();
 
-	if (pSM) {
-                pMatB = nullptr; // pMatB will be deleted when deleting pSM
-		SAFEDELETE(pSM);
+	if (eig_pSM) {
+                pMatB = nullptr; // pMatB will be deleted when deleting eig_pSM
+		SAFEDELETE(eig_pSM);
 	}
 
 	if (pMatA) {
@@ -7272,13 +7272,13 @@ Solver::AllocateSchurSolman(integer iStates)
 NonlinearSolver *const
 Solver::AllocateNonlinearSolver()
 {
-	NonlinearSolver *pNLS = 0;
+	NonlinearSolver *eig_pNLS = 0;
 
 	switch (NonlinearSolverType) {
 	case NonlinearSolver::MATRIXFREE:
 		switch (MFSolverType) {
 		case MatrixFreeSolver::BICGSTAB:
-			SAFENEWWITHCONSTRUCTOR(pNLS,
+			SAFENEWWITHCONSTRUCTOR(eig_pNLS,
 					BiCGStab,
 					BiCGStab(PcType,
 						iPrecondSteps,
@@ -7295,7 +7295,7 @@ Solver::AllocateNonlinearSolver()
 			/* warning: should be unreachable */
 
 		case MatrixFreeSolver::GMRES:
-			SAFENEWWITHCONSTRUCTOR(pNLS,
+			SAFENEWWITHCONSTRUCTOR(eig_pNLS,
 					Gmres,
 					Gmres(PcType,
 						iPrecondSteps,
@@ -7313,7 +7313,7 @@ Solver::AllocateNonlinearSolver()
 				<< std::endl);
 
 	case NonlinearSolver::NEWTONRAPHSON:
-		SAFENEWWITHCONSTRUCTOR(pNLS,
+		SAFENEWWITHCONSTRUCTOR(eig_pNLS,
 				NewtonRaphsonSolver,
 				NewtonRaphsonSolver(bTrueNewtonRaphson,
                                         oLineSearchParam.bKeepJacAcrossSteps,
@@ -7339,13 +7339,13 @@ Solver::AllocateNonlinearSolver()
             }
             
             if (bTrueNewtonRaphson) {
-		SAFENEWWITHCONSTRUCTOR(pNLS,
+		SAFENEWWITHCONSTRUCTOR(eig_pNLS,
 				LineSearchFull,
 				LineSearchFull(pDM, 
                                  *this,
                                  oLineSearchParam));
             } else {                
-                SAFENEWWITHCONSTRUCTOR(pNLS,
+                SAFENEWWITHCONSTRUCTOR(eig_pNLS,
                                        LineSearchModified,
                                        LineSearchModified(pDM, 
                                                           *this,
@@ -7356,7 +7356,7 @@ Solver::AllocateNonlinearSolver()
                 switch (CurrLinearSolver.GetSolver()) {
                 case LinSol::QR_SOLVER:
                 case LinSol::SPQR_SOLVER:
-                        SAFENEWWITHCONSTRUCTOR(pNLS,
+                        SAFENEWWITHCONSTRUCTOR(eig_pNLS,
                                                LineSearchBFGS,
                                                LineSearchBFGS(pDM,
                                                               *this,
@@ -7368,7 +7368,7 @@ Solver::AllocateNonlinearSolver()
                 }            
                 break;
         case NonlinearSolver::MCP_NEWTON_FB:
-                SAFENEWWITHCONSTRUCTOR(pNLS,
+                SAFENEWWITHCONSTRUCTOR(eig_pNLS,
                                        MCPNewtonFB,
                                        MCPNewtonFB(pDM, *this, oLineSearchParam));
                 break;
@@ -7379,7 +7379,7 @@ Solver::AllocateNonlinearSolver()
                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
                 }
                 
-                SAFENEWWITHCONSTRUCTOR(pNLS,
+                SAFENEWWITHCONSTRUCTOR(eig_pNLS,
                                        MCPNewtonMinFB,
                                        MCPNewtonMinFB(pDM, *this, oLineSearchParam));
                 break;
@@ -7445,23 +7445,23 @@ Solver::AllocateNonlinearSolver()
                 }
 
                 CurrLinearSolver.SetSolverFlags(uSolFlags);
-                pNLS = pAllocateNoxNonlinearSolver(*this, oNoxSolverParam);
+                eig_pNLS = pAllocateNoxNonlinearSolver(*this, oNoxSolverParam);
         } break;
 #endif
 #ifdef USE_SICONOS
         case NonlinearSolver::SICONOS_MCP_NEWTON_FB:
-                SAFENEWWITHCONSTRUCTOR(pNLS,
+                SAFENEWWITHCONSTRUCTOR(eig_pNLS,
                                        SiconosMCPNewton,
                                        SiconosMCPNewton(*this, oLineSearchParam));
                 break;
         case NonlinearSolver::SICONOS_MCP_NEWTON_MIN_FB:
-                SAFENEWWITHCONSTRUCTOR(pNLS,
+                SAFENEWWITHCONSTRUCTOR(eig_pNLS,
                                        SiconosMCPNewtonMin,
                                        SiconosMCPNewtonMin(*this, oLineSearchParam));
                 break;                
 #endif
 	}
-	return pNLS;
+	return eig_pNLS;
 }
 
 void

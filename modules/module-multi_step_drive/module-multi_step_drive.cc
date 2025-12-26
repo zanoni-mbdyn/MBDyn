@@ -57,8 +57,8 @@ class MultiStepDrive : public DriveCaller
 public:
 	struct StepRecord
 	{
-		StepRecord(doublereal x=0., doublereal y=0.)
-		:x(x), y(y) { }
+		StepRecord(doublereal x_a=0., doublereal y_a=0.)
+		:x(x_a), y(y_a) { }
 		doublereal x;
 		doublereal y;
 	};
@@ -81,9 +81,9 @@ struct MultiStepDriveDCR : public DriveCallerRead {
 	Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred);
 };
 
-MultiStepDrive::MultiStepDrive(const DriveHandler* pDH, const std::vector<StepRecord>& rgSteps)
+MultiStepDrive::MultiStepDrive(const DriveHandler* pDH, const std::vector<StepRecord>& rgSteps_a)
 : DriveCaller(pDH),
-  rgSteps(rgSteps)
+  rgSteps(rgSteps_a)
 {
 	NO_OP;
 }

@@ -56,8 +56,8 @@ trapfpe ()
 }
 #endif
 
-Membrane::Membrane(unsigned uLabel, const DofOwner* pDO, flag fOut)
-: InitialAssemblyElem(uLabel, fOut)
+Membrane::Membrane(unsigned uLabel_a, const DofOwner* pDO, flag fOut)
+: InitialAssemblyElem(uLabel_a, fOut)
 {
 	NO_OP;
 }

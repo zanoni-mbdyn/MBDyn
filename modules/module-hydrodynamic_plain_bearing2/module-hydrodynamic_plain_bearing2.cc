@@ -3273,8 +3273,8 @@ namespace {
           }
 
           // Only Hook materials are supported right now since the theory of the elastic half space is based on them
-          Material(doublereal E, doublereal nu)
-               :E(E), nu(nu) {
+          Material(doublereal E_a, doublereal nu_a)
+               :E(E_a), nu(nu_a) {
           }
 
           void ParseInput(integer iIndex, MBDynParser& HP, const HydroRootElement* pRoot);
@@ -4690,12 +4690,12 @@ namespace {
 
           class MatrixArray {
           public:
-               MatrixArray(MatrixType* pC, MatrixType* pD, MatrixType* pE, std::vector<index_type>* pModeIndex)
-                    :pC(pC), pD(pD), pE(pE), pModeIndex(pModeIndex), eMatType(ComplianceMatrixCommon::MAT_FULL) {
+               MatrixArray(MatrixType* pC_a, MatrixType* pD_a, MatrixType* pE_a, std::vector<index_type>* pModeIndex_a)
+                    :pC(pC_a), pD(pD_a), pE(pE_a), pModeIndex(pModeIndex_a), eMatType(ComplianceMatrixCommon::MAT_FULL) {
                }
 
-               MatrixArray(MatrixType* pRPhiK, MatrixType* pPhin)
-                    :pRPhiK(pRPhiK), pPhin(pPhin), eMatType(ComplianceMatrixCommon::MAT_MODAL) {
+               MatrixArray(MatrixType* pRPhiK_a, MatrixType* pPhin_a)
+                    :pRPhiK(pRPhiK_a), pPhin(pPhin_a), eMatType(ComplianceMatrixCommon::MAT_MODAL) {
                     rgMat[2] = nullptr;
                     pModeIndex = nullptr;
                }
@@ -4780,8 +4780,8 @@ namespace {
           };
 
           struct GridIndex {
-               GridIndex(index_type ix, index_type iz)
-                    :ix(ix), iz(iz) {
+               GridIndex(index_type ix_a, index_type iz_a)
+                    :ix(ix_a), iz(iz_a) {
                }
 
                bool operator==(const GridIndex& oGridIndex) const {
@@ -4795,11 +4795,11 @@ namespace {
           class MatrixData {
           public:
                template <typename... ARGS>
-               MatrixData(MeshLocation eMeshLocation,
-                          const ModalAd* pModalJoint,
+               MatrixData(MeshLocation eMeshLocation_a,
+                          const ModalAd* pModalJoint_a,
                           ARGS... pMatrix)
-                    :eMeshLocation(eMeshLocation),
-                     pModalJoint(pModalJoint),
+                    :eMeshLocation(eMeshLocation_a),
+                     pModalJoint(pModalJoint_a),
                      rgMatrices(pMatrix...) {
                }
 
@@ -4820,8 +4820,8 @@ namespace {
           typedef std::vector<PressureElement> ElementContainer;
 
      public:
-          explicit ComplianceMatrixFileParser(MatrixData& oMatData)
-               :oMatData(oMatData) {
+          explicit ComplianceMatrixFileParser(MatrixData& oMatData_a)
+               :oMatData(oMatData_a) {
           }
 
           void Parse(const std::string& strFileName,
@@ -4832,8 +4832,8 @@ namespace {
 
      private:
           struct NodeRec {
-               NodeRec(index_type iComplianceIndex, doublereal x, doublereal z)
-                    :iComplianceIndex(iComplianceIndex), x(x), z(z) {
+               NodeRec(index_type iComplianceIndex_a, doublereal x_a, doublereal z_a)
+                    :iComplianceIndex(iComplianceIndex_a), x(x_a), z(z_a) {
                }
 
                index_type iComplianceIndex;
@@ -5248,10 +5248,10 @@ namespace {
           static constexpr index_type GRIDINTERP = 16;
 
           struct PolyData {
-               PolyData(SpMatrix<doublereal, POLYORDER, GRIDINTERP>&& pinvA,
-                        const std::array<index_type, GRIDINTERP>& Cidx)
-                    :pinvA(std::move(pinvA)),
-                     Cidx(Cidx) {
+               PolyData(SpMatrix<doublereal, POLYORDER, GRIDINTERP>&& pinvA_a,
+                        const std::array<index_type, GRIDINTERP>& Cidx_a)
+                    :pinvA(std::move(pinvA_a)),
+                     Cidx(Cidx_a) {
                }
 
                SpMatrix<doublereal, POLYORDER, GRIDINTERP> pinvA;
@@ -5805,10 +5805,10 @@ namespace {
      };
 
      HydroRootElement::HydroRootElement(
-          unsigned uLabel, const DofOwner *pDO,
-          DataManager* pDM, MBDynParser& HP)
-          :       UserDefinedElem(uLabel, pDO),
-                  pDM(pDM),
+          unsigned uLabel_a, const DofOwner *pDO,
+          DataManager* pDM_a, MBDynParser& HP)
+          :       UserDefinedElem(uLabel_a, pDO),
+                  pDM(pDM_a),
                   uOutputFlags(OUTPUT_NOTHING),
                   pFluid(nullptr),
                   pMesh(nullptr),
@@ -6226,15 +6226,15 @@ namespace {
 #endif
      }
 
-     void HydroRootElement::AddDofOwner(HydroDofOwner* pDofOwner)
+     void HydroRootElement::AddDofOwner(HydroDofOwner* pDofOwner_a)
      {
-          if (pDofOwner == nullptr) {
+          if (pDofOwner_a == nullptr) {
                return;
           }
 
           HYDRO_ASSERT(pDofOwner->iGetNumDof() != 0);
 
-          rgDofOwner.push_back(pDofOwner);
+          rgDofOwner.push_back(pDofOwner_a);
      }
 
      void HydroRootElement::RebuildDofMap()
@@ -6248,23 +6248,23 @@ namespace {
 
                oDofOwner.clear();
 
-               for (HydroDofOwner* pDofOwner: rgDofOwner) {
+               for (HydroDofOwner* pDO: rgDofOwner) {
                     const integer iNumDof = (rgFuncs[j] == SpFunctionCall::INITIAL_ASS_RES)
-                         ? pDofOwner->iGetInitialNumDof()
-                         : pDofOwner->iGetNumDof();
+                         ? pDO->iGetInitialNumDof()
+                         : pDO->iGetNumDof();
 
                     if (!iNumDof) {
                          continue;
                     }
 
-                    pDofOwner->SetOffsetIndex(iOffsetIndex, rgFuncs[j]);
+                    pDO->SetOffsetIndex(iOffsetIndex, rgFuncs[j]);
 
                     const integer iFirstIndex = iOffsetIndex;
                     const integer iLastIndex = iFirstIndex + iNumDof;
 
-                    for (integer j = iFirstIndex; j < iLastIndex; ++j) {
-                         HYDRO_ASSERT(oDofOwner.find(j) == oDofOwner.end());
-                         oDofOwner.insert(std::make_pair(j, pDofOwner));
+                    for (integer k = iFirstIndex; k < iLastIndex; ++k) {
+                         HYDRO_ASSERT(oDofOwn.find(k) == oDofOwner.end());
+                         oDofOwner.insert(std::make_pair(k, pDO));
                     }
 
                     iOffsetIndex += iNumDof;
@@ -6428,8 +6428,8 @@ namespace {
      {
           if (pNode->bIsNodeType(eType)) {
                const SpColVector<doublereal, 2>& x = pNode->GetPosition2D();
-               const HydroDofOwner* const pDofOwner = dynamic_cast<const HydroDofOwner*>(pNode);
-               const integer iOffset = pDofOwner && pDofOwner->iGetNumDof() ? pDofOwner->iGetOffsetIndex(SpFunctionCall::REGULAR_RES) : -1;
+               const HydroDofOwner* const pDO = dynamic_cast<const HydroDofOwner*>(pNode);
+               const integer iOffset = pDO && pDO->iGetNumDof() ? pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES) : -1;
                out << pNode->iGetNodeNumber() + 1 << ' ' << x(1) << ' ' << x(2) << ' ' << iOffset << ' ';
           }
      }
@@ -6739,7 +6739,7 @@ namespace {
      }
 
      void
-     HydroRootElement::SetValue(DataManager *pDM,
+     HydroRootElement::SetValue(DataManager *pDM_a,
                                 VectorHandler& X, VectorHandler& XP,
                                 SimulationEntity::Hints *ph)
      {
@@ -7188,8 +7188,8 @@ namespace {
           return dInitAss;
      }
 
-     Geometry2D::Geometry2D(const SpColVector<doublereal, 2>& x)
-          :x(x)
+     Geometry2D::Geometry2D(const SpColVector<doublereal, 2>& x_a)
+          :x(x_a)
      {
 
      }
@@ -7385,15 +7385,15 @@ namespace {
           }
      }
 
-     Circle2D::Circle2D(const SpColVector<doublereal, 2>& x, doublereal r)
-          :Geometry2D(x), r(r)
+     Circle2D::Circle2D(const SpColVector<doublereal, 2>& x_a, doublereal r_a)
+          :Geometry2D(x_a), r(r_a)
      {
 
      }
 
-     std::unique_ptr<Geometry2D> Circle2D::Clone(const SpColVector<doublereal, 2>& x) const
+     std::unique_ptr<Geometry2D> Circle2D::Clone(const SpColVector<doublereal, 2>& x_a) const
      {
-          return std::unique_ptr<Geometry2D>{new Circle2D(x, r)};
+          return std::unique_ptr<Geometry2D>{new Circle2D(x_a, r)};
      }
 
      bool Circle2D::bPointIsInside(const SpColVector<doublereal, 2>& p1) const
@@ -7419,15 +7419,15 @@ namespace {
           return sqrt(dx * dx + dz * dz) <= r;
      }
 
-     Rectangle2D::Rectangle2D(const SpColVector<doublereal, 2>& x, doublereal w, doublereal h)
-          :Geometry2D(x), w(w), h(h)
+     Rectangle2D::Rectangle2D(const SpColVector<doublereal, 2>& x_a, doublereal w_a, doublereal h_a)
+          :Geometry2D(x_a), w(w_a), h(h_a)
      {
 
      }
 
-     std::unique_ptr<Geometry2D> Rectangle2D::Clone(const SpColVector<doublereal, 2>& x) const
+     std::unique_ptr<Geometry2D> Rectangle2D::Clone(const SpColVector<doublereal, 2>& x_a) const
      {
-          return std::unique_ptr<Geometry2D>{new Rectangle2D(x, w, h)};
+          return std::unique_ptr<Geometry2D>{new Rectangle2D(x_a, w, h)};
      }
 
      bool Rectangle2D::bPointIsInside(const SpColVector<doublereal, 2>& p1) const
@@ -7459,14 +7459,14 @@ namespace {
           return bInside;
      }
 
-     CompleteSurface2D::CompleteSurface2D(const SpColVector<doublereal, 2>& x)
-          :Geometry2D(x)
+     CompleteSurface2D::CompleteSurface2D(const SpColVector<doublereal, 2>& x_a)
+          :Geometry2D(x_a)
      {
      }
 
-     std::unique_ptr<Geometry2D> CompleteSurface2D::Clone(const SpColVector<doublereal, 2>& x) const
+     std::unique_ptr<Geometry2D> CompleteSurface2D::Clone(const SpColVector<doublereal, 2>& x_a) const
      {
-          return std::unique_ptr<Geometry2D>{new CompleteSurface2D{x}};
+          return std::unique_ptr<Geometry2D>{new CompleteSurface2D{x_a}};
      }
 
      bool CompleteSurface2D::bPointIsInside(const SpColVector<doublereal, 2>& p1) const
@@ -7488,17 +7488,17 @@ namespace {
      }
 
      SurfaceGrid2D::SurfaceGrid2D(const SpColVector<doublereal, 2>& xc,
-                                  const SpColVector<doublereal>& x,
-                                  const SpColVector<doublereal>& z,
-                                  doublereal tolx,
-                                  doublereal tolz,
-                                  const std::vector<bool>& status)
+                                  const SpColVector<doublereal>& x_a,
+                                  const SpColVector<doublereal>& z_a,
+                                  doublereal tolx_a,
+                                  doublereal tolz_a,
+                                  const std::vector<bool>& status_a)
           :Geometry2D(xc),
-           tolx(tolx),
-           tolz(tolz),
-           x(x),
-           z(z),
-           status(status)
+           tolx(tolx_a),
+           tolz(tolz_a),
+           x(x_a),
+           z(z_a),
+           status(status_a)
      {
           HYDRO_ASSERT(x.iGetNumRows() >= 2);
           HYDRO_ASSERT(z.iGetNumRows() >= 2);
@@ -7569,9 +7569,9 @@ namespace {
           return false;
      }
 
-     LubricationGroove::LubricationGroove(integer iLabel, std::unique_ptr<Geometry2D>&& pGeometry)
-          :iLabel(iLabel),
-           pGeometry(std::move(pGeometry))
+     LubricationGroove::LubricationGroove(integer iLabel_a, std::unique_ptr<Geometry2D>&& pGeometry_a)
+          :iLabel(iLabel_a),
+           pGeometry(std::move(pGeometry_a))
      {
           HYDRO_ASSERT(this->pGeometry != nullptr);
      }
@@ -7592,14 +7592,14 @@ namespace {
           return std::unique_ptr<LubricationGrooveMaster>{new LubricationGrooveMaster(iLabel, std::move(pGeometry), pBoundaryCond.release(), eType)};
      }
 
-     LubricationGrooveMaster::LubricationGrooveMaster(integer iLabel,
-                                                      std::unique_ptr<Geometry2D>&& pGeometry,
-                                                      FluidStateBoundaryCond* pBoundaryCond,
+     LubricationGrooveMaster::LubricationGrooveMaster(integer iLabel_a,
+                                                      std::unique_ptr<Geometry2D>&& pGeometry_a,
+                                                      FluidStateBoundaryCond* pBoundaryCond_a,
                                                       enum Type type)
-          :LubricationGroove(iLabel, std::move(pGeometry)),
+          :LubricationGroove(iLabel_a, std::move(pGeometry_a)),
            eType(type),
            iNumNodes(0),
-           pBoundaryCond(pBoundaryCond)
+           pBoundaryCond(pBoundaryCond_a)
      {
 
      }
@@ -7636,10 +7636,10 @@ namespace {
           return pBoundaryCond;
      }
 
-     LubricationGrooveSlave::LubricationGrooveSlave(LubricationGrooveMaster* pMaster, const SpColVector<doublereal, 2>& x)
-          :LubricationGroove(pMaster->iGetLabel(),
-                             pMaster->pGetGeometry()->Clone(x)),
-           pMaster(pMaster)
+     LubricationGrooveSlave::LubricationGrooveSlave(LubricationGrooveMaster* pMaster_a, const SpColVector<doublereal, 2>& x_a)
+          :LubricationGroove(pMaster_a->iGetLabel(),
+                             pMaster_a->pGetGeometry()->Clone(x_a)),
+           pMaster(pMaster_a)
      {
 
      }
@@ -7674,8 +7674,8 @@ namespace {
           return pMaster->GetType();
      }
 
-     Pocket::Pocket(std::unique_ptr<Geometry2D>&& pGeometry)
-          :pGeometry(std::move(pGeometry))
+     Pocket::Pocket(std::unique_ptr<Geometry2D>&& pGeometry_a)
+          :pGeometry(std::move(pGeometry_a))
      {
 
      }
@@ -7907,8 +7907,8 @@ namespace {
           }
      }
 
-     ConstHeightPocket::ConstHeightPocket(std::unique_ptr<Geometry2D>&& pGeometry, doublereal dy)
-          :Pocket(std::move(pGeometry)), dy(dy)
+     ConstHeightPocket::ConstHeightPocket(std::unique_ptr<Geometry2D>&& pGeometry_a, doublereal dy_a)
+          :Pocket(std::move(pGeometry_a)), dy(dy_a)
      {
 
      }
@@ -7968,13 +7968,13 @@ namespace {
           return std::unique_ptr<Pocket>{new ConstHeightPocket(pGetGeometry()->Clone(x), dy)};
      }
 
-     RectangularPocket::RectangularPocket(std::unique_ptr<Geometry2D>&& pGeometry,
-                                          const SpColVector<doublereal, 2>& x,
-                                          const SpColVector<doublereal, 2>& z,
+     RectangularPocket::RectangularPocket(std::unique_ptr<Geometry2D>&& pGeometry_a,
+                                          const SpColVector<doublereal, 2>& x_a,
+                                          const SpColVector<doublereal, 2>& z_a,
                                           const SpMatrix<doublereal, 2, 2>& Deltay)
-          :Pocket(std::move(pGeometry)),
-           x(x),
-           z(z),
+          :Pocket(std::move(pGeometry_a)),
+           x(x_a),
+           z(z_a),
            f(Deltay)
      {
           dfi1_dx = (f(2, 1) - f(1, 1)) / (x(2) - x(1));
@@ -7986,49 +7986,49 @@ namespace {
 
      }
 
-     void RectangularPocket::GetHeight(const SpColVector<doublereal, 2>& x, doublereal& Deltay) const
+     void RectangularPocket::GetHeight(const SpColVector<doublereal, 2>& x_a, doublereal& Deltay) const
      {
-          GetHeightTpl(x, Deltay);
+          GetHeightTpl(x_a, Deltay);
      }
 
-     void RectangularPocket::GetHeight(const SpColVector<SpGradient, 2>& x, SpGradient& Deltay) const
+     void RectangularPocket::GetHeight(const SpColVector<SpGradient, 2>& x_a, SpGradient& Deltay) const
      {
-          GetHeightTpl(x, Deltay);
+          GetHeightTpl(x_a, Deltay);
      }
 
-     void RectangularPocket::GetHeight(const SpColVector<GpGradProd, 2>& x, GpGradProd& Deltay) const
+     void RectangularPocket::GetHeight(const SpColVector<GpGradProd, 2>& x_a, GpGradProd& Deltay) const
      {
-          GetHeightTpl(x, Deltay);
+          GetHeightTpl(x_a, Deltay);
      }
 
-     void RectangularPocket::GetHeightDerX(const SpColVector<doublereal, 2>& x, doublereal& dDeltay_dx) const
+     void RectangularPocket::GetHeightDerX(const SpColVector<doublereal, 2>& x_a, doublereal& dDeltay_dx) const
      {
-          GetHeightDerXTpl(x, dDeltay_dx);
+          GetHeightDerXTpl(x_a, dDeltay_dx);
      }
 
-     void RectangularPocket::GetHeightDerX(const SpColVector<SpGradient, 2>& x, SpGradient& dDeltay_dx) const
+     void RectangularPocket::GetHeightDerX(const SpColVector<SpGradient, 2>& x_a, SpGradient& dDeltay_dx) const
      {
-          GetHeightDerXTpl(x, dDeltay_dx);
+          GetHeightDerXTpl(x_a, dDeltay_dx);
      }
 
-     void RectangularPocket::GetHeightDerX(const SpColVector<GpGradProd, 2>& x, GpGradProd& dDeltay_dx) const
+     void RectangularPocket::GetHeightDerX(const SpColVector<GpGradProd, 2>& x_a, GpGradProd& dDeltay_dx) const
      {
-          GetHeightDerXTpl(x, dDeltay_dx);
+          GetHeightDerXTpl(x_a, dDeltay_dx);
      }
 
-     void RectangularPocket::GetHeightDerZ(const SpColVector<doublereal, 2>& x, doublereal& dDeltay_dz) const
+     void RectangularPocket::GetHeightDerZ(const SpColVector<doublereal, 2>& x_a, doublereal& dDeltay_dz) const
      {
-          GetHeightDerZTpl(x, dDeltay_dz);
+          GetHeightDerZTpl(x_a, dDeltay_dz);
      }
 
-     void RectangularPocket::GetHeightDerZ(const SpColVector<SpGradient, 2>& x, SpGradient& dDeltay_dz) const
+     void RectangularPocket::GetHeightDerZ(const SpColVector<SpGradient, 2>& x_a, SpGradient& dDeltay_dz) const
      {
-          GetHeightDerZTpl(x, dDeltay_dz);
+          GetHeightDerZTpl(x_a, dDeltay_dz);
      }
 
-     void RectangularPocket::GetHeightDerZ(const SpColVector<GpGradProd, 2>& x, GpGradProd& dDeltay_dz) const
+     void RectangularPocket::GetHeightDerZ(const SpColVector<GpGradProd, 2>& x_a, GpGradProd& dDeltay_dz) const
      {
-          GetHeightDerZTpl(x, dDeltay_dz);
+          GetHeightDerZTpl(x_a, dDeltay_dz);
      }
 
      std::unique_ptr<Pocket> RectangularPocket::Clone(const SpColVector<doublereal, 2>& xgc) const
@@ -8070,14 +8070,14 @@ namespace {
           dDeltay_dz = (fi2 - fi1) / (z(2) - z(1));
      }
 
-     SurfaceGrid::SurfaceGrid(std::unique_ptr<Geometry2D>&& pGeometry,
-                              const SpColVector<doublereal>& x,
-                              const SpColVector<doublereal>& z,
-                              const SpMatrix<doublereal>& f)
-          :Pocket(std::move(pGeometry)),
-           x(x),
-           z(z),
-           f(f)
+     SurfaceGrid::SurfaceGrid(std::unique_ptr<Geometry2D>&& pGeometry_a,
+                              const SpColVector<doublereal>& x_a,
+                              const SpColVector<doublereal>& z_a,
+                              const SpMatrix<doublereal>& f_a)
+          :Pocket(std::move(pGeometry_a)),
+           x(x_a),
+           z(z_a),
+           f(f_a)
      {
           HYDRO_ASSERT(x.iGetNumRows() >= 2);
           HYDRO_ASSERT(z.iGetNumRows() >= 2);
@@ -8089,49 +8089,49 @@ namespace {
      {
      }
 
-     void SurfaceGrid::GetHeight(const SpColVector<doublereal, 2>& x, doublereal& Deltay) const
+     void SurfaceGrid::GetHeight(const SpColVector<doublereal, 2>& x_a, doublereal& Deltay) const
      {
-          GetHeightTpl(x, Deltay);
+          GetHeightTpl(x_a, Deltay);
      }
 
-     void SurfaceGrid::GetHeight(const SpColVector<SpGradient, 2>& x, SpGradient& Deltay) const
+     void SurfaceGrid::GetHeight(const SpColVector<SpGradient, 2>& x_a, SpGradient& Deltay) const
      {
-          GetHeightTpl(x, Deltay);
+          GetHeightTpl(x_a, Deltay);
      }
 
-     void SurfaceGrid::GetHeight(const SpColVector<GpGradProd, 2>& x, GpGradProd& Deltay) const
+     void SurfaceGrid::GetHeight(const SpColVector<GpGradProd, 2>& x_a, GpGradProd& Deltay) const
      {
-          GetHeightTpl(x, Deltay);
+          GetHeightTpl(x_a, Deltay);
      }
 
-     void SurfaceGrid::GetHeightDerX(const SpColVector<doublereal, 2>& x, doublereal& dDeltay_dx) const
+     void SurfaceGrid::GetHeightDerX(const SpColVector<doublereal, 2>& x_a, doublereal& dDeltay_dx) const
      {
-          GetHeightDerXTpl(x, dDeltay_dx);
+          GetHeightDerXTpl(x_a, dDeltay_dx);
      }
 
-     void SurfaceGrid::GetHeightDerX(const SpColVector<SpGradient, 2>& x, SpGradient& dDeltay_dx) const
+     void SurfaceGrid::GetHeightDerX(const SpColVector<SpGradient, 2>& x_a, SpGradient& dDeltay_dx) const
      {
-          GetHeightDerXTpl(x, dDeltay_dx);
+          GetHeightDerXTpl(x_a, dDeltay_dx);
      }
 
-     void SurfaceGrid::GetHeightDerX(const SpColVector<GpGradProd, 2>& x, GpGradProd& dDeltay_dx) const
+     void SurfaceGrid::GetHeightDerX(const SpColVector<GpGradProd, 2>& x_a, GpGradProd& dDeltay_dx) const
      {
-          GetHeightDerXTpl(x, dDeltay_dx);
+          GetHeightDerXTpl(x_a, dDeltay_dx);
      }
 
-     void SurfaceGrid::GetHeightDerZ(const SpColVector<doublereal, 2>& x, doublereal& dDeltay_dz) const
+     void SurfaceGrid::GetHeightDerZ(const SpColVector<doublereal, 2>& x_a, doublereal& dDeltay_dz) const
      {
-          GetHeightDerZTpl(x, dDeltay_dz);
+          GetHeightDerZTpl(x_a, dDeltay_dz);
      }
 
-     void SurfaceGrid::GetHeightDerZ(const SpColVector<SpGradient, 2>& x, SpGradient& dDeltay_dz) const
+     void SurfaceGrid::GetHeightDerZ(const SpColVector<SpGradient, 2>& x_a, SpGradient& dDeltay_dz) const
      {
-          GetHeightDerZTpl(x, dDeltay_dz);
+          GetHeightDerZTpl(x_a, dDeltay_dz);
      }
 
-     void SurfaceGrid::GetHeightDerZ(const SpColVector<GpGradProd, 2>& x, GpGradProd& dDeltay_dz) const
+     void SurfaceGrid::GetHeightDerZ(const SpColVector<GpGradProd, 2>& x_a, GpGradProd& dDeltay_dz) const
      {
-          GetHeightDerZTpl(x, dDeltay_dz);
+          GetHeightDerZTpl(x_a, dDeltay_dz);
      }
 
      std::unique_ptr<Pocket> SurfaceGrid::Clone(const SpColVector<doublereal, 2>& xc) const
@@ -8206,16 +8206,16 @@ namespace {
           dDeltay_dz = (fi2 - fi1) / (z(iz + 1) - z(iz));
      }
 
-     HelicalGroove::HelicalGroove(std::unique_ptr<Geometry2D>&& pGeometry,
-                                  std::array<std::unique_ptr<DriveCaller>, 2>&& rgProfile,
-                                  const SpMatrix<doublereal, 2, 2>& R0,
-                                  const SpColVector<doublereal, 2>& x0,
-                                  doublereal P)
-          :Pocket(std::move(pGeometry)),
-           rgProfile(std::move(rgProfile)),
-           R0(R0),
-           x0(x0),
-           P(P)
+     HelicalGroove::HelicalGroove(std::unique_ptr<Geometry2D>&& pGeometry_a,
+                                  std::array<std::unique_ptr<DriveCaller>, 2>&& rgProfile_a,
+                                  const SpMatrix<doublereal, 2, 2>& R0_a,
+                                  const SpColVector<doublereal, 2>& x0_a,
+                                  doublereal P_a)
+          :Pocket(std::move(pGeometry_a)),
+           rgProfile(std::move(rgProfile_a)),
+           R0(R0_a),
+           x0(x0_a),
+           P(P_a)
      {
      }
 
@@ -8353,11 +8353,11 @@ namespace {
           }
 
           if (pFriction) {
-               const SpColVector<T, 2> U = U1 - U2;
+               const SpColVector<T, 2> U12 = U1 - U2;
 
-               pFriction->GetFrictionForce(h, U, pasp, tauc_0);
+               pFriction->GetFrictionForce(h, U12, pasp, tauc_0);
 
-               Pfc = Dot(U, tauc_0);
+               Pfc = Dot(U12, tauc_0);
           } else {
                for (index_type i = 1; i <= tauc_0.iGetNumRows(); ++i) {
                     SpGradientTraits<T>::ResizeReset(tauc_0(i), 0., 0);
@@ -8368,50 +8368,50 @@ namespace {
      }
 
      template <typename T>
-     void KinematicsBoundaryCond<T>::GetClearance(T& h) const
+     void KinematicsBoundaryCond<T>::GetClearance(T& h_a) const
      {
-          h = this->h;
+          h_a = this->h;
      }
 
      template <typename T>
-     void KinematicsBoundaryCond<T>::GetClearanceDerTime(T& dh_dt) const
+     void KinematicsBoundaryCond<T>::GetClearanceDerTime(T& dh_dt_a) const
      {
-          dh_dt = this->dh_dt;
+          dh_dt_a = this->dh_dt;
      }
 
      template <typename T>
-     void KinematicsBoundaryCond<T>::GetVelocity(SpColVector<T, 2>& U1, SpColVector<T, 2>& U2) const
+     void KinematicsBoundaryCond<T>::GetVelocity(SpColVector<T, 2>& U1_a, SpColVector<T, 2>& U2_a) const
      {
-          U1 = this->U1;
-          U2 = this->U2;
+          U1_a = this->U1;
+          U2_a = this->U2;
      }
 
      template <typename T>
-     void KinematicsBoundaryCond<T>::GetHydraulicVelocity(SpColVector<T, 2>& U) const
+     void KinematicsBoundaryCond<T>::GetHydraulicVelocity(SpColVector<T, 2>& U_a) const
      {
-          U = this->U;
+          U_a = this->U;
      }
 
      template <typename T>
-     bool KinematicsBoundaryCond<T>::GetContactPressure(T& pasp) const
+     bool KinematicsBoundaryCond<T>::GetContactPressure(T& pasp_a) const
      {
-          pasp = this->pasp;
+          pasp_a = this->pasp;
 
           return bContact;
      }
 
      template <typename T>
-     bool KinematicsBoundaryCond<T>::GetContactStress(SpColVector<T, 2>& tauc_0) const
+     bool KinematicsBoundaryCond<T>::GetContactStress(SpColVector<T, 2>& tauc_0_a) const
      {
-          tauc_0 = this->tauc_0;
+          tauc_0_a = this->tauc_0;
 
           return bContact;
      }
 
      template <typename T>
-     bool KinematicsBoundaryCond<T>::GetContactFrictionLossDens(T& Pfc) const
+     bool KinematicsBoundaryCond<T>::GetContactFrictionLossDens(T& Pfc_a) const
      {
-          Pfc = this->Pfc;
+          Pfc_a = this->Pfc;
 
           return bContact;
      }
@@ -8474,13 +8474,13 @@ namespace {
           rgOffsetIndex[iFuncCallToIndex(eFunc)] = iOffset;
      }
 
-     Node2D::Node2D(integer iNodeNo,
-                    const SpColVector<doublereal, 2>& x,
+     Node2D::Node2D(integer iNodeNo_a,
+                    const SpColVector<doublereal, 2>& x_a,
                     HydroMesh* pParent,
-                    integer iNodeFlags)
-          :iNodeNo(iNodeNo),
-           iNodeFlags(iNodeFlags),
-           x(x),
+                    integer iNodeFlags_a)
+          :iNodeNo(iNodeNo_a),
+           iNodeFlags(iNodeFlags_a),
+           x(x_a),
            pMesh(pParent),
            pFluid(pParent->pGetParent()->pGetFluid())
      {
@@ -8575,11 +8575,11 @@ namespace {
      {
      }
 
-     ThermoHydrNode::ThermoHydrNode(integer iNodeNo,
-                                    const SpColVector<doublereal, 2>& x,
-                                    HydroMesh* pMesh,
-                                    integer iNodeFlags)
-          :Node2D(iNodeNo, x, pMesh, THERMAL_NODE | CORNER_NODE | iNodeFlags)
+     ThermoHydrNode::ThermoHydrNode(integer iNodeNo_a,
+                                    const SpColVector<doublereal, 2>& x_a,
+                                    HydroMesh* pMesh_a,
+                                    integer iNodeFlags_a)
+          :Node2D(iNodeNo_a, x_a, pMesh_a, THERMAL_NODE | CORNER_NODE | iNodeFlags_a)
      {
      }
 
@@ -8604,20 +8604,20 @@ namespace {
           }
      }
 
-     ThermalActiveNode::ThermalActiveNode(integer iNodeNo,
-                                          const SpColVector<doublereal, 2>& x,
+     ThermalActiveNode::ThermalActiveNode(integer iNodeNo_a,
+                                          const SpColVector<doublereal, 2>& x_a,
                                           HydroMesh* pParent,
                                           doublereal T0,
-                                          bool bDoInitAss,
-                                          SolverBase::StepIntegratorType eStepInteg)
-          :ThermoHydrNode(iNodeNo, x, pParent, ACTIVE_NODE | MASTER_NODE),
+                                          bool bDoInitAss_a,
+                                          SolverBase::StepIntegratorType eStepInteg_a)
+          :ThermoHydrNode(iNodeNo_a, x_a, pParent, ACTIVE_NODE | MASTER_NODE),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
            T(T0),
            dT_dt(0.),
            T_Y(0.),
            s(pParent->pGetParent()->dGetScale(HydroRootElement::SCALE_TEMPERATURE_DOF)),
-           bDoInitAss(bDoInitAss),
-           eStepInteg(eStepInteg)
+           bDoInitAss(bDoInitAss_a),
+           eStepInteg(eStepInteg_a)
      {
      }
 
@@ -8625,44 +8625,44 @@ namespace {
      {
      }
 
-     void ThermalActiveNode::GetTemperature(doublereal& T, doublereal) const
+     void ThermalActiveNode::GetTemperature(doublereal& T_a, doublereal) const
      {
-          T = this->T;
+          T_a = this->T;
      }
 
-     void ThermalActiveNode::GetTemperature(SpGradient& T, doublereal dCoef) const
+     void ThermalActiveNode::GetTemperature(SpGradient& T_a, doublereal dCoef) const
      {
           if (eCurrFunc & SpFunctionCall::REGULAR_FLAG) {
                const index_type iDofIndex = iGetFirstDofIndex(eCurrFunc);
                dCoef = pGetMesh()->pGetParent()->dGetStepIntegratorCoef(iDofIndex);
-               T.Reset(this->T, iDofIndex, -dCoef * s);
+               T_a.Reset(this->T, iDofIndex, -dCoef * s);
           } else {
-               T.ResizeReset(this->T, 0);
+               T_a.ResizeReset(this->T, 0);
           }
      }
 
-     void ThermalActiveNode::GetTemperature(GpGradProd& T, doublereal dCoef) const
+     void ThermalActiveNode::GetTemperature(GpGradProd& T_a, doublereal dCoef) const
      {
-          T.Reset(this->T, -dCoef * s * T_Y);
+          T_a.Reset(this->T, -dCoef * s * T_Y);
      }
 
-     void ThermalActiveNode::GetTemperatureDerTime(doublereal& dT_dt, doublereal) const
+     void ThermalActiveNode::GetTemperatureDerTime(doublereal& dT_dt_a, doublereal) const
      {
-          dT_dt = this->dT_dt;
+          dT_dt_a = this->dT_dt;
      }
 
-     void ThermalActiveNode::GetTemperatureDerTime(SpGradient& dT_dt, doublereal dCoef) const
+     void ThermalActiveNode::GetTemperatureDerTime(SpGradient& dT_dt_a, doublereal dCoef) const
      {
           if (bDoInitAss || (eCurrFunc & SpFunctionCall::REGULAR_FLAG)) {
-               dT_dt.Reset(this->dT_dt, iGetFirstDofIndex(eCurrFunc), -s);
+               dT_dt_a.Reset(this->dT_dt, iGetFirstDofIndex(eCurrFunc), -s);
           } else {
-               dT_dt.ResizeReset(this->dT_dt, 0);
+               dT_dt_a.ResizeReset(this->dT_dt, 0);
           }
      }
 
-     void ThermalActiveNode::GetTemperatureDerTime(GpGradProd& dT_dt, doublereal dCoef) const
+     void ThermalActiveNode::GetTemperatureDerTime(GpGradProd& dT_dt_a, doublereal dCoef) const
      {
-          dT_dt.Reset(this->dT_dt, -s * T_Y);
+          dT_dt_a.Reset(this->dT_dt, -s * T_Y);
      }
 
      integer ThermalActiveNode::iGetFirstEquationIndex(sp_grad::SpFunctionCall eFunc) const
@@ -8790,12 +8790,12 @@ namespace {
           return out;
      }
 
-     ThermalCoupledNode::ThermalCoupledNode(integer iNodeNo,
-                                            const SpColVector<doublereal, 2>& x,
-                                            HydroMesh* pMesh,
-                                            ThermalNodeAd* pExtThermNode)
-          :ThermoHydrNode(iNodeNo, x, pMesh, COUPLED_NODE | MASTER_NODE),
-           pExtThermNode(pExtThermNode),
+     ThermalCoupledNode::ThermalCoupledNode(integer iNodeNo_a,
+                                            const SpColVector<doublereal, 2>& x_a,
+                                            HydroMesh* pMesh_a,
+                                            ThermalNodeAd* pExtThermNode_a)
+          :ThermoHydrNode(iNodeNo_a, x_a, pMesh_a, COUPLED_NODE | MASTER_NODE),
+           pExtThermNode(pExtThermNode_a),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG)
      {
           HYDRO_ASSERT(pExtThermNode != nullptr);
@@ -8881,14 +8881,14 @@ namespace {
           HYDRO_ASSERT(eCurrFunc == SpFunctionCall::REGULAR_FLAG);
      }
 
-     ThermalInletNode::ThermalInletNode(integer iNodeNo,
-                                        const SpColVector<doublereal, 2>& x,
+     ThermalInletNode::ThermalInletNode(integer iNodeNo_a,
+                                        const SpColVector<doublereal, 2>& x_a,
                                         HydroMesh* pParent,
                                         ThermalNodeAd* pExtThermNode,
-                                        bool bDoInitAss,
-                                        SolverBase::StepIntegratorType eStepInteg)
-          :ThermalActiveNode(iNodeNo, x, pParent, pExtThermNode->dGetX(), bDoInitAss, eStepInteg),
-           oInletNode(iNodeNo, x, pParent, pExtThermNode)
+                                        bool bDoInitAss_a,
+                                        SolverBase::StepIntegratorType eStepInteg_a)
+          :ThermalActiveNode(iNodeNo_a, x_a, pParent, pExtThermNode->dGetX(), bDoInitAss_a, eStepInteg_a),
+           oInletNode(iNodeNo_a, x_a, pParent, pExtThermNode)
      {
 
      }
@@ -8920,12 +8920,12 @@ namespace {
                + oInletNode.iGetNumColsWorkSpace(eFunc);
      }
 
-     ThermalPassiveNode::ThermalPassiveNode(integer iNodeNo,
-                                            const SpColVector<doublereal, 2>& x,
+     ThermalPassiveNode::ThermalPassiveNode(integer iNodeNo_a,
+                                            const SpColVector<doublereal, 2>& x_a,
                                             HydroMesh* pParent,
-                                            const FluidStateBoundaryCond* pBoundCond)
-          :ThermoHydrNode(iNodeNo, x, pParent, PASSIVE_NODE | MASTER_NODE),
-           pBoundCond(pBoundCond)
+                                            const FluidStateBoundaryCond* pBoundCond_a)
+          :ThermoHydrNode(iNodeNo_a, x_a, pParent, PASSIVE_NODE | MASTER_NODE),
+           pBoundCond(pBoundCond_a)
      {
           HYDRO_ASSERT(pBoundCond->bIncludeNode(GetNodePhysics()));
      }
@@ -8989,11 +8989,11 @@ namespace {
      {
      }
 
-     ThermalSlaveNode::ThermalSlaveNode(integer iNodeNo,
-                                        const SpColVector<doublereal, 2>& x,
-                                        ThermoHydrNode* pMasterNode)
-          :ThermoHydrNode(iNodeNo, x, pMasterNode->pGetMesh(), (pMasterNode->iGetNodeFlags() & ~MASTER_NODE) | SLAVE_NODE),
-           pMasterNode(pMasterNode)
+     ThermalSlaveNode::ThermalSlaveNode(integer iNodeNo_a,
+                                        const SpColVector<doublereal, 2>& x_a,
+                                        ThermoHydrNode* pMasterNode_a)
+          :ThermoHydrNode(iNodeNo_a, x_a, pMasterNode_a->pGetMesh(), (pMasterNode_a->iGetNodeFlags() & ~MASTER_NODE) | SLAVE_NODE),
+           pMasterNode(pMasterNode_a)
      {
      }
 
@@ -9059,21 +9059,21 @@ namespace {
      {
      }
 
-     FluxNode::FluxNode(integer iNodeNo,
-                        HydroMesh* pMesh,
-                        const std::array<const HydroNode*, iNumNodes>& rgNodes,
+     FluxNode::FluxNode(integer iNodeNo_a,
+                        HydroMesh* pMesh_a,
+                        const std::array<const HydroNode*, iNumNodes>& rgNodes_a,
                         PressureSource ePressSrc,
                         NodeDataReq eNodeDataReq)
-          :Node2D(iNodeNo,
-                  (rgNodes[0]->GetPosition2D() + rgNodes[1]->GetPosition2D()) * 0.5,
-                  pMesh,
-                  (iDirectionFromNodes(rgNodes) == 1 ? FLUX_NODE_X : FLUX_NODE_Z) |
+          :Node2D(iNodeNo_a,
+                  (rgNodes_a[0]->GetPosition2D() + rgNodes_a[1]->GetPosition2D()) * 0.5,
+                  pMesh_a,
+                  (iDirectionFromNodes(rgNodes_a) == 1 ? FLUX_NODE_X : FLUX_NODE_Z) |
                   CENTRAL_NODE |
                   COMPUTED_NODE |
                   MASTER_NODE),
-           iDirection(iDirectionFromNodes(rgNodes)),
+           iDirection(iDirectionFromNodes(rgNodes_a)),
            du(0.),
-           rgNodes(rgNodes),
+           rgNodes(rgNodes_a),
            ePressSource(ePressSrc),
            uNodeDataReq(eNodeDataReq)
      {
@@ -9083,7 +9083,7 @@ namespace {
           HYDRO_ASSERT(rgNodes[0]->pGetMesh() == pGetMesh());
           HYDRO_ASSERT(rgNodes[1]->pGetMesh() == pGetMesh());
 #endif
-          du = pMesh->pGetGeometry()->dGetNodeDistance2D(rgNodes[iNodeDown], rgNodes[iNodeUp], iDirection);
+          du = pMesh_a->pGetGeometry()->dGetNodeDistance2D(rgNodes[iNodeDown], rgNodes[iNodeUp], iDirection);
      }
 
      FluxNode::~FluxNode()
@@ -9341,8 +9341,8 @@ namespace {
      }
 
      template <typename G>
-     void FluxNode::UpdateTpl(NodeData<G>& oNode,
-                              std::array<FluxData<G>, iNumPressSources>& rgFlux,
+     void FluxNode::UpdateTpl(NodeData<G>& oNode_a,
+                              std::array<FluxData<G>, iNumPressSources>& rgFlux_a,
                               doublereal dCoef,
                               SpFunctionCall func) const
      {
@@ -9434,12 +9434,12 @@ namespace {
 
                oDofMap.MapAssign(a0, h * h / (12. * eta) * dp_du);
 
-               oDofMap.MapAssign(rgFlux[j].wu, U - a0);
-               oDofMap.MapAssign(rgFlux[j].qu, h * rgFlux[j].wu);
+               oDofMap.MapAssign(rgFlux_a[j].wu, U - a0);
+               oDofMap.MapAssign(rgFlux_a[j].qu, h * rgFlux_a[j].wu);
 
-               const index_type iUpwindu = rgFlux[j].qu >= 0. ? iNodeDown : iNodeUp;
+               const index_type iUpwindu = rgFlux_a[j].qu >= 0. ? iNodeDown : iNodeUp;
 
-               oDofMap.MapAssign(rgFlux[j].mdotu, rgNDH[iUpwindu].rho * rgFlux[j].qu);
+               oDofMap.MapAssign(rgFlux_a[j].mdotu, rgNDH[iUpwindu].rho * rgFlux_a[j].qu);
 
                switch (j) {
                case PRESSURE_FROM_NODE:
@@ -9472,7 +9472,7 @@ namespace {
                                                       cp,
                                                       HydroFluid::SPEC_HEAT_TRUE);
 
-                         oDofMap.MapAssign(oNode.Qu, rgFlux[j].qu * (beta * rgNDH[iUpwindu].T * dp_du
+                         oDofMap.MapAssign(oNode_a.Qu, rgFlux_a[j].qu * (beta * rgNDH[iUpwindu].T * dp_du
                                                                      - rgNDH[iUpwindu].rho * cp * (rgNDH[iNodeUp].T - rgNDH[iNodeDown].T) / du)
                                            + h * a0 * dp_du + eta * dU * dU / h);
 
@@ -9484,9 +9484,9 @@ namespace {
                               oDofMap.MapAssign(Psi0, dU / h - a1);
                               oDofMap.MapAssign(Psih, dU / h + a1);
 
-                              oDofMap.MapAssign(oNode.A0, eta * Psi0 * Psi0);
-                              oDofMap.MapAssign(oNode.Ah, eta * Psih * Psih);
-                              oDofMap.MapAssign(oNode.Ac, 0.5 * (rgNDH[iNodeUp].Pfc + rgNDH[iNodeDown].Pfc) / h);
+                              oDofMap.MapAssign(oNode_a.A0, eta * Psi0 * Psi0);
+                              oDofMap.MapAssign(oNode_a.Ah, eta * Psih * Psih);
+                              oDofMap.MapAssign(oNode_a.Ac, 0.5 * (rgNDH[iNodeUp].Pfc + rgNDH[iNodeDown].Pfc) / h);
                          }
                     }
                     break;
@@ -9495,11 +9495,11 @@ namespace {
           }
      }
 
-     HydroNode::HydroNode(integer iNodeNo,
-                          const SpColVector<doublereal, 2>& x,
+     HydroNode::HydroNode(integer iNodeNo_a,
+                          const SpColVector<doublereal, 2>& x_a,
                           HydroMesh* pParent,
-                          integer iNodeFlags)
-          :Node2D(iNodeNo, x, pParent, HYDRAULIC_NODE | CORNER_NODE | iNodeFlags),
+                          integer iNodeFlags_a)
+          :Node2D(iNodeNo_a, x_a, pParent, HYDRAULIC_NODE | CORNER_NODE | iNodeFlags_a),
            pThermalNode(nullptr)
      {
 
@@ -9679,12 +9679,12 @@ namespace {
           }
      }
 
-     HydroSlaveNode::HydroSlaveNode(integer iNodeNo,
-                                    const SpColVector<doublereal, 2>& x,
-                                    HydroMesh* pMesh,
-                                    HydroNode* pMasterNode)
-          :HydroNode(iNodeNo, x, pMesh, (pMasterNode->iGetNodeFlags() & ~MASTER_NODE) | SLAVE_NODE),
-           pMasterNode(pMasterNode)
+     HydroSlaveNode::HydroSlaveNode(integer iNodeNo_a,
+                                    const SpColVector<doublereal, 2>& x_a,
+                                    HydroMesh* pMesh_a,
+                                    HydroNode* pMasterNode_a)
+          :HydroNode(iNodeNo_a, x_a, pMesh_a, (pMasterNode_a->iGetNodeFlags() & ~MASTER_NODE) | SLAVE_NODE),
+           pMasterNode(pMasterNode_a)
      {
           HYDRO_ASSERT(pMasterNode->bIsNodeType(MASTER_NODE));
      }
@@ -9939,11 +9939,11 @@ namespace {
           return pMasterNode->iGetComplianceIndex();
      }
 
-     HydroMasterNode::HydroMasterNode(integer iNodeNo,
-                                      const SpColVector<doublereal, 2>& x,
-                                      HydroMesh* pMesh,
-                                      integer iNodeFlags)
-          :HydroNode(iNodeNo, x, pMesh, iNodeFlags | MASTER_NODE)
+     HydroMasterNode::HydroMasterNode(integer iNodeNo_a,
+                                      const SpColVector<doublereal, 2>& x_a,
+                                      HydroMesh* pMesh_a,
+                                      integer iNodeFlags_a)
+          :HydroNode(iNodeNo_a, x_a, pMesh_a, iNodeFlags_a | MASTER_NODE)
      {
 
      }
@@ -9953,21 +9953,21 @@ namespace {
 
      }
 
-     HydroUpdatedNode::HydroUpdatedNode(integer iNodeNo,
-                                        const SpColVector<doublereal, 2>& x,
-                                        HydroMesh* pMesh,
-                                        ContactModel* pContactModel,
-                                        std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                        integer iNodeFlags)
-          :HydroMasterNode(iNodeNo, x, pMesh, iNodeFlags | UPDATED_NODE),
+     HydroUpdatedNode::HydroUpdatedNode(integer iNodeNo_a,
+                                        const SpColVector<doublereal, 2>& x_a,
+                                        HydroMesh* pMesh_a,
+                                        ContactModel* pContactModel_a,
+                                        std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                        integer iNodeFlags_a)
+          :HydroMasterNode(iNodeNo_a, x_a, pMesh_a, iNodeFlags_a | UPDATED_NODE),
            sum_tau_xy_0(0.),
            sum_tau_yz_0(0.),
            sum_tau_xy_h(0.),
            sum_tau_yz_h(0.),
            iNumStressEval(0),
-           pContactModel(pContactModel),
-           pFrictionModel(std::move(pFrictionModel)),
-           pComplianceModel(pMesh->pGetComplianceModel()),
+           pContactModel(pContactModel_a),
+           pFrictionModel(std::move(pFrictionModel_a)),
+           pComplianceModel(pMesh_a->pGetComplianceModel()),
            iComplianceIndex(-1)
      {
           if (pComplianceModel) {
@@ -10228,21 +10228,21 @@ namespace {
           return iComplianceIndex;
      }
 
-     HydroActiveNode::HydroActiveNode(integer iNodeNo,
-                                      const SpColVector<doublereal, 2>& x,
-                                      HydroMesh* pParent,
-                                      ContactModel* pContactModel,
-                                      std::unique_ptr<FrictionModel>&& pFrictionModel)
-          :HydroIncompressibleNode(iNodeNo,
-                                   x,
-                                   pParent,
-                                   pContactModel,
-                                   std::move(pFrictionModel),
+     HydroActiveNode::HydroActiveNode(integer iNodeNo_a,
+                                      const SpColVector<doublereal, 2>& x_a,
+                                      HydroMesh* pParent_a,
+                                      ContactModel* pContactModel_a,
+                                      std::unique_ptr<FrictionModel>&& pFrictionModel_a)
+          :HydroIncompressibleNode(iNodeNo_a,
+                                   x_a,
+                                   pParent_a,
+                                   pContactModel_a,
+                                   std::move(pFrictionModel_a),
                                    ACTIVE_NODE),
            p(0.),
            dp_dt(0.),
            pY(0.),
-           s(pParent->pGetParent()->dGetScale(HydroRootElement::SCALE_PRESSURE_DOF)),
+           s(pParent_a->pGetParent()->dGetScale(HydroRootElement::SCALE_PRESSURE_DOF)),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG)
      {
 
@@ -10343,42 +10343,42 @@ namespace {
           XPrimeCurr(iIndex) = dp_dt / s;
      }
 
-     void HydroActiveNode::GetPressure(doublereal& p, doublereal) const {
-          p = this->p;
+     void HydroActiveNode::GetPressure(doublereal& p_a, doublereal) const {
+          p_a = this->p;
      }
 
-     void HydroActiveNode::GetPressure(SpGradient& p, doublereal dCoef) const {
-          p.Reset(this->p, iGetFirstDofIndex(eCurrFunc), -s);
+     void HydroActiveNode::GetPressure(SpGradient& p_a, doublereal dCoef) const {
+          p_a.Reset(this->p, iGetFirstDofIndex(eCurrFunc), -s);
      }
 
-     void HydroActiveNode::GetPressure(GpGradProd& p, doublereal dCoef) const {
-          p.Reset(this->p, -s * pY);
+     void HydroActiveNode::GetPressure(GpGradProd& p_a, doublereal dCoef) const {
+          p_a.Reset(this->p, -s * pY);
      }
 
-     void HydroActiveNode::GetPressureDerTime(doublereal& dp_dt, doublereal) const {
-          dp_dt = this->dp_dt;
+     void HydroActiveNode::GetPressureDerTime(doublereal& dp_dt_a, doublereal) const {
+          dp_dt_a = this->dp_dt;
      }
 
-     void HydroActiveNode::GetPressureDerTime(SpGradient& dp_dt, doublereal dCoef) const {
+     void HydroActiveNode::GetPressureDerTime(SpGradient& dp_dt_a, doublereal dCoef) const {
           HYDRO_ASSERT(eCurrFunc == SpFunctionCall::REGULAR_FLAG || eCurrFunc == SpFunctionCall::INITIAL_ASS_FLAG);
 
           if (eCurrFunc == SpFunctionCall::REGULAR_FLAG) {
                // We assume that db0Algebraic == db0Differential
                // In case of multistep and hope methods this is correct
                // only if algebraic and differential spectral radii are the same!
-               dp_dt.Reset(this->dp_dt, iGetFirstDofIndex(eCurrFunc), -dCoef * s);
+               dp_dt_a.Reset(this->dp_dt, iGetFirstDofIndex(eCurrFunc), -dCoef * s);
           } else {
-               dp_dt.ResizeReset(this->dp_dt, 0);
+               dp_dt_a.ResizeReset(this->dp_dt, 0);
           }
      }
 
-     void HydroActiveNode::GetPressureDerTime(GpGradProd& dp_dt, doublereal dCoef) const {
+     void HydroActiveNode::GetPressureDerTime(GpGradProd& dp_dt_a, doublereal dCoef) const {
           HYDRO_ASSERT(eCurrFunc == SpFunctionCall::REGULAR_FLAG);
 
           // We assume that db0Algebraic == db0Differential
           // In case of multistep and hope methods this is correct
           // only if algebraic and differential spectral radii are the same!
-          dp_dt.Reset(this->dp_dt, -dCoef * s * pY);
+          dp_dt_a.Reset(this->dp_dt, -dCoef * s * pY);
      }
 
      unsigned int HydroActiveNode::iGetNumDof(void) const
@@ -10425,19 +10425,19 @@ namespace {
           return out;
      }
 
-     HydroPassiveNode::HydroPassiveNode(integer iNodeNo,
-                                        const SpColVector<doublereal, 2>& x,
-                                        HydroMesh* pParent,
-                                        ContactModel* pContactModel,
-                                        std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                        const FluidStateBoundaryCond* pBoundaryCond)
-          :HydroIncompressibleNode(iNodeNo,
-                                   x,
-                                   pParent,
-                                   pContactModel,
-                                   std::move(pFrictionModel),
+     HydroPassiveNode::HydroPassiveNode(integer iNodeNo_a,
+                                        const SpColVector<doublereal, 2>& x_a,
+                                        HydroMesh* pParent_a,
+                                        ContactModel* pContactModel_a,
+                                        std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                        const FluidStateBoundaryCond* pBoundaryCond_a)
+          :HydroIncompressibleNode(iNodeNo_a,
+                                   x_a,
+                                   pParent_a,
+                                   pContactModel_a,
+                                   std::move(pFrictionModel_a),
                                    PASSIVE_NODE),
-           pBoundaryCond(pBoundaryCond)
+           pBoundaryCond(pBoundaryCond_a)
      {
           HYDRO_ASSERT(pBoundaryCond->bIncludeNode(GetNodePhysics()));
      }
@@ -10507,18 +10507,18 @@ namespace {
           pBoundaryCond->GetPressureDerTime(dp_dt, h, dh_dt);
      }
 
-     HydroIncompressibleNode::HydroIncompressibleNode(integer iNodeNo,
-                                                      const SpColVector<doublereal, 2>& x,
-                                                      HydroMesh* pParent,
-                                                      ContactModel* pContactModel,
-                                                      std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                                      integer iNodeFlags)
-          :HydroUpdatedNode(iNodeNo,
-                            x,
-                            pParent,
-                            pContactModel,
-                            std::move(pFrictionModel),
-                            iNodeFlags | INCOMPRESSIBLE_NODE)
+     HydroIncompressibleNode::HydroIncompressibleNode(integer iNodeNo_a,
+                                                      const SpColVector<doublereal, 2>& x_a,
+                                                      HydroMesh* pParent_a,
+                                                      ContactModel* pContactModel_a,
+                                                      std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                                      integer iNodeFlags_a)
+          :HydroUpdatedNode(iNodeNo_a,
+                            x_a,
+                            pParent_a,
+                            pContactModel_a,
+                            std::move(pFrictionModel_a),
+                            iNodeFlags_a | INCOMPRESSIBLE_NODE)
      {
 
      }
@@ -10592,30 +10592,30 @@ namespace {
 
      template <typename G>
      inline void
-     HydroIncompressibleNode::UpdateState(FluidState<G>& oState, doublereal dCoef) const
+     HydroIncompressibleNode::UpdateState(FluidState<G>& oState_a, doublereal dCoef) const
      {
           G p, T, dT_dt, drho_dp, drho_dT;
 
           GetPressure(p, dCoef);
           GetTemperature(T, dCoef);
           GetTemperatureDerTime(dT_dt, dCoef);
-          pGetFluid()->GetDensity(p, T, oState.rho, &drho_dp, &drho_dT);
-          oState.drho_dt = drho_dT * dT_dt;
+          pGetFluid()->GetDensity(p, T, oState_a.rho, &drho_dp, &drho_dT);
+          oState_a.drho_dt = drho_dT * dT_dt;
 
           HYDRO_ASSERT(drho_dp == 0.);
      }
 
-     HydroCoupledNode::HydroCoupledNode(integer iNodeNo,
-                                        const SpColVector<doublereal, 2>& x,
-                                        HydroMesh* pParent,
-                                        ContactModel* pContactModel,
-                                        std::unique_ptr<FrictionModel>&& pFrictionModel,
+     HydroCoupledNode::HydroCoupledNode(integer iNodeNo_a,
+                                        const SpColVector<doublereal, 2>& x_a,
+                                        HydroMesh* pParent_a,
+                                        ContactModel* pContactModel_a,
+                                        std::unique_ptr<FrictionModel>&& pFrictionModel_a,
                                         const PressureNodeAd* pNode)
-          :HydroIncompressibleNode(iNodeNo,
-                                   x,
-                                   pParent,
-                                   pContactModel,
-                                   std::move(pFrictionModel),
+          :HydroIncompressibleNode(iNodeNo_a,
+                                   x_a,
+                                   pParent_a,
+                                   pContactModel_a,
+                                   std::move(pFrictionModel_a),
                                    COUPLED_NODE),
            pExtNode(pNode),
            pextY(0.),
@@ -10717,18 +10717,18 @@ namespace {
           HydroIncompressibleNode::Update(Y, dCoef);
      }
 
-     HydroCompressibleNode::HydroCompressibleNode(integer iNodeNo,
-                                                  const SpColVector<doublereal, 2>& x,
-                                                  HydroMesh* pParent,
-                                                  ContactModel* pContactModel,
-                                                  std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                                  integer iNodeFlags)
-          :HydroUpdatedNode(iNodeNo,
-                            x,
-                            pParent,
-                            pContactModel,
-                            std::move(pFrictionModel),
-                            iNodeFlags | COMPRESSIBLE_NODE)
+     HydroCompressibleNode::HydroCompressibleNode(integer iNodeNo_a,
+                                                  const SpColVector<doublereal, 2>& x_a,
+                                                  HydroMesh* pParent_a,
+                                                  ContactModel* pContactModel_a,
+                                                  std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                                  integer iNodeFlags_a)
+          :HydroUpdatedNode(iNodeNo_a,
+                            x_a,
+                            pParent_a,
+                            pContactModel_a,
+                            std::move(pFrictionModel_a),
+                            iNodeFlags_a | COMPRESSIBLE_NODE)
      {
 
      }
@@ -10738,23 +10738,23 @@ namespace {
 
      }
 
-     HydroActiveComprNode::HydroActiveComprNode(integer iNodeNo,
-                                                const SpColVector<doublereal, 2>& x,
+     HydroActiveComprNode::HydroActiveComprNode(integer iNodeNo_a,
+                                                const SpColVector<doublereal, 2>& x_a,
                                                 HydroMesh* pParent,
-                                                ContactModel* pContactModel,
-                                                std::unique_ptr<FrictionModel>&& pFrictionModel,
+                                                ContactModel* pContactModel_a,
+                                                std::unique_ptr<FrictionModel>&& pFrictionModel_a,
                                                 SolverBase::StepIntegratorType eIntegPressure,
                                                 SolverBase::StepIntegratorType eIntegDensity,
-                                                bool bLineSearchControl)
-          :HydroCompressibleNode(iNodeNo,
-                                 x,
+                                                bool bLineSearchControl_a)
+          :HydroCompressibleNode(iNodeNo_a,
+                                 x_a,
                                  pParent,
-                                 pContactModel,
-                                 std::move(pFrictionModel),
+                                 pContactModel_a,
+                                 std::move(pFrictionModel_a),
                                  ACTIVE_NODE),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
            rgStepInteg{eIntegPressure, eIntegDensity},
-           bLineSearchControl(bLineSearchControl)
+           bLineSearchControl(bLineSearchControl_a)
      {
           std::array<HydroRootElement::ScaleType, iNumDofMax> rgScale = {
                HydroRootElement::SCALE_PRESSURE_DOF,
@@ -10905,28 +10905,28 @@ namespace {
      }
 
      template <typename G>
-     inline void HydroActiveComprNode::UpdateState(FluidState<G>& oState, doublereal dCoef) const
+     inline void HydroActiveComprNode::UpdateState(FluidState<G>& oState_a, doublereal dCoef) const
      {
-          GetTheta(oState.Theta, dCoef);
-          GetThetaDerTime(oState.dTheta_dt, dCoef);
-          GetTemperature(oState.T, dCoef);
-          GetTemperatureDerTime(oState.dT_dt, dCoef);
+          GetTheta(oState_a.Theta, dCoef);
+          GetThetaDerTime(oState_a.dTheta_dt, dCoef);
+          GetTemperature(oState_a.T, dCoef);
+          GetTemperatureDerTime(oState_a.dT_dt, dCoef);
 
-          pGetFluid()->ThetaToPhysical(oState.Theta,
-                                       oState.dTheta_dt,
-                                       oState.T,
-                                       oState.dT_dt,
-                                       oState.p,
-                                       oState.dp_dt,
-                                       oState.rho,
-                                       oState.drho_dt);
+          pGetFluid()->ThetaToPhysical(oState_a.Theta,
+                                       oState_a.dTheta_dt,
+                                       oState_a.T,
+                                       oState_a.dT_dt,
+                                       oState_a.p,
+                                       oState_a.dp_dt,
+                                       oState_a.rho,
+                                       oState_a.drho_dt);
 
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.Theta[0])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.Theta[1])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.dTheta_dt[0])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.dTheta_dt[1])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.T)));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.dT_dt)));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.Theta[0])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.Theta[1])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.dTheta_dt[0])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.dTheta_dt[1])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.T)));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.dT_dt)));
      }
 
      integer HydroActiveComprNode::iGetFirstEquationIndex(sp_grad::SpFunctionCall eFunc) const
@@ -11336,18 +11336,18 @@ namespace {
           return out;
      }
 
-     HydroActiveComprNodeMCP::HydroActiveComprNodeMCP(integer iNodeNo,
-                                                      const SpColVector<doublereal, 2>& x,
+     HydroActiveComprNodeMCP::HydroActiveComprNodeMCP(integer iNodeNo_a,
+                                                      const SpColVector<doublereal, 2>& x_a,
                                                       HydroMesh* pParent,
-                                                      ContactModel* pContactModel,
-                                                      std::unique_ptr<FrictionModel>&& pFrictionModel,
+                                                      ContactModel* pContactModel_a,
+                                                      std::unique_ptr<FrictionModel>&& pFrictionModel_a,
                                                       SolverBase::StepIntegratorType eIntegPressure,
                                                       SolverBase::StepIntegratorType eIntegDensity)
-          :HydroCompressibleNode(iNodeNo,
-                                 x,
+          :HydroCompressibleNode(iNodeNo_a,
+                                 x_a,
                                  pParent,
-                                 pContactModel,
-                                 std::move(pFrictionModel),
+                                 pContactModel_a,
+                                 std::move(pFrictionModel_a),
                                  ACTIVE_NODE),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
            rgStepInteg{eIntegPressure, eIntegDensity},
@@ -11459,28 +11459,28 @@ namespace {
      }
 
      template <typename G>
-     inline void HydroActiveComprNodeMCP::UpdateState(FluidState<G>& oState, doublereal dCoef) const
+     inline void HydroActiveComprNodeMCP::UpdateState(FluidState<G>& oState_a, doublereal dCoef) const
      {
-          GetTheta(oState.Theta, dCoef);
-          GetThetaDerTime(oState.dTheta_dt, dCoef);
-          GetTemperature(oState.T, dCoef);
-          GetTemperatureDerTime(oState.dT_dt, dCoef);
+          GetTheta(oState_a.Theta, dCoef);
+          GetThetaDerTime(oState_a.dTheta_dt, dCoef);
+          GetTemperature(oState_a.T, dCoef);
+          GetTemperatureDerTime(oState_a.dT_dt, dCoef);
 
-          pGetFluid()->ThetaToPhysical(oState.Theta,
-                                       oState.dTheta_dt,
-                                       oState.T,
-                                       oState.dT_dt,
-                                       oState.p,
-                                       oState.dp_dt,
-                                       oState.rho,
-                                       oState.drho_dt);
+          pGetFluid()->ThetaToPhysical(oState_a.Theta,
+                                       oState_a.dTheta_dt,
+                                       oState_a.T,
+                                       oState_a.dT_dt,
+                                       oState_a.p,
+                                       oState_a.dp_dt,
+                                       oState_a.rho,
+                                       oState_a.drho_dt);
 
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.Theta[0])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.Theta[1])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.dTheta_dt[0])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.dTheta_dt[1])));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.T)));
-          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState.dT_dt)));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.Theta[0])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.Theta[1])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.dTheta_dt[0])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.dTheta_dt[1])));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.T)));
+          HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(oState_a.dT_dt)));
      }
 
      integer HydroActiveComprNodeMCP::iGetFirstEquationIndex(sp_grad::SpFunctionCall eFunc) const
@@ -11785,19 +11785,19 @@ namespace {
           return out;
      }
 
-     HydroPassiveComprNode::HydroPassiveComprNode(integer iNodeNo,
-                                                  const SpColVector<doublereal, 2>& x,
+     HydroPassiveComprNode::HydroPassiveComprNode(integer iNodeNo_a,
+                                                  const SpColVector<doublereal, 2>& x_a,
                                                   HydroMesh* pParent,
-                                                  ContactModel* pContactModel,
-                                                  std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                                  const FluidStateBoundaryCond* pBoundaryCond)
-          :HydroCompressibleNode(iNodeNo,
-                                 x,
+                                                  ContactModel* pContactModel_a,
+                                                  std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                                  const FluidStateBoundaryCond* pBoundaryCond_a)
+          :HydroCompressibleNode(iNodeNo_a,
+                                 x_a,
                                  pParent,
-                                 pContactModel,
-                                 std::move(pFrictionModel),
+                                 pContactModel_a,
+                                 std::move(pFrictionModel_a),
                                  PASSIVE_NODE),
-           pBoundaryCond(pBoundaryCond)
+           pBoundaryCond(pBoundaryCond_a)
      {
           HYDRO_ASSERT(pBoundaryCond->bIncludeNode(GetNodePhysics()));
      }
@@ -11923,15 +11923,15 @@ namespace {
           pBoundaryCond->GetDensityDerTime(dp_dt, h, dh_dt);
      }
 
-     HydroComprOutletNode::HydroComprOutletNode(integer iNodeNo,
-                                                const SpColVector<doublereal, 2>& x,
+     HydroComprOutletNode::HydroComprOutletNode(integer iNodeNo_a,
+                                                const SpColVector<doublereal, 2>& x_a,
                                                 HydroMesh* pParent,
-                                                ContactModel* pContactModel,
-                                                std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                                const FluidStateBoundaryCond* pBoundaryCond,
-                                                const HydroMasterNode* pMasterNode)
-          :HydroPassiveComprNode(iNodeNo, x, pParent, pContactModel, std::move(pFrictionModel), pBoundaryCond),
-           pMasterNode(pMasterNode)
+                                                ContactModel* pContactModel_a,
+                                                std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                                const FluidStateBoundaryCond* pBoundaryCond_a,
+                                                const HydroMasterNode* pMasterNode_a)
+          :HydroPassiveComprNode(iNodeNo_a, x_a, pParent, pContactModel_a, std::move(pFrictionModel_a), pBoundaryCond_a),
+           pMasterNode(pMasterNode_a)
      {
      }
 
@@ -11969,21 +11969,21 @@ namespace {
           pMasterNode->GetDensityDerTime(drho_dt, dCoef);
      }
 
-     HydroCoupledComprNode::HydroCoupledComprNode(integer iNodeNo,
-                                                  const SpColVector<doublereal, 2>& x,
+     HydroCoupledComprNode::HydroCoupledComprNode(integer iNodeNo_a,
+                                                  const SpColVector<doublereal, 2>& x_a,
                                                   HydroMesh* pParent,
-                                                  ContactModel* pContactModel,
-                                                  std::unique_ptr<FrictionModel>&& pFrictionModel,
-                                                  PressureNodeAd* pExtNode)
-          :HydroCompressibleNode(iNodeNo, x, pParent, pContactModel, std::move(pFrictionModel), COUPLED_NODE),
-           pExtNode(pExtNode),
+                                                  ContactModel* pContactModel_a,
+                                                  std::unique_ptr<FrictionModel>&& pFrictionModel_a,
+                                                  PressureNodeAd* pExtNode_a)
+          :HydroCompressibleNode(iNodeNo_a, x_a, pParent, pContactModel_a, std::move(pFrictionModel_a), COUPLED_NODE),
+           pExtNode(pExtNode_a),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG)
      {
-          if (pExtNode->dGetX() < pGetFluid()->dGetRefPressure()) {
-               pExtNode->SetX(pGetFluid()->dGetRefPressure());
+          if (pExtNode_a->dGetX() < pGetFluid()->dGetRefPressure()) {
+               pExtNode_a->SetX(pGetFluid()->dGetRefPressure());
           }
 
-          pext = pExtNode->dGetX();
+          pext = pExtNode_a->dGetX();
           dpext_dt = 0.;
           pextY = 0.;
      }
@@ -12181,17 +12181,17 @@ namespace {
           oStateCurr.drho_dt = drho_dp * oStateCurr.dp_dt + drho_dT * dT_dt;
      }
 
-     ComplianceModel::ComplianceModel(HydroMesh* pMesh,
-                                      doublereal dDefScale,
-                                      doublereal dPressScale)
-          :HydroElement(pMesh, COMPLIANCE_ELEM),
-           dDefScale(dDefScale),
-           dPressScale(dPressScale),
+     ComplianceModel::ComplianceModel(HydroMesh* pMesh_a,
+                                      doublereal dDefScale_a,
+                                      doublereal dPressScale_a)
+          :HydroElement(pMesh_a, COMPLIANCE_ELEM),
+           dDefScale(dDefScale_a),
+           dPressScale(dPressScale_a),
            bDoInitAss(false)
      {
-          HYDRO_ASSERT(pMesh->iGetNumNodes() > 0);
+          HYDRO_ASSERT(pMesh_a->iGetNumNodes() > 0);
 
-          rgNodes.reserve(pMesh->iGetNumNodes());
+          rgNodes.reserve(pMesh_a->iGetNumNodes());
      }
 
      ComplianceModel::~ComplianceModel()
@@ -12312,9 +12312,9 @@ namespace {
                          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
                     }
 
-                    for (auto i = pBegQuad; i != pEndQuad; ++i) {
+                    for (auto k = pBegQuad; k != pEndQuad; ++k) {
                          for (index_type j = 0; j < oElem.iGetNumNodes(); ++j) {
-                              oElem.SetNode(j, pElem->pGetNode(i->rgNodes[j]));
+                              oElem.SetNode(j, pElem->pGetNode(k->rgNodes[j]));
                          }
 
                          rgElements.push_back(oElem);
@@ -12335,18 +12335,18 @@ namespace {
           w2 = 0.;
      }
 
-     ComplianceModelNodal::ComplianceModelNodal(HydroMesh* pMesh,
-                                                const ModalAd* pModalJoint,
-                                                doublereal dDefScale,
-                                                doublereal dPressScale,
-                                                SolverBase::StepIntegratorType eStepInteg,
+     ComplianceModelNodal::ComplianceModelNodal(HydroMesh* pMesh_a,
+                                                const ModalAd* pModalJoint_a,
+                                                doublereal dDefScale_a,
+                                                doublereal dPressScale_a,
+                                                SolverBase::StepIntegratorType eStepInteg_a,
                                                 ComplianceMatrixArray&& rgMatArg)
-          :ComplianceModel(pMesh, dDefScale, dPressScale),
+          :ComplianceModel(pMesh_a, dDefScale_a, dPressScale_a),
            iNumNodes(-1), iNumModes(-1),
-           pModalJoint(pModalJoint),
+           pModalJoint(pModalJoint_a),
            rgMatrices(std::move(rgMatArg)),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
-           eStepInteg(eStepInteg)
+           eStepInteg(eStepInteg_a)
      {
      }
 
@@ -12477,12 +12477,12 @@ namespace {
           const integer iEqIndex = iGetFirstIndex(func);
 
           {
-               T w, dw_dt;
+               T wi, dwi_dt;
 
                for (index_type i = 0; i < iNumNodes; ++i) {
-                    GetRadialDeformation(w, dw_dt, dCoef, func, rgNodes[i]);
-                    w *= dEquationScale;
-                    WorkVec.AddItem(iEqIndex + i, w);
+                    GetRadialDeformation(wi, dwi_dt, dCoef, func, rgNodes[i]);
+                    wi *= dEquationScale;
+                    WorkVec.AddItem(iEqIndex + i, wi);
                }
           }
 
@@ -12636,9 +12636,9 @@ namespace {
           return bDoInitAss ? iGetNumDof() : 0u;
      }
 
-     integer ComplianceModelNodal::iGetNumColsWorkSpace(sp_grad::SpFunctionCall eFunc, index_type iNumNodes) const
+     integer ComplianceModelNodal::iGetNumColsWorkSpace(sp_grad::SpFunctionCall eFunc, index_type iNumNodes_a) const
      {
-          return (eFunc & SpFunctionCall::REGULAR_FLAG ? 1 : bDoInitAss) * iNumNodes; // Number of columns per node in this case
+          return (eFunc & SpFunctionCall::REGULAR_FLAG ? 1 : bDoInitAss) * iNumNodes_a; // Number of columns per node in this case
      }
 
      DofOrder::Order ComplianceModelNodal::GetDofType(unsigned int i) const
@@ -12797,24 +12797,24 @@ namespace {
      const index_type ComplianceModelNodalDouble::min_zg = *std::min_element(zg.begin(), zg.end());
      const index_type ComplianceModelNodalDouble::max_zg = *std::max_element(zg.begin(), zg.end());
 
-     ComplianceModelNodalDouble::ComplianceModelNodalDouble(HydroMesh* pMesh,
-                                                            const ModalJointArray& rgModalJoints,
-                                                            doublereal dDefScale,
-                                                            doublereal dPressScale,
-                                                            ComplianceMatrixArray&& rgMatrices,
+     ComplianceModelNodalDouble::ComplianceModelNodalDouble(HydroMesh* pMesh_a,
+                                                            const ModalJointArray& rgModalJoints_a,
+                                                            doublereal dDefScale_a,
+                                                            doublereal dPressScale_a,
+                                                            ComplianceMatrixArray&& rgMatrices_a,
                                                             const CylindricalBearing& oGeometry,
-                                                            DEhdInterpolOption eInterpolOption,
-                                                            SolverBase::StepIntegratorType eStepInteg)
-          :ComplianceModel(pMesh, dDefScale, dPressScale),
-           rgModalJoints(rgModalJoints),
+                                                            DEhdInterpolOption eInterpolOption_a,
+                                                            SolverBase::StepIntegratorType eStepInteg_a)
+          :ComplianceModel(pMesh_a, dDefScale_a, dPressScale_a),
+           rgModalJoints(rgModalJoints_a),
            dPressDofScale(0.),
            dMeshRadius(oGeometry.dGetMeshRadius()),
            dMinDistance_2(std::pow(std::numeric_limits<doublereal>::epsilon(), 2./6.)),
-           rgMatrices(std::move(rgMatrices)),
+           rgMatrices(std::move(rgMatrices_a)),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
-           eInterpolOption(eInterpolOption),
+           eInterpolOption(eInterpolOption_a),
            dAxialThreshold(0.),
-           eStepInteg(eStepInteg)
+           eStepInteg(eStepInteg_a)
      {
           std::fill(rgNumNodes.begin(), rgNumNodes.end(), -1);
      }
@@ -13658,14 +13658,14 @@ namespace {
                               f(l + 1) = (p + pasp) * dScale;
                          } break;
                          case FT_DEF_MOVING: {
-                              T dw_dt;
+                              T dwl_dt;
 
                               HYDRO_ASSERT(eMshSrc == DEHD_BODY_MOVING);
                               HYDRO_ASSERT(iCompIndex >= 1);
                               HYDRO_ASSERT(iCompIndex <= w[eMshSrc].iGetNumRows());
 
                               GetRadialDeformation(f(l + 1),
-                                                   dw_dt,
+                                                   dwl_dt,
                                                    dCoef,
                                                    func,
                                                    DEHD_DEF_MOVING,
@@ -13792,12 +13792,12 @@ namespace {
 
                for (index_type i = 1; i <= rgNumNodes[DEHD_BODY_FIXED]; ++i) {
                     const ComplianceMatrix::GridIndex& oGridIdx = rgActGridIdx[DEHD_BODY_FIXED][i - 1];
-                    constexpr doublereal dDefScale = 1.;
+                    constexpr doublereal dScale = 1.;
 
                     Interpolate<FT_DEF_MOVING, DEHD_BODY_MOVING, DEHD_BODY_FIXED>(oGridIdx.ix,
                                                                                   oGridIdx.iz,
                                                                                   dxm,
-                                                                                  dDefScale,
+                                                                                  dScale,
                                                                                   wm2(i),
                                                                                   dCoef,
                                                                                   func);
@@ -13907,16 +13907,16 @@ namespace {
           }
      }
 
-     ComplianceModelModal::ComplianceModelModal(HydroMesh* pMesh,
-                                                doublereal dDefScale,
-                                                doublereal dPressScale,
-                                                SolverBase::StepIntegratorType eStepInteg,
-                                                const std::string& strFileName)
-          :ComplianceModel(pMesh, dDefScale, dPressScale),
+     ComplianceModelModal::ComplianceModelModal(HydroMesh* pMesh_a,
+                                                doublereal dDefScale_a,
+                                                doublereal dPressScale_a,
+                                                SolverBase::StepIntegratorType eStepInteg_a,
+                                                const std::string& strFileName_a)
+          :ComplianceModel(pMesh_a, dDefScale_a, dPressScale_a),
            iNumModes(0),
-           strFileName(strFileName),
+           strFileName(strFileName_a),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
-           eStepInteg(eStepInteg)
+           eStepInteg(eStepInteg_a)
      {
      }
 
@@ -13966,9 +13966,8 @@ namespace {
           eCurrFunc = SpFunctionCall::REGULAR_FLAG;
 
           integer iDofIndex = iGetFirstIndex(eCurrFunc);
-          const index_type iNumModes = iGetNumModes();
 
-          for (index_type i = 1; i <= iNumModes; ++i, ++iDofIndex) {
+          for (index_type i = 1; i <= iGetNumModes(); ++i, ++iDofIndex) {
                HYDRO_ASSERT(i <= XCurr.iGetSize());
 
                XCurr(iDofIndex) = q(i);
@@ -14015,9 +14014,8 @@ namespace {
      {
           if (bDoInitAss || !bInitial) {
                integer iDofIndex = iGetFirstIndex(bInitial ? SpFunctionCall::INITIAL_ASS_FLAG : SpFunctionCall::REGULAR_FLAG);
-               const index_type iNumModes = iGetNumModes();
 
-               for (index_type i = 1; i <= iNumModes; ++i, ++iDofIndex) {
+               for (index_type i = 1; i <= iGetNumModes(); ++i, ++iDofIndex) {
                     out << prefix << iDofIndex << ": ModalAd elasticity dof for mode " << i << std::endl;
                }
           }
@@ -14030,9 +14028,8 @@ namespace {
      {
           if (bDoInitAss || !bInitial) {
                integer iDofIndex = iGetFirstIndex(bInitial ? SpFunctionCall::INITIAL_ASS_FLAG : SpFunctionCall::REGULAR_FLAG);
-               const index_type iNumModes = iGetNumModes();
-
-               for (index_type i = 1; i <= iNumModes; ++i, ++iDofIndex) {
+               
+               for (index_type i = 1; i <= iGetNumModes(); ++i, ++iDofIndex) {
                     out << prefix << iDofIndex << ": ModalAd elasticity definition for mode " << i << std::endl;
                }
           }
@@ -14045,9 +14042,8 @@ namespace {
      {
           if (bDoInitAss || (func & SpFunctionCall::REGULAR_FLAG)) {
                integer iDofIndex = iGetFirstIndex(func);
-               const index_type iNumModes = iGetNumModes();
 
-               for (index_type i = 1; i <= iNumModes; ++i, ++iDofIndex) {
+               for (index_type i = 1; i <= iGetNumModes(); ++i, ++iDofIndex) {
                     HYDRO_ASSERT(iDofIndex >= 1);
                     HYDRO_ASSERT(iDofIndex <= XCurr.iGetSize());
 
@@ -14067,9 +14063,8 @@ namespace {
      ComplianceModelModal::Update(const VectorHandler& Y, doublereal dCoef)
      {
           integer iDofIndex = iGetFirstIndex(SpFunctionCall::REGULAR_JAC);
-          const index_type iNumModes = iGetNumModes();
 
-          for (index_type i = 1; i <= iNumModes; ++i, ++iDofIndex) {
+          for (index_type i = 1; i <= iGetNumModes(); ++i, ++iDofIndex) {
                HYDRO_ASSERT(iDofIndex >= 1);
                HYDRO_ASSERT(iDofIndex <= Y.iGetSize());
 
@@ -14176,7 +14171,6 @@ namespace {
      void ComplianceModelModal::GetRadialDeformationTpl(T& wi, T& dwi_dt, doublereal dCoef, SpFunctionCall func, const HydroUpdatedNode* pNode) const
      {
           const index_type iNodeIndex = pNode->iGetComplianceIndex();
-          const index_type iNumModes = iGetNumModes();
 
           HYDRO_ASSERT(iNodeIndex >= 1);
           HYDRO_ASSERT(iNodeIndex <= iGetNumNodes());
@@ -14187,7 +14181,7 @@ namespace {
 
           T qi;
 
-          for (index_type iMode = 1; iMode <= iNumModes; ++iMode) {
+          for (index_type iMode = 1; iMode <= iGetNumModes(); ++iMode) {
                GetModalDeformation(iMode, qi, dCoef, func);
 
                wi += Phin(iNodeIndex, iMode) * qi;
@@ -14196,7 +14190,7 @@ namespace {
           if (func & SpFunctionCall::REGULAR_FLAG) {
                T dqi_dt;
 
-               for (index_type iMode = 1; iMode <= iNumModes; ++iMode) {
+               for (index_type iMode = 1; iMode <= iGetNumModes(); ++iMode) {
                     GetModalDeformationDer(iMode, dqi_dt, dCoef, func);
 
                     dwi_dt += Phin(iNodeIndex, iMode) * dqi_dt;
@@ -14227,13 +14221,12 @@ namespace {
                                            const SpGradientVectorHandler<T>& XCurr,
                                            SpFunctionCall func)
      {
-          const index_type iNumModes = iGetNumModes();
           const index_type iNumNodes = rgNodes.size();
           const doublereal dEquationScale = pGetMesh()->pGetParent()->dGetScale(HydroRootElement::SCALE_ELASTICITY_EQU);
 
           SpColVector<T, SpMatrixSize::DYNAMIC> f(iNumModes, iNumNodes + 1);
 
-          for (index_type iMode = 1; iMode <= iNumModes; ++iMode) {
+          for (index_type iMode = 1; iMode <= iGetNumModes(); ++iMode) {
                GetModalDeformation(iMode, f(iMode), dCoef, func);
           }
 
@@ -14248,7 +14241,7 @@ namespace {
 
                p *= dPressScale;
 
-               for (index_type iMode = 1; iMode <= iNumModes; ++iMode) {
+               for (index_type iMode = 1; iMode <= iGetNumModes(); ++iMode) {
                     f(iMode) -= EvalUnique(RPhiK(iMode, jNode) * p);
                }
           }
@@ -14878,13 +14871,13 @@ namespace {
                                                   throw ErrGeneric(MBDYN_EXCEPT_ARGS);
                                              }
 
-                                             std::vector<const Node*> rgNodes;
+                                             std::vector<const Node*> rgNodesConn;
 
-                                             oMatData.pModalJoint->GetConnectedNodes(rgNodes);
+                                             oMatData.pModalJoint->GetConnectedNodes(rgNodesConn);
 
                                              bool bValid = false;
 
-                                             for (const Node* pNode: rgNodes) {
+                                             for (const Node* pNode: rgNodesConn) {
                                                   if (pNode == pNodeInterface) {
                                                        bValid = true;
                                                        break;
@@ -15505,8 +15498,8 @@ namespace {
           }
      }
 
-     ComplianceFromFile::ComplianceFromFile(const std::string& strFileName)
-          :strFileName(strFileName)
+     ComplianceFromFile::ComplianceFromFile(const std::string& strFileName_a)
+          :strFileName(strFileName_a)
      {
      }
 
@@ -15528,8 +15521,8 @@ namespace {
      constexpr SpGradExpDofMapHelper<doublereal> BearingGeometry::oDofMapDoublereal;
      constexpr SpGradExpDofMapHelper<GpGradProd> BearingGeometry::oDofMapGpGradProd;
 
-     BearingGeometry::BearingGeometry(HydroRootElement* pParent)
-          :pParent(pParent),
+     BearingGeometry::BearingGeometry(HydroRootElement* pParent_a)
+          :pParent(pParent_a),
            bDofMapUseInactiveNodes(false)
      {
 #if MBDYN_ENABLE_PROFILE
@@ -15714,8 +15707,8 @@ namespace {
           return du;
      }
 
-     RigidBodyBearing::RigidBodyBearing(HydroRootElement* pParent)
-          :BearingGeometry(pParent),
+     RigidBodyBearing::RigidBodyBearing(HydroRootElement* pParent_a)
+          :BearingGeometry(pParent_a),
            pNode1{nullptr},
            pNode2{nullptr}
      {
@@ -15851,15 +15844,15 @@ namespace {
      }
 
      void
-     RigidBodyBearing::SaveReactionForce(const SpColVector<doublereal, 3>& F1,
-                                         const SpColVector<doublereal, 3>& M1,
-                                         const SpColVector<doublereal, 3>& F2,
-                                         const SpColVector<doublereal, 3>& M2)
+     RigidBodyBearing::SaveReactionForce(const SpColVector<doublereal, 3>& F1_a,
+                                         const SpColVector<doublereal, 3>& M1_a,
+                                         const SpColVector<doublereal, 3>& F2_a,
+                                         const SpColVector<doublereal, 3>& M2_a)
      {
-          this->F1 = F1;
-          this->M1 = M1;
-          this->F2 = F2;
-          this->M2 = M2;
+          this->F1 = F1_a;
+          this->M1 = M1_a;
+          this->F2 = F2_a;
+          this->M2 = M2_a;
      }
 
      void
@@ -15890,8 +15883,8 @@ namespace {
           return os;
      }
 
-     CylindricalBearing::CylindricalBearing(HydroRootElement* pParent)
-          :RigidBodyBearing(pParent), hmin(0.)
+     CylindricalBearing::CylindricalBearing(HydroRootElement* pParent_a)
+          :RigidBodyBearing(pParent_a), hmin(0.)
      {
 
      }
@@ -16000,8 +15993,8 @@ namespace {
      CylindricalBearing::GetPosition3DTpl(const SpColVector<T, 2>& x1,
                                           SpColVector<T, 3>& v1) const
      {
-          const doublereal r = dGetMeshRadius();
-          const T Phi1 = x1(1) / r;
+          const doublereal rm = dGetMeshRadius();
+          const T Phi1 = x1(1) / rm;
           const T& z1 = x1(2);
           const Pocket* const pPocket = pFindMeshPocket(x1);
           T dy;
@@ -16012,9 +16005,9 @@ namespace {
                SpGradientTraits<T>::ResizeReset(dy, 0., 0);
           }
 
-          const SpColVector<T, 3> v1_Rb{(r + dy) * cos(Phi1),
-                    (r + dy) * sin(Phi1),
-                    z1};
+          const SpColVector<T, 3> v1_Rb{(rm + dy) * cos(Phi1),
+               (rm + dy) * sin(Phi1),
+               z1};
 
           const auto& Rb = GetOrientationMeshNode();
 
@@ -16045,8 +16038,8 @@ namespace {
      void CylindricalBearing::GetTangentCoordSysTpl(const SpColVector<T, 2>& x1,
                                                     SpMatrix<T, 3, 3>& Rbt) const
      {
-          const doublereal r = dGetMeshRadius();
-          const T Phi1 = x1(1) / r;
+          const doublereal rm = dGetMeshRadius();
+          const T Phi1 = x1(1) / rm;
 
           const SpMatrix<T, 3, 3> Rt{-sin(Phi1),  cos(Phi1), T{0.},
                                      -cos(Phi1), -sin(Phi1), T{0.},
@@ -16075,8 +16068,8 @@ namespace {
      void CylindricalBearing::GetStructNodeOffset(const HydroNode* pHydroNode, SpColVector<doublereal, 3>& v) const
      {
           const SpColVector<doublereal, 2>& x = pHydroNode->GetPosition2D();
-          const doublereal r = dGetMeshRadius();
-          const doublereal Phi = x(1) / r;
+          const doublereal rm = dGetMeshRadius();
+          const doublereal Phi = x(1) / rm;
           const doublereal z = x(2);
           const Pocket* const pPocket = pFindMeshPocket(x);
 
@@ -16088,8 +16081,8 @@ namespace {
                pPocket->GetHeight(x, dy);
           }
 
-          const SpColVector<doublereal, 3> v_Rb({(r + dy) * cos(Phi),
-                                                 (r + dy) * sin(Phi),
+          const SpColVector<doublereal, 3> v_Rb({(rm + dy) * cos(Phi),
+                                                 (rm + dy) * sin(Phi),
                                                  z});
 
           const SpMatrix<doublereal, 3, 3>& Rb = GetOrientationMeshNode();
@@ -16166,8 +16159,8 @@ namespace {
 
           rgPockets.reserve(2 * iNumPockets);
 
-          const doublereal r = dGetMeshRadius();
-          const doublereal c = 2 * M_PI * r;
+          const doublereal rm = dGetMeshRadius();
+          const doublereal c = 2 * M_PI * rm;
 
           for (integer i = 0; i < iNumPockets; ++i) {
                std::unique_ptr<Pocket> pPocket(Pocket::Read(pGetParent(), HP, this));
@@ -16201,8 +16194,8 @@ namespace {
           }
      }
 
-     CylindricalMeshAtShaft::CylindricalMeshAtShaft(HydroRootElement* pParent)
-          :CylindricalBearing(pParent),
+     CylindricalMeshAtShaft::CylindricalMeshAtShaft(HydroRootElement* pParent_a)
+          :CylindricalBearing(pParent_a),
            oBound(*this),
            oBound_grad(*this),
            oBound_gradp(*this)
@@ -16230,8 +16223,8 @@ namespace {
      }
 
      template <typename T>
-     CylindricalMeshAtShaft::Boundary<T>::Boundary(const CylindricalMeshAtShaft& rParent)
-          :rParent(rParent)
+     CylindricalMeshAtShaft::Boundary<T>::Boundary(const CylindricalMeshAtShaft& rParent_a)
+          :rParent(rParent_a)
      {
 
      }
@@ -16470,7 +16463,7 @@ namespace {
           const auto& o2 = rParent.GetOffsetNode2();
           const auto& Rb1 = rParent.GetOrientationNode1();
           const auto& Rb2 = rParent.GetOrientationNode2();
-          const doublereal r = rParent.dGetMeshRadius();
+          const doublereal rm = rParent.dGetMeshRadius();
 
           SpGradExpDofMapHelper<T> oDofMap;
 
@@ -16492,7 +16485,7 @@ namespace {
 
           const SpColVector<T, 3> R2_Rb2_e1(R2 * Rb2.GetCol(1), oDofMap);
 
-          x(1) = r * atan2(Dot(R1 * Rb1.GetCol(2), R2_Rb2_e1, oDofMap),
+          x(1) = rm * atan2(Dot(R1 * Rb1.GetCol(2), R2_Rb2_e1, oDofMap),
                            Dot(R1 * Rb1.GetCol(1), R2_Rb2_e1, oDofMap));
 
           const SpColVector<T, 3> R2_o2(R2 * o2, oDofMap);
@@ -16839,47 +16832,43 @@ namespace {
           const doublereal dInitAss = pGetParent()->dGetStartupFactor();
           const SpColVector<doublereal, 3>& o1 = GetOffsetNode1();
           const SpColVector<doublereal, 3>& o2 = GetOffsetNode2();
-          const SpMatrix<doublereal, 3, 3>& Rb1 = GetOrientationNode1();
-          const SpMatrix<doublereal, 3, 3>& Rb2 = GetOrientationNode2();
+          const SpMatrix<doublereal, 3, 3>& Rb1l = GetOrientationNode1();
+          const SpMatrix<doublereal, 3, 3>& Rb2l = GetOrientationNode2();
 
           SpColVectorA<T, 3, 1> X1, X2;
           SpMatrixA<T, 3, 3, 3> R1, R2;
 
-          const StructNodeAd* const pNode1 = pGetNode1();
+          pGetNode1()->GetXCurr(X1, dCoef, func);
+          pGetNode1()->GetRCurr(R1, dCoef, func);
 
-          pNode1->GetXCurr(X1, dCoef, func);
-          pNode1->GetRCurr(R1, dCoef, func);
+          pGetNode2()->GetXCurr(X2, dCoef, func);
+          pGetNode2()->GetRCurr(R2, dCoef, func);
 
-          const StructNodeAd* const pNode2 = pGetNode2();
+          const T lambda = -Dot(Rb1l.GetCol(3), (Transpose(R1) * (X1 - X2 - R2 * o2) + o1))
+               / Dot(Rb1l.GetCol(3), (Transpose(R1) * (R2 * Rb2l.GetCol(3))));
+          const SpColVector<T, 3> F1l((R1 * oReact.F1_R1) * dInitAss, oDofMap);
+          const SpColVector<T, 3> M1l((R1 * oReact.M1_R1) * dInitAss + Cross((R1 * o1), F1l), oDofMap);
+          const SpColVector<T, 3> F2l((R1 * oReact.F2_R1) * dInitAss, oDofMap);
+          const SpColVector<T, 3> M2l((R1 * oReact.M2_R1) * dInitAss + Cross((R2 * (o2 + Rb2l.GetCol(3) * lambda)), F2l), oDofMap);
 
-          pNode2->GetXCurr(X2, dCoef, func);
-          pNode2->GetRCurr(R2, dCoef, func);
-
-          const T lambda = -Dot(Rb1.GetCol(3), (Transpose(R1) * (X1 - X2 - R2 * o2) + o1))
-               / Dot(Rb1.GetCol(3), (Transpose(R1) * (R2 * Rb2.GetCol(3))));
-          const SpColVector<T, 3> F1((R1 * oReact.F1_R1) * dInitAss, oDofMap);
-          const SpColVector<T, 3> M1((R1 * oReact.M1_R1) * dInitAss + Cross((R1 * o1), F1), oDofMap);
-          const SpColVector<T, 3> F2((R1 * oReact.F2_R1) * dInitAss, oDofMap);
-          const SpColVector<T, 3> M2((R1 * oReact.M2_R1) * dInitAss + Cross((R2 * (o2 + Rb2.GetCol(3) * lambda)), F2), oDofMap);
-
-          const integer iFirstMomIndexNode1 = (func & INITIAL_ASS_FLAG) ? pNode1->iGetFirstPositionIndex() : pNode1->iGetFirstMomentumIndex();
-          const integer iFirstMomIndexNode2 = (func & INITIAL_ASS_FLAG) ? pNode2->iGetFirstPositionIndex() : pNode2->iGetFirstMomentumIndex();
+          const integer iFirstMomIndexNode1 = (func & INITIAL_ASS_FLAG) ? pGetNode1()->iGetFirstPositionIndex() : pGetNode1()->iGetFirstMomentumIndex();
+          const integer iFirstMomIndexNode2 = (func & INITIAL_ASS_FLAG) ? pGetNode2()->iGetFirstPositionIndex() : pGetNode2()->iGetFirstMomentumIndex();
 
 #if GRADIENT_DEBUG >= 2
-          std::cerr << "F1=" << F1 << std::endl;
+          std::cerr << "F1l=" << F1l << std::endl;
 #endif
 
-          SaveReactionForce(F1, M1, F2, M2);
+          SaveReactionForce(F1l, M1l, F2l, M2l);
 
-          CHECK_NUM_COLS_WORK_SPACE(this, func, F1, iFirstMomIndexNode1 + 1);
-          CHECK_NUM_COLS_WORK_SPACE(this, func, M1, iFirstMomIndexNode1 + 4);
-          CHECK_NUM_COLS_WORK_SPACE(this, func, F2, iFirstMomIndexNode2 + 1);
-          CHECK_NUM_COLS_WORK_SPACE(this, func, M2, iFirstMomIndexNode2 + 4);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, F1l, iFirstMomIndexNode1 + 1);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, M1l, iFirstMomIndexNode1 + 4);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, F2l, iFirstMomIndexNode2 + 1);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, M2l, iFirstMomIndexNode2 + 4);
 
-          WorkVec.AddItem(iFirstMomIndexNode1 + 1, F1);
-          WorkVec.AddItem(iFirstMomIndexNode1 + 4, M1);
-          WorkVec.AddItem(iFirstMomIndexNode2 + 1, F2);
-          WorkVec.AddItem(iFirstMomIndexNode2 + 4, M2);
+          WorkVec.AddItem(iFirstMomIndexNode1 + 1, F1l);
+          WorkVec.AddItem(iFirstMomIndexNode1 + 4, M1l);
+          WorkVec.AddItem(iFirstMomIndexNode2 + 1, F2l);
+          WorkVec.AddItem(iFirstMomIndexNode2 + 4, M2l);
      }
 
      enum LubricationGroove::Type CylindricalMeshAtShaft::ReadLubricationGrooveType(MBDynParser& HP) const
@@ -16940,8 +16929,8 @@ namespace {
           }
      }
 
-     CylindricalMeshAtBearing::CylindricalMeshAtBearing(HydroRootElement* pParent)
-          :CylindricalBearing(pParent),
+     CylindricalMeshAtBearing::CylindricalMeshAtBearing(HydroRootElement* pParent_a)
+          :CylindricalBearing(pParent_a),
            oBound(*this),
            oBound_grad(*this),
            oBound_gradp(*this)
@@ -17163,52 +17152,49 @@ namespace {
           SpColVectorA<T, 3, 1> X1, X2;
           SpMatrixA<T, 3, 3, 3> R1, R2;
 
-          const StructNodeAd* const pNode1 = pGetNode1();
-          const StructNodeAd* const pNode2 = pGetNode2();
+          pGetNode1()->GetXCurr(X1, dCoef, func);
+          pGetNode1()->GetRCurr(R1, dCoef, func);
 
-          pNode1->GetXCurr(X1, dCoef, func);
-          pNode1->GetRCurr(R1, dCoef, func);
-
-          pNode2->GetXCurr(X2, dCoef, func);
-          pNode2->GetRCurr(R2, dCoef, func);
+          pGetNode2()->GetXCurr(X2, dCoef, func);
+          pGetNode2()->GetRCurr(R2, dCoef, func);
 
           const SpColVector<doublereal, 3>& o1 = GetOffsetNode1();
           const SpColVector<doublereal, 3>& o2 = GetOffsetNode2();
-          const SpMatrix<doublereal, 3, 3>& Rb1 = GetOrientationNode1();
-          const SpMatrix<doublereal, 3, 3>& Rb2 = GetOrientationNode2();
+          const SpMatrix<doublereal, 3, 3>& Rb1l = GetOrientationNode1();
+          const SpMatrix<doublereal, 3, 3>& Rb2l = GetOrientationNode2();
 
           const doublereal dInitAss = pGetParent()->dGetStartupFactor();
 
-          const T lambda = -Dot(Rb2.GetCol(3), (Transpose(R2) * (X1 + (R1 * o1) - X2) - o2))
-               / Dot(Rb2.GetCol(3), (Transpose(R2) * (R1 * Rb1.GetCol(3))));
+          const T lambda = -Dot(Rb2l.GetCol(3), (Transpose(R2) * (X1 + (R1 * o1) - X2) - o2))
+               / Dot(Rb2l.GetCol(3), (Transpose(R2) * (R1 * Rb1l.GetCol(3))));
 
-          const SpColVector<T, 3> l1 = R1 * (o1 + Rb1.GetCol(3) * lambda);
+          const SpColVector<T, 3> l1 = R1 * (o1 + Rb1l.GetCol(3) * lambda);
           const SpColVector<T, 3> l2 = R2 * o2;
 
-          SpColVector<T, 3> F1(R2 * oReact.F1_R2, oDofMap);
-          SpColVector<T, 3> M1(SpColVector<T, 3>(R2 * oReact.M1_R2, oDofMap) + Cross(l1, F1, oDofMap), oDofMap);
-          SpColVector<T, 3> F2(R2 * oReact.F2_R2, oDofMap);
-          SpColVector<T, 3> M2(SpColVector<T, 3>(R2 * oReact.M2_R2, oDofMap) + Cross(l2, F2, oDofMap), oDofMap);
+          SpColVector<T, 3> F1l(R2 * oReact.F1_R2, oDofMap);
+          SpColVector<T, 3> M1l(SpColVector<T, 3>(R2 * oReact.M1_R2, oDofMap) + Cross(l1, F1l, oDofMap), oDofMap);
+          SpColVector<T, 3> F2l(R2 * oReact.F2_R2, oDofMap);
+          SpColVector<T, 3> M2l(SpColVector<T, 3>(R2 * oReact.M2_R2, oDofMap) + Cross(l2, F2l, oDofMap), oDofMap);
 
-          F1 *= dInitAss;
-          M1 *= dInitAss;
-          F2 *= dInitAss;
-          M2 *= dInitAss;
+          F1l *= dInitAss;
+          M1l *= dInitAss;
+          F2l *= dInitAss;
+          M2l *= dInitAss;
 
-          SaveReactionForce(F1, M1, F2, M2);
+          SaveReactionForce(F1l, M1l, F2l, M2l);
 
-          const integer iFirstMomIndexNode1 = (func & INITIAL_ASS_FLAG) ? pNode1->iGetFirstPositionIndex() : pNode1->iGetFirstMomentumIndex();
-          const integer iFirstMomIndexNode2 = (func & INITIAL_ASS_FLAG) ? pNode2->iGetFirstPositionIndex() : pNode2->iGetFirstMomentumIndex();
+          const integer iFirstMomIndexNode1 = (func & INITIAL_ASS_FLAG) ? pGetNode1()->iGetFirstPositionIndex() : pGetNode1()->iGetFirstMomentumIndex();
+          const integer iFirstMomIndexNode2 = (func & INITIAL_ASS_FLAG) ? pGetNode2()->iGetFirstPositionIndex() : pGetNode2()->iGetFirstMomentumIndex();
 
-          CHECK_NUM_COLS_WORK_SPACE(this, func, F1, iFirstMomIndexNode1 + 1);
-          CHECK_NUM_COLS_WORK_SPACE(this, func, M1, iFirstMomIndexNode1 + 4);
-          CHECK_NUM_COLS_WORK_SPACE(this, func, F2, iFirstMomIndexNode2 + 1);
-          CHECK_NUM_COLS_WORK_SPACE(this, func, M2, iFirstMomIndexNode2 + 4);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, F1l, iFirstMomIndexNode1 + 1);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, M1l, iFirstMomIndexNode1 + 4);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, F2l, iFirstMomIndexNode2 + 1);
+          CHECK_NUM_COLS_WORK_SPACE(this, func, M2l, iFirstMomIndexNode2 + 4);
 
-          WorkVec.AddItem(iFirstMomIndexNode1 + 1, F1);
-          WorkVec.AddItem(iFirstMomIndexNode1 + 4, M1);
-          WorkVec.AddItem(iFirstMomIndexNode2 + 1, F2);
-          WorkVec.AddItem(iFirstMomIndexNode2 + 4, M2);
+          WorkVec.AddItem(iFirstMomIndexNode1 + 1, F1l);
+          WorkVec.AddItem(iFirstMomIndexNode1 + 4, M1l);
+          WorkVec.AddItem(iFirstMomIndexNode2 + 1, F2l);
+          WorkVec.AddItem(iFirstMomIndexNode2 + 4, M2l);
      }
 
      enum LubricationGroove::Type
@@ -17374,8 +17360,8 @@ namespace {
      }
 
      template <typename T>
-     CylindricalMeshAtBearing::Boundary<T>::Boundary(const CylindricalMeshAtBearing& rParent)
-          :rParent(rParent)
+     CylindricalMeshAtBearing::Boundary<T>::Boundary(const CylindricalMeshAtBearing& rParent_a)
+          :rParent(rParent_a)
      {
 
      }
@@ -17627,7 +17613,7 @@ namespace {
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
           }
 
-          const doublereal E = HP.GetReal();
+          E = HP.GetReal();
 
           os.str("");
 
@@ -17642,13 +17628,11 @@ namespace {
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
           }
 
-          const doublereal nu = HP.GetReal();
-
-          *this = Material(E, nu);
+          nu = HP.GetReal();
      }
 
-     ContactModel::ContactModel(HydroMesh* pMesh)
-          :pMesh(pMesh)
+     ContactModel::ContactModel(HydroMesh* pMesh_a)
+          :pMesh(pMesh_a)
      {
 
      }
@@ -17670,8 +17654,8 @@ namespace {
           }
      }
 
-     GreenwoodTrippCM::GreenwoodTrippCM(HydroMesh* pMesh)
-          :ContactModel(pMesh),
+     GreenwoodTrippCM::GreenwoodTrippCM(HydroMesh* pMesh_a)
+          :ContactModel(pMesh_a),
            k(0.),
            sigmaDelta(0.),
            H0(0.), Hoffset(0.), a0(0.), a1(0.)
@@ -17862,14 +17846,14 @@ namespace {
           }
      }
 
-     PenaltyCM::PenaltyCM(HydroMesh* pMesh, doublereal href)
-          :ContactModel(pMesh),
+     PenaltyCM::PenaltyCM(HydroMesh* pMesh_a, doublereal href_a)
+          :ContactModel(pMesh_a),
            a(0.),
            b(0.),
            c(0.),
            h0(0.),
            h1(0.),
-           href(href)
+           href(href_a)
      {
 
      }
@@ -17966,8 +17950,8 @@ namespace {
           }
      }
 
-     FrictionModel::FrictionModel(HydroMesh* pMesh)
-          :pMesh(pMesh)
+     FrictionModel::FrictionModel(HydroMesh* pMesh_a)
+          :pMesh(pMesh_a)
      {
 
      }
@@ -17987,8 +17971,8 @@ namespace {
 
      }
 
-     CoulombFriction::CoulombFriction(HydroMesh* pMesh)
-          :FrictionModel(pMesh),
+     CoulombFriction::CoulombFriction(HydroMesh* pMesh_a)
+          :FrictionModel(pMesh_a),
            mu(0.),
            signumDeltaU(0.)
      {
@@ -18055,8 +18039,8 @@ namespace {
           tau = u * (mu * p);
      }
 
-     LugreFriction::LugreFriction(HydroMesh* pMesh)
-          :FrictionModel(pMesh),
+     LugreFriction::LugreFriction(HydroMesh* pMesh_a)
+          :FrictionModel(pMesh_a),
            Mk(2, 2, 0),
            Mk2(2, 2, 0),
            invMk2_sigma0(2, 2, 0),
@@ -18310,10 +18294,10 @@ namespace {
           // Do Nothing
      }
 
-     HydroElement::HydroElement(HydroMesh* pMeshArg, ElementType eType)
+     HydroElement::HydroElement(HydroMesh* pMeshArg, ElementType eType_a)
           :pMesh(pMeshArg),
            pFluid(pMeshArg->pGetParent()->pGetFluid()),
-           eType(eType)
+           eType(eType_a)
      {
 
      }
@@ -18325,9 +18309,8 @@ namespace {
 
      integer HydroElement::iGetNumColsWorkSpace(sp_grad::SpFunctionCall eFunc, index_type) const
      {
-          const HydroMesh* const pMesh = pGetMesh();
-          const BearingGeometry* const pGeometry = pMesh->pGetGeometry();
-          const ComplianceModel* pComplianceModel = pMesh->pGetComplianceModel();
+          const BearingGeometry* const pGeometry = pGetMesh()->pGetGeometry();
+          const ComplianceModel* pComplianceModel = pGetMesh()->pGetComplianceModel();
 
           integer iNumCols = pGeometry->iGetNumColsWorkSpace(eFunc);
 
@@ -18371,8 +18354,8 @@ namespace {
           // NO_OP
      }
 
-     LinFD5Elem::LinFD5Elem(HydroMesh* pMesh, ElementType eType)
-          :HydroElement(pMesh, eType), dx(0.), dz(0.)
+     LinFD5Elem::LinFD5Elem(HydroMesh* pMesh_a, ElementType eType_a)
+          :HydroElement(pMesh_a, eType_a), dx(0.), dz(0.)
      {
           std::fill(rgHydroNodes.begin(), rgHydroNodes.end(), nullptr);
           std::fill(rgFluxNodes.begin(), rgFluxNodes.end(), nullptr);
@@ -18490,8 +18473,8 @@ namespace {
 
      constexpr int LinFD4Elem::iNumNodes;
 
-     LinFD4Elem::LinFD4Elem(HydroMesh* pMesh, ElementType eType)
-          :HydroElement(pMesh, eType),
+     LinFD4Elem::LinFD4Elem(HydroMesh* pMesh_a, ElementType eType_a)
+          :HydroElement(pMesh_a, eType_a),
            dx(0.),
            dz(0.),
            dA(0.)
@@ -18560,8 +18543,8 @@ namespace {
           dA = dx * dz;
      }
 
-     LinFD5ReynoldsElem::LinFD5ReynoldsElem(HydroMesh* pMesh)
-          :LinFD5Elem(pMesh, REYNOLDS_ELEM)
+     LinFD5ReynoldsElem::LinFD5ReynoldsElem(HydroMesh* pMesh_a)
+          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM)
      {
 
 #if MBDYN_ENABLE_PROFILE
@@ -18747,8 +18730,8 @@ namespace {
           WorkVec.AddItem(iFirstIndex, Re);
      }
 
-     LinFD5CouplingElem::LinFD5CouplingElem(HydroMesh* pMesh)
-          :LinFD5Elem(pMesh, COUPLING_ELEM)
+     LinFD5CouplingElem::LinFD5CouplingElem(HydroMesh* pMesh_a)
+          :LinFD5Elem(pMesh_a, COUPLING_ELEM)
      {
 
      }
@@ -18862,8 +18845,8 @@ namespace {
           WorkVec.AddItem(iFirstIndex, dm_dt);
      }
 
-     LinFD4FrictionElem::LinFD4FrictionElem(HydroMesh* pMesh)
-          :LinFD4Elem(pMesh, FRICTION_ELEM),
+     LinFD4FrictionElem::LinFD4FrictionElem(HydroMesh* pMesh_a)
+          :LinFD4Elem(pMesh_a, FRICTION_ELEM),
            xc(2, 0),
            vc(3, 0),
            Rtc(3, 3, 0),
@@ -19257,8 +19240,8 @@ namespace {
           dScaleEnergy = pGetMesh()->pGetParent()->dGetScale(HydroRootElement::SCALE_ENERGY_EQ);
      }
 
-     LinFD4MassFlowZ::LinFD4MassFlowZ(HydroMesh* pMesh)
-          :LinFD4Elem(pMesh, COUPLING_ELEM)
+     LinFD4MassFlowZ::LinFD4MassFlowZ(HydroMesh* pMesh_a)
+          :LinFD4Elem(pMesh_a, COUPLING_ELEM)
      {
           std::fill(rgFluxNodes.begin(), rgFluxNodes.end(), nullptr);
      }
@@ -19387,8 +19370,8 @@ namespace {
           rgFluxNodes[iNode] = pFluxNode;
      }
 
-     LinFD5ComprReynoldsElem::LinFD5ComprReynoldsElem(HydroMesh* pMesh)
-          :LinFD5Elem(pMesh, REYNOLDS_ELEM)
+     LinFD5ComprReynoldsElem::LinFD5ComprReynoldsElem(HydroMesh* pMesh_a)
+          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM)
      {
 
      }
@@ -19581,8 +19564,8 @@ namespace {
           }
      }
 
-     LinFD5ComprReynoldsElemMCP::LinFD5ComprReynoldsElemMCP(HydroMesh* pMesh)
-          :LinFD5Elem(pMesh, REYNOLDS_ELEM)
+     LinFD5ComprReynoldsElemMCP::LinFD5ComprReynoldsElemMCP(HydroMesh* pMesh_a)
+          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM)
      {
 
      }
@@ -19762,8 +19745,8 @@ namespace {
           }
      }
 
-     LinFD5ThermalElem::LinFD5ThermalElem(HydroMesh* pMesh)
-          :LinFD5Elem(pMesh, THERMAL_ELEM),
+     LinFD5ThermalElem::LinFD5ThermalElem(HydroMesh* pMesh_a)
+          :LinFD5Elem(pMesh_a, THERMAL_ELEM),
            dScale(0.)
      {
           std::fill(rgThermNodes.begin(), rgThermNodes.end(), nullptr);
@@ -19999,9 +19982,9 @@ namespace {
           }
      }
 
-     LinFD5ThermalElemImp::LinFD5ThermalElemImp(HydroMesh* pMesh, bool bDoInitAss)
-          :LinFD5ThermalElem(pMesh),
-           bDoInitAss(bDoInitAss)
+     LinFD5ThermalElemImp::LinFD5ThermalElemImp(HydroMesh* pMesh_a, bool bDoInitAss_a)
+          :LinFD5ThermalElem(pMesh_a),
+           bDoInitAss(bDoInitAss_a)
      {
 
      }
@@ -20143,11 +20126,11 @@ namespace {
           WorkVec.AddItem(rgThermNodes[iNodeCenter]->iGetFirstEquationIndex(func), f);
      }
 
-     LinFD5ThermalCouplingElem::LinFD5ThermalCouplingElem(HydroMesh* pMesh,
-                                                          bool bDoInitAss)
-          :LinFD5ThermalElem(pMesh),
+     LinFD5ThermalCouplingElem::LinFD5ThermalCouplingElem(HydroMesh* pMesh_a,
+                                                          bool bDoInitAss_a)
+          :LinFD5ThermalElem(pMesh_a),
            pInletNode(nullptr),
-           bDoInitAss(bDoInitAss)
+           bDoInitAss(bDoInitAss_a)
      {
 
      }
@@ -20332,14 +20315,14 @@ namespace {
      }
 
 
-     QuadFeIso9Elem::IntegrationRule::IntegrationRule(ElementType eElemType,
-                                                      index_type iGaussMin,
-                                                      index_type iGaussMax,
-                                                      index_type iGaussStep)
-          :iGaussMin(iGaussMin),
-           iGaussMax(iGaussMax),
-           iGaussStep(iGaussStep),
-           eElemType(eElemType)
+     QuadFeIso9Elem::IntegrationRule::IntegrationRule(ElementType eElemType_a,
+                                                      index_type iGaussMin_a,
+                                                      index_type iGaussMax_a,
+                                                      index_type iGaussStep_a)
+          :iGaussMin(iGaussMin_a),
+           iGaussMax(iGaussMax_a),
+           iGaussStep(iGaussStep_a),
+           eElemType(eElemType_a)
      {
           HYDRO_ASSERT(bInvariant());
      }
@@ -20419,8 +20402,8 @@ namespace {
           { 1, -1, {3, 6, 7, 8}}
      };
 
-     QuadFeIso9Elem::QuadFeIso9Elem(HydroMesh* pMesh, const IntegrationRule& oIntegRule, ElementType eType)
-          :HydroElement(pMesh, eType),
+     QuadFeIso9Elem::QuadFeIso9Elem(HydroMesh* pMesh_a, const IntegrationRule& oIntegRule, ElementType eType_a)
+          :HydroElement(pMesh_a, eType_a),
            iCurrIntegRule(-1)
      {
           rgGauss.reserve(oIntegRule.iGetGaussCount());
@@ -20735,8 +20718,8 @@ namespace {
           return &*pNodeGroup;
      }
 
-     QuadFeIso9ReynoldsElem::QuadFeIso9ReynoldsElem(HydroMesh* pMesh, const IntegrationRule& oIntegRule)
-          :QuadFeIso9Elem(pMesh, oIntegRule, REYNOLDS_ELEM),
+     QuadFeIso9ReynoldsElem::QuadFeIso9ReynoldsElem(HydroMesh* pMesh_a, const IntegrationRule& oIntegRule_a)
+          :QuadFeIso9Elem(pMesh_a, oIntegRule_a, REYNOLDS_ELEM),
            rgGaussPntDat(iGetGaussPointSize()),
            dA(0.)
      {
@@ -20979,9 +20962,9 @@ namespace {
           pedantic_cout("element surface area: " << dA << '\n');
      }
 
-     QuadFeIso9FrictionElem::QuadFeIso9FrictionElem(HydroMesh* pMesh,
-                                                    const IntegrationRule& oIntegRule)
-          :QuadFeIso9Elem(pMesh, oIntegRule, FRICTION_ELEM),
+     QuadFeIso9FrictionElem::QuadFeIso9FrictionElem(HydroMesh* pMesh_a,
+                                                    const IntegrationRule& oIntegRule_a)
+          :QuadFeIso9Elem(pMesh_a, oIntegRule_a, FRICTION_ELEM),
            rgGaussPntDat(iGetGaussPointSize())
      {
      }
@@ -21010,8 +20993,8 @@ namespace {
                          PressureInterpolMatrix(rgGaussPntDat[idx].N, r, s);
                          PressureGradInterpolMatrix(rgGaussPntDat[idx].B, rgGaussPntDat[idx].detJ, xe, r, s);
 
-                         for (index_type k = 1; k <= 2; ++k) {
-                              rgGaussPntDat[idx].xc(k) = Dot(rgGaussPntDat[idx].N, xe.GetCol(k));
+                         for (index_type l = 1; l <= 2; ++l) {
+                              rgGaussPntDat[idx].xc(l) = Dot(rgGaussPntDat[idx].N, xe.GetCol(l));
                          }
 
                          pGeometry->GetPosition3D(rgGaussPntDat[idx].xc, rgGaussPntDat[idx].vc);
@@ -21272,7 +21255,7 @@ namespace {
 
                          static const int iReactionIdx[2] = {1, 3};
 
-                         for (int i = 1; i <= 2; ++i) {
+                         for (int k = 1; k <= 2; ++k) {
                               // Note: The contact pressure will be always
                               //               normal to the surface of each part
                               //           but the angle between the surface
@@ -21286,8 +21269,8 @@ namespace {
                               //               as long as the relative clearance is small
                               //               in case of a cylindrical bearing.
 
-                              oDofMap.Add(dF_0_Rt(iReactionIdx[i - 1]), tauc_0(i) * dA);
-                              oDofMap.Sub(dF_h_Rt(iReactionIdx[i - 1]), tauc_0(i) * dA);
+                              oDofMap.Add(dF_0_Rt(iReactionIdx[k - 1]), tauc_0(k) * dA);
+                              oDofMap.Sub(dF_h_Rt(iReactionIdx[k - 1]), tauc_0(k) * dA);
                          }
                     }
 
@@ -21349,10 +21332,10 @@ namespace {
 
      const index_type QuadFeIso9MassFlowZ::rgNodeIndexOutletBound[2][iNumNodesOutletBound] = {{3 - 1, 4 - 1, 7 - 1}, {1 - 1, 2 - 1, 5 - 1}};
 
-     QuadFeIso9MassFlowZ::QuadFeIso9MassFlowZ(HydroMesh* pMesh, const IntegrationRule& oIntegRule, doublereal sref)
-          :QuadFeIso9Elem(pMesh, oIntegRule, COUPLING_ELEM),
+     QuadFeIso9MassFlowZ::QuadFeIso9MassFlowZ(HydroMesh* pMesh_a, const IntegrationRule& oIntegRule_a, doublereal sref_a)
+          :QuadFeIso9Elem(pMesh_a, oIntegRule_a, COUPLING_ELEM),
            rgGaussPntDat(iGetGaussPointSize1D()),
-           sref(sref),
+           sref(sref_a),
            pNodeIndexOutletBound{rgNodeIndexOutletBound[sref > 0.]}
      {
           HYDRO_ASSERT(fabs(sref) == 1.);
@@ -21538,16 +21521,16 @@ namespace {
           }
      }
 
-     ThermalFluidModel::ThermalFluidModel(doublereal T0,
-                                          doublereal rho0,
-                                          doublereal eta0,
-                                          doublereal beta)
+     ThermalFluidModel::ThermalFluidModel(doublereal T0_a,
+                                          doublereal rho0_a,
+                                          doublereal eta0_a,
+                                          doublereal beta_a)
           :eType(ISOTHERMAL),
-           T0(T0),
+           T0(T0_a),
            cp0(0.),
-           rho0(rho0),
-           eta0(eta0),
-           beta(beta),
+           rho0(rho0_a),
+           eta0(eta0_a),
+           beta(beta_a),
            lambda0(0.),
            alphalambda(1.),
            Aeta2_Aeta3(0.),
@@ -21650,7 +21633,7 @@ namespace {
      }
 
      template <typename U>
-     U ThermalFluidModel::GetSpecHeatPerVolume(const U& p, const U& T, HeatCapacityType eType) const
+     U ThermalFluidModel::GetSpecHeatPerVolume(const U& p, const U& T, HeatCapacityType eHcType) const
      {
           // alpha = 1 for rho * cp(T)
           // alpha = 0.5 for rho * integrate(cp(T), T, 0, T) / T
@@ -21661,7 +21644,7 @@ namespace {
           static_assert(SPEC_HEAT_AVERAGED == 1, "index does not match");
 
           // Dirk Bartel 2009 equation (6-8)
-          return rho0 * cp0 * (1 + (Ac1 * p) / (1 + Ac2 * p)) * (1 + Ac3 * (1 + Ac4 * p + Ac5 * p * p) * (alpha[eType] * T - T0));
+          return rho0 * cp0 * (1 + (Ac1 * p) / (1 + Ac2 * p)) * (1 + Ac3 * (1 + Ac4 * p + Ac5 * p * p) * (alpha[eHcType] * T - T0));
      }
 
      template <typename U>
@@ -21683,8 +21666,8 @@ namespace {
      }
 
      template <typename U>
-     U ThermalFluidModel::GetSpecificHeatLiquid(const U& p, const U& T, HeatCapacityType eType) const {
-          return GetSpecHeatPerVolume(p, T, eType) / GetDensityLiquid(T);
+     U ThermalFluidModel::GetSpecificHeatLiquid(const U& p, const U& T, HeatCapacityType eHcType) const {
+          return GetSpecHeatPerVolume(p, T, eHcType) / GetDensityLiquid(T);
      }
 
      template <typename U>
@@ -21705,9 +21688,9 @@ namespace {
                std::isfinite(Aeta2_Aeta3);
      }
 
-     HydroFluid::HydroFluid(doublereal pc, const ThermalFluidModel& oThermModel)
-          :pc(pc),
-           oThermModel(oThermModel)
+     HydroFluid::HydroFluid(doublereal pc_a, const ThermalFluidModel& oThermModel_a)
+          :pc(pc_a),
+           oThermModel(oThermModel_a)
      {
 
      }
@@ -21727,8 +21710,8 @@ namespace {
           return oThermModel.dGetRefDensity();
      }
 
-     HydroIncompressibleFluid::HydroIncompressibleFluid(doublereal pc, const ThermalFluidModel& oThermModel)
-          :HydroFluid(pc, oThermModel)
+     HydroIncompressibleFluid::HydroIncompressibleFluid(doublereal pc_a, const ThermalFluidModel& oThermModel_a)
+          :HydroFluid(pc_a, oThermModel_a)
      {
 
      }
@@ -21905,10 +21888,10 @@ namespace {
           return INCOMPRESSIBLE;
      }
 
-     LinearCompressibleFluid::LinearCompressibleFluid(doublereal etavap_etaliq, const doublereal pc, HydraulicType type, const ThermalFluidModel& oThermModel)
-          :HydroFluid(pc, oThermModel),
-           etavap_etaliq(etavap_etaliq),
-           type(type)
+     LinearCompressibleFluid::LinearCompressibleFluid(doublereal etavap_etaliq_a, const doublereal pc_a, HydraulicType type_a, const ThermalFluidModel& oThermModel_a)
+          :HydroFluid(pc_a, oThermModel_a),
+           etavap_etaliq(etavap_etaliq_a),
+           type(type_a)
      {
 
      }
@@ -22136,16 +22119,16 @@ namespace {
           return type;
      }
 
-     FluidStateBoundaryCond::FluidStateBoundaryCond(const HydroFluid* pFluid,
-                                                    Type eType,
-                                                    ExtrapMethod eExtrapMethod,
-                                                    unsigned uNodeMask,
-                                                    std::unique_ptr<DriveCaller>&& pTemp)
-          :pFluid(pFluid),
-           eType(eType),
-           eExtrapMethod(eExtrapMethod),
-           uNodeMask(uNodeMask),
-           pTempDrv(std::move(pTemp))
+     FluidStateBoundaryCond::FluidStateBoundaryCond(const HydroFluid* pFluid_a,
+                                                    Type eType_a,
+                                                    ExtrapMethod eExtrapMethod_a,
+                                                    unsigned uNodeMask_a,
+                                                    std::unique_ptr<DriveCaller>&& pTemp_a)
+          :pFluid(pFluid_a),
+           eType(eType_a),
+           eExtrapMethod(eExtrapMethod_a),
+           uNodeMask(uNodeMask_a),
+           pTempDrv(std::move(pTemp_a))
      {
 
      }
@@ -22249,13 +22232,13 @@ namespace {
           dT_dt = pTempDrv->dGetP();
      }
 
-     FluidStateFunction::FluidStateFunction(const HydroFluid* pFluid,
-                                            Type eType,
-                                            ExtrapMethod eExtrapMethod,
-                                            unsigned uNodeMask,
+     FluidStateFunction::FluidStateFunction(const HydroFluid* pFluid_a,
+                                            Type eType_a,
+                                            ExtrapMethod eExtrapMethod_a,
+                                            unsigned uNodeMask_a,
                                             std::unique_ptr<DriveCaller>&& pPressDens,
-                                            std::unique_ptr<DriveCaller>&& pTemp)
-          :FluidStateBoundaryCond(pFluid, eType, eExtrapMethod, uNodeMask, std::move(pTemp)),
+                                            std::unique_ptr<DriveCaller>&& pTemp_a)
+          :FluidStateBoundaryCond(pFluid_a, eType_a, eExtrapMethod_a, uNodeMask_a, std::move(pTemp_a)),
            pPressDensDrv(std::move(pPressDens)),
            p(0.),
            dp_dt(0.),
@@ -22334,8 +22317,8 @@ namespace {
      void FluidStateFunction::Update() {
           FluidStateBoundaryCond::Update();
 
-          const doublereal T = dGetTemperature();
-          const doublereal dT_dt = dGetTemperatureDerTime();
+          const doublereal T1 = dGetTemperature();
+          const doublereal dT1_dt = dGetTemperatureDerTime();
 
           switch (GetType()) {
           case BC_PRESSURE:
@@ -22347,11 +22330,11 @@ namespace {
 
                doublereal drho_dp, drho_dT;
 
-               pGetFluid()->GetDensity(p, T, rho, &drho_dp, &drho_dT);
+               pGetFluid()->GetDensity(p, T1, rho, &drho_dp, &drho_dT);
 
                pGetFluid()->Cavitation(p, &dp_dt);
 
-               drho_dt = drho_dp * dp_dt + drho_dT * dT_dt;
+               drho_dt = drho_dp * dp_dt + drho_dT * dT1_dt;
                break;
 
           case BC_DENSITY:
@@ -22363,9 +22346,9 @@ namespace {
 
                doublereal dp_drho, dp_dT;
 
-               pGetFluid()->GetPressure(rho, T, p, &dp_drho, &dp_dT);
+               pGetFluid()->GetPressure(rho, T1, p, &dp_drho, &dp_dT);
 
-               dp_dt = dp_drho * drho_dt + dp_dT * dT_dt;
+               dp_dt = dp_drho * drho_dt + dp_dT * dT1_dt;
                break;
 
           default:
@@ -22374,14 +22357,14 @@ namespace {
           }
      }
 
-     FillingRatioFunction::FillingRatioFunction(const HydroFluid* pFluid,
-                                                Type eType,
-                                                ExtrapMethod eExtrapMethod,
-                                                unsigned uNodeMask,
-                                                std::unique_ptr<DriveCaller>&& pFill,
-                                                std::unique_ptr<DriveCaller>&& pTemp)
-          :FluidStateBoundaryCond(pFluid, eType, eExtrapMethod, uNodeMask, std::move(pTemp)),
-           pFillRatioDrv(std::move(pFill)),
+     FillingRatioFunction::FillingRatioFunction(const HydroFluid* pFluid_a,
+                                                Type eType_a,
+                                                ExtrapMethod eExtrapMethod_a,
+                                                unsigned uNodeMask_a,
+                                                std::unique_ptr<DriveCaller>&& pFill_a,
+                                                std::unique_ptr<DriveCaller>&& pTemp_a)
+          :FluidStateBoundaryCond(pFluid_a, eType_a, eExtrapMethod_a, uNodeMask_a, std::move(pTemp_a)),
+           pFillRatioDrv(std::move(pFill_a)),
            h0(0.),
            dh0_dt(0.),
            rho(0.),
@@ -22465,14 +22448,14 @@ namespace {
                dh0_dt = pFillRatioDrv->dGetP();
           }
 
-          const doublereal T = dGetTemperature();
-          const doublereal dT_dt = dGetTemperatureDerTime();
+          const doublereal T1 = dGetTemperature();
+          const doublereal dT1_dt = dGetTemperatureDerTime();
           const doublereal p = pGetFluid()->dGetRefPressure();
           doublereal drho_dT;
 
-          pGetFluid()->GetDensity(p, T, rho, nullptr, &drho_dT);
+          pGetFluid()->GetDensity(p, T1, rho, nullptr, &drho_dT);
 
-          drho_dt = drho_dT * dT_dt;
+          drho_dt = drho_dT * dT1_dt;
      }
 
      template <typename G>
@@ -22529,9 +22512,9 @@ namespace {
           drho_o_dt = dalpha_dt * rho + alpha * drho_dt;
      }
 
-     PressureCouplingCond::PressureCouplingCond(integer iLabel, std::unique_ptr<Geometry2D>&& pGeometry)
-          :iLabel(iLabel),
-           pGeometry(std::move(pGeometry))
+     PressureCouplingCond::PressureCouplingCond(integer iLabel_a, std::unique_ptr<Geometry2D>&& pGeometry_a)
+          :iLabel(iLabel_a),
+           pGeometry(std::move(pGeometry_a))
      {
 
      }
@@ -22588,13 +22571,13 @@ namespace {
                                                                                     std::move(pGeometry))};
      }
 
-     PressureCouplingMaster::PressureCouplingMaster(integer iLabel,
-                                                    PressureNodeAd* pHydroNode,
-                                                    ThermalNodeAd* pThermalNode,
-                                                    std::unique_ptr<Geometry2D>&& pGeometry)
-          :PressureCouplingCond(iLabel, std::move(pGeometry)),
-           pHydroNode(pHydroNode),
-           pThermalNode(pThermalNode),
+     PressureCouplingMaster::PressureCouplingMaster(integer iLabel_a,
+                                                    PressureNodeAd* pHydroNode_a,
+                                                    ThermalNodeAd* pThermalNode_a,
+                                                    std::unique_ptr<Geometry2D>&& pGeometry_a)
+          :PressureCouplingCond(iLabel_a, std::move(pGeometry_a)),
+           pHydroNode(pHydroNode_a),
+           pThermalNode(pThermalNode_a),
            iNumNodes(0)
      {
 
@@ -22626,9 +22609,9 @@ namespace {
           return std::unique_ptr<PressureCouplingSlave>{new PressureCouplingSlave(this, pGetGeometry()->Clone(x))};
      }
 
-     PressureCouplingSlave::PressureCouplingSlave(PressureCouplingMaster* pMaster, std::unique_ptr<Geometry2D>&& pGeometry)
-          :PressureCouplingCond(pMaster->iGetLabel(), std::move(pGeometry)),
-           pMaster(pMaster)
+     PressureCouplingSlave::PressureCouplingSlave(PressureCouplingMaster* pMaster_a, std::unique_ptr<Geometry2D>&& pGeometry_a)
+          :PressureCouplingCond(pMaster_a->iGetLabel(), std::move(pGeometry_a)),
+           pMaster(pMaster_a)
      {
 
      }
@@ -22653,16 +22636,16 @@ namespace {
           return pMaster->iGetNumNodes();
      }
 
-     HydroMesh::HydroMesh(HydroRootElement* pParent)
+     HydroMesh::HydroMesh(HydroRootElement* pParent_a)
           :pGeometry(nullptr),
            pCompliance(nullptr),
            bUseOutletAxial(false),
-           bThermalModel(pParent->pGetFluid()->GetThermalType() != HydroFluid::ISOTHERMAL),
+           bThermalModel(pParent_a->pGetFluid()->GetThermalType() != HydroFluid::ISOTHERMAL),
            rgStepInteg{SolverBase::INT_IMPLICITEULER,
                        SolverBase::INT_CRANKNICOLSON,
                        SolverBase::INT_CRANKNICOLSON,
                        SolverBase::INT_DEFAULT},
-           pParent(pParent)
+           pParent(pParent_a)
      {
      }
 
@@ -23250,10 +23233,8 @@ namespace {
 
      void HydroMesh::GenerateBoundaryConditions()
      {
-          HydroRootElement* const pParent = pGetParent();
-
           for (auto i = rgBoundaryCond.begin(); i != rgBoundaryCond.end(); ++i) {
-               pParent->AddBoundaryCondition(std::move(*i));
+               pGetParent()->AddBoundaryCondition(std::move(*i));
           }
 
           rgBoundaryCond.clear();
@@ -23383,11 +23364,9 @@ namespace {
 
      std::ostream& HydroMesh::PrintLogFile(std::ostream& os) const
      {
-          const BearingGeometry* pGeometry = pGetGeometry();
+          os << pGetGeometry()->GetType() << ' ';
 
-          os << pGeometry->GetType() << ' ';
-
-          pGeometry->PrintLogFile(os);
+          pGetGeometry()->PrintLogFile(os);
 
           return os;
      }
@@ -23436,8 +23415,8 @@ namespace {
           return pCouplingCond;
      }
 
-     LinFDMesh::LinFDMesh(HydroRootElement* pParent)
-          :HydroMesh(pParent),
+     LinFDMesh::LinFDMesh(HydroRootElement* pParent_a)
+          :HydroMesh(pParent_a),
            M(0),
            N(0),
            eElemType(CENT_DIFF_5),
@@ -23833,9 +23812,7 @@ namespace {
           HYDRO_ASSERT(M >= 2);
           HYDRO_ASSERT(N >= 3);
 
-          HydroRootElement* const pParent = pGetParent();
-
-          const HydroFluid* const pFluid = pParent->pGetFluid();
+          const HydroFluid* const pFluid = pGetParent()->pGetFluid();
 
           const bool bIncompressible = pFluid->GetHydraulicType() == HydroFluid::INCOMPRESSIBLE;
           const bool bInitAssThermal = pGetParent()->bInitialAssembly(HydroRootElement::INIT_ASS_THERMAL);
@@ -23845,10 +23822,10 @@ namespace {
           // active pressure nodes
           for (integer i = 1; i <= M - 1; ++i) {
                for (integer j = 1; j <= N - 1; ++j) {
-                    const SpColVector<doublereal, 2> x = GetNodePosition(i, j);
+                    const SpColVector<doublereal, 2> xij = GetNodePosition(i, j);
                     const integer iNodeIndex = iGetNodeIndexHydro(i, j);
-                    LubricationGroove* pGroove = pFindGroove(x, Node2D::HYDRAULIC_NODE, iNodeIndex);
-                    PressureCouplingCond* pCoupling = pFindCouplingCond(x, iNodeIndex);
+                    LubricationGroove* pGroove = pFindGroove(xij, Node2D::HYDRAULIC_NODE, iNodeIndex);
+                    PressureCouplingCond* pCoupling = pFindCouplingCond(xij, iNodeIndex);
                     std::unique_ptr<HydroNode> pNode;
                     std::unique_ptr<FrictionModel> pFrictionNode;
 
@@ -23861,13 +23838,13 @@ namespace {
                     if (pGroove == nullptr && pCoupling == nullptr) {
                          if (bIncompressible) {
                               pNode.reset(new HydroActiveNode(iNodeIndex,
-                                                              x,
+                                                              xij,
                                                               this,
                                                               pContact.get(),
                                                               std::move(pFrictionNode)));
                          } else if (bEnableMCP) {
                               pNode.reset(new HydroActiveComprNodeMCP(iNodeIndex,
-                                                                      x,
+                                                                      xij,
                                                                       this,
                                                                       pContact.get(),
                                                                       std::move(pFrictionNode),
@@ -23875,7 +23852,7 @@ namespace {
                                                                       rgStepInteg[INT_DENSITY]));
                          } else {
                               pNode.reset(new HydroActiveComprNode(iNodeIndex,
-                                                                   x,
+                                                                   xij,
                                                                    this,
                                                                    pContact.get(),
                                                                    std::move(pFrictionNode),
@@ -23899,14 +23876,14 @@ namespace {
 
                          if (bIncompressible) {
                               pNode.reset(new HydroCoupledNode(iNodeIndex,
-                                                               x,
+                                                               xij,
                                                                this,
                                                                pContact.get(),
                                                                std::move(pFrictionNode),
                                                                pCoupling->pGetNode()));
                          } else {
                               pNode.reset(new HydroCoupledComprNode(iNodeIndex,
-                                                                    x,
+                                                                    xij,
                                                                     this,
                                                                     pContact.get(),
                                                                     std::move(pFrictionNode),
@@ -23920,14 +23897,14 @@ namespace {
 
                          if (bIncompressible) {
                               pNode.reset(new HydroPassiveNode(iNodeIndex,
-                                                               x,
+                                                               xij,
                                                                this,
                                                                pContact.get(),
                                                                std::move(pFrictionNode),
                                                                pGroove->pGetBoundaryCond()));
                          } else {
                               pNode.reset(new HydroPassiveComprNode(iNodeIndex,
-                                                                    x,
+                                                                    xij,
                                                                     this,
                                                                     pContact.get(),
                                                                     std::move(pFrictionNode),
@@ -23939,7 +23916,7 @@ namespace {
 
                     HYDRO_ASSERT(pNode != nullptr);
 
-                    pParent->AddNode(std::move(pNode));
+                    pGetParent()->AddNode(std::move(pNode));
                }
           }
 
@@ -23947,7 +23924,7 @@ namespace {
           for (integer i = 0; i <= M; i += M) {
                for (integer j = 1; j <= N - 1; ++j) {
                     const integer iNodeIndex = iGetNodeIndexHydro(i, j);
-                    const SpColVector<doublereal, 2> x = GetNodePosition(i, j);
+                    const SpColVector<doublereal, 2> xij = GetNodePosition(i, j);
                     std::unique_ptr<HydroNode> pNode;
                     std::unique_ptr<FrictionModel> pFrictionNode;
 
@@ -23958,25 +23935,25 @@ namespace {
                     if (bUseOutletAxial) {
                          if (bIncompressible) {
                               pNode.reset(new HydroCoupledNode(iNodeIndex,
-                                                               x,
+                                                               xij,
                                                                this,
                                                                pContact.get(),
                                                                std::move(pFrictionNode),
                                                                rgOutletAxial[i / M].pExtHydroNode));
                          } else {
                               pNode.reset(new HydroCoupledComprNode(iNodeIndex,
-                                                                    x,
+                                                                    xij,
                                                                     this,
                                                                     pContact.get(),
                                                                     std::move(pFrictionNode),
                                                                     rgOutletAxial[i / M].pExtHydroNode));
                          }
                     } else {
-                         LubricationGroove* pGroove = pFindGroove(x, Node2D::HYDRAULIC_NODE, iNodeIndex);
+                         LubricationGroove* pGroove = pFindGroove(xij, Node2D::HYDRAULIC_NODE, iNodeIndex);
                          FluidStateBoundaryCond* pBoundaryCond = nullptr;
 
                          if (pGroove == nullptr) {
-                              pBoundaryCond = pParent->pGetBoundaryCondition(i / M);
+                              pBoundaryCond = pGetParent()->pGetBoundaryCondition(i / M);
                          } else {
                               pBoundaryCond = pGroove->pGetBoundaryCond();
                          }
@@ -23990,22 +23967,22 @@ namespace {
 
                          if (bIncompressible) {
                               pNode.reset(new HydroPassiveNode(iNodeIndex,
-                                                               x,
+                                                               xij,
                                                                this,
                                                                pContact.get(),
                                                                std::move(pFrictionNode),
                                                                pBoundaryCond));
                          } else if (pBoundaryCond->GetExtrapMethod() == FluidStateBoundaryCond::EX_OUTLET) {
                               pNode.reset(new HydroComprOutletNode(iNodeIndex,
-                                                                   x,
+                                                                   xij,
                                                                    this,
                                                                    pContact.get(),
                                                                    std::move(pFrictionNode),
                                                                    pBoundaryCond,
-                                                                   pParent->pGetNode<HydroMasterNode>(iGetNodeIndexHydro(i + 1 - 2 * i / M, j))));
+                                                                   pGetParent()->pGetNode<HydroMasterNode>(iGetNodeIndexHydro(i + 1 - 2 * i / M, j))));
                          } else {
                               pNode.reset(new HydroPassiveComprNode(iNodeIndex,
-                                                                    x,
+                                                                    xij,
                                                                     this,
                                                                     pContact.get(),
                                                                     std::move(pFrictionNode),
@@ -24017,7 +23994,7 @@ namespace {
                          }
                     }
 
-                    pParent->AddNode(std::move(pNode));
+                    pGetParent()->AddNode(std::move(pNode));
                }
           }
 
@@ -24025,12 +24002,12 @@ namespace {
           for (integer i = 0; i <= M; ++i) {
                for (integer j = 0; j <= N; j += N) {
                     const integer iMasterNode = iGetNodeIndexHydro(i, j == 0 ? N - 1 : 1);
-                    HYDRO_ASSERT(pParent->pGetNode(iMasterNode) != 0);
+                    HYDRO_ASSERT(pGetParent()->pGetNode(iMasterNode) != 0);
 
-                    pParent->AddNode(std::unique_ptr<HydroNode>{new HydroSlaveNode(iGetNodeIndexHydro(i, j),
-                                                                                   GetNodePosition(i, j),
-                                                                                   this,
-                                                                                   pParent->pGetNode<HydroNode>(iMasterNode))});
+                    pGetParent()->AddNode(std::unique_ptr<HydroNode>{new HydroSlaveNode(iGetNodeIndexHydro(i, j),
+                                                                                        GetNodePosition(i, j),
+                                                                                        this,
+                                                                                        pGetParent()->pGetNode<HydroNode>(iMasterNode))});
                }
           }
 
@@ -24038,9 +24015,9 @@ namespace {
 
           FluxNode::NodeDataReq eFluxData = FluxNode::ND_NONE;
 
-          if (bThermalModel && (pParent->uGetOutputFlags() & HydroRootElement::OUTPUT_HEAT_FLUX)) {
+          if (bThermalModel && (pGetParent()->uGetOutputFlags() & HydroRootElement::OUTPUT_HEAT_FLUX)) {
                eFluxData = FluxNode::ND_THERMAL;
-          } else if (pParent->uGetOutputFlags() & (HydroRootElement::OUTPUT_MASS_FLUX | HydroRootElement::OUTPUT_VOLUME_FLUX)) {
+          } else if (pGetParent()->uGetOutputFlags() & (HydroRootElement::OUTPUT_MASS_FLUX | HydroRootElement::OUTPUT_VOLUME_FLUX)) {
                eFluxData = FluxNode::ND_HYDRAULIC;
           }
 
@@ -24050,7 +24027,7 @@ namespace {
                     const integer iNodeIndex = iGetNodeIndexFluxX(i, j);
 
                     for (integer k = 0; k < 2; ++k) {
-                         rgNodesFlux[k] = pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j + k));
+                         rgNodesFlux[k] = pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j + k));
                     }
 
                     std::unique_ptr<FluxNode> pNode{new FluxNode(iNodeIndex,
@@ -24059,7 +24036,7 @@ namespace {
                                                                  FluxNode::PRESSURE_FROM_NODE,
                                                                  eFluxData)};
 
-                    pParent->AddNode(std::move(pNode));
+                    pGetParent()->AddNode(std::move(pNode));
                }
           }
 
@@ -24069,7 +24046,7 @@ namespace {
                     const integer iNodeIndex = iGetNodeIndexFluxZ(i, j);
 
                     for (integer k = 0; k < 2; ++k) {
-                         rgNodesFlux[k] = pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i + k, j + 1));
+                         rgNodesFlux[k] = pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + k, j + 1));
                     }
 
                     std::unique_ptr<FluxNode> pNode{new FluxNode(iNodeIndex,
@@ -24078,26 +24055,24 @@ namespace {
                                                                  FluxNode::PRESSURE_FROM_NODE,
                                                                  eFluxData)};
 
-                    pParent->AddNode(std::move(pNode));
+                    pGetParent()->AddNode(std::move(pNode));
                }
           }
 
           if (bThermalModel) {
-               const bool bInitAssThermal = pGetParent()->bInitialAssembly(HydroRootElement::INIT_ASS_THERMAL);
-
                const doublereal T0 = pGetParent()->pGetFluid()->dGetRefTemperature();
 
                for (integer i = 1; i <= M - 1; ++i) {
                     for (integer j = 1; j <= N - 1; ++j) {
-                         const SpColVector<doublereal, 2> x = GetNodePosition(i, j);
+                         const SpColVector<doublereal, 2> xij = GetNodePosition(i, j);
                          const integer iNodeIndex = iGetNodeIndexTherm(i, j);
-                         LubricationGroove* pGroove = pFindGroove(x, Node2D::THERMAL_NODE, iNodeIndex);
-                         PressureCouplingCond* pCoupling = pFindCouplingCond(x, iNodeIndex);
+                         LubricationGroove* pGroove = pFindGroove(xij, Node2D::THERMAL_NODE, iNodeIndex);
+                         PressureCouplingCond* pCoupling = pFindCouplingCond(xij, iNodeIndex);
                          std::unique_ptr<ThermoHydrNode> pNode;
 
                          if (pGroove == nullptr && pCoupling == nullptr) {
                               pNode.reset(new ThermalActiveNode(iNodeIndex,
-                                                                x,
+                                                                xij,
                                                                 this,
                                                                 T0,
                                                                 bInitAssThermal,
@@ -24106,14 +24081,14 @@ namespace {
                               HYDRO_ASSERT(pCoupling->pGetThermalNode() != nullptr);
 
                               pNode.reset(new ThermalInletNode(iNodeIndex,
-                                                               x,
+                                                               xij,
                                                                this,
                                                                pCoupling->pGetThermalNode(),
                                                                bInitAssThermal,
                                                                rgStepInteg[INT_TEMPERATURE]));
                          } else {
                               pNode.reset(new ThermalPassiveNode(iNodeIndex,
-                                                                 x,
+                                                                 xij,
                                                                  this,
                                                                  pGroove->pGetBoundaryCond()));
 
@@ -24122,7 +24097,7 @@ namespace {
 
                          HYDRO_ASSERT(pNode != nullptr);
 
-                         pParent->AddNode(std::move(pNode));
+                         pGetParent()->AddNode(std::move(pNode));
                     }
                }
 
@@ -24130,20 +24105,20 @@ namespace {
                for (integer i = 0; i <= M; i += M) {
                     for (integer j = 1; j <= N - 1; ++j) {
                          const integer iNodeIndex = iGetNodeIndexTherm(i, j);
-                         const SpColVector<doublereal, 2> x = GetNodePosition(i, j);
+                         const SpColVector<doublereal, 2> xij = GetNodePosition(i, j);
                          std::unique_ptr<ThermoHydrNode> pNode;
 
                          if (bUseOutletAxial) {
                               pNode.reset(new ThermalCoupledNode(iNodeIndex,
-                                                                 x,
+                                                                 xij,
                                                                  this,
                                                                  rgOutletAxial[i / M].pExtThermNode));
                          } else {
-                              LubricationGroove* pGroove = pFindGroove(x, Node2D::THERMAL_NODE, iNodeIndex);
+                              LubricationGroove* pGroove = pFindGroove(xij, Node2D::THERMAL_NODE, iNodeIndex);
                               FluidStateBoundaryCond* pBoundaryCond = nullptr;
 
                               if (pGroove == nullptr) {
-                                   pBoundaryCond = pParent->pGetBoundaryCondition(i / M);
+                                   pBoundaryCond = pGetParent()->pGetBoundaryCondition(i / M);
                               } else {
                                    pBoundaryCond = pGroove->pGetBoundaryCond();
                               }
@@ -24157,12 +24132,12 @@ namespace {
 
                               if (pBoundaryCond->GetExtrapMethod() == FluidStateBoundaryCond::EX_OUTLET) {
                                    pNode.reset(new ThermalSlaveNode(iNodeIndex,
-                                                                    x,
-                                                                    pParent->pGetNode<ThermoHydrNode>(iGetNodeIndexTherm(i + 1 - 2 * i / M, j))));
+                                                                    xij,
+                                                                    pGetParent()->pGetNode<ThermoHydrNode>(iGetNodeIndexTherm(i + 1 - 2 * i / M, j))));
 
                               } else {
                                    pNode.reset(new ThermalPassiveNode(iNodeIndex,
-                                                                      x,
+                                                                      xij,
                                                                       this,
                                                                       pBoundaryCond));
                               }
@@ -24172,7 +24147,7 @@ namespace {
                               }
                          }
 
-                         pParent->AddNode(std::move(pNode));
+                         pGetParent()->AddNode(std::move(pNode));
                     }
                }
 
@@ -24181,11 +24156,11 @@ namespace {
                     for (integer j = 0; j <= N; j += N) {
                          const integer iMasterNode = iGetNodeIndexTherm(i, j == 0 ? N - 1 : 1);
 
-                         HYDRO_ASSERT(pParent->pGetNode(iMasterNode) != nullptr);
+                         HYDRO_ASSERT(pGetParent()->pGetNode(iMasterNode) != nullptr);
 
-                         pParent->AddNode(std::unique_ptr<ThermoHydrNode>{new ThermalSlaveNode(iGetNodeIndexTherm(i, j),
+                         pGetParent()->AddNode(std::unique_ptr<ThermoHydrNode>{new ThermalSlaveNode(iGetNodeIndexTherm(i, j),
                                                                                                GetNodePosition(i, j),
-                                                                                               pParent->pGetNode<ThermoHydrNode>(iMasterNode))});
+                                                                                               pGetParent()->pGetNode<ThermoHydrNode>(iMasterNode))});
                     }
                }
 
@@ -24193,14 +24168,14 @@ namespace {
                     for (integer j = 0; j <= N; ++j) {
                          const integer iNodeHydro = iGetNodeIndexHydro(i, j);
                          const integer iNodeTherm = iGetNodeIndexTherm(i, j);
-                         pParent->pGetNode<HydroNode>(iNodeHydro)->SetThermalNode(pParent->pGetNode<ThermoHydrNode>(iNodeTherm));
+                         pGetParent()->pGetNode<HydroNode>(iNodeHydro)->SetThermalNode(pGetParent()->pGetNode<ThermoHydrNode>(iNodeTherm));
                     }
                }
           }
 
           for (integer i = 1; i <= M - 1; ++i) {
                for (integer j = 1; j <= N - 1; ++j) {
-                    HydroNode* const pCenterNode = pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j));
+                    HydroNode* const pCenterNode = pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j));
                     std::unique_ptr<LinFD5Elem> pElement;
 
                     if (typeid(*pCenterNode) == typeid(HydroActiveNode)) {
@@ -24224,19 +24199,19 @@ namespace {
                     }
 
                     pElement->SetNode(LinFD5Elem::iNodeCenter, pCenterNode);
-                    pElement->SetNode(LinFD5Elem::iNodeWest,   pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j - 1)));
-                    pElement->SetNode(LinFD5Elem::iNodeEast,   pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j + 1)));
-                    pElement->SetNode(LinFD5Elem::iNodeSouth,  pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i - 1, j)));
-                    pElement->SetNode(LinFD5Elem::iNodeNorth,  pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
+                    pElement->SetNode(LinFD5Elem::iNodeWest,   pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j - 1)));
+                    pElement->SetNode(LinFD5Elem::iNodeEast,   pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j + 1)));
+                    pElement->SetNode(LinFD5Elem::iNodeSouth,  pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i - 1, j)));
+                    pElement->SetNode(LinFD5Elem::iNodeNorth,  pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
 
-                    pElement->SetFluxNode(LinFD5Elem::iNodeFlxWest, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j - 1)));
-                    pElement->SetFluxNode(LinFD5Elem::iNodeFlxEast, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j)));
-                    pElement->SetFluxNode(LinFD5Elem::iNodeFlzSouth, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i - 1, j - 1)));
-                    pElement->SetFluxNode(LinFD5Elem::iNodeFlzNorth, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i, j - 1)));
+                    pElement->SetFluxNode(LinFD5Elem::iNodeFlxWest, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j - 1)));
+                    pElement->SetFluxNode(LinFD5Elem::iNodeFlxEast, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j)));
+                    pElement->SetFluxNode(LinFD5Elem::iNodeFlzSouth, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i - 1, j - 1)));
+                    pElement->SetFluxNode(LinFD5Elem::iNodeFlzNorth, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i, j - 1)));
 
-                    HYDRO_TRACE("Element(" << pParent->iGetNumElements() << "):" << typeid(*pElement).name() << std::endl);
+                    HYDRO_TRACE("Element(" << pGetParent()->iGetNumElements() << "):" << typeid(*pElement).name() << std::endl);
 
-                    pParent->AddElement(std::move(pElement));
+                    pGetParent()->AddElement(std::move(pElement));
                }
           }
 
@@ -24244,12 +24219,12 @@ namespace {
                for (integer j = 1; j <= N - 1; ++j) {
                     std::unique_ptr<HydroElement> pElement{new LinFD4FrictionElem(this)};
 
-                    pElement->SetNode(LinFD4Elem::iNode1NE, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j + 1)));
-                    pElement->SetNode(LinFD4Elem::iNode2NW, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
-                    pElement->SetNode(LinFD4Elem::iNode3SW, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j)));
-                    pElement->SetNode(LinFD4Elem::iNode4SE, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j + 1)));
+                    pElement->SetNode(LinFD4Elem::iNode1NE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j + 1)));
+                    pElement->SetNode(LinFD4Elem::iNode2NW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
+                    pElement->SetNode(LinFD4Elem::iNode3SW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j)));
+                    pElement->SetNode(LinFD4Elem::iNode4SE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j + 1)));
 
-                    pParent->AddElement(std::move(pElement));
+                    pGetParent()->AddElement(std::move(pElement));
                }
           }
 
@@ -24258,27 +24233,27 @@ namespace {
                for (integer j = 1; j <= N - 1; ++j) {
                     std::unique_ptr<LinFD4MassFlowZ> pElement{new LinFD4MassFlowZ(this)}; // z = b/2
 
-                    pElement->SetNode(LinFD4Elem::iNode1NE, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(M, j + 1)));
-                    pElement->SetNode(LinFD4Elem::iNode2NW, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(M, j)));
-                    pElement->SetNode(LinFD4Elem::iNode3SW, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(M - 1, j)));
-                    pElement->SetNode(LinFD4Elem::iNode4SE, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(M - 1, j + 1)));
+                    pElement->SetNode(LinFD4Elem::iNode1NE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(M, j + 1)));
+                    pElement->SetNode(LinFD4Elem::iNode2NW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(M, j)));
+                    pElement->SetNode(LinFD4Elem::iNode3SW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(M - 1, j)));
+                    pElement->SetNode(LinFD4Elem::iNode4SE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(M - 1, j + 1)));
 
-                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeWest, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(M - 1, j - 1)));
-                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeEast, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(M - 1, j)));
+                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeWest, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(M - 1, j - 1)));
+                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeEast, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(M - 1, j)));
 
-                    pParent->AddElement(std::move(pElement));
+                    pGetParent()->AddElement(std::move(pElement));
 
                     pElement.reset(new LinFD4MassFlowZ(this));   // z = -b/2
 
-                    pElement->SetNode(LinFD4Elem::iNode3SW, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(1, j + 1)));
-                    pElement->SetNode(LinFD4Elem::iNode4SE, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(1, j)));
-                    pElement->SetNode(LinFD4Elem::iNode1NE, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(0, j)));
-                    pElement->SetNode(LinFD4Elem::iNode2NW, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(0, j + 1)));
+                    pElement->SetNode(LinFD4Elem::iNode3SW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(1, j + 1)));
+                    pElement->SetNode(LinFD4Elem::iNode4SE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(1, j)));
+                    pElement->SetNode(LinFD4Elem::iNode1NE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(0, j)));
+                    pElement->SetNode(LinFD4Elem::iNode2NW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(0, j + 1)));
 
-                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeEast, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(0, j - 1)));
-                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeWest, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(0, j)));
+                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeEast, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(0, j - 1)));
+                    pElement->SetFluxNode(LinFD4MassFlowZ::iFNodeWest, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(0, j)));
 
-                    pParent->AddElement(std::move(pElement));
+                    pGetParent()->AddElement(std::move(pElement));
                }
           }
 
@@ -24307,22 +24282,22 @@ namespace {
           if (bThermalModel) {
                for (integer i = 1; i <= M - 1; ++i) {
                     for (integer j = 1; j <= N - 1; ++j) {
-                         ThermalActiveNode* pCenterNode = dynamic_cast<ThermalActiveNode*>(pParent->pGetNode(iGetNodeIndexTherm(i, j)));
+                         ThermalActiveNode* pCenterNode = dynamic_cast<ThermalActiveNode*>(pGetParent()->pGetNode(iGetNodeIndexTherm(i, j)));
 
                          if (pCenterNode != nullptr) {
                               std::unique_ptr<LinFD5ThermalElem> pElement{new LinFD5ThermalElemImp(this, bInitAssThermal)};
-                              pElement->SetNode(LinFD5Elem::iNodeCenter, pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j)));
-                              pElement->SetNode(LinFD5Elem::iNodeWest,   pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j - 1)));
-                              pElement->SetNode(LinFD5Elem::iNodeEast,   pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j + 1)));
-                              pElement->SetNode(LinFD5Elem::iNodeSouth,  pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i - 1, j)));
-                              pElement->SetNode(LinFD5Elem::iNodeNorth,  pParent->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
+                              pElement->SetNode(LinFD5Elem::iNodeCenter, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j)));
+                              pElement->SetNode(LinFD5Elem::iNodeWest,   pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j - 1)));
+                              pElement->SetNode(LinFD5Elem::iNodeEast,   pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i, j + 1)));
+                              pElement->SetNode(LinFD5Elem::iNodeSouth,  pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i - 1, j)));
+                              pElement->SetNode(LinFD5Elem::iNodeNorth,  pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
 
-                              pElement->SetFluxNode(LinFD5Elem::iNodeFlxWest, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j - 1)));
-                              pElement->SetFluxNode(LinFD5Elem::iNodeFlxEast, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j)));
-                              pElement->SetFluxNode(LinFD5Elem::iNodeFlzSouth, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i - 1, j - 1)));
-                              pElement->SetFluxNode(LinFD5Elem::iNodeFlzNorth, pParent->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i, j - 1)));
+                              pElement->SetFluxNode(LinFD5Elem::iNodeFlxWest, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j - 1)));
+                              pElement->SetFluxNode(LinFD5Elem::iNodeFlxEast, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxX(i - 1, j)));
+                              pElement->SetFluxNode(LinFD5Elem::iNodeFlzSouth, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i - 1, j - 1)));
+                              pElement->SetFluxNode(LinFD5Elem::iNodeFlzNorth, pGetParent()->pGetNode<FluxNode>(iGetNodeIndexFluxZ(i, j - 1)));
 
-                              pParent->AddElement(std::move(pElement));
+                              pGetParent()->AddElement(std::move(pElement));
                          }
                     }
                }
@@ -24392,8 +24367,8 @@ namespace {
           return i * (N + 1) + j;
      }
 
-     QuadFeIso9Mesh::QuadFeIso9Mesh(HydroRootElement* pParent)
-          :HydroMesh(pParent),
+     QuadFeIso9Mesh::QuadFeIso9Mesh(HydroRootElement* pParent_a)
+          :HydroMesh(pParent_a),
            oIntegRuleReynolds(QuadFeIso9Elem::REYNOLDS_ELEM),
            oIntegRuleFriction(QuadFeIso9Elem::FRICTION_ELEM),
            dSkewMesh(0.),
@@ -24407,14 +24382,13 @@ namespace {
 
      void QuadFeIso9Mesh::ParseInput(DataManager* pDM, MBDynParser& HP)
      {
-          HydroRootElement* const pParent = pGetParent();
-          const HydroFluid* const pFluid = pParent->pGetFluid();
+          const HydroFluid* const pFluid = pGetParent()->pGetFluid();
 
           if (pFluid->GetHydraulicType() != HydroFluid::INCOMPRESSIBLE ||
               pFluid->GetThermalType() != HydroFluid::ISOTHERMAL)
           {
                silent_cerr("hydrodynamic plain bearing2(" <<
-                           pParent->GetLabel()
+                           pGetParent()->GetLabel()
                            << "): only incompressible isothermal fluids are supported "
                            "for isoparameteric 9 elements at line "
                            << HP.GetLineData() << std::endl);
@@ -24816,9 +24790,9 @@ namespace {
 
                          for (auto k = std::begin(rgNodeLayout); k != std::end(rgNodeLayout); ++k) {
                               index_type iNodeIdx = iGetNodeIndex(i + k->iOffsetX, j + k->iOffsetZ);
-                              HydroNode* pNode = pGetParent()->pGetNode<HydroNode>(iNodeIdx);
-                              bAddElem = bAddElem || pNode->bIsNodeType(HydroNode::ACTIVE_NODE);
-                              pElem->SetNode(k->iNode, pNode);
+                              HydroNode* pNode_k = pGetParent()->pGetNode<HydroNode>(iNodeIdx);
+                              bAddElem = bAddElem || pNode_k->bIsNodeType(HydroNode::ACTIVE_NODE);
+                              pElem->SetNode(k->iNode, pNode_k);
                          }
 
                          if (bAddElem) {
@@ -24914,9 +24888,9 @@ namespace {
           Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred);
      };
 
-     GrooveShapeDriveCaller::GrooveShapeDriveCaller(const DriveHandler* pDH, doublereal Ws, doublereal Wc, doublereal Hg)
-          : DriveCaller(pDH),
-            Ws(Ws), Wc(Wc), Hg(Hg)
+     GrooveShapeDriveCaller::GrooveShapeDriveCaller(const DriveHandler* pDH_a, doublereal Ws_a, doublereal Wc_a, doublereal Hg_a)
+          : DriveCaller(pDH_a),
+            Ws(Ws_a), Wc(Wc_a), Hg(Hg_a)
      {
           NO_OP;
      }

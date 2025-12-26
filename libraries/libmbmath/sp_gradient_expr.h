@@ -52,12 +52,12 @@ namespace sp_grad {
           eExprEvalFlags = util::ExprEvalFlagsHelper<std::remove_reference<LhsExpr>::type::eExprEvalFlags,
                                                      std::remove_reference<RhsExpr>::type::eExprEvalFlags>::eExprEvalFlags;
 
-          constexpr SpGradBinExpr(const LhsExpr& u, const RhsExpr&  v)
-               :u(u),
-                v(v),
-                f(BinaryFunc::f(u.dGetValue(), v.dGetValue())),
-                df_du(BinaryFunc::df_du(u.dGetValue(), v.dGetValue())),
-                df_dv(BinaryFunc::df_dv(u.dGetValue(), v.dGetValue())) {
+          constexpr SpGradBinExpr(const LhsExpr& u_a, const RhsExpr&  v_a)
+               :u(u_a),
+                v(v_a),
+                f(BinaryFunc::f(u_a.dGetValue(), v_a.dGetValue())),
+                df_du(BinaryFunc::df_du(u_a.dGetValue(), v_a.dGetValue())),
+                df_dv(BinaryFunc::df_dv(u_a.dGetValue(), v_a.dGetValue())) {
           }
 
           constexpr doublereal dGetValue() const {
@@ -125,10 +125,10 @@ namespace sp_grad {
      public:
           static constexpr SpGradCommon::ExprEvalFlags eExprEvalFlags = std::remove_reference<Expr>::type::eExprEvalFlags;
 
-          explicit constexpr SpGradUnExpr(const Expr&  u)
-               :u(u),
-                f(UnaryFunc::f(u.dGetValue())),
-                df_du(UnaryFunc::df_du(u.dGetValue())) {
+          explicit constexpr SpGradUnExpr(const Expr&  u_a)
+               :u(u_a),
+                f(UnaryFunc::f(u_a.dGetValue())),
+                df_du(UnaryFunc::df_du(u_a.dGetValue())) {
           }
 
           constexpr doublereal dGetValue() const {
@@ -186,8 +186,8 @@ namespace sp_grad {
      public:
           static constexpr SpGradCommon::ExprEvalFlags eExprEvalFlags = SpGradCommon::ExprEvalDuplicate;
 
-          explicit constexpr SpGradConstExpr(ScalarType  u)
-               :u(u) {
+          explicit constexpr SpGradConstExpr(ScalarType  u_a)
+               :u(u_a) {
           }
 
           constexpr ScalarType dGetValue() const {
@@ -234,8 +234,8 @@ namespace sp_grad {
      public:
           static constexpr SpGradCommon::ExprEvalFlags eExprEvalFlags = SpGradCommon::ExprEvalUnique;
 
-          constexpr SpGradComprExpr(const Expr&  u)
-               :u(u) {
+          constexpr SpGradComprExpr(const Expr&  u_a)
+               :u(u_a) {
           }
 
           constexpr doublereal dGetValue() const {

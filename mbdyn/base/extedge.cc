@@ -132,10 +132,10 @@ mbedge_eat_field(char *buf, size_t& buflen)
 
 /* ExtFileHandlerEDGE - begin */
 
-ExtFileHandlerEDGE::ExtFileHandlerEDGE(std::string& fflagname,
-	std::string& fdataname, mbsleep_t SleepTime, std::streamsize Precision)
-: ExtFileHandlerBase(SleepTime, Precision),
-fflagname(fflagname), fdataname(fdataname),
+ExtFileHandlerEDGE::ExtFileHandlerEDGE(std::string& fflagname_a,
+	std::string& fdataname_a, mbsleep_t SleepTime_a, std::streamsize Precision_a)
+: ExtFileHandlerBase(SleepTime_a, Precision_a),
+fflagname(fflagname_a), fdataname(fdataname_a),
 bReadForces(true)
 {
 	NO_OP;

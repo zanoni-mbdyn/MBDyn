@@ -40,7 +40,7 @@
 
 /* AerodynamicModal - begin */
 
-AerodynamicModal::AerodynamicModal(unsigned int uLabel,
+AerodynamicModal::AerodynamicModal(unsigned int uLabel_a,
 	const StructNode* pN,
 	const Modal* pMJ,
 	const Mat3x3& RaTmp,
@@ -59,7 +59,7 @@ AerodynamicModal::AerodynamicModal(unsigned int uLabel,
 	FullMatrixHandler* pD2Mat,
 	flag fout)
 : AerodynamicElem(pDO),
-InitialAssemblyElem(uLabel, fout),
+InitialAssemblyElem(uLabel_a, fout),
 pModalNode(pN), pModalJoint(pMJ),
 Ra(RaTmp),
 Chord(Cd),
@@ -369,8 +369,8 @@ AerodynamicModal::InitialAssRes(SubVectorHandler& WorkVec,
 			WorkVec.PutRowIndex(iCnt, iFirstIndex + RigidF + iCnt);
 		}
 
-		const Vec3& X0(pModalNode->GetXCurr());
-		const Mat3x3& Rn(pModalNode->GetRCurr());
+		// const Vec3& X0(pModalNode->GetXCurr());
+		// const Mat3x3& Rn(pModalNode->GetRCurr());
 		Mat3x3 RR(Rn*Ra);
 
 		// q

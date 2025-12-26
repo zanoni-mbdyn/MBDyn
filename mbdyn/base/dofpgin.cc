@@ -36,8 +36,8 @@
 
 #include "dofpgin.h"
 
-DofPlugIn::DofPlugIn(MathParser& mp, DataManager *pDM)
-     : MathParser::PlugIn(mp), pDM(pDM), bPrev(false)
+DofPlugIn::DofPlugIn(MathParser& mp_a, DataManager *pDM_a)
+     : MathParser::PlugIn(mp_a), pDM(pDM_a), bPrev(false)
 {
 	ASSERT(pDM != NULL);
 }

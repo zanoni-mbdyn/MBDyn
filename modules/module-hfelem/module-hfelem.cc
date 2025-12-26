@@ -249,9 +249,9 @@ public:
 };
 
 HarmonicForcingElem::HarmonicForcingElem(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 DriveOwner(0),
 m_pDM(pDM),
 m_dTInit(-std::numeric_limits<doublereal>::max()),

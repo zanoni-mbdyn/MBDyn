@@ -670,48 +670,48 @@ public:
 	virtual ~StructNode(void);
 
 	// RBK
-	const Mat3x3& GetR(void) const;
-	const Vec3& GetW(void) const;
-	const Vec3& GetWP(void) const;
+	const Mat3x3& GetR(void) const override;
+	const Vec3& GetW(void) const override;
+	const Vec3& GetWP(void) const override;
 
 	/* Contributo del nodo strutturale al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
 	virtual std::ostream& DescribeDof(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void DescribeDof(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	virtual std::ostream& DescribeEq(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void DescribeEq(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	/* Tipo di nodo strutturale */
 	virtual StructNode::Type GetStructNodeType(void) const = 0;
 
 	/* Restituisce il valore del dof iDof;
 	 * se differenziale, iOrder puo' essere = 1 per la derivata */
-	virtual const doublereal& dGetDofValue(int iDof, int iOrder = 0) const;
+	virtual const doublereal& dGetDofValue(int iDof, int iOrder = 0) const override;
 
 	/* Restituisce il valore del dof iDof al passo precedente;
 	 * se differenziale, iOrder puo' essere = 1 per la derivata */
-	virtual const doublereal& dGetDofValuePrev(int iDof, int iOrder = 0) const;
+	virtual const doublereal& dGetDofValuePrev(int iDof, int iOrder = 0) const override;
 
 	/* Setta il valore del dof iDof a dValue;
 	 * se differenziale, iOrder puo' essere = 1 per la derivata */
 	virtual void SetDofValue(const doublereal& dValue,
-		unsigned int iDof, unsigned int iOrder = 0);
+		unsigned int iDof, unsigned int iOrder = 0) override;
 
 	/* Ritorna il numero di dofs usato nell'assemblaggio iniziale */
-	virtual inline unsigned int iGetInitialNumDof(void) const;
+	virtual inline unsigned int iGetInitialNumDof(void) const override;
 
 	/* Restituiscono i dati correnti */
 	/* Attenzione: restituiscono un reference ai dati veri, per limitare
@@ -737,10 +737,10 @@ public:
 
 	virtual inline bool bOmegaRotates(void) const;
 
-	virtual void OutputPrepare(OutputHandler &OH);
+	virtual void OutputPrepare(OutputHandler &OH) override;
 
 	/* Output del nodo strutturale (da mettere a punto) */
-	virtual void Output(OutputHandler& OH) const;
+	virtual void Output(OutputHandler& OH) const override;
 
 #if 0
 	/* Output della soluzione perturbata (modi ...) */
@@ -750,60 +750,60 @@ public:
 
 	/* Aggiorna dati in base alla soluzione */
 	virtual void Update(const VectorHandler& X,
-		const VectorHandler& XP);
+		const VectorHandler& XP) override;
 
 	/* Aggiorna dati durante l'iterazione fittizia iniziale */
 	virtual void DerivativesUpdate(const VectorHandler& X,
-		const VectorHandler& XP);
+		const VectorHandler& XP) override;
 
 	/* Aggiorna dati in base alla soluzione durante l'assemblaggio iniziale */
-	virtual void InitialUpdate(const VectorHandler& X);
+	virtual void InitialUpdate(const VectorHandler& X) override;
 
 	/* Inverse Dynamics: */
 	/* Do Update on node position, velocity or acceleration 
 	 * depending on iOrder */
-	void Update(const VectorHandler& X, InverseDynamics::Order iOrder);
+	void Update(const VectorHandler& X, InverseDynamics::Order iOrder) override;
 
 	/* Funzioni di inizializzazione, ereditate da DofOwnerOwner */
-	virtual void SetInitialValue(VectorHandler& X);
+	virtual void SetInitialValue(VectorHandler& X) override;
 	virtual void SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	/* Elaborazione vettori e dati prima e dopo la predizione
 	 * per MultiStepIntegrator */
 	virtual void BeforePredict(VectorHandler& X, VectorHandler& XP,
 		std::deque<VectorHandler*>& /* qXPr */ ,
-		std::deque<VectorHandler*>& /* qXPPr */ ) const;
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+		std::deque<VectorHandler*>& /* qXPPr */ ) const override;
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 	
 	/*Inverse Dynamics: reset orientation parameters*/
 	virtual void AfterConvergence(const VectorHandler& X, 
 			const VectorHandler& XP, 
-			const VectorHandler& XPP);
+			const VectorHandler& XPP) override;
 
 	/*
 	 * Metodi per l'estrazione di dati "privati".
 	 * Si suppone che l'estrattore li sappia interpretare.
 	 * Come default non ci sono dati privati estraibili
 	 */
-	virtual unsigned int iGetNumPrivData(void) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
 
 	/*
 	 * Maps a string (possibly with substrings) to a private data;
 	 * returns a valid index ( > 0 && <= iGetNumPrivData()) or 0 
 	 * in case of unrecognized data; error must be handled by caller
 	 */
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
 
 	/*
 	 * Returns the current value of a private data
 	 * with 0 < i <= iGetNumPrivData()
 	 */
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* test code for getting dimension of components */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 }; /* End class StructNode */
 
 /* Ritorna il numero di dofs usato nell'assemblaggio iniziale */
@@ -1126,23 +1126,23 @@ public:
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
 	/* Tipo di nodo strutturale */
-	virtual StructNode::Type GetStructNodeType(void) const;
+	virtual StructNode::Type GetStructNodeType(void) const override;
 
 	virtual std::ostream& DescribeDof(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void DescribeDof(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 	virtual std::ostream& DescribeEq(std::ostream& out,
 		const char *prefix = "",
-		bool bInitial = false) const;
+		bool bInitial = false) const override;
 
 	virtual void DescribeEq(std::vector<std::string>& desc,
 		bool bInitial = false,
-		int i = -1) const;
+		int i = -1) const override;
 
 #if 0
 	/* Ritorna il primo indice (-1) di quantita' di moto */
@@ -1151,7 +1151,7 @@ public:
 
 	/* Usato dalle forze astratte, dai bulk ecc., per assemblare le forze
 	 * al posto giusto */
-	virtual integer iGetFirstRowIndex(void) const;
+	virtual integer iGetFirstRowIndex(void) const override;
 
         virtual void SetValue(DataManager *pDM,
                               VectorHandler& X, VectorHandler& XP,
@@ -1159,16 +1159,16 @@ public:
      
 	/* Aggiorna dati in base alla soluzione */
 	virtual void Update(const VectorHandler& X,
-		const VectorHandler& XP);
+		const VectorHandler& XP) override;
 
 	virtual void DerivativesUpdate(const VectorHandler& X,
-                                       const VectorHandler& XP);
+                                       const VectorHandler& XP) override;
      
 	virtual void AfterConvergence(const VectorHandler& X,
-		const VectorHandler& XP);
+		const VectorHandler& XP) override;
 
 	/* to get dimension of equations */
-	const virtual OutputHandler::Dimensions GetEquationDimension (integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension (integer index) const override;
 };
 
 

@@ -137,24 +137,24 @@ Modal::Modal(unsigned int uL,
         doublereal dMassTmp,     /* inv. inerzia (m, m.stat., d'in.) */
         const Vec3& STmp,
         const Mat3x3& JTmp,
-        std::vector<unsigned int>&& uModeNumber,
+        std::vector<unsigned int>&& uModeNumber_a,
         MatNxN&& oGenMass,
         MatNxN&& oGenStiff,
         MatNxN&& oGenDamp,
-        std::vector<std::string>&& IdFEMNodes,	/* label nodi FEM */
+        std::vector<std::string>&& IdFEMNodes_a,	/* label nodi FEM */
         Mat3xN&& oN,               /* posizione dei nodi FEM */
         std::vector<Modal::StrNodeData>&& snd,
         Mat3xN&& oPHItStrNode,     /* forme modali nodi d'interfaccia */
         Mat3xN&& oPHIrStrNode,
-        Mat3xN&& oModeShapest,     /* autovettori: servono a aeromodal */
-        Mat3xN&& oModeShapesr,
-        Mat3xN&& oInv3,            /* invarianti d'inerzia I3...I11 */
-        Mat3xN&& oInv4,
-        Mat3xN&& oInv5,
-        Mat3xN&& oInv8,
-        Mat3xN&& oInv9,
-        Mat3xN&& oInv10,
-        Mat3xN&& oInv11,
+        Mat3xN&& oModeShapest_a,     /* autovettori: servono a aeromodal */
+        Mat3xN&& oModeShapesr_a,
+        Mat3xN&& oInv3_a,            /* invarianti d'inerzia I3...I11 */
+        Mat3xN&& oInv4_a,
+        Mat3xN&& oInv5_a,
+        Mat3xN&& oInv8_a,
+        Mat3xN&& oInv9_a,
+        Mat3xN&& oInv10_a,
+        Mat3xN&& oInv11_a,
         VecN&& aa,
         VecN&& bb,
         flag fOut)
@@ -167,28 +167,28 @@ RT(R0.Transpose()),
 NModes(NM),
 NStrNodes(NI),
 NFEMNodes(NF),
-IdFEMNodes(std::move(IdFEMNodes)),
+IdFEMNodes(std::move(IdFEMNodes_a)),
 oXYZFEMNodes(std::move(oN)),
 dMass(dMassTmp),
 Inv2(STmp),
 Inv7(JTmp),
-uModeNumber(std::move(uModeNumber)),
+uModeNumber(std::move(uModeNumber_a)),
 oModalMass(std::move(oGenMass)),
 oModalStiff(std::move(oGenStiff)),
 oModalDamp(std::move(oGenDamp)),
 oPHIt(std::move(oPHItStrNode)),
 oPHIr(std::move(oPHIrStrNode)),
-oModeShapest(std::move(oModeShapest)),
-oModeShapesr(std::move(oModeShapesr)),
+oModeShapest(std::move(oModeShapest_a)),
+oModeShapesr(std::move(oModeShapesr_a)),
 oCurrXYZ{},
 oCurrXYZVel{},
-oInv3(std::move(oInv3)),
-oInv4(std::move(oInv4)),
-oInv5(std::move(oInv5)),
-oInv8(std::move(oInv8)),
-oInv9(std::move(oInv9)),
-oInv10(std::move(oInv10)),
-oInv11(std::move(oInv11)),
+oInv3(std::move(oInv3_a)),
+oInv4(std::move(oInv4_a)),
+oInv5(std::move(oInv5_a)),
+oInv8(std::move(oInv8_a)),
+oInv9(std::move(oInv9_a)),
+oInv10(std::move(oInv10_a)),
+oInv11(std::move(oInv11_a)),
 Inv3jaj(::Zero3),
 Inv3jaPj(::Zero3),
 Inv8jaj(::Zero3x3),
@@ -324,19 +324,19 @@ Modal::DescribeDof(std::vector<std::string>& desc, bool bInitial, int i) const
         } else if (i == -1) {
                 std::string name(os.str());
 
-                for (unsigned i = 0; i < 2*NModes; i++) {
+                for (unsigned ii = 0; ii < 2*NModes; ii++) {
                         os.str(name);
                         os.seekp(0, std::ios_base::end);
-                        os << ": " << mdof[i/NModes] << "(" << i%NModes + 1 << ")";
-                        desc[i] = os.str();
+                        os << ": " << mdof[ii/NModes] << "(" << ii%NModes + 1 << ")";
+                        desc[ii] = os.str();
                 }
 
-                for (unsigned i = 0; i < modulo*NStrNodes; i++) {
+                for (unsigned ii = 0; ii < modulo*NStrNodes; ii++) {
                         os.str(name);
                         os.seekp(0, std::ios_base::end);
-                        os << ": StructNode(" << SND[i/modulo].pNode->GetLabel() << ") "
-                                << rdof[(i/3)%(modulo/3)] << xyz[i%3];
-                        desc[2*NModes + i] = os.str();
+                        os << ": StructNode(" << SND[ii/modulo].pNode->GetLabel() << ") "
+                                << rdof[(ii/3)%(modulo/3)] << xyz[ii%3];
+                        desc[2*NModes + ii] = os.str();
                 }
 
         } else {
@@ -421,19 +421,19 @@ Modal::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i) const
         } else if (i == -1) {
                 std::string name(os.str());
 
-                for (unsigned i = 0; i < 2*NModes; i++) {
+                for (unsigned ii = 0; ii < 2*NModes; ii++) {
                         os.str(name);
                         os.seekp(0, std::ios_base::end);
-                        os << ": " << meq[i/NModes] << "(" << i%NModes + 1 << ")";
-                        desc[i] = os.str();
+                        os << ": " << meq[ii/NModes] << "(" << ii%NModes + 1 << ")";
+                        desc[ii] = os.str();
                 }
 
-                for (unsigned i = 0; i < modulo*NStrNodes; i++) {
+                for (unsigned ii = 0; ii < modulo*NStrNodes; ii++) {
                         os.str(name);
                         os.seekp(0, std::ios_base::end);
-                        os << ": StructNode(" << SND[i/modulo].pNode->GetLabel() << ") "
-                                << req[(i/3)%(modulo/3)] << xyz[i%3];
-                        desc[2*NModes + i] = os.str();
+                        os << ": StructNode(" << SND[ii/modulo].pNode->GetLabel() << ") "
+                                << req[(ii/3)%(modulo/3)] << xyz[ii%3];
+                        desc[2*NModes + ii] = os.str();
                 }
 
         } else {
@@ -1033,9 +1033,9 @@ Modal::AssRes(SubVectorHandler& WorkVec,
                                         for (unsigned int kMode = 1; kMode <= NModes; kMode++) {
                                                 doublereal a_kMode = a(kMode);
                                                 doublereal aP_kMode = b(kMode);
-                                                unsigned int iOffset = (jMode - 1)*3*NModes + (kMode - 1)*3 + 1;
-                                                Inv9jkajak += oInv9.GetMat3x3ScalarMult(iOffset, a_jMode*a_kMode);
-                                                Inv9jkajaPk += oInv9.GetMat3x3ScalarMult(iOffset, a_jMode*aP_kMode);
+                                                unsigned int jkOffset = (jMode - 1)*3*NModes + (kMode - 1)*3 + 1;
+                                                Inv9jkajak += oInv9.GetMat3x3ScalarMult(jkOffset, a_jMode*a_kMode);
+                                                Inv9jkajaPk += oInv9.GetMat3x3ScalarMult(jkOffset, a_jMode*aP_kMode);
                                         }
                                 }
                         }
@@ -1236,9 +1236,9 @@ Modal::AssRes(SubVectorHandler& WorkVec,
                 /* FIXME: what about using Blitz++ ? :) */
                 Mat3xN PHIt(NModes), PHIr(NModes);
                 for (unsigned int jMode = 1; jMode <= NModes; jMode++) {
-                        integer iOffset = (jMode - 1)*NStrNodes + iStrNode;
-                        PHIt.PutVec(jMode, oPHIt.GetVec(iOffset));
-                        PHIr.PutVec(jMode, oPHIr.GetVec(iOffset));
+                        integer jOffset = (jMode - 1)*NStrNodes + iStrNode;
+                        PHIt.PutVec(jMode, oPHIt.GetVec(jOffset));
+                        PHIr.PutVec(jMode, oPHIr.GetVec(jOffset));
                 }
 
                 /*
@@ -3122,7 +3122,7 @@ ReadModal(DataManager* pDM,
         std::string sEchoFileName;
         int iEchoPrecision(13);
         if (HP.IsKeyWord("echo")) {
-                const char *s = HP.GetFileName();
+                s = HP.GetFileName();
                 if (s == 0) {
                         silent_cerr("Modal(" << uLabel << "): "
                                 "unable to parse echo file name at line " << HP.GetLineData()

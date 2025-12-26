@@ -49,11 +49,11 @@ od(UNKNOWN_ORIENTATION_DESCRIPTION)
 	NO_OP;
 }
 
-ReferenceFrame::ReferenceFrame(unsigned int uLabel, 
+ReferenceFrame::ReferenceFrame(unsigned int uLabel_a,
 		const Vec3& xIn, const Mat3x3& RIn,
 		const Vec3& vIn, const Vec3& wIn,
 		const OrientationDescription& ood)
-: WithLabel(uLabel), x(xIn), R(RIn), v(vIn), w(wIn), od(ood)
+: WithLabel(uLabel_a), x(xIn), R(RIn), v(vIn), w(wIn), od(ood)
 {
 	ASSERT(Mat3x3(1., 0., 0., 0., 1., 0., 0., 0., 1.).IsSame(R.MulTM(R), 1e-12));
 }

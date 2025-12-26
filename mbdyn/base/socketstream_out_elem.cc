@@ -76,20 +76,20 @@
 /* SocketStreamElem - begin */
 
 SocketStreamElem::SocketStreamElem(unsigned int uL,
-	const std::string& name,
+	const std::string& name_a,
 	unsigned int oe,
-	UseSocket *pUS,
-	StreamContent *pSC,
-	int flags, bool bSendFirst, bool bAbortIfBroken,
-	StreamOutEcho *pSOE,
-	bool bMsgDontWait,
-	bool bSendAfterPredict)
-: StreamOutElem(uL, name, oe),
-pUS(pUS), pSC(pSC), send_flags(flags),
-bSendFirst(bSendFirst), bAbortIfBroken(bAbortIfBroken),
-bMsgDontWait(bMsgDontWait),
-pSOE(pSOE),
-bSendAfterPredict(bSendAfterPredict)
+	UseSocket *pUS_a,
+	StreamContent *pSC_a,
+	int flags, bool bSendFirst_a, bool bAbortIfBroken_a,
+	StreamOutEcho *pSOE_a,
+	bool bMsgDontWait_a,
+	bool bSendAfterPredict_a)
+: StreamOutElem(uL, name_a, oe),
+pUS(pUS_a), pSC(pSC_a), send_flags(flags),
+bSendFirst(bSendFirst_a), bAbortIfBroken(bAbortIfBroken_a),
+bMsgDontWait(bMsgDontWait_a),
+pSOE(pSOE_a),
+bSendAfterPredict(bSendAfterPredict_a)
 {
 	if (pSOE) {
 		pSOE->Init("SocketStreamElem", uLabel, pSC->GetNumChannels());

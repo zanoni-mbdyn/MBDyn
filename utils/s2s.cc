@@ -209,26 +209,26 @@ parse_format(const char *fmt)
 void
 s2s_t::parse(int argc, char *argv[])
 {
-	char	*next;
+	char	*next_c;
 
-	next = std::strrchr(argv[0], '/');
-	if (next != 0) {
-		next++;
+	next_c = std::strrchr(argv[0], '/');
+	if (next_c != 0) {
+		next_c++;
 
 	} else {
-		next = argv[0];
+		next_c = argv[0];
 	}
 
 	// libtool paranoia
-	if (strncmp(next, "lt-", STRLENOF("lt-")) == 0) {
-		next += STRLENOF("lt-");
+	if (strncmp(next_c, "lt-", STRLENOF("lt-")) == 0) {
+		next_c += STRLENOF("lt-");
 	}
 
-	if (strcmp(next, "socket2stream") == 0) {
+	if (strcmp(next_c, "socket2stream") == 0) {
 		this->stream2socket = false;
 		this->progname = "socket2stream";
 
-	} else if (strcmp(next, "stream2socket") == 0) {
+	} else if (strcmp(next_c, "stream2socket") == 0) {
 		this->stream2socket = true;
 		this->progname = "stream2socket";
 
@@ -280,8 +280,8 @@ s2s_t::parse(int argc, char *argv[])
 			break;
 
 		case 'n':
-			this->nChannels = strtoul(optarg, &next, 10);
-			if (next[0] != '\0') {
+			this->nChannels = strtoul(optarg, &next_c, 10);
+			if (next_c[0] != '\0') {
 				silent_cerr("unable to parse option -n "
 						"\"" << optarg << "\""
 						<< std::endl);
@@ -290,8 +290,8 @@ s2s_t::parse(int argc, char *argv[])
 			break;
 
 		case 'p':
-			this->port = strtoul(optarg, &next, 10);
-			if (next[0] != '\0') {
+			this->port = strtoul(optarg, &next_c, 10);
+			if (next_c[0] != '\0') {
 				silent_cerr("unable to parse option -p "
 						"\"" << optarg << "\""
 						<< std::endl);
@@ -392,13 +392,13 @@ s2s_t::prepare(void)
 					exit(EXIT_FAILURE);
 				}
 
-				char	*next;
+				char	*next_c;
 				unsigned long tmp_port;
 
 				p[0] = '\0';
 				p++;
-				tmp_port = strtoul(p, &next, 10);
-				if (next[0] != '\0') {
+				tmp_port = strtoul(p, &next_c, 10);
+				if (next_c[0] != '\0') {
 					silent_cerr("unable to parse port out of "
 						"\"" << this->host << ":" << p << "\""
 						<< std::endl);
@@ -452,10 +452,10 @@ s2s_t::prepare(void)
       				throw;
    			}
 
-			int sock = this->sock;
+			int sock_i = this->sock;
 			socklen_t len;
-			this->sock = accept(sock, addrp, &len);
-			close(sock);
+			this->sock = accept(sock_i, addrp, &len);
+			close(sock_i);
 			if (this->sock == -1) {
 				save_errno = WSAGetLastError();
 				const char	*err_msg = sock_err_string(save_errno);

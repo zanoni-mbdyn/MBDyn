@@ -50,12 +50,12 @@
 class RigidBodyDispJointAd: public Joint {
 public:
      struct SlaveNodeData {
-          SlaveNodeData(const StructDispNodeAd* pNode,
-                        const Vec3& offset,
-                        doublereal weight)
-               :pNode{pNode},
-                offset{offset},
-                weight{weight} {
+          SlaveNodeData(const StructDispNodeAd* pNode_a,
+                        const Vec3& offset_a,
+                        doublereal weight_a)
+               :pNode{pNode_a},
+                offset{offset_a},
+                weight{weight_a} {
                 }
           const StructDispNodeAd* pNode;
           Vec3 offset;

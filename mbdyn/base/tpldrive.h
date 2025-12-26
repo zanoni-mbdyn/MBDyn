@@ -44,8 +44,8 @@ class ReferenceFrame;
 template <class T>
 class TplDriveCaller {
 public:
-     explicit TplDriveCaller(const DriveHandler* pDrvHdl)
-          :pDrvHdl(pDrvHdl) {
+     explicit TplDriveCaller(const DriveHandler* pDrvHdl_a)
+          :pDrvHdl(pDrvHdl_a) {
      }
 
      virtual ~TplDriveCaller(void) {

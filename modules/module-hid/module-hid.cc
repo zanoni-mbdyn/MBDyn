@@ -76,10 +76,10 @@ public:
 };
 
 JoystickDrive::JoystickDrive(unsigned int uL, const DriveHandler* pDH,
-	const std::string& sFileName,
+	const std::string& sFileName_a,
 	integer nButtons, const std::vector<doublereal>& lc_scale,
 	const std::vector<doublereal>& v0)
-: FileDrive(uL, pDH, sFileName, nButtons + lc_scale.size(), v0),
+: FileDrive(uL, pDH, sFileName_a, nButtons + lc_scale.size(), v0),
 m_fd(-1),
 m_b_reset(nButtons), m_nButtons(nButtons),
 m_lc_scale(lc_scale), m_nLC(m_lc_scale.size()),

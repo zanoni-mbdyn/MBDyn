@@ -135,7 +135,7 @@ public:
 	template <class T>
 	struct JointDriveHint : public Joint::JointHint {
 		TplDriveHint<T> *pTDH;
-		JointDriveHint(TplDriveHint<T> *pTDH) : pTDH(pTDH) {};
+		JointDriveHint(TplDriveHint<T> *pTDH_a) : pTDH(pTDH_a) {};
 		~JointDriveHint(void) {
 			if (pTDH) {
 				delete pTDH;
@@ -144,27 +144,27 @@ public:
 	};
 	template <class T>
 	struct PositionDriveHint : public Joint::JointDriveHint<T> {
-		PositionDriveHint(TplDriveHint<T> *pTDH) : Joint::JointDriveHint<T>(pTDH) {};
+		PositionDriveHint(TplDriveHint<T> *pTDH_a) : Joint::JointDriveHint<T>(pTDH_a) {};
 	};
 	template <class T>
 	struct VelocityDriveHint : public Joint::JointDriveHint<T> {
-		VelocityDriveHint(TplDriveHint<T> *pTDH) : Joint::JointDriveHint<T>(pTDH) {};
+		VelocityDriveHint(TplDriveHint<T> *pTDH_a) : Joint::JointDriveHint<T>(pTDH_a) {};
 	};
 	template <class T>
 	struct AccelerationDriveHint : public Joint::JointDriveHint<T> {
-		AccelerationDriveHint(TplDriveHint<T> *pTDH) : Joint::JointDriveHint<T>(pTDH) {};
+		AccelerationDriveHint(TplDriveHint<T> *pTDH_a) : Joint::JointDriveHint<T>(pTDH_a) {};
 	};
 	template <class T>
 	struct OrientationDriveHint : public Joint::JointDriveHint<T> {
-		OrientationDriveHint(TplDriveHint<T> *pTDH) : Joint::JointDriveHint<T>(pTDH) {};
+		OrientationDriveHint(TplDriveHint<T> *pTDH_a) : Joint::JointDriveHint<T>(pTDH_a) {};
 	};
 	template <class T>
 	struct AngularVelocityDriveHint : public Joint::JointDriveHint<T> {
-		AngularVelocityDriveHint(TplDriveHint<T> *pTDH) : Joint::JointDriveHint<T>(pTDH) {};
+		AngularVelocityDriveHint(TplDriveHint<T> *pTDH_a) : Joint::JointDriveHint<T>(pTDH_a) {};
 	};
 	template <class T>
 	struct AngularAccelerationDriveHint : public Joint::JointDriveHint<T> {
-		AngularAccelerationDriveHint(TplDriveHint<T> *pTDH) : Joint::JointDriveHint<T>(pTDH) {};
+		AngularAccelerationDriveHint(TplDriveHint<T> *pTDH_a) : Joint::JointDriveHint<T>(pTDH_a) {};
 	};
 
 	struct ReactionsHint : public Joint::JointHint {};

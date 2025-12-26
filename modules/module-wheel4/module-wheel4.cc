@@ -48,9 +48,9 @@
 #include "simentity.h"
 #include "body.h"
 
-Wheel4::Wheel4(unsigned uLabel, const DofOwner *pDO,
+Wheel4::Wheel4(unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 firstRes(true)
 {
 	// help
@@ -989,9 +989,9 @@ else
 	// ,contributions of ring rot matrix to Jac of moment on ring
 
 }
-	for (int i=1; i <= WM.iGetNumCols(); i++) {
-		WM.PutCoef(1, i, WM.dGetCoef(1, i) / Kpatv(1));
-		WM.PutCoef(3, i, WM.dGetCoef(3, i) / Kpatv(2));
+	for (int ii=1; ii <= WM.iGetNumCols(); ii++) {
+		WM.PutCoef(1, ii, WM.dGetCoef(1, ii) / Kpatv(1));
+		WM.PutCoef(3, ii, WM.dGetCoef(3, ii) / Kpatv(2));
 	}
 	return WorkMat;
 }
@@ -1160,11 +1160,11 @@ Wheel4::AssRes(SubVectorHandler& WorkVec,
 								} else if ( dt_adjFactor > 1.)
 								{
 									doublereal dt_stepInflRatio = 0.;
-									for (int iCnt = 1; iCnt <= dt_numAhead; iCnt++) {  // this loop checks if a smaller timestep guarantees a smaller bump
+									for (int iCnt1 = 1; iCnt1 <= dt_numAhead; iCnt1++) {  // this loop checks if a smaller timestep guarantees a smaller bump
 										dt_maxHeight = -std::numeric_limits<doublereal>::max();
 										dt_minHeight = std::numeric_limits<doublereal>::max();
-										dt_dXxProj_dLsNow = dXxProj+(iCnt-1)*dt_Res - 0.35*dR_0*dPls ; // Besselink, p. 131, half contact patch length never really goes above 0.35*dR_0
-										while (dt_dXxProj_dLsNow <= dXxProj+(dXxProj-dXxProjPrev)/dt_adjFactor+iCnt*dt_Res + 0.35*dR_0*dPls)
+										dt_dXxProj_dLsNow = dXxProj+(iCnt1-1)*dt_Res - 0.35*dR_0*dPls ; // Besselink, p. 131, half contact patch length never really goes above 0.35*dR_0
+										while (dt_dXxProj_dLsNow <= dXxProj+(dXxProj-dXxProjPrev)/dt_adjFactor+iCnt1*dt_Res + 0.35*dR_0*dPls)
 										{
 											dt_maxHeight = fmax( dt_maxHeight, pRoad->dGet(CapLoop(dt_dXxProj_dLsNow)) );
 											dt_minHeight = fmin( dt_minHeight, pRoad->dGet(CapLoop(dt_dXxProj_dLsNow)) );
@@ -1607,9 +1607,9 @@ Wheel4::iGetPrivDataIdx(const char *s) const
 }
 
 
-doublereal Wheel4::dGetPrivData(unsigned int i) const
+doublereal Wheel4::dGetPrivData(unsigned int ii) const
 {
-   ASSERT(i >= 1 && i <= iGetNumPrivData());
+   ASSERT(ii >= 1 && ii <= iGetNumPrivData());
     	return dtMax; // this should return the maximum timestep that this wheel is able to take (to be fed into the strategy:change cirective in the MBDyn input file)
 }
 
@@ -1651,13 +1651,13 @@ Wheel4::iGetNumDof(void) const
 	return 4;
 }
 DofOrder::Order
-Wheel4::GetDofType(unsigned int i) const
+Wheel4::GetDofType(unsigned int ii) const
 {
 	return DofOrder::DIFFERENTIAL;
 }
 
 DofOrder::Order
-Wheel4::GetEqType(unsigned int i) const
+Wheel4::GetEqType(unsigned int ii) const
 {
 	return DofOrder::DIFFERENTIAL;
 }
@@ -1705,9 +1705,9 @@ Wheel4::InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr)
 // FIXME: does not need to be an element, imho
 
 TimeStep::TimeStep(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {

@@ -387,9 +387,9 @@ private:
 };
 
 template <typename StructNodeType1>
-UniInPlaneFriction<StructNodeType1>::ContactPoint::ContactPoint(const Vec3& offset, doublereal s)
+UniInPlaneFriction<StructNodeType1>::ContactPoint::ContactPoint(const Vec3& offset, doublereal s_a)
      :o1(offset),
-      s(s),
+      s(s_a),
       lambda(0.),
       lambdaPrev(0.),
       dXn(0.),
@@ -403,31 +403,31 @@ UniInPlaneFriction<StructNodeType1>::ContactPoint::ContactPoint(const Vec3& offs
 
 template <typename StructNodeType1>
 void UniInPlaneFriction<StructNodeType1>::ContactPoint::UpdateReaction(
-     const sp_grad::SpColVector<doublereal, 3>& F1,
-     const sp_grad::SpColVector<doublereal, 3>& M1,
-     const sp_grad::SpColVector<doublereal, 3>& F2,
-     const sp_grad::SpColVector<doublereal, 3>& M2,
-     const doublereal dXn,
-     const doublereal lambda)
+     const sp_grad::SpColVector<doublereal, 3>& F1_a,
+     const sp_grad::SpColVector<doublereal, 3>& M1_a,
+     const sp_grad::SpColVector<doublereal, 3>& F2_a,
+     const sp_grad::SpColVector<doublereal, 3>& M2_a,
+     const doublereal dXn_a,
+     const doublereal lambda_a)
 {
-     this->F1 = F1;
-     this->M1 = M1;
-     this->F2 = F2;
-     this->M2 = M2;
-     this->dXn = dXn;
-     this->lambda = lambda;
+     this->F1 = F1_a;
+     this->M1 = M1_a;
+     this->F2 = F2_a;
+     this->M2 = M2_a;
+     this->dXn = dXn_a;
+     this->lambda = lambda_a;
 }
 
 template <typename StructNodeType1>
-void UniInPlaneFriction<StructNodeType1>::ContactPoint::UpdateFriction(const sp_grad::SpColVector<doublereal, 2>& U,
-                                                                       const sp_grad::SpColVector<doublereal, 2>& tau,
-                                                                       const sp_grad::SpColVector<doublereal, 2>& z,
-                                                                       const sp_grad::SpColVector<doublereal, 2>& zP)
+void UniInPlaneFriction<StructNodeType1>::ContactPoint::UpdateFriction(const sp_grad::SpColVector<doublereal, 2>& U_a,
+                                                                       const sp_grad::SpColVector<doublereal, 2>& tau_a,
+                                                                       const sp_grad::SpColVector<doublereal, 2>& z_a,
+                                                                       const sp_grad::SpColVector<doublereal, 2>& zP_a)
 {
-     this->U = U;
-     this->tau = tau;
-     this->z = z;
-     this->zP = zP;
+     this->U = U_a;
+     this->tau = tau_a;
+     this->z = z_a;
+     this->zP = zP_a;
 }
 
 template <typename StructNodeType1>
@@ -459,10 +459,10 @@ const typename UniInPlaneFriction<StructNodeType1>::PrivateData UniInPlaneFricti
 
 template <typename StructNodeType1>
 UniInPlaneFriction<StructNodeType1>::UniInPlaneFriction(
-     unsigned uLabel, const DofOwner *pDO,
-     DataManager* pDM, MBDynParser& HP)
-     :       UserDefinedElem(uLabel, pDO),
-             pDM(pDM),
+     unsigned uLabel_a, const DofOwner *pDO,
+     DataManager* pDM_a, MBDynParser& HP)
+     :       UserDefinedElem(uLabel_a, pDO),
+             pDM(pDM_a),
              pNode1(0),
              pNode2(0),
              o2(Zero3),
@@ -1120,33 +1120,33 @@ UniInPlaneFriction<StructNodeType1>::AssRes(sp_grad::SpGradientAssVec<T>& WorkVe
                     kappa = norm_Mk2_U / g;
                }
 
-               for (int i = 1; i <= 2; ++i)
+               for (int ii = 1; ii <= 2; ++ii)
                {
-                    XCurr.dGetCoef(iDofIndex + i, z(i), dCoef);
-                    XPrimeCurr.dGetCoef(iDofIndex + i, zP(i), 1.);
+                    XCurr.dGetCoef(iDofIndex + ii, z(ii), dCoef);
+                    XPrimeCurr.dGetCoef(iDofIndex + ii, zP(ii), 1.);
                }
 
                const SpColVector<T, 2> Phi = (U - (invMk2_sigma0 * z) * kappa - zP) * alpha;
 
-               for (index_type i = 1; i <= 2; ++i)
+               for (index_type ii = 1; ii <= 2; ++ii)
                {
                     ++iDofIndex;
 
                     if (alpha != 0.)
                     {
-                         WorkVec.AddItem(iDofIndex, Phi(i));
+                         WorkVec.AddItem(iDofIndex, Phi(ii));
                     }
                     else
                     {
-                         WorkVec.AddItem(iDofIndex, z(i));
+                         WorkVec.AddItem(iDofIndex, z(ii));
                     }
                }
 
                tau = (sigma0 * z + sigma1 * zP) * lambda + sigma2 * U;
 
-               for (index_type i = 1; i <= 2; ++i)
+               for (index_type ii = 1; ii <= 2; ++ii)
                {
-                    F1p -= Rp.GetCol(i) * tau(i);
+                    F1p -= Rp.GetCol(ii) * tau(ii);
                }
 
                cont.UpdateFriction(U, tau, z, zP);
@@ -1201,7 +1201,7 @@ UniInPlaneFriction<StructNodeType1>::GetConnectedNodes(std::vector<const Node *>
 
 template <typename StructNodeType1>
 void
-UniInPlaneFriction<StructNodeType1>::SetValue(DataManager *pDM,
+UniInPlaneFriction<StructNodeType1>::SetValue(DataManager *pDM_a,
                                               VectorHandler& X, VectorHandler& XP,
                                               SimulationEntity::Hints *ph)
 {
@@ -1276,14 +1276,14 @@ UniInPlaneFriction<StructNodeType1>::Restart(RestartData& oData, RestartData::Re
 {
      int i = 0;
 
-     for (auto& ContactPoint: ContactPoints1)
+     for (auto& ContactPoint_ref: ContactPoints1)
      {
           ++i;
 
-          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "lambda", ContactPoint.lambda, eAction);
-          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "lambdaPrev", ContactPoint.lambdaPrev, eAction);
-          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "z", ContactPoint.z, eAction);
-          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "zP", ContactPoint.zP, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "lambda", ContactPoint_ref.lambda, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "lambdaPrev", ContactPoint_ref.lambdaPrev, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "z", ContactPoint_ref.z, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "zP", ContactPoint_ref.zP, eAction);
           oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "tCurr", tCurr, eAction);
           oData.Sync(RestartData::ELEM_LOADABLE, GetLabel(), i, "tPrev", tPrev, eAction);
      }

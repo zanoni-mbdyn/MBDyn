@@ -320,8 +320,8 @@ main(int argc, char *argv[])
 		vector_sum( &tmp_x1, &tmp_x2, &x_k, 1. );
 
 		// send new controls
-		for (int i = 0; i < s2s_controls.nChannels ; i++) {
-			s2s_controls.dbuf[i] = u_k.vec[i];
+		for (int ii = 0; ii < s2s_controls.nChannels ; ii++) {
+			s2s_controls.dbuf[ii] = u_k.vec[ii];
 		}
 		s2s_controls.send(0);
 	

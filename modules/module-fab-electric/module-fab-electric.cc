@@ -46,9 +46,9 @@
 
 // Resistor
 Resistor::Resistor(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -315,9 +315,9 @@ Resistor::InitialAssRes(
 
 // Capacitor:
 Capacitor::Capacitor(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -376,9 +376,9 @@ Capacitor::OutputPrepare(OutputHandler& OH)
 			os << "elem.loadable." << GetLabel();
 			(void)OH.CreateVar(os.str(), "Capacitor");
 
-			std::string m_sOutputNameBase = os.str();
+			std::string m_sOutputNameBase_local = os.str();
 
-			Var_di_curr = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "I",
+			Var_di_curr = OH.CreateVar<doublereal>(m_sOutputNameBase_local + "." "I",
 					OutputHandler::Dimensions::Current,
 					"Current on capacitor");
 		}
@@ -584,9 +584,9 @@ Capacitor::InitialAssRes(
 
 // Inductor:
 Inductor::Inductor(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -855,9 +855,9 @@ Inductor::InitialAssRes(
 // Diode model
 // ref.: http://en.wikipedia.org/wiki/Diode
 Diode::Diode(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -1125,9 +1125,9 @@ Diode::InitialAssRes(
 // Switch
 // Model not tested!!!!!
 Switch::Switch(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -1367,9 +1367,9 @@ Switch::InitialAssRes(
 // options: no control, current control, voltage control
 // Model not tested!!!!!
 ElectricalSource::ElectricalSource(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -1847,9 +1847,9 @@ ElectricalSource::InitialAssRes(
 // Ideal Tranformer
 // Model not tested!!!!!
 IdealTransformer::IdealTransformer(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -2036,8 +2036,8 @@ IdealTransformer::AssRes(SubVectorHandler& WorkVec,
 	integer iElecOutNodeFirstIndex2 = pElecOut2->iGetFirstRowIndex() + 1;
 	integer iFirstIndex = iGetFirstIndex() + 1;
 
-	doublereal i_currIn = XCurr(iFirstIndex);
-	doublereal i_currOut = XCurr(iFirstIndex + 1);
+	doublereal i_currIn_local = XCurr(iFirstIndex);
+	doublereal i_currOut_local = XCurr(iFirstIndex + 1);
 	doublereal V1in = pElecIn1->dGetX();
 	doublereal V2in = pElecIn2->dGetX();
 	doublereal V1out = pElecOut1->dGetX();
@@ -2052,15 +2052,15 @@ IdealTransformer::AssRes(SubVectorHandler& WorkVec,
 	WorkVec.PutRowIndex(6, iFirstIndex + 1);
 
 	DEBUGCOUT("IdealTransformer::AssRes(), V1in, V2in, i_currIn, V1out, V2out, i_currOut, G1: "
-		<< V1in << ", " << V2in << ", " << i_currIn << ", " << V1out << ", " << V2out << ", "
-		<< i_currOut  << ", " << G1 << std::endl);
+		<< V1in << ", " << V2in << ", " << i_currIn_local << ", " << V1out << ", " << V2out << ", "
+		<< i_currOut_local  << ", " << G1 << std::endl);
 
-	WorkVec.DecCoef(1, i_currIn);
-	WorkVec.IncCoef(2, i_currIn);
-	WorkVec.DecCoef(3, i_currOut);
-	WorkVec.IncCoef(4, i_currOut);
+	WorkVec.DecCoef(1, i_currIn_local);
+	WorkVec.IncCoef(2, i_currIn_local);
+	WorkVec.DecCoef(3, i_currOut_local);
+	WorkVec.IncCoef(4, i_currOut_local);
 	WorkVec.IncCoef(5, (V2out - V1out) - G1*(V2in - V1in));
-	WorkVec.IncCoef(6, i_currIn - G1*i_currOut);
+	WorkVec.IncCoef(6, i_currIn_local - G1*i_currOut_local);
 
 	return WorkVec;
 }
@@ -2148,9 +2148,9 @@ IdealTransformer::InitialAssRes(
 // Model not tested!!!!!
 
 OperationalAmplifier::OperationalAmplifier(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -2456,9 +2456,9 @@ OperationalAmplifier::InitialAssRes(
 // Model not tested!!!!!
 
 BipolarTransistor::BipolarTransistor(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {
@@ -2798,9 +2798,9 @@ BipolarTransistor::InitialAssRes(
 // Proximity Sensor:
 // Model not tested!!!!!
 ProximitySensor::ProximitySensor(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {

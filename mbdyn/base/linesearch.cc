@@ -107,7 +107,7 @@ LineSearchParameters::LineSearchParameters(void)
      NO_OP;
 }
 
-LineSearchSolver::LineSearchSolver(DataManager* pDM,
+LineSearchSolver::LineSearchSolver(DataManager* pDM_a,
                                    const NonlinearSolverTestOptions& options,
                                    const struct LineSearchParameters& param)
      : NonlinearSolver(options),
@@ -119,7 +119,7 @@ LineSearchSolver::LineSearchSolver(DataManager* pDM,
        pNLP(0),
        pS(0),
        pSM(0),
-       pDM(pDM),
+       pDM(pDM_a),
        iRebuildJac(0)
 {
      TRACE_VAR(dTolX);
@@ -148,18 +148,18 @@ LineSearchSolver::~LineSearchSolver(void)
      NO_OP;
 }
 
-void LineSearchSolver::Attach(const NonlinearProblem* pNLP, Solver* pS)
+void LineSearchSolver::Attach(const NonlinearProblem* pNLP_a, Solver* pS_a)
 {
-     ASSERT(pNLP != NULL);
-     ASSERT(pS != NULL);
+     ASSERT(pNLP_a != NULL);
+     ASSERT(pS_a != NULL);
 
-     if (this->pNLP != pNLP) {
+     if (this->pNLP != pNLP_a) {
           ResetCond();
      }
 
+     this->pS = pS_a;
      pSM = pS->pGetSolutionManager();
-     this->pS = pS;
-     this->pNLP = pNLP;
+     this->pNLP = pNLP_a;
      pRes = pSM->pResHdl();
      pAbsRes = pGetResTest()->GetAbsRes();
      pSol = pSM->pSolHdl();
@@ -322,7 +322,7 @@ bool LineSearchSolver::bCheckDivergence(const doublereal dErrFactor, const doubl
      return bDivergence;
 }
 
-doublereal LineSearchSolver::dGetLambdaMin(doublereal& dSlope, const bool bRebuildJac, const VectorHandler& p, const integer iIterCnt, doublereal fCurr) const
+doublereal LineSearchSolver::dGetLambdaMin(doublereal& dSlope, const bool bRebuildJac, const VectorHandler& p_a, const integer iIterCnt, doublereal fCurr) const
 {
      TRACE_VAR(dSlope);
 
@@ -351,7 +351,7 @@ doublereal LineSearchSolver::dGetLambdaMin(doublereal& dSlope, const bool bRebui
           if (dLambdaMinCurr < 0) {
                // dLambdaMinCurr has to be detected
                if (uFlags & RELATIVE_LAMBDA_MIN) {
-                    dLambdaMinCurr = std::max(dLambdaMin, dGetMinNewtonInc(p));
+                    dLambdaMinCurr = std::max(dLambdaMin, dGetMinNewtonInc(p_a));
                } else {
                     dLambdaMinCurr = dLambdaMin;
                }
@@ -533,10 +533,10 @@ void LineSearchSolver::OutputJacobian(const MatrixHandler& Jac) const
      }
 }
 
-LineSearchFull::LineSearchFull(DataManager* pDM,
+LineSearchFull::LineSearchFull(DataManager* pDM_a,
                                const NonlinearSolverTestOptions& options,
                                const struct LineSearchParameters& param)
-     :LineSearchSolver(pDM, options, param)
+     :LineSearchSolver(pDM_a, options, param)
 {
 }
 
@@ -545,12 +545,12 @@ LineSearchFull::~LineSearchFull(void)
 }
 
 bool
-LineSearchFull::LineSearch(const doublereal dMaxStep,
+LineSearchFull::LineSearch(const doublereal dMaxStep_a,
                            const doublereal fPrev,
                            doublereal& fCurr,
                            const integer iIterCnt)
 {
-     ScaleNewtonStep(dMaxStep, *pSol, iIterCnt);
+     ScaleNewtonStep(dMaxStep_a, *pSol, iIterCnt);
 
      p = *pSol; // save the Newton increment
 
@@ -648,7 +648,7 @@ LineSearchFull::LineSearch(const doublereal dMaxStep,
 
 void
 LineSearchFull::Solve(const NonlinearProblem *pNonLinProblem,
-                      Solver *pS,
+                      Solver *pS_a,
                       const integer iMaxIter,
                       const doublereal& Tol,
                       integer& iIterCnt,
@@ -656,7 +656,7 @@ LineSearchFull::Solve(const NonlinearProblem *pNonLinProblem,
                       const doublereal& SolTol,
                       doublereal& dSolErr)
 {
-     Attach(pNonLinProblem, pS);
+     Attach(pNonLinProblem, pS_a);
      iIterCnt = 0;
      dSolErr = 0.;
      dErr = 0.;
@@ -685,7 +685,7 @@ LineSearchFull::Solve(const NonlinearProblem *pNonLinProblem,
           return;
      }
 
-     const doublereal dMaxStep = dGetMaxNewtonStep(*pDM->GetpXCurr(), *pDM->GetpXPCurr());
+     dMaxStep = dGetMaxNewtonStep(*pDM->GetpXCurr(), *pDM->GetpXPCurr());
 
      TRACE_VAR(dMaxStep);
 
@@ -772,10 +772,10 @@ LineSearchFull::Solve(const NonlinearProblem *pNonLinProblem,
      }
 }
 
-LineSearchModified::LineSearchModified(DataManager* pDM,
+LineSearchModified::LineSearchModified(DataManager* pDM_a,
                                        const NonlinearSolverTestOptions& options,
                                        const struct LineSearchParameters& param)
-     :LineSearchSolver(pDM, options, param),
+     :LineSearchSolver(pDM_a, options, param),
       dTimePrev(pDM->dGetTime()), dTimeStepPrev(0.)
 {
 }
@@ -785,8 +785,8 @@ LineSearchModified::~LineSearchModified(void)
 
 }
 
-void LineSearchModified::Solve(const NonlinearProblem* const pNLP,
-                               Solver* const pS,
+void LineSearchModified::Solve(const NonlinearProblem* const pNLP_a,
+                               Solver* const pS_a,
                                const integer iMaxIter,
                                const doublereal& Tol,
                                integer& iIterCnt,
@@ -794,12 +794,12 @@ void LineSearchModified::Solve(const NonlinearProblem* const pNLP,
                                const doublereal& SolTol,
                                doublereal& dSolErr)
 {
-     if (this->pNLP != pNLP) {
+     if (this->pNLP != pNLP_a) {
           // Force update of Jacobian matrix in order to avoid problems when scaling an empty matrix
           iRebuildJac = 0;
      }
 
-     Attach(pNLP, pS);
+     Attach(pNLP_a, pS_a);
      dSolErr = 0.;
      dErr = 0.;
 
@@ -834,7 +834,7 @@ void LineSearchModified::Solve(const NonlinearProblem* const pNLP,
      bool bUpdateResidual = true;
      bool bDivergence = false;
      doublereal fCurr, dErrDiff, dErr0 = 0;
-     const doublereal dMaxStep = dGetMaxNewtonStep(*pDM->GetpXCurr(), *pDM->GetpXPCurr());
+     dMaxStep = dGetMaxNewtonStep(*pDM->GetpXCurr(), *pDM->GetpXPCurr());
 
      try {
           while (true) {
@@ -1099,10 +1099,10 @@ exit_success:
      // It would prevent that AfterConvergence is called in StepIntegrator::Advance.
 }
 
-LineSearchBFGS::LineSearchBFGS(DataManager* pDM,
+LineSearchBFGS::LineSearchBFGS(DataManager* pDM_a,
                                const NonlinearSolverTestOptions& options,
                                const struct LineSearchParameters& param)
-     :LineSearchSolver(pDM, options, param)
+     :LineSearchSolver(pDM_a, options, param)
 
 {
 }
@@ -1111,9 +1111,9 @@ LineSearchBFGS::~LineSearchBFGS(void)
 {
 }
 
-void LineSearchBFGS::Attach(const NonlinearProblem* pNLP, Solver* pS)
+void LineSearchBFGS::Attach(const NonlinearProblem* pNLP_a, Solver* pS_a)
 {
-     LineSearchSolver::Attach(pNLP, pS);
+     LineSearchSolver::Attach(pNLP_a, pS_a);
 
      if (t.iGetSize() != Size) {
           t.Resize(Size);
@@ -1124,8 +1124,8 @@ void LineSearchBFGS::Attach(const NonlinearProblem* pNLP, Solver* pS)
      }
 }
 
-void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
-                           Solver *pS,
+void LineSearchBFGS::Solve(const NonlinearProblem *pNLP_a,
+                           Solver *pS_a,
                            const integer iMaxIter,
                            const doublereal& Tol,
                            integer& iIterCnt,
@@ -1133,12 +1133,12 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
                            const doublereal& SolTol,
                            doublereal& dSolErr)
 {
-     if (this->pNLP != pNLP) {
+     if (this->pNLP != pNLP_a) {
           // Force update of Jacobian matrix in order to avoid problems when scaling an empty matrix
           iRebuildJac = 0;
      }
 
-     Attach(pNLP, pS);
+     Attach(pNLP_a, pS_a);
      dSolErr = 0.;
      dErr = 0.;
 
@@ -1146,9 +1146,9 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
           iRebuildJac = 0;
      }
 
-     auto* const pSM = dynamic_cast<QrSolutionManager*>(this->pSM);
+     auto* const QrSpSM = dynamic_cast<QrSolutionManager*>(this->pSM);
 
-     if (!pSM) {
+     if (!QrSpSM) {
           throw ErrGeneric(MBDYN_EXCEPT_ARGS);
      }
 
@@ -1163,7 +1163,7 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
      bool bUpdateResidual = true;
      bool bDivergence = false;
      doublereal fCurr, dErrDiff, dErr0 = 0.;
-     const doublereal dMaxStep = dGetMaxNewtonStep(*pDM->GetpXCurr(), *pDM->GetpXPCurr());
+     dMaxStep = dGetMaxNewtonStep(*pDM->GetpXCurr(), *pDM->GetpXPCurr());
 
      try {
           while (true) {
@@ -1203,7 +1203,7 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
 
                     oCPU.LinearSolver.Tic(oCPU.Jacobian);
 
-                    pSM->InitQR();
+                    QrSpSM->InitQR();
 
                     oCPU.Jacobian.Tic(oCPU.LinearSolver);
 
@@ -1213,13 +1213,13 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
                     if (iIterCnt > 0) {
                          t.Reset();
 
-                         pSM->MatVecOp(QrSolutionManager::OP_A_MINUS_R_B, t, s); // t = -R * s
+                         QrSpSM->MatVecOp(QrSolutionManager::OP_A_MINUS_R_B, t, s); // t = -R * s
 
                          for (integer i = 1; i <= Size; ++i) {
                               w(i) = FCurr(i) - FPrev(i);
                          }
 
-                         pSM->MatVecOp(QrSolutionManager::OP_A_MINUS_Q_B, w, t); // w = dF - Q * t = dF + Q * R * s
+                         QrSpSM->MatVecOp(QrSolutionManager::OP_A_MINUS_Q_B, w, t); // w = dF - Q * t = dF + Q * R * s
 
                          bool bSkip = true;
 
@@ -1235,7 +1235,7 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
 
                          if (!bSkip) {
                               s *= (-1. / s.Dot());
-                              pSM->UpdateQR(w, s);
+                              QrSpSM->UpdateQR(w, s);
                          }
                     }
 
@@ -1249,11 +1249,11 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
 
                p.Reset();
 
-               pSM->MatVecOp(QrSolutionManager::OP_A_PLUS_QT_B, p, FCurr); // p = Q^T * Fcurr
+               QrSpSM->MatVecOp(QrSolutionManager::OP_A_PLUS_QT_B, p, FCurr); // p = Q^T * Fcurr
 
                g.Reset();
 
-               pSM->MatVecOp(QrSolutionManager::OP_A_MINUS_RT_B, g, p); // g = -(Q * R)^T * Fcurr = -R^T * p
+               QrSpSM->MatVecOp(QrSolutionManager::OP_A_MINUS_RT_B, g, p); // g = -(Q * R)^T * Fcurr = -R^T * p
 
                FPrev = FCurr;
 
@@ -1263,7 +1263,7 @@ void LineSearchBFGS::Solve(const NonlinearProblem *pNLP,
 
                *pSol = p;
 
-               pSM->SolveR(); // R * s = p
+               QrSpSM->SolveR(); // R * s = p
 
                s = *pSol;
 
@@ -1467,10 +1467,10 @@ exit_success:
 // https://nonsmooth.gricad-pages.univ-grenoble-alpes.fr/siconos/index.html
 // https://github.com/siconos/siconos
 
-LineSearchMCP::LineSearchMCP(DataManager* pDM,
+LineSearchMCP::LineSearchMCP(DataManager* pDM_a,
                              const NonlinearSolverTestOptions& options,
                              const struct LineSearchParameters& param)
-     :LineSearchSolver(pDM, options, param)
+     :LineSearchSolver(pDM_a, options, param)
 {
 }
 
@@ -1494,7 +1494,7 @@ void LineSearchMCP::ComputeHInt(const VectorHandler& z, const VectorHandler& F, 
 
      H.Reset();
 
-     sp_grad::SpGradient g;
+     sp_grad::SpGradient g_local;
 
      for (integer i = 1; i <= Size; ++i) {
           DofOrder::Equality eEqType = pDM->GetEqualityType(i);
@@ -1503,12 +1503,12 @@ void LineSearchMCP::ComputeHInt(const VectorHandler& z, const VectorHandler& F, 
                H.SubItem(i, nablaFMCP.GetRow(i));
           } else if (workV1(i)) {
                const doublereal normi = sqrt(workV1(i) * workV1(i) + workV2(i) * workV2(i));
-               g.Reset(0., i, workV1(i) / normi - 1.);
-               H.AddItem(i, g - nablaFMCP.GetRow(i) * (workV2(i) / normi - 1.));
+               g_local.Reset(0., i, workV1(i) / normi - 1.);
+               H.AddItem(i, g_local - nablaFMCP.GetRow(i) * (workV2(i) / normi - 1.));
           } else {
                const doublereal normi = sqrt(z(i) * z(i) + F(i) * F(i));
-               g.Reset(0., i, z(i) / normi - 1.);
-               H.AddItem(i, g - nablaFMCP.GetRow(i) * (F(i) / normi - 1.));
+               g_local.Reset(0., i, z(i) / normi - 1.);
+               H.AddItem(i, g_local - nablaFMCP.GetRow(i) * (F(i) / normi - 1.));
           }
      }
 }
@@ -1570,7 +1570,7 @@ void LineSearchMCP::ComputeHInt(const VectorHandler& z, const VectorHandler& F, 
 
      H.Scale(rgRowScale, rgColScale);
 
-     sp_grad::SpGradient g;
+     sp_grad::SpGradient g_local;
 
      for (integer i = 1; i <= Size; ++i) {
           DofOrder::Equality eEqType = pDM->GetEqualityType(i);
@@ -1579,12 +1579,12 @@ void LineSearchMCP::ComputeHInt(const VectorHandler& z, const VectorHandler& F, 
                continue;
           } else if (workV1(i)) {
                const doublereal normi = sqrt(workV1(i) * workV1(i) + workV2(i) * workV2(i));
-               g.Reset(0., i, workV1(i) / normi - 1.);
-               H.AddItem(i, g);
+               g_local.Reset(0., i, workV1(i) / normi - 1.);
+               H.AddItem(i, g_local);
           } else {
                const doublereal normi = sqrt(z(i) * z(i) + F(i) * F(i));
-               g.Reset(0., i, z(i) / normi - 1.);
-               H.AddItem(i, g);
+               g_local.Reset(0., i, z(i) / normi - 1.);
+               H.AddItem(i, g_local);
           }
      }
 }
@@ -1624,14 +1624,14 @@ void LineSearchMCP::ComputeHDescInt(const SpGradientSparseMatrixHandler& nablaFM
 {
      H.Reset();
 
-     sp_grad::SpGradient g;
+     sp_grad::SpGradient g_local;
 
      for (integer i = 1; i <= Size; ++i) {
           DofOrder::Equality eEqType = pDM->GetEqualityType(i);
 
           if (eEqType == DofOrder::INEQUALITY && z(i) <= F(i)) {
-               g.Reset(0., i, 1.);
-               H.AddItem(i, g);
+               g_local.Reset(0., i, 1.);
+               H.AddItem(i, g_local);
           } else {
                H.SubItem(i, nablaFMCP.GetRow(i));
           }
@@ -1802,9 +1802,9 @@ void LineSearchMCP::CheckLineSearch(doublereal& dThetaCurr,
      dThetaCurr = LineSearch(dThetaPrev, preRHS, z, F, FMerit, DeltaZ, iIterCnt);
 }
 
-void LineSearchMCP::Attach(const NonlinearProblem* pNLPNew, Solver* pS)
+void LineSearchMCP::Attach(const NonlinearProblem* pNLPNew, Solver* pS_a)
 {
-     LineSearchSolver::Attach(pNLPNew, pS);
+     LineSearchSolver::Attach(pNLPNew, pS_a);
 
      if (zH.iGetSize() != Size) {
           zH.ResizeReset(Size);
@@ -1817,10 +1817,10 @@ void LineSearchMCP::Attach(const NonlinearProblem* pNLPNew, Solver* pS)
 }
 
 
-MCPNewtonMinFB::MCPNewtonMinFB(DataManager* pDM,
+MCPNewtonMinFB::MCPNewtonMinFB(DataManager* pDM_a,
                                const NonlinearSolverTestOptions& options,
                                const struct LineSearchParameters& param)
-     :LineSearchMCP(pDM, options, param),
+     :LineSearchMCP(pDM_a, options, param),
       nablaFMCPH(0, 0)
 {
 }
@@ -1829,8 +1829,8 @@ MCPNewtonMinFB::~MCPNewtonMinFB()
 {
 }
 
-void MCPNewtonMinFB::Solve(const NonlinearProblem *pNLP,
-                           Solver *pS,
+void MCPNewtonMinFB::Solve(const NonlinearProblem *pNLP_a,
+                           Solver *pS_a,
                            const integer iMaxIter,
                            const doublereal& Tol,
                            integer& iIterCnt,
@@ -1841,7 +1841,7 @@ void MCPNewtonMinFB::Solve(const NonlinearProblem *pNLP,
      iIterCnt = 0;
      doublereal dErrDiff = dSolErr = dErr = 0.;
 
-     Attach(pNLP, pS);
+     Attach(pNLP_a, pS_a);
 
      VectorHandler& Fmin = *pSM->pResHdl();
      VectorHandler& DeltaZ = *pSM->pSolHdl();
@@ -1945,19 +1945,19 @@ void MCPNewtonMinFB::Solve(const NonlinearProblem *pNLP,
      }
 }
 
-void MCPNewtonMinFB::Attach(const NonlinearProblem* pNLPNew, Solver* pS)
+void MCPNewtonMinFB::Attach(const NonlinearProblem* pNLPNew, Solver* pS_a)
 {
-     LineSearchMCP::Attach(pNLPNew, pS);
+     LineSearchMCP::Attach(pNLPNew, pS_a);
 
      if (nablaFMCPH.iGetNumRows() != Size) {
           nablaFMCPH.ResizeReset(Size, Size);
      }
 }
 
-MCPNewtonFB::MCPNewtonFB(DataManager* pDM,
+MCPNewtonFB::MCPNewtonFB(DataManager* pDM_a,
                          const NonlinearSolverTestOptions& options,
                          const struct LineSearchParameters& param)
-     :LineSearchMCP(pDM, options, param)
+     :LineSearchMCP(pDM_a, options, param)
 {
 }
 
@@ -1965,8 +1965,8 @@ MCPNewtonFB::~MCPNewtonFB()
 {
 }
 
-void MCPNewtonFB::Solve(const NonlinearProblem *pNLP,
-                        Solver *pS,
+void MCPNewtonFB::Solve(const NonlinearProblem *pNLP_a,
+                        Solver *pS_a,
                         const integer iMaxIter,
                         const doublereal& Tol,
                         integer& iIterCnt,
@@ -1977,7 +1977,7 @@ void MCPNewtonFB::Solve(const NonlinearProblem *pNLP,
      iIterCnt = 0;
      doublereal dErrDiff = dSolErr = dErr = 0.;
 
-     Attach(pNLP, pS);
+     Attach(pNLP_a, pS_a);
 
      VectorHandler& Fmin = *pSM->pResHdl();
      VectorHandler& DeltaZ = *pSM->pSolHdl();
@@ -2072,9 +2072,9 @@ void MCPNewtonFB::Solve(const NonlinearProblem *pNLP,
      }
 }
 
-void MCPNewtonFB::Attach(const NonlinearProblem* pNLP, Solver* pS)
+void MCPNewtonFB::Attach(const NonlinearProblem* pNLP_a, Solver* pS_a)
 {
-     LineSearchMCP::Attach(pNLP, pS);
+     LineSearchMCP::Attach(pNLP_a, pS_a);
 
      rgRowScale.resize(Size);
 }

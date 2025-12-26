@@ -72,9 +72,9 @@ FiniteDifferenceJacobianBase::JacobianStat::JacobianStat()
       iColMaxDiff(-1) {
 }
 
-FiniteDifferenceJacobianBase::FiniteDifferenceJacobianBase(DataManager* const pDM, FiniteDifferenceJacobianParam&& oParam)
+FiniteDifferenceJacobianBase::FiniteDifferenceJacobianBase(DataManager* const pDM_a, FiniteDifferenceJacobianParam&& oParam)
      :FiniteDifferenceJacobianParam(std::move(oParam)),
-      pDM(pDM),
+      pDM(pDM_a),
       dTimePrev(-std::numeric_limits<doublereal>::max()),
       iJacobians(0),
       iIterations(0)
@@ -168,8 +168,8 @@ void FiniteDifferenceJacobianBase::Attach(const MatrixHandler* pJac)
 }
 
 template <integer N>
-FiniteDifferenceJacobian<N>::FiniteDifferenceJacobian(DataManager* const pDM, FiniteDifferenceJacobianParam&& oParam)
-     :FiniteDifferenceJacobianBase(pDM, std::move(oParam))
+FiniteDifferenceJacobian<N>::FiniteDifferenceJacobian(DataManager* const pDM_a, FiniteDifferenceJacobianParam&& oParam)
+     :FiniteDifferenceJacobianBase(pDM_a, std::move(oParam))
 {
 }
 
@@ -268,8 +268,8 @@ class FiniteDifferenceJacobian<5>;
 template
 class FiniteDifferenceJacobian<7>;
 
-AdForwardModeJacobian::AdForwardModeJacobian(DataManager* pDM, FiniteDifferenceJacobianParam&& oParam)
-     :FiniteDifferenceJacobianBase(pDM, std::move(oParam)) {
+AdForwardModeJacobian::AdForwardModeJacobian(DataManager* pDM_a, FiniteDifferenceJacobianParam&& oParam)
+     :FiniteDifferenceJacobianBase(pDM_a, std::move(oParam)) {
 }
 
 AdForwardModeJacobian::~AdForwardModeJacobian()

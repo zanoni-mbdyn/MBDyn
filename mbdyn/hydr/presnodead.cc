@@ -42,11 +42,11 @@
 
 #include "presnodead.h"
 
-PressureNodeAd::PressureNodeAd(unsigned int uL, const DofOwner* pDO, doublereal dx, DofOrder::Equality eEqualityType, flag fOut)
+PressureNodeAd::PressureNodeAd(unsigned int uL, const DofOwner* pDO, doublereal dx, DofOrder::Equality eEqualityType_a, flag fOut)
      :ScalarNode(uL, pDO, fOut),
-      ScalarAlgebraicNode(uL, pDO, dx, eEqualityType, fOut),
-      PressureNode(uL, pDO, dx, eEqualityType, fOut),
-      ScalarAlgebraicNodeAd(uL, pDO, dx, eEqualityType, fOut)
+      ScalarAlgebraicNode(uL, pDO, dx, eEqualityType_a, fOut),
+      PressureNode(uL, pDO, dx, eEqualityType_a, fOut),
+      ScalarAlgebraicNodeAd(uL, pDO, dx, eEqualityType_a, fOut)
 {
 	NO_OP;
 }

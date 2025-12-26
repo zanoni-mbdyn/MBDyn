@@ -46,18 +46,18 @@
 Accumulator::Accumulator(unsigned int uL, const DofOwner* pDO, 
 			 HydraulicFluid* hf,
 			 const PressureNode* p1, 
-			 doublereal St, doublereal start, doublereal As, 
+			 doublereal St, doublereal start_a, doublereal As,
 			 doublereal A_pipe, doublereal ms,
-			 doublereal h_in, doublereal h_out,
+			 doublereal h_in_a, doublereal h_out_a,
 			 doublereal P0, doublereal Pmax,doublereal k,
 			 doublereal Wg, doublereal Kspr,doublereal F0,
 			 doublereal cs, doublereal cv, doublereal ca,
 			 flag fOut)
 : HydraulicElem(uL, pDO, hf, fOut),
 pNode1(p1),
-stroke(St), start(start), area(As), area_pipe(A_pipe), mass(ms),
+stroke(St), start(start_a), area(As), area_pipe(A_pipe), mass(ms),
 press0(P0), press_max(Pmax),
-Kappa(k), weight(Wg), spring(Kspr), force0(F0), h_in(h_in), h_out(h_out),
+Kappa(k), weight(Wg), spring(Kspr), force0(F0), h_in(h_in_a), h_out(h_out_a),
 density(0.), c_spost(cs), c_vel(cv), c_acc(ca),
 s(0.), v(0.), sp(0.), vp(0.), pgas(0.), flow(0.)
 {

@@ -316,8 +316,8 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                perm[2] = 2;
                perm[3] = 1;
                perm[4] = 0;
-               for (int i = 0; i < 5; i++) {
-                    invperm[perm[i]] = i;
+               for (int ii = 0; ii < 5; ii++) {
+                    invperm[perm[ii]] = ii;
                }
 
                NaiveMatrixHandler nm(5);
@@ -355,9 +355,9 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                     }
                }
 
-               for (integer i = 0; i < 5; ++i) {
-                    x.PutCoef(i + 1, sol[i]);
-                    b.PutCoef(i + 1, res[i]);
+               for (integer ii = 0; ii < 5; ++ii) {
+                    x.PutCoef(ii + 1, sol[ii]);
+                    b.PutCoef(ii + 1, res[ii]);
                }
 
                std::vector<doublereal> Ax0, Ax1, Axd0, Axd1;
@@ -418,20 +418,20 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
 #endif
           }
 
-          for (unsigned i = 0; i < sizeof(matScale)/sizeof(matScale[0]); ++i) {
-               delete matScale[i].pNaive;
-               delete matScale[i].pNaivePerm;
-               delete matScale[i].pFull;
-               delete matScale[i].pCCol0;
-               delete matScale[i].pCCol1;
-               delete matScale[i].pDirCCol0;
-               delete matScale[i].pDirCCol1;
-               delete matScale[i].pMap;
-               delete matScale[i].pGrad;
-               delete matScale[i].pCSC0;
-               delete matScale[i].pCSC1;
+          for (unsigned ii = 0; ii < sizeof(matScale)/sizeof(matScale[0]); ++ii) {
+               delete matScale[ii].pNaive;
+               delete matScale[ii].pNaivePerm;
+               delete matScale[ii].pFull;
+               delete matScale[ii].pCCol0;
+               delete matScale[ii].pCCol1;
+               delete matScale[ii].pDirCCol0;
+               delete matScale[ii].pDirCCol1;
+               delete matScale[ii].pMap;
+               delete matScale[ii].pGrad;
+               delete matScale[ii].pCSC0;
+               delete matScale[ii].pCSC1;
 #ifdef USE_TRILINOS
-               delete matScale[i].pEpetra;
+               delete matScale[ii].pEpetra;
 #endif
           }
      }

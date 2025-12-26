@@ -46,12 +46,12 @@ GimbalRotationJoint::GimbalRotationJoint(unsigned int uL,
 	const StructNode* pN2,
 	const Mat3x3& R1,
 	const Mat3x3& R2,
-	const OrientationDescription& od,
+	const OrientationDescription& od_a,
 	flag fOut)
 : Joint(uL, pDO, fOut),
 pNode1(pN1), pNode2(pN2), R1h(R1), R2h(R2),
 M(Zero3), dTheta(0.), dPhi(0.), 
-od(od)
+od(od_a)
 {
 	ASSERT(pNode1 != NULL);
 	ASSERT(pNode2 != NULL);

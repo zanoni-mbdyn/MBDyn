@@ -360,10 +360,10 @@ const char* AmesosSolver::GetSolverName(unsigned uFlags)
      }
 }
 
-AmesosPreconditioner::AmesosPreconditioner(unsigned uFlags, const Teuchos::RCP<Epetra_RowMatrix>& pOperator)
-     :pOperator(pOperator),
-      oRhs(pOperator->Map(), false),
-      oSolver(pOperator.get(), nullptr, &oRhs, uFlags)
+AmesosPreconditioner::AmesosPreconditioner(unsigned uFlags, const Teuchos::RCP<Epetra_RowMatrix>& pOperator_a)
+     :pOperator(pOperator_a),
+      oRhs(pOperator_a->Map(), false),
+      oSolver(pOperator_a.get(), nullptr, &oRhs, uFlags)
 {
      oSolver.SetUseTranspose(pOperator->UseTranspose());
 }
@@ -546,8 +546,8 @@ AztecOOSolutionManager::AztecOOSolutionManager(
      MPI::Intracomm& oComm,
 #endif
      integer Dim,
-     integer iMaxIter,
-     doublereal dTol,
+     integer iMaxIter_a,
+     doublereal dTol_a,
      integer iVerbose,
      unsigned uPrecondFlag)
      :EpetraLinearSystem(
@@ -557,8 +557,8 @@ AztecOOSolutionManager::AztecOOSolutionManager(
           Dim),
       oProblem(A.pGetEpetraCrsMatrix(), x.pGetEpetraVector(), b.pGetEpetraVector()),
       oSolver(oProblem),
-      iMaxIter(iMaxIter),
-      dTol(dTol)
+      iMaxIter(iMaxIter_a),
+      dTol(dTol_a)
 {
      oSolver.SetAztecOption(AZ_output, iVerbose);
      oSolver.SetAztecOption(AZ_kspace, iMaxIter);
@@ -604,8 +604,8 @@ AztecOOPrecondSolutionManager::AztecOOPrecondSolutionManager(
      MPI::Intracomm& oComm,
 #endif
      integer Dim,
-     integer iMaxIter,
-     doublereal dTol,
+     integer iMaxIter_a,
+     doublereal dTol_a,
      integer iVerbose,
      unsigned uPrecondFlag)
      :AztecOOSolutionManager(
@@ -613,8 +613,8 @@ AztecOOPrecondSolutionManager::AztecOOPrecondSolutionManager(
           oComm,
 #endif
           Dim,
-          iMaxIter,
-          dTol,
+          iMaxIter_a,
+          dTol_a,
           iVerbose,
           uPrecondFlag),
       oPrecond(uPrecondFlag, Teuchos::rcpFromRef(*A.pGetEpetraCrsMatrix()))

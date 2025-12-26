@@ -102,9 +102,9 @@ public:
 };
 
 GearJoint::GearJoint(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 pNode1(0), pNode2(0), pNodeRef(0), Gear_r1(1.), Gear_r2(1.)
 {
    DEBUGCOUT("Entering GearJoint constructor" << std::endl);
@@ -514,10 +514,10 @@ GearJoint::AfterConvergence(const VectorHandler& X,
    Mat3x3 Gamma2IT(RotManip::DRot_IT(theta2));
 
    // Lagrange multiplier:
-   doublereal MTmp = X(iGetFirstIndex()+1);
+   doublereal MTmp_local = X(iGetFirstIndex()+1);
 
-   M1 = R1r*Gamma1IT.GetCol(3)*Gear_r1*MTmp;
-   M2 = R2r*Gamma2IT.GetCol(3)*Gear_r2*MTmp;
+   M1 = R1r*Gamma1IT.GetCol(3)*Gear_r1*MTmp_local;
+   M2 = R2r*Gamma2IT.GetCol(3)*Gear_r2*MTmp_local;
 
    // Actual rotation angles calculation (local reference):
    ThetaOut1 = Unwrap(ThetaOut1, theta1);
@@ -589,9 +589,9 @@ public:
 };
 
 LinearTransmissionJoint::LinearTransmissionJoint(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 pNode1(0), pNode2(0), pNodeRef1(0), pNodeRef2(0), Coef_f1(1.), Coef_f2(1.)
 {
 	// help
@@ -1207,9 +1207,9 @@ public:
 };
 
 MotionTransmissionJoint::MotionTransmissionJoint(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 pNode1(0), pNode2(0), pNodeRef1(0), pNodeRef2(0), Coef_f1(1.), Coef_f2(1.)
 {
 	// help

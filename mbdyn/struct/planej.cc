@@ -50,7 +50,7 @@ PlaneHingeJoint::PlaneHingeJoint(unsigned int uL, const DofOwner* pDO,
 		const StructNode* pN1, const StructNode* pN2,
 		const Vec3& dTmp1, const Vec3& dTmp2,
 		const Mat3x3& R1hTmp, const Mat3x3& R2hTmp,
-		const OrientationDescription& od,
+		const OrientationDescription& od_a,
 		flag fOut, 
 		const bool _calcInitdTheta,
 		const doublereal initDTheta,
@@ -64,7 +64,7 @@ pNode1(pN1), pNode2(pN2),
 d1(dTmp1), R1h(R1hTmp), d2(dTmp2), R2h(R2hTmp), F(Zero3), M(Zero3),
 calcInitdTheta(_calcInitdTheta), NTheta(0), dTheta(initDTheta), dThetaWrapped(initDTheta),
 Sh_c(sh), fc(f), preF(pref), r(rr), ReactComp(rc),
-od(od)
+od(od_a)
 {
 	NO_OP;
 	char * fname = NULL;
@@ -151,39 +151,39 @@ PlaneHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, int 
 			nfc = desc.size();
 		}
 		desc.resize(nfc + nself);
-		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[i];
+		for (unsigned ii = nfc; ii-- > 0; ) {
+			desc[nself + ii] = os.str() + ": " + desc[ii];
 		}
 
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction force f" << xyz[i];
-			desc[i] = os.str();
+			os << ": reaction force f" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction couple m" << xyz[i];
-			desc[3 + i] = os.str();
+			os << ": reaction couple m" << xyz[ii];
+			desc[3 + ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction force derivative fP" << xyz[i];
-				desc[3 + 2 + i] = os.str();
+				os << ": reaction force derivative fP" << xyz[ii];
+				desc[3 + 2 + ii] = os.str();
 			}
 	
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction couple derivative mP" << xyz[i];
-				desc[3 + 2 + 3 + i] = os.str();
+				os << ": reaction couple derivative mP" << xyz[ii];
+				desc[3 + 2 + 3 + ii] = os.str();
 			}
 		}
 
@@ -288,39 +288,39 @@ PlaneHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i
 			nfc = desc.size();
 		}
 		desc.resize(nfc + nself);
-		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[i];
+		for (unsigned ii = nfc; ii-- > 0; ) {
+			desc[nself + ii] = os.str() + ": " + desc[ii];
 		}
 
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": position constraint P" << xyz[i];
-			desc[i] = os.str();
+			os << ": position constraint P" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": orientation constraint g" << xyz[i];
-			desc[3 + i] = os.str();
+			os << ": orientation constraint g" << xyz[ii];
+			desc[3 + ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": position constraint derivative v" << xyz[i];
-				desc[3 + 2 + i] = os.str();
+				os << ": position constraint derivative v" << xyz[ii];
+				desc[3 + 2 + ii] = os.str();
 			}
 	
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": orientation constraint derivative w" << xyz[i];
-				desc[3 + 2 + 3 + i] = os.str();
+				os << ": orientation constraint derivative w" << xyz[ii];
+				desc[3 + 2 + 3 + ii] = os.str();
 			}
 		}
 
@@ -492,10 +492,10 @@ PlaneHingeJoint::AfterConvergence(const VectorHandler& X,
 		Vec3 Omega1(pNode1->GetWCurr());
 		Vec3 Omega2(pNode2->GetWCurr());
 		//relative velocity
-		doublereal v = (Omega1-Omega2).Dot(e3a)*r;
+		doublereal v_rel = (Omega1-Omega2).Dot(e3a)*r;
 		//reaction norm
 		doublereal modF = std::max(F.Norm(), preF);
-		fc->AfterConvergence(modF,v,X,XP,iGetFirstIndex()+NumSelfDof);
+		fc->AfterConvergence(modF,v_rel,X,XP,iGetFirstIndex()+NumSelfDof);
 	}
 }
 
@@ -730,7 +730,6 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           }
       }
       if ((modF != 0.) && (FReactForFrict.Norm() > preF)) {
-          // (wrongly) assuming constant triad orientation!
           Vec3 PF(ForceProjector * FReactForFrict);
           dF.Set(ForceProjector.MulTV(PF)/modF, 1, 12+1);
           switch (ReactComp) {
@@ -741,7 +740,7 @@ PlaneHingeJoint::AssJac(VariableSubMatrixHandler& WorkMat,
                         break;
                 }
                 case ReactionComponentsForFriction::Axial: {
-                        Vec3 PF(ForceProjector * FReactForFrict);
+                        // Vec3 PF(ForceProjector * FReactForFrict);
                         //PF.Cross(e3a) == 0
                         dF.Set(e3a.Cross(F) * (PF.Dot(e3a)*dCoef), 4, 6);
                         break;
@@ -1703,14 +1702,14 @@ PlaneHingeJoint::GetEquationDimension(integer index) const {
 PlaneRotationJoint::PlaneRotationJoint(unsigned int uL, const DofOwner* pDO,
 				 const StructNode* pN1, const StructNode* pN2,
 				 const Mat3x3& R1hTmp, const Mat3x3& R2hTmp,
-				 const OrientationDescription& od,
+				 const OrientationDescription& od_a,
 				 flag fOut)
 : Joint(uL, pDO, fOut), 
 pNode1(pN1), pNode2(pN2),
 R1h(R1hTmp), R2h(R2hTmp), M(Zero3),
 NTheta(0), dTheta(0.),
 dThetaWrapped(0.),
-od(od)
+od(od_a)
 {
    NO_OP;
 }
@@ -1757,19 +1756,19 @@ PlaneRotationJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, i
 		desc.resize(nself);
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction couple m" << xyz[i];
-			desc[i] = os.str();
+			os << ": reaction couple m" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction couple derivative mP" << xyz[i];
-				desc[2 + i] = os.str();
+				os << ": reaction couple derivative mP" << xyz[ii];
+				desc[2 + ii] = os.str();
 			}
 		}
 
@@ -1835,19 +1834,19 @@ PlaneRotationJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, in
 		desc.resize(nself);
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": orientation constraint g" << xyz[i];
-			desc[i] = os.str();
+			os << ": orientation constraint g" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": orientation constraint derivative w" << xyz[i];
-				desc[2 + i] = os.str();
+				os << ": orientation constraint derivative w" << xyz[ii];
+				desc[2 + ii] = os.str();
 			}
 		}
 
@@ -2681,7 +2680,7 @@ AxialRotationJoint::AxialRotationJoint(unsigned int uL, const DofOwner* pDO,
 		const Mat3x3& R1hTmp, 
 		const Mat3x3& R2hTmp,
 		const DriveCaller* pDC,
-		const OrientationDescription& od,
+		const OrientationDescription& od_a,
 		flag fOut,
 		const doublereal rr,
 		const doublereal pref,
@@ -2693,7 +2692,7 @@ pNode1(pN1), pNode2(pN2),
 d1(dTmp1), R1h(R1hTmp), d2(dTmp2), R2h(R2hTmp), F(Zero3), M(Zero3),
 NTheta(0), dTheta(0.), dThetaWrapped(0.),
 Sh_c(sh), fc(f), preF(pref), r(rr),
-od(od)
+od(od_a)
 {
 	NO_OP;
 }
@@ -2773,39 +2772,39 @@ AxialRotationJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, i
 			nfc = desc.size();
 		}
 		desc.resize(nfc + nself);
-		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[i];
+		for (unsigned ii = nfc; ii-- > 0; ) {
+			desc[nself + ii] = os.str() + ": " + desc[ii];
 		}
 
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction force f" << xyz[i];
-			desc[i] = os.str();
+			os << ": reaction force f" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction couple m" << xyz[i];
-			desc[3 + i] = os.str();
+			os << ": reaction couple m" << xyz[ii];
+			desc[3 + ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction force derivative fP" << xyz[i];
-				desc[6 + i] = os.str();
+				os << ": reaction force derivative fP" << xyz[ii];
+				desc[6 + ii] = os.str();
 			}
 	
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction couple derivative mP" << xyz[i];
-				desc[9 + i] = os.str();
+				os << ": reaction couple derivative mP" << xyz[ii];
+				desc[9 + ii] = os.str();
 			}
 		}
 
@@ -2913,24 +2912,24 @@ AxialRotationJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, in
 			nfc = desc.size();
 		}
 		desc.resize(nfc + nself);
-		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[i];
+		for (unsigned ii = nfc; ii-- > 0; ) {
+			desc[nself + ii] = os.str() + ": " + desc[ii];
 		}
 
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": position constraint P" << xyz[i];
-			desc[i] = os.str();
+			os << ": position constraint P" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": orientation constraint g" << xyz[i];
-			desc[3 + i] = os.str();
+			os << ": orientation constraint g" << xyz[ii];
+			desc[3 + ii] = os.str();
 		}
 
 		os.str(name);
@@ -2939,18 +2938,18 @@ AxialRotationJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, in
 		desc[5] = os.str();
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": position constraint derivative v" << xyz[i];
-				desc[6 + i] = os.str();
+				os << ": position constraint derivative v" << xyz[ii];
+				desc[6 + ii] = os.str();
 			}
 	
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": orientation constraint derivative w" << xyz[i];
-				desc[9 + i] = os.str();
+				os << ": orientation constraint derivative w" << xyz[ii];
+				desc[9 + ii] = os.str();
 			}
 		}
 
@@ -3126,10 +3125,10 @@ AxialRotationJoint::AfterConvergence(const VectorHandler& X,
 		const Vec3& Omega1(pNode1->GetWCurr());
 		const Vec3& Omega2(pNode2->GetWCurr());
 		//relative velocity
-		doublereal v = (Omega1-Omega2).Dot(e3a)*r;
+		doublereal v_rel = (Omega1-Omega2).Dot(e3a)*r;
 		//reaction norm
 		doublereal modF = std::max(F.Norm(), preF);;
-		fc->AfterConvergence(modF,v,X,XP,iGetFirstIndex()+NumSelfDof);
+		fc->AfterConvergence(modF,v_rel,X,XP,iGetFirstIndex()+NumSelfDof);
 	}
 }
 
@@ -3330,13 +3329,13 @@ AxialRotationJoint::AssJac(VariableSubMatrixHandler& WorkMat,
           //shape function
       doublereal shc = Sh_c->Sh_c();
           //omega and omega rif
-      const Vec3& Omega1(pNode1->GetWCurr());
-      const Vec3& Omega2(pNode2->GetWCurr());
+      const Vec3& Omega1_curr(pNode1->GetWCurr());
+      const Vec3& Omega2_curr(pNode2->GetWCurr());
       // const Vec3& Omega1r(pNode1->GetWRef());
       // const Vec3& Omega2r(pNode2->GetWRef());   
       //compute 
           //relative velocity
-      doublereal v = (Omega1-Omega2).Dot(e3a)*r;
+      doublereal v = (Omega1_curr-Omega2_curr).Dot(e3a)*r;
           //reaction norm
       doublereal modF = std::max(F.Norm(), preF);
           //reaction moment
@@ -3481,23 +3480,23 @@ SubVectorHandler& AxialRotationJoint::AssRes(SubVectorHandler& WorkVec,
    /* Questa equazione non viene divisa per dCoef */
    
    /* Equazione di vincolo di velocita' di rotazione */
-   const Vec3& Omega1(pNode1->GetWCurr());
-   const Vec3& Omega2(pNode2->GetWCurr());
+   const Vec3& Omega1_curr(pNode1->GetWCurr());
+   const Vec3& Omega2_curr(pNode2->GetWCurr());
    doublereal dOmega0 = pGetDriveCaller()->dGet();
-   WorkVec.PutCoef(18, dOmega0-e3a.Dot(Omega2-Omega1));
+   WorkVec.PutCoef(18, dOmega0-e3a.Dot(Omega2_curr-Omega1_curr));
 
    if (fc) {
       bool ChangeJac(false);
-      doublereal v = (Omega1-Omega2).Dot(e3a)*r;
+      doublereal v_rel = (Omega1_curr-Omega2_curr).Dot(e3a)*r;
       doublereal modF = std::max(F.Norm(), preF);
       try {
-          fc->AssRes(WorkVec,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,modF,v,XCurr,XPrimeCurr);
+          fc->AssRes(WorkVec,12+NumSelfDof,iFirstReactionIndex+NumSelfDof,modF,v_rel,XCurr,XPrimeCurr);
       }
       catch (Elem::ChangedEquationStructure& err) {
           ChangeJac = true;
       }
       doublereal f = fc->fc();
-      doublereal shc = Sh_c->Sh_c(f,modF,v);
+      doublereal shc = Sh_c->Sh_c(f,modF,v_rel);
       Ffrict = Vec3(0., 0., 0.);
       if (F.Norm() > preF) {
           Ffrict = -e3a.Cross(F)*shc;
@@ -4229,33 +4228,33 @@ PlanePinJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, int i)
 		desc.resize(nself);
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction force f" << xyz[i];
-			desc[i] = os.str();
+			os << ": reaction force f" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction couple m" << xyz[i];
-			desc[3 + i] = os.str();
+			os << ": reaction couple m" << xyz[ii];
+			desc[3 + ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction force derivative fP" << xyz[i];
-				desc[5 + i] = os.str();
+				os << ": reaction force derivative fP" << xyz[ii];
+				desc[5 + ii] = os.str();
 			}
 	
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction couple derivative mP" << xyz[i];
-				desc[8 + i] = os.str();
+				os << ": reaction couple derivative mP" << xyz[ii];
+				desc[8 + ii] = os.str();
 			}
 		}
 
@@ -4337,33 +4336,33 @@ PlanePinJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, int i) 
 		desc.resize(nself);
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": position constraint P" << xyz[i];
-			desc[i] = os.str();
+			os << ": position constraint P" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
-		for (unsigned i = 0; i < 2; i++) {
+		for (unsigned ii = 0; ii < 2; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": orientation constraint g" << xyz[i];
-			desc[3 + i] = os.str();
+			os << ": orientation constraint g" << xyz[ii];
+			desc[3 + ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": position constraint derivative v" << xyz[i];
-				desc[5 + i] = os.str();
+				os << ": position constraint derivative v" << xyz[ii];
+				desc[5 + ii] = os.str();
 			}
 	
-			for (unsigned i = 0; i < 2; i++) {
+			for (unsigned ii = 0; ii < 2; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": orientation constraint derivative w" << xyz[i];
-				desc[8 + i] = os.str();
+				os << ": orientation constraint derivative w" << xyz[ii];
+				desc[8 + ii] = os.str();
 			}
 		}
 
@@ -4529,7 +4528,7 @@ std::ostream& PlanePinJoint::Restart(std::ostream& out) const
 {
    Joint::Restart(out) << ", revolute pin, "
      << pNode->GetLabel() 
-     << ", reference, node, ", d.Write(out, ", ") 
+     << ", reference, node, ", d.Write(out, ", ")
      << ", hinge, reference, node, 1, ", 
      (Rh.GetVec(1)).Write(out, ", ") << ", 2, ", 
      (Rh.GetVec(2)).Write(out, ", ") 
@@ -4863,13 +4862,13 @@ PlanePinJoint::InitialAssJac(VariableSubMatrixHandler& WorkMat,
    WM.Add(10, 18, Mat3x3(MatCross, dTmp));
  
    for (int iCnt = 1; iCnt <= 3; iCnt++) {
-      doublereal d = Tmp1(iCnt);
-      WM.PutCoef(3+iCnt, 16, d);
-      WM.PutCoef(9+iCnt, 21, d);
+      doublereal d_tmp = Tmp1(iCnt);
+      WM.PutCoef(3+iCnt, 16, d_tmp);
+      WM.PutCoef(9+iCnt, 21, d_tmp);
       
-      d = Tmp2(iCnt);
-      WM.PutCoef(3+iCnt, 17, d);
-      WM.PutCoef(9+iCnt, 22, d);
+      d_tmp = Tmp2(iCnt);
+      WM.PutCoef(3+iCnt, 17, d_tmp);
+      WM.PutCoef(9+iCnt, 22, d_tmp);
  
       WM.PutCoef(9+iCnt, 16, TmpPrime1(iCnt));
       WM.PutCoef(9+iCnt, 17, TmpPrime2(iCnt));
@@ -4884,19 +4883,19 @@ PlanePinJoint::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 
    /* Equazioni di vincolo di rotazione: e1b~e3a, e2b~e3a */            
    for (int iCnt = 1; iCnt <= 3; iCnt++) {	
-      doublereal d = -Tmp1(iCnt);
-      WM.PutCoef(16, 3+iCnt, d);
+      doublereal d_tmp = -Tmp1(iCnt);
+      WM.PutCoef(16, 3+iCnt, d_tmp);
       
       /* Queste sono per la derivata dell'equazione, sono qui solo per 
        * ottimizzazione */
-      WM.PutCoef(21, 9+iCnt, d);
+      WM.PutCoef(21, 9+iCnt, d_tmp);
       
-      d = Tmp2(iCnt);
-      WM.PutCoef(17, 3+iCnt, d);
+      d_tmp = Tmp2(iCnt);
+      WM.PutCoef(17, 3+iCnt, d_tmp);
       
       /* Queste sono per la derivata dell'equazione, sono qui solo per 
        * ottimizzazione */
-      WM.PutCoef(22, 9+iCnt, d);
+      WM.PutCoef(22, 9+iCnt, d_tmp);
    }   
    
    /* Derivate delle equazioni di vincolo di rotazione: e1b~e3a, e2b~e3a */

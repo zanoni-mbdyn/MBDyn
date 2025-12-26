@@ -130,9 +130,9 @@ private:
      doublereal m[2], k[2], q[2], qdot[2], qddot[2], lambda;
 };
 
-MCPTest1::MCPTest1(unsigned uLabel, const DofOwner *pDO,
+MCPTest1::MCPTest1(unsigned uLabel_a, const DofOwner *pDO,
                    DataManager* pDM, MBDynParser& HP)
-     :UserDefinedElem(uLabel, pDO)
+     :UserDefinedElem(uLabel_a, pDO)
 {
      // help
      if (HP.IsKeyWord("help")) {
@@ -402,22 +402,22 @@ MCPTest1::AssRes(SpGradientAssVec<T>& WorkVec,
 
      const integer iFirstIndex = iGetFirstIndex();
 
-     T q[2], qdot[2], v[2], vdot[2], lambda;
+     T Tq[2], Tqdot[2], Tv[2], Tvdot[2], Tlambda;
 
      for (integer i = 0; i < 2; ++i) {
-          XCurr.dGetCoef(iFirstIndex + i + 1, q[i], dCoef);
-          XPrimeCurr.dGetCoef(iFirstIndex + i + 1, qdot[i], 1.);
-          XCurr.dGetCoef(iFirstIndex + i + 3, v[i], dCoef);
-          XPrimeCurr.dGetCoef(iFirstIndex + i + 3, vdot[i], 1.);
+          XCurr.dGetCoef(iFirstIndex + i + 1, Tq[i], dCoef);
+          XPrimeCurr.dGetCoef(iFirstIndex + i + 1, Tqdot[i], 1.);
+          XCurr.dGetCoef(iFirstIndex + i + 3, Tv[i], dCoef);
+          XPrimeCurr.dGetCoef(iFirstIndex + i + 3, Tvdot[i], 1.);
      }
 
-     XCurr.dGetCoef(iFirstIndex + 5, lambda, 1.);
+     XCurr.dGetCoef(iFirstIndex + 5, Tlambda, 1.);
 
-     T f1 = m[0] * vdot[0] + k[0] * q[0] + k[1] * (q[0] - q[1]);
-     T f2 = m[1] * vdot[1] + k[1] * (q[1] - q[0]) - lambda;
-     T f3 = qdot[0] - v[0];
-     T f4 = qdot[1] - v[1];
-     T f5 = q[1] / dCoef;
+     T f1 = m[0] * Tvdot[0] + k[0] * Tq[0] + k[1] * (Tq[0] - Tq[1]);
+     T f2 = m[1] * Tvdot[1] + k[1] * (Tq[1] - Tq[0]) - Tlambda;
+     T f3 = Tqdot[0] - Tv[0];
+     T f4 = Tqdot[1] - Tv[1];
+     T f5 = Tq[1] / dCoef;
 
      WorkVec.AddItem(iFirstIndex + 1, f1);
      WorkVec.AddItem(iFirstIndex + 2, f2);
@@ -426,12 +426,12 @@ MCPTest1::AssRes(SpGradientAssVec<T>& WorkVec,
      WorkVec.AddItem(iFirstIndex + 5, f5);
 
      for (integer i = 0; i < 2; ++i) {
-          SaveVar(q[i], this->q[i]);
-          SaveVar(qdot[i], this->qdot[i]);
-          SaveVar(vdot[i], this->qddot[i]);
+          SaveVar(Tq[i], this->q[i]);
+          SaveVar(Tqdot[i], this->qdot[i]);
+          SaveVar(Tvdot[i], this->qddot[i]);
      }
 
-     SaveVar(lambda, this->lambda);
+     SaveVar(Tlambda, this->lambda);
 }
 
 int
@@ -574,9 +574,9 @@ private:
      DriveOwner f;
 };
 
-MCPTest2::MCPTest2(unsigned uLabel, const DofOwner *pDO,
+MCPTest2::MCPTest2(unsigned uLabel_a, const DofOwner *pDO,
                    DataManager* pDM, MBDynParser& HP)
-     :UserDefinedElem(uLabel, pDO)
+     :UserDefinedElem(uLabel_a, pDO)
 {
      // help
      if (HP.IsKeyWord("help")) {
@@ -823,27 +823,27 @@ MCPTest2::AssRes(SpGradientAssVec<T>& WorkVec,
 
      const integer iFirstIndex = iGetFirstIndex();
 
-     T q, qdot, v, vdot, lambda;
+     T Tq, Tqdot, Tv, Tvdot, Tlambda;
 
-     XCurr.dGetCoef(iFirstIndex + 1, q, dCoef);
-     XPrimeCurr.dGetCoef(iFirstIndex + 1, qdot, 1.);
-     XCurr.dGetCoef(iFirstIndex + 2, v, dCoef);
-     XPrimeCurr.dGetCoef(iFirstIndex + 2, vdot, 1.);
+     XCurr.dGetCoef(iFirstIndex + 1, Tq, dCoef);
+     XPrimeCurr.dGetCoef(iFirstIndex + 1, Tqdot, 1.);
+     XCurr.dGetCoef(iFirstIndex + 2, Tv, dCoef);
+     XPrimeCurr.dGetCoef(iFirstIndex + 2, Tvdot, 1.);
 
-     XCurr.dGetCoef(iFirstIndex + 3, lambda, 1.);
+     XCurr.dGetCoef(iFirstIndex + 3, Tlambda, 1.);
 
-     T f1 = m * vdot + k * q - f.dGet() - lambda;
-     T f2 = qdot - v;
-     T f3 = q / dCoef;
+     T f1 = m * Tvdot + k * Tq - f.dGet() - Tlambda;
+     T f2 = Tqdot - Tv;
+     T f3 = Tq / dCoef;
 
      WorkVec.AddItem(iFirstIndex + 1, f1);
      WorkVec.AddItem(iFirstIndex + 2, f2);
      WorkVec.AddItem(iFirstIndex + 3, f3);
 
-     SaveVar(q, this->q);
-     SaveVar(qdot, this->qdot);
-     SaveVar(vdot, this->qddot);
-     SaveVar(lambda, this->lambda);
+     SaveVar(Tq, this->q);
+     SaveVar(Tqdot, this->qdot);
+     SaveVar(Tvdot, this->qddot);
+     SaveVar(Tlambda, this->lambda);
 }
 
 int

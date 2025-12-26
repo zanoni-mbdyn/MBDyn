@@ -109,9 +109,9 @@ struct MinMaxDriveDCR : public DriveCallerRead {
 	Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred);
 };
 
-MinMaxDriveCaller::MinMaxDriveCaller(const std::vector<DriveOwner>& drives)
+MinMaxDriveCaller::MinMaxDriveCaller(const std::vector<DriveOwner>& drives_a)
 : DriveCaller(0),
- drives(drives)
+ drives(drives_a)
 {
 	NO_OP;
 }
@@ -220,8 +220,8 @@ MinMaxDriveCaller::Restart(std::ostream& out) const
 	return out;
 }
 
-MinDriveCaller::MinDriveCaller(const std::vector<DriveOwner>& drives)
-: MinMaxDriveCaller(drives)
+MinDriveCaller::MinDriveCaller(const std::vector<DriveOwner>& drives_a)
+: MinMaxDriveCaller(drives_a)
 {
 	NO_OP;
 };
@@ -253,8 +253,8 @@ const char *MinDriveCaller::c_str(void) const
 	return "min";
 }
 
-MaxDriveCaller::MaxDriveCaller(const std::vector<DriveOwner>& drives)
-: MinMaxDriveCaller(drives)
+MaxDriveCaller::MaxDriveCaller(const std::vector<DriveOwner>& drives_a)
+: MinMaxDriveCaller(drives_a)
 {
 	NO_OP;
 };

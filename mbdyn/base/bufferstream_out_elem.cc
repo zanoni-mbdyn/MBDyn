@@ -44,9 +44,9 @@
 
 BufferStreamElem_base::BufferStreamElem_base(unsigned int uL,
 	unsigned int oe,
-	StreamContent *pSC, StreamOutEcho *pSOE)
+	StreamContent *pSC_a, StreamOutEcho *pSOE_a)
 : StreamOutElem(uL, "buffer", oe),
-pSC(pSC), pSOE(pSOE)
+pSC(pSC_a), pSOE(pSOE_a)
 {
 	if (pSOE != 0) {
 		pSOE->Init("BufferStreamElem_base", uLabel, pSC->GetNumChannels());
@@ -118,8 +118,8 @@ BufferStreamElem_base::AfterConvergence(const VectorHandler& X,
 
 BufferStreamElem::BufferStreamElem(unsigned int uL,
 	unsigned int oe,
-	StreamContent *pSC, StreamOutEcho *pSOE)
-: BufferStreamElem_base(uL, oe, pSC, pSOE),
+	StreamContent *pSC_a, StreamOutEcho *pSOE_a)
+: BufferStreamElem_base(uL, oe, pSC_a, pSOE_a),
 buffer(pSC->GetNumChannels())
 {
 	NO_OP;
@@ -161,9 +161,9 @@ BufferStreamElem::Restart(std::ostream& out) const
 
 BufferStreamElemRaw::BufferStreamElemRaw(unsigned int uL,
 	unsigned int oe,
-	StreamContent *pSC, StreamOutEcho *pSOE,
+	StreamContent *pSC_a, StreamOutEcho *pSOE_a,
 	bool bOwnsMemory)
-: BufferStreamElem_base(uL, oe, pSC, pSOE),
+: BufferStreamElem_base(uL, oe, pSC_a, pSOE_a),
 m_bOwnsMemory(bOwnsMemory),
 m_pBuffer(0)
 {

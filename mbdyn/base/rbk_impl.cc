@@ -42,13 +42,13 @@ ConstRigidBodyKinematics::ConstRigidBodyKinematics(void)
 	NO_OP;
 }
 
-ConstRigidBodyKinematics::ConstRigidBodyKinematics(const Vec3& X,
-	const Mat3x3& R,
-	const Vec3& V,
-	const Vec3& W,
-	const Vec3& XPP,
-	const Vec3& WP)
-: X(X), R(R), V(V), W(W), XPP(XPP), WP(WP)
+ConstRigidBodyKinematics::ConstRigidBodyKinematics(const Vec3& X_a,
+	const Mat3x3& R_a,
+	const Vec3& V_a,
+	const Vec3& W_a,
+	const Vec3& XPP_a,
+	const Vec3& WP_a)
+: X(X_a), R(R_a), V(V_a), W(W_a), XPP(XPP_a), WP(WP_a)
 {
 	NO_OP;
 }

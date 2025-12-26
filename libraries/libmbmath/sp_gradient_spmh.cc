@@ -584,16 +584,16 @@ void SpGradientSparseMatrixHandler::EnumerateNz(const std::function<EnumerateNzC
 
 SpGradientSparseMatrixHandler* SpGradientSparseMatrixHandler::Copy() const
 {
-     SpGradientSparseMatrixHandler* pMH = nullptr;
+     SpGradientSparseMatrixHandler* pMH_t = nullptr;
 
-     SAFENEWWITHCONSTRUCTOR(pMH, SpGradientSparseMatrixHandler, SpGradientSparseMatrixHandler(iGetNumRows(), iGetNumCols()));
+     SAFENEWWITHCONSTRUCTOR(pMH_t, SpGradientSparseMatrixHandler, SpGradientSparseMatrixHandler(iGetNumRows(), iGetNumCols()));
 
-     return pMH;
+     return pMH_t;
 }
 
 #ifdef USE_MULTITHREAD
-SpGradientSparseMatrixWrapper::SpGradientSparseMatrixWrapper(SpGradientSparseMatrixHandler* pMH)
-     :pMH(pMH)
+SpGradientSparseMatrixWrapper::SpGradientSparseMatrixWrapper(SpGradientSparseMatrixHandler* pMH_a)
+     :pMH(pMH_a)
 {
 }
 

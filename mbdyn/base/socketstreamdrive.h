@@ -93,7 +93,7 @@ private:
 
 public:
 	StreamDR(void) { NO_OP; };
-	StreamDR(const std::string &s) : s(s) { NO_OP; };
+	StreamDR(const std::string &s_a) : s(s_a) { NO_OP; };
 
 	virtual Drive *
 	Read(unsigned uLabel, const DataManager *pDM, MBDynParser& HP);

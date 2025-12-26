@@ -394,8 +394,8 @@ DriveHandler::dGet(InputStream& InStr) const
 }
 #endif // DO_NOT_USE_EE
 
-DriveHandler::MyRand::MyRand(unsigned int uLabel, integer iS, integer iR)
-: MyMeter(uLabel, iS), iRand(iR)
+DriveHandler::MyRand::MyRand(unsigned int uLabel_a, integer iS, integer iR)
+: MyMeter(uLabel_a, iS), iRand(iR)
 {
 	NO_OP;
 }
@@ -405,8 +405,8 @@ DriveHandler::MyRand::~MyRand(void)
 	NO_OP;
 }
 
-DriveHandler::MyMeter::MyMeter(unsigned int uLabel, integer iS)
-: WithLabel(uLabel), iSteps(iS), iCurr(0)
+DriveHandler::MyMeter::MyMeter(unsigned int uLabel_a, integer iS)
+: WithLabel(uLabel_a), iSteps(iS), iCurr(0)
 {
 	NO_OP;
 }
@@ -416,11 +416,11 @@ DriveHandler::MyMeter::~MyMeter(void)
 	NO_OP;
 }
 
-DriveHandler::MyClosestNext::MyClosestNext(unsigned int uLabel,
-	const DriveHandler *pDH,
+DriveHandler::MyClosestNext::MyClosestNext(unsigned int uLabel_a,
+	const DriveHandler *pDH_a,
 	const DriveCaller *pIncrement,
 	doublereal dStartTime)
-: WithLabel(uLabel), pDH(pDH), Increment(pIncrement), bMustSetNext(false), dNext(dStartTime)
+: WithLabel(uLabel_a), pDH(pDH_a), Increment(pIncrement), bMustSetNext(false), dNext(dStartTime)
 {
 	NO_OP;
 }
@@ -430,11 +430,11 @@ DriveHandler::MyClosestNext::~MyClosestNext(void)
 	NO_OP;
 }
 
-DriveHandler::MySH::MySH(unsigned int uLabel,
-	const DriveCaller *pFunc,
-	const DriveCaller *pTrigger,
-	const doublereal dVal0)
-: WithLabel(uLabel), dVal0(dVal0), dVal(dVal0), Func(pFunc), Trigger(pTrigger)
+DriveHandler::MySH::MySH(unsigned int uLabel_a,
+	const DriveCaller *pFunc_a,
+	const DriveCaller *pTrigger_a,
+	const doublereal dVal0_a)
+: WithLabel(uLabel_a), dVal0(dVal0_a), dVal(dVal0_a), Func(pFunc_a), Trigger(pTrigger_a)
 {
 	NO_OP;
 }
@@ -462,8 +462,8 @@ DriveHandler::MySH::dGetVal0(void) const
 	return dVal0;
 }
 
-DriveHandler::MyDiscreteFilter::MyDiscreteFilter(unsigned int uLabel, DriveCaller *pDC, const std::vector<doublereal>& a, doublereal b0, const std::vector<doublereal>& b)
-: WithLabel(uLabel), pDC(pDC), a(a), b0(b0), b(b), x(a.size()), u(b.size()), ax(0.), bu(0.), xk(0.), uk(0.)
+DriveHandler::MyDiscreteFilter::MyDiscreteFilter(unsigned int uLabel_a, DriveCaller *pDC_a, const std::vector<doublereal>& a_a, doublereal b0_a, const std::vector<doublereal>& b_a)
+: WithLabel(uLabel_a), pDC(pDC_a), a(a_a), b0(b0_a), b(b_a), x(a.size()), u(b_a.size()), ax(0.), bu(0.), xk(0.), uk(0.)
 {
 	NO_OP;
 }
@@ -535,19 +535,19 @@ void DriveCaller::Output(OutputHandler& OH) const
 
 void DriveCaller::Trace(OutputHandler& OH) const
 {
-	const flag fTrace = fToBeTraced();
+	const flag fTrace_local = fToBeTraced();
 
-	if (fTrace) {
+	if (fTrace_local) {
 		if (OH.UseText(OutputHandler::TRACES)) {
 			std::ostream& os = OH.Traces();
 
 			os << GetLabel();
 
-			if (fTrace & TRACE_VALUE) {
+			if (fTrace_local & TRACE_VALUE) {
 				os << ' ' << dGet();
 			}
 
-			if (fTrace & TRACE_DERIVATIVE) {
+			if (fTrace_local & TRACE_DERIVATIVE) {
 				ASSERT(bIsDifferentiable());
 
 				os << ' ' << dGetP();

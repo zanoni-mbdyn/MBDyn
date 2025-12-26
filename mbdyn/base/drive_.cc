@@ -651,16 +651,16 @@ SineDriveCaller::Restart(std::ostream& out) const
 /* FourierSeriesDriveCaller - begin */
 
 FourierSeriesDriveCaller::FourierSeriesDriveCaller(const DriveHandler* pDH,
-	doublereal dStartTime,
-	doublereal dOmega,
+	doublereal dStartTime_a,
+	doublereal dOmega_a,
 	std::vector<doublereal>& a,
-	integer iNumCyc,
-	doublereal dInitialValue)
+	integer iNumCyc_a,
+	doublereal dInitialValue_a)
 : DriveCaller(pDH),
-dStartTime(dStartTime),
-dOmega(dOmega),
-iNumCycles(iNumCyc),
-dInitialValue(dInitialValue),
+dStartTime(dStartTime_a),
+dOmega(dOmega_a),
+iNumCycles(iNumCyc_a),
+dInitialValue(dInitialValue_a),
 bNeverEnd(false)
 {
 	ASSERT(iNumCycles >= 0);
@@ -833,14 +833,14 @@ TanhDriveCaller::Restart(std::ostream& out) const
 
 FreqSweepDriveCaller::FreqSweepDriveCaller(const DriveHandler* pDH,
 	doublereal d1,
-	const DriveCaller* pOmega,
-	const DriveCaller* pAmplitude,
+	const DriveCaller* pOmega_a,
+	const DriveCaller* pAmplitude_a,
 	doublereal d2,
 	doublereal d3,
 	doublereal d4)
 : DriveCaller(pDH),
-dStartTime(d1), pOmega(pOmega),
-pAmplitude(pAmplitude),
+dStartTime(d1), pOmega(pOmega_a),
+pAmplitude(pAmplitude_a),
 dInitialValue(d2), dEndTime(d3), dFinalValue(d4),
 bNeverEnd(false)
 {
@@ -1026,10 +1026,10 @@ MeterDriveCaller::Restart(std::ostream& out) const
 /* ClosestNextDriveCaller - begin */
 
 ClosestNextDriveCaller::ClosestNextDriveCaller(const DriveHandler* pDH,
-	doublereal dS, doublereal dE, const DriveCaller *pIncrement)
+	doublereal dS, doublereal dE, const DriveCaller *pIncrement_a)
 : DriveCaller(pDH),
 dStartTime(dS), dEndTime(dE),
-pIncrement(pIncrement)
+pIncrement(pIncrement_a)
 {
 	iDriveNumber = pDrvHdl->iClosestNextInit(pIncrement, dStartTime);
 }
@@ -1250,9 +1250,9 @@ DriveArrayCaller::Restart(std::ostream& out) const
 /* PeriodicDriveCaller - begin */
 
 PeriodicDriveCaller::PeriodicDriveCaller(const DriveHandler *pDH,
-	const DriveCaller* pDC, doublereal dT0, doublereal dPeriod)
+	const DriveCaller* pDC, doublereal dT0_a, doublereal dPeriod_a)
 : DriveCaller(pDH),
-DO(pDC), dT0(dT0), dPeriod(dPeriod)
+DO(pDC), dT0(dT0_a), dPeriod(dPeriod_a)
 {
 	NO_OP;
 }
@@ -1299,9 +1299,9 @@ PostponedDriveCaller::Check(void) const
 	}
 }
 
-PostponedDriveCaller::PostponedDriveCaller(MBDynParser& HP, unsigned uLabel)
+PostponedDriveCaller::PostponedDriveCaller(MBDynParser& HP_a, unsigned uLabel_a)
 : DriveCaller(0),
-HP(HP), uDriveLabel(uLabel), DO(0)
+HP(HP_a), uDriveLabel(uLabel_a), DO(0)
 {
 	NO_OP;
 }

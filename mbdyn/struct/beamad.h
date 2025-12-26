@@ -194,22 +194,22 @@ protected:
                  const std::array<sp_grad::SpColVectorA<doublereal, 6>, NUMSEZ>& AzLoc);
 
      inline void
-     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::SpGradient, 3, 3>, NUMSEZ>& R,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& p,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& g,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& L,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& DefLoc,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& Az,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& AzLoc) {}
+     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::SpGradient, 3, 3>, NUMSEZ>& R_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& p_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& g_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& L_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& DefLoc_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& Az_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& AzLoc_a) {}
 
      inline void
-     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::GpGradProd, 3, 3>, NUMSEZ>& R,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& p,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& g,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& L,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& DefLoc,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& Az,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& AzLoc) {}
+     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::GpGradProd, 3, 3>, NUMSEZ>& R_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& p_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& g_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& L_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& DefLoc_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& Az_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& AzLoc_a) {}
 };
 
 class ViscoElasticBeamAd: public BeamAdBase<ViscoElasticBeam> {
@@ -304,30 +304,30 @@ protected:
                  const std::array<sp_grad::SpColVectorA<doublereal, 6>, NUMSEZ>& AzLoc);
 
      inline void
-     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::SpGradient, 3, 3>, NUMSEZ>& R,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& p,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& g,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& gPrime,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& Omega,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& L,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& LPrime,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& DefLoc,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& DefPrimeLoc,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& Az,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& AzLoc) {}
+     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::SpGradient, 3, 3>, NUMSEZ>& R_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& p_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& g_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& gPrime_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& Omega_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& L_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 3>, NUMSEZ>& LPrime_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& DefLoc_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& DefPrimeLoc_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& Az_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::SpGradient, 6>, NUMSEZ>& AzLoc_a) {}
 
      inline void
-     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::GpGradProd, 3, 3>, NUMSEZ>& R,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& p,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& g,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& gPrime,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& Omega,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& L,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& LPrime,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& DefLoc,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& DefPrimeLoc,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& Az,
-                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& AzLoc) {}
+     UpdateState(const std::array<sp_grad::SpMatrixA<sp_grad::GpGradProd, 3, 3>, NUMSEZ>& R_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& p_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& g_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& gPrime_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& Omega_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& L_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 3>, NUMSEZ>& LPrime_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& DefLoc_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& DefPrimeLoc_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& Az_a,
+                 const std::array<sp_grad::SpColVectorA<sp_grad::GpGradProd, 6>, NUMSEZ>& AzLoc_a) {}
 };
 
 #endif /* BEAMAD_H */

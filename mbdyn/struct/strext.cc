@@ -50,33 +50,33 @@
 /* Costruttore */
 StructExtForce::StructExtForce(unsigned int uL,
 	DataManager *pDM,
-	const StructNode *pRefNode,
-	bool bUseReferenceNodeForces,
-	bool bRotateReferenceNodeForces,
+	const StructNode *pRefNode_a,
+	bool bUseReferenceNodeForces_a,
+	bool bRotateReferenceNodeForces_a,
 	std::vector<unsigned >& labels,
 	std::vector<const StructNode *>& nodes,
 	std::vector<Vec3>& offsets,
-	bool bSorted,
-	bool bLabels,
-	bool bOutputAccelerations,
-	unsigned uRot,
-	ExtFileHandlerBase *pEFH,
-	bool bSendAfterPredict,
-	int iCoupling,
-	unsigned uOutputFlags,
+	bool bSorted_a,
+	bool bLabels_a,
+	bool bOutputAccelerations_a,
+	unsigned uRot_a,
+	ExtFileHandlerBase *pEFH_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
+	unsigned uOutputFlags_a,
 	flag fOut)
-: ExtForce(uL, pDM, pEFH, bSendAfterPredict, iCoupling, fOut), 
-pRefNode(pRefNode),
-bUseReferenceNodeForces(bUseReferenceNodeForces),
-bRotateReferenceNodeForces(bRotateReferenceNodeForces),
+: ExtForce(uL, pDM, pEFH_a, bSendAfterPredict_a, iCoupling_a, fOut),
+pRefNode(pRefNode_a),
+bUseReferenceNodeForces(bUseReferenceNodeForces_a),
+bRotateReferenceNodeForces(bRotateReferenceNodeForces_a),
 F0(Zero3), M0(Zero3),
 F1(Zero3), M1(Zero3),
 F2(Zero3), M2(Zero3),
-uOutputFlags(uOutputFlags),
-bLabels(bLabels),
-bSorted(bSorted),
-uRot(uRot),
-bOutputAccelerations(bOutputAccelerations),
+uOutputFlags(uOutputFlags_a),
+bLabels(bLabels_a),
+bSorted(bSorted_a),
+uRot(uRot_a),
+bOutputAccelerations(bOutputAccelerations_a),
 iobuf_labels(0),
 iobuf_x(0),
 iobuf_R(0),
@@ -280,16 +280,16 @@ StructExtForce::WorkSpaceDim(integer* piNumRows, integer* piNumCols) const
 }
 
 bool
-StructExtForce::Prepare(ExtFileHandlerBase *pEFH)
+StructExtForce::Prepare(ExtFileHandlerBase *pEFH_a)
 {
 	bool bResult = true;
 
-	switch (pEFH->NegotiateRequest()) {
+	switch (pEFH_a->NegotiateRequest()) {
 	case ExtFileHandlerBase::NEGOTIATE_NO:
 		break;
 
 	case ExtFileHandlerBase::NEGOTIATE_CLIENT: {
-		std::ostream *outfp = pEFH->GetOutStream();
+		std::ostream *outfp = pEFH_a->GetOutStream();
 		if (outfp) {
 
 #ifdef USE_SOCKET
@@ -313,9 +313,9 @@ StructExtForce::Prepare(ExtFileHandlerBase *pEFH)
 
 			uint32_ptr[1] = m_Points.size();
 
-			ssize_t rc = sendn(pEFH->GetOutFileDes(),
+			ssize_t rc = sendn(pEFH_a->GetOutFileDes(),
 				(const char *)buf, sizeof(buf),
-				pEFH->GetSendFlags());
+				pEFH_a->GetSendFlags());
 
 			if (rc == SOCKET_ERROR) {
 				int save_errno = WSAGetLastError();
@@ -345,7 +345,7 @@ StructExtForce::Prepare(ExtFileHandlerBase *pEFH)
 		bool bA = false;
 		bool bL = false;
 
-		std::istream *infp = pEFH->GetInStream();
+		std::istream *infp = pEFH_a->GetInStream();
 		if (infp) {
 			// TODO: stream negotiation?
 
@@ -354,9 +354,9 @@ StructExtForce::Prepare(ExtFileHandlerBase *pEFH)
 			char buf[sizeof(uint32_t) + sizeof(uint32_t)];
 			uint32_t *uint32_ptr;
 
-			ssize_t rc = recvn(pEFH->GetInFileDes(),
+			ssize_t rc = recvn(pEFH_a->GetInFileDes(),
 				(char *)buf, sizeof(buf),
-				pEFH->GetRecvFlags());
+				pEFH_a->GetRecvFlags());
 			if (rc == SOCKET_ERROR) {
 				int save_errno = WSAGetLastError();
 				char *err_msg = sock_err_string(save_errno);
@@ -460,22 +460,22 @@ StructExtForce::CheckProblemsMatch (unsigned  uNodal, bool bRef, unsigned  uR, b
  * Send output to companion software
  */
 void
-StructExtForce::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen when)
+StructExtForce::Send(ExtFileHandlerBase *pEFH_a, ExtFileHandlerBase::SendWhen when)
 {
     pedantic_cout("StructExtForce:in Send" << std::endl);
 
-	switch (pEFH->GetType())
+	switch (pEFH_a->GetType())
 	{
 	case ExtFileHandlerBase::TYPE_FILE:
 	case ExtFileHandlerBase::TYPE_EDGE:
 	case ExtFileHandlerBase::TYPE_SOCKET: {
 
-	std::ostream *outfp = pEFH->GetOutStream();
+	std::ostream *outfp = pEFH_a->GetOutStream();
 	if (outfp) {
 		SendToStream(*outfp, when);
 
 	} else {
-		SendToFileDes(pEFH->GetOutFileDes(), when);
+		SendToFileDes(pEFH_a->GetOutFileDes(), when);
 	}
 
 		break;
@@ -872,22 +872,22 @@ StructExtForce::SendToFileDes(int outfd, ExtFileHandlerBase::SendWhen when)
 }
 
 void
-StructExtForce::Recv(ExtFileHandlerBase *pEFH)
+StructExtForce::Recv(ExtFileHandlerBase *pEFH_a)
 {
 
-	switch (pEFH->GetType())
+	switch (pEFH_a->GetType())
 	{
 	case ExtFileHandlerBase::TYPE_FILE:
 	case ExtFileHandlerBase::TYPE_EDGE:
 	case ExtFileHandlerBase::TYPE_SOCKET: {
 
-		std::istream *infp = pEFH->GetInStream();
+		std::istream *infp = pEFH_a->GetInStream();
 
         	if (infp) {
         	    RecvFromStream(*infp);
 
         	} else {
-        	    RecvFromFileDes(pEFH->GetInFileDes());
+        	    RecvFromFileDes(pEFH_a->GetInFileDes());
         	}
 
         }

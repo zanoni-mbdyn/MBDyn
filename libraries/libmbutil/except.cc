@@ -35,7 +35,7 @@
 #include "except.h"
 
 MBDynErrBase::MBDynErrBase(MBDYN_EXCEPT_ARGS_DECL_NODEF)
-     :file(file), line(line), func(func), r(r)
+     :file(file_a), line(line_a), func(func_a), r(r_a)
 {
 
 }
@@ -67,9 +67,9 @@ void
 ErrIndexOutOfRange::WriteMsg(const char *idx_type, int idx, int imin, int imax, MBDYN_EXCEPT_ARGS_DECL_NODEF)
 {
 	std::stringstream ss;
-	ss << "[" << file << ":" << line << ",func=" << func << "]";
-	if (!r.empty()) {
-		ss << " (" << r << ")";
+	ss << "[" << file_a << ":" << line_a << ",func=" << func_a << "]";
+	if (!r_a.empty()) {
+		ss << " (" << r_a << ")";
 	}
 	ss << ": " << idx_type << "index=" << idx << " out of range (" << imin << ":" << imax << ")";
 	Set(ss.str());

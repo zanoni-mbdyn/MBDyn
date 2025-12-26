@@ -225,9 +225,9 @@ private:
 };
 
 DeformableJointAD::DeformableJointAD(
-     unsigned uLabel, const DofOwner *pDO,
+     unsigned uLabel_a, const DofOwner *pDO,
      DataManager* pDM, MBDynParser& HP)
-     :	UserDefinedElem(uLabel, pDO),
+     :	UserDefinedElem(uLabel_a, pDO),
 	pNode1(nullptr),
 	pNode2(nullptr),
 	fRes(TRADITIONAL),
@@ -941,15 +941,15 @@ inline void DeformableJointAD::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
 				      sp_grad::SpFunctionCall func)
 {
      using namespace sp_grad;
-     typedef SpMatrixA<T, 3, 3> Mat3x3;
-     typedef SpColVectorA<T, 3> Vec3;
+     typedef SpMatrixA<T, 3, 3> Mat3x3_type;
+     typedef SpColVectorA<T, 3> Vec3_type;
 
 #if CREATE_PROFILE == 1
      auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-     Mat3x3 R1, R2;
-     Vec3 X1, X2, XP1, XP2, W1, W2;
+     Mat3x3_type R1, R2;
+     Vec3_type X1, X2, XP1, XP2, W1, W2;
      
 #if CREATE_PROFILE == 1
      const index_type iFunc = (func == SpFunctionCall::REGULAR_RES) ? RESIDUAL : JACOBIAN;
@@ -972,16 +972,16 @@ inline void DeformableJointAD::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      start = std::chrono::high_resolution_clock::now();
 #endif
 
-     const Vec3 R1o1 = R1 * o1;
-     const Vec3 R2o2 = R2 * o2;
-     const Vec3 dX = Transpose(R1) * (X1 + R1o1 - X2 - R2o2);
+     const Vec3_type R1o1 = R1 * o1;
+     const Vec3_type R2o2 = R2 * o2;
+     const Vec3_type dX = Transpose(R1) * (X1 + R1o1 - X2 - R2o2);
 
-     const Vec3 dXP = Transpose(R1) * (XP1 + Cross(W1, R1o1) - XP2 - Cross(W2, R2o2));
-     const Vec3 F1 = -(R1 * (S1 * dX + D1 * dXP));
+     const Vec3_type dXP = Transpose(R1) * (XP1 + Cross(W1, R1o1) - XP2 - Cross(W2, R2o2));
+     const Vec3_type F1 = -(R1 * (S1 * dX + D1 * dXP));
 
-     const Vec3 F2 = -F1;
-     const Vec3 M1 = Cross(R1o1, F1);
-     const Vec3 M2 = Cross(R2o2, F2);
+     const Vec3_type F2 = -F1;
+     const Vec3_type M1 = Cross(R1o1, F1);
+     const Vec3_type M2 = Cross(R2o2, F2);
 
 #if CREATE_PROFILE == 1
      profile.dtCalc[iFunc] += std::chrono::high_resolution_clock::now() - start;
@@ -1071,9 +1071,9 @@ DeformableJointAD::InitialAssRes(
 }
 
 #if CREATE_PROFILE == 1
-const char* DeformableJointAD::AssemblyFuncName(enum AssemblyFlag flag)
+const char* DeformableJointAD::AssemblyFuncName(enum AssemblyFlag fflag)
 {
-     switch (flag) {
+     switch (fflag) {
      case TRADITIONAL:
 	  return "traditional";
           
@@ -1171,9 +1171,9 @@ private:
 };
 
 InlineJointAD::InlineJointAD(
-     unsigned uLabel, const DofOwner *pDO,
+     unsigned uLabel_a, const DofOwner *pDO,
      DataManager* pDM, MBDynParser& HP)
-     :	UserDefinedElem(uLabel, pDO),
+     :	UserDefinedElem(uLabel_a, pDO),
 	pNode1(nullptr),
 	pNode2(nullptr),
 	o1(Zero3),
@@ -1442,34 +1442,34 @@ InlineJointAD::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
 		      sp_grad::SpFunctionCall func) {
      using namespace sp_grad;
      
-     typedef SpColVectorA<T, 3> Vec3;
-     typedef SpMatrixA<T, 3, 3> Mat3x3;
+     typedef SpColVectorA<T, 3> Vec3_type;
+     typedef SpMatrixA<T, 3, 3> Mat3x3_type;
 
      const integer iFirstIndex = iGetFirstIndex();
      const integer iFirstMomentumIndexNode1 = pNode1->iGetFirstMomentumIndex();
      const integer iFirstMomentumIndexNode2 = pNode2->iGetFirstMomentumIndex();
 
-     Vec3 X1, X2;
-     Mat3x3 R1, R2;
+     Vec3_type X1, X2;
+     Mat3x3_type R1, R2;
 
      pNode1->GetXCurr(X1, dCoef, func);
      pNode1->GetRCurr(R1, dCoef, func);
      pNode2->GetXCurr(X2, dCoef, func);
      pNode2->GetRCurr(R2, dCoef, func);
 
-     SpColVector<T, 2> lambda(2, 1);
+     SpColVector<T, 2> lambda_sp(2, 1);
 
-     XCurr.GetVec(iFirstIndex + 1, lambda, 1.); // Note: for algebraic variables dCoef is always one
+     XCurr.GetVec(iFirstIndex + 1, lambda_sp, 1.); // Note: for algebraic variables dCoef is always one
 
-     const Vec3 R2o2 = R2 * o2;
-     const Vec3 l1 = X2 + R2o2 - X1;
+     const Vec3_type R2o2 = R2 * o2;
+     const Vec3_type l1 = X2 + R2o2 - X1;
 
-     const Vec3 F1 = R1 * (e.GetCol(2) * lambda(1) + e.GetCol(3) * lambda(2));
-     const Vec3 M1 = Cross(l1, F1);
-     const Vec3 F2 = -F1;
-     const Vec3 M2 = Cross(R2o2, F2);
+     const Vec3_type F1 = R1 * (e.GetCol(2) * lambda_sp(1) + e.GetCol(3) * lambda_sp(2));
+     const Vec3_type M1 = Cross(l1, F1);
+     const Vec3_type F2 = -F1;
+     const Vec3_type M2 = Cross(R2o2, F2);
 
-     const Vec3 a = Transpose(R1) * l1 - o1;
+     const Vec3_type a = Transpose(R1) * l1 - o1;
 
      WorkVec.AddItem(iFirstMomentumIndexNode1 + 1, F1);
      WorkVec.AddItem(iFirstMomentumIndexNode1 + 4, M1);
@@ -1573,11 +1573,11 @@ InlineJointAD::InitialAssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
 			     const sp_grad::SpGradientVectorHandler<T>& XCurr,
 			     sp_grad::SpFunctionCall func) {
      using namespace sp_grad;
-     typedef SpColVectorA<T, 3> Vec3;
-     typedef SpMatrixA<T, 3, 3> Mat3x3;
+     typedef SpColVectorA<T, 3> Vec3_type;
+     typedef SpMatrixA<T, 3, 3> Mat3x3_type;
 
-     Vec3 X1, XP1, X2, XP2, omega1, omega2;
-     Mat3x3 R1, R2;
+     Vec3_type X1, XP1, X2, XP2, omega1, omega2;
+     Mat3x3_type R1, R2;
 
      pNode1->GetXCurr(X1, 1., func);	// Note: during initial assembly dCoef is always one
      pNode1->GetRCurr(R1, 1., func);
@@ -1593,28 +1593,28 @@ InlineJointAD::InitialAssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      const integer iFirstIndexNode2 = pNode2->iGetFirstIndex();
      const integer iFirstIndex = iGetFirstIndex();
 
-     T lambda[2], lambdaP[2];
+     T Tlambda[2], TlambdaP[2];
 
      for (integer i = 1; i <= 2; ++i) {
-	  XCurr.dGetCoef(iFirstIndex + i, lambda[i - 1], 1.);
-	  XCurr.dGetCoef(iFirstIndex + i + 2, lambdaP[i - 1], 1.);
+	  XCurr.dGetCoef(iFirstIndex + i, Tlambda[i - 1], 1.);
+	  XCurr.dGetCoef(iFirstIndex + i + 2, TlambdaP[i - 1], 1.);
      }
 
-     const Vec3 R2o2 = R2 * o2;
-     const Vec3 l1 = X2 + R2o2 - X1;
+     const Vec3_type R2o2 = R2 * o2;
+     const Vec3_type l1 = X2 + R2o2 - X1;
 
-     const Vec3 F1 = R1 * Vec3(e.GetCol(2) * lambda[L1] + e.GetCol(3) * lambda[L2]);
-     const Vec3 M1 = Cross(l1, F1);
-     const Vec3 FP1 = Cross(omega1, R1 * Vec3(e.GetCol(2) * lambda[L1] + e.GetCol(3) * lambda[L2]))
-	  + R1 * Vec3(e.GetCol(2) * lambdaP[L1] + e.GetCol(3) * lambdaP[L2]);
-     const Vec3 MP1 = -Cross(F1, XP2 + Cross(omega2, R2o2) - XP1) + Cross(l1, FP1);
-     const Vec3 F2 = -F1;
-     const Vec3 M2 = Cross(R2o2, F2);
-     const Vec3 FP2 = -FP1;
-     const Vec3 MP2 = Cross(Cross(omega2, R2o2), F2) + Cross(R2o2, FP2);
+     const Vec3_type F1 = R1 * Vec3_type(e.GetCol(2) * Tlambda[L1] + e.GetCol(3) * Tlambda[L2]);
+     const Vec3_type M1 = Cross(l1, F1);
+     const Vec3_type FP1 = Cross(omega1, R1 * Vec3_type(e.GetCol(2) * Tlambda[L1] + e.GetCol(3) * Tlambda[L2]))
+	  + R1 * Vec3_type(e.GetCol(2) * TlambdaP[L1] + e.GetCol(3) * TlambdaP[L2]);
+     const Vec3_type MP1 = -Cross(F1, XP2 + Cross(omega2, R2o2) - XP1) + Cross(l1, FP1);
+     const Vec3_type F2 = -F1;
+     const Vec3_type M2 = Cross(R2o2, F2);
+     const Vec3_type FP2 = -FP1;
+     const Vec3_type MP2 = Cross(Cross(omega2, R2o2), F2) + Cross(R2o2, FP2);
 
-     const Vec3 a = Transpose(R1) * l1 - o1;
-     const Vec3 aP = Transpose(R1) * Vec3(Cross(l1, omega1) + XP2 + Cross(omega2, R2o2) - XP1);
+     const Vec3_type a = Transpose(R1) * l1 - o1;
+     const Vec3_type aP = Transpose(R1) * Vec3_type(Cross(l1, omega1) + XP2 + Cross(omega2, R2o2) - XP1);
 
      WorkVec.AddItem(iFirstIndexNode1 + 1, F1);
      WorkVec.AddItem(iFirstIndexNode1 + 4, M1);

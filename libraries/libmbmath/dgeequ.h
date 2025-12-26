@@ -54,9 +54,9 @@ public:
      inline VectorHandler& ScaleRightHandSide(VectorHandler& bVH) const;
      inline VectorHandler& ScaleSolution(VectorHandler& xVH) const;
      std::ostream& Report(std::ostream& os) const;
-     const std::vector<doublereal>& GetRowScale()const{ return rowScale; }
-     const std::vector<doublereal>& GetColScale()const{ return colScale; }
-     bool bGetInitialized()const{ return !(rowScale.empty() && colScale.empty()); } // Allow row only or column only scaling
+     const std::vector<doublereal>& GetRowScale()const{ return rowScaleVec; }
+     const std::vector<doublereal>& GetColScale()const{ return colScaleVec; }
+     bool bGetInitialized()const{ return !(rowScaleVec.empty() && colScaleVec.empty()); } // Allow row only or column only scaling
 
 protected:
      inline MatrixHandler::Norm_t GetCondNumNorm()const;
@@ -65,7 +65,8 @@ protected:
      void PrepareRows(const MatrixHandler& mh, integer& nrows);
      void PrepareCols(const MatrixHandler& mh, integer& ncols);
      inline bool bReport() const;
-     std::vector<doublereal> rowScale, colScale;
+protected:
+     std::vector<doublereal> rowScaleVec, colScaleVec;
      mutable doublereal dCondBefore, dCondAfter;
      const unsigned uFlags;
      bool bOK;
@@ -215,8 +216,8 @@ private:
 
 VectorHandler& MatrixScaleBase::ScaleRightHandSide(VectorHandler& bVH) const
 {
-     if (!rowScale.empty()) {
-	  ScaleVector(bVH, rowScale);
+     if (!rowScaleVec.empty()) {
+	  ScaleVector(bVH, rowScaleVec);
      }
 
      return bVH;
@@ -224,8 +225,8 @@ VectorHandler& MatrixScaleBase::ScaleRightHandSide(VectorHandler& bVH) const
 
 VectorHandler& MatrixScaleBase::ScaleSolution(VectorHandler& xVH) const
 {
-     if (!colScale.empty()) {
-	  ScaleVector(xVH, colScale);
+     if (!colScaleVec.empty()) {
+	  ScaleVector(xVH, colScaleVec);
      }
 
      return xVH;
@@ -277,7 +278,7 @@ T& MatrixScale<T>::ScaleMatrix(T& mh) const
 	  dCondBefore = mh.ConditionNumber(GetCondNumNorm());
      }
 
-     mh.Scale(rowScale, colScale);
+     mh.Scale(rowScaleVec, colScaleVec);
 
      if (uFlags & SolutionManager::SCALEF_COND_NUM) {
 	  dCondAfter = mh.ConditionNumber(GetCondNumNorm());
@@ -289,7 +290,7 @@ T& MatrixScale<T>::ScaleMatrix(T& mh) const
 template <typename T>
 bool MatrixScale<T>::ComputeScaleFactors(const T& mh)
 {
-     bOK = ComputeScaleFactors(mh, rowScale, colScale);
+     bOK = ComputeScaleFactors(mh, rowScaleVec, colScaleVec);
 
      return bOK;
 }

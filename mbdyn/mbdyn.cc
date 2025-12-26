@@ -1084,8 +1084,8 @@ mbdyn_program(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
 #ifdef USE_GTEST
 class MBDynProgramGTest: public testing::Test {
 public:
-        MBDynProgramGTest(int argc, char* argv[], mbdyn_proc_t* mbp)
-                :argc(argc), argv(argv), mbp(mbp) {
+        MBDynProgramGTest(int argc_a, char* argv_a[], mbdyn_proc_t* mbp_a)
+                :argc(argc_a), argv(argv_a), mbp(mbp_a) {
         }
 
         virtual void TestBody() override {

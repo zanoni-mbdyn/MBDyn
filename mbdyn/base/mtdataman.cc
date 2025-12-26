@@ -130,7 +130,7 @@ MultiThreadDataManager::MultiThreadDataManager(MBDynParser& HP,
                 const char* sOutputFileName,
                 const char* sInputFileName,
                 bool bAbortAfterInput,
-                unsigned nThreads)
+                unsigned nThreads_a)
 :
 DataManager(HP, OF, pS, dInitialTime, sOutputFileName, sInputFileName, bAbortAfterInput),
 AssMode(ASS_UNKNOWN),
@@ -140,7 +140,7 @@ op(MultiThreadDataManager::OP_UNKNOWN),
 thread_count(0),
 propagate_ErrMatrixRebuild(false)
 {
-        DataManager::nThreads = nThreads;
+        DataManager::nThreads = nThreads_a;
 
 #if 0	/* no effects ... */
         struct sched_param	sp;

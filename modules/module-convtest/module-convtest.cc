@@ -76,9 +76,9 @@ public:
 	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr);
 };
 
-ConvergenceTest::ConvergenceTest(unsigned uLabel, const DofOwner *pDO,
+ConvergenceTest::ConvergenceTest(unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {

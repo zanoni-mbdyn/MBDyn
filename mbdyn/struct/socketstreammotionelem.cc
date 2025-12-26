@@ -37,10 +37,10 @@
 
 /* StreamContentMotion - begin */
 
-StreamContentMotion::StreamContentMotion(unsigned uFlags,
+StreamContentMotion::StreamContentMotion(unsigned uFlags_a,
 	std::vector<const StructNode *>& n,
 	StreamContent::Modifier *pMod)
-: StreamContent(0, pMod), uFlags(uFlags), nodes(n)
+: StreamContent(0, pMod), uFlags(uFlags_a), nodes(n)
 {
 	/* FIXME: size depends on the type of the output signals */
 	ASSERT(uFlags != 0);

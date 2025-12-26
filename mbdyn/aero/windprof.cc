@@ -43,9 +43,9 @@
 /* WindProfile - begin */
 
 WindProfile::WindProfile(
-	const Vec3& X0,
-	const Mat3x3& R0)
-: X0(X0), R0(R0)
+	const Vec3& X0_a,
+	const Mat3x3& R0_a)
+: X0(X0_a), R0(R0_a)
 {
 	NO_OP;
 }
@@ -60,11 +60,11 @@ WindProfile::~WindProfile(void)
 /* ScalarFuncWindProfile - begin */
 
 ScalarFuncWindProfile::ScalarFuncWindProfile(
-	const Vec3& X0,
-	const Mat3x3& R0,
-	const BasicScalarFunction *sf)
-: WindProfile(X0, R0),
-sf(sf)
+	const Vec3& X0_a,
+	const Mat3x3& R0_a,
+	const BasicScalarFunction *sf_a)
+: WindProfile(X0_a, R0_a),
+sf(sf_a)
 {
 	ASSERT(sf != 0);
 }
@@ -164,15 +164,15 @@ ScalarFuncGR::Read(const DataManager* pDM, MBDynParser& HP)
 /* PowerLawWindProfile - begin */
 
 PowerLawWindProfile::PowerLawWindProfile(
-	const Vec3& X0,
-	const Mat3x3& R0,
-	const doublereal dZRef,
+	const Vec3& X0_a,
+	const Mat3x3& R0_a,
+	const doublereal dZRef_a,
 	const DriveCaller *pVRef,
-	const doublereal dPower)
-: WindProfile(X0, R0),
-dZRef(dZRef),
+	const doublereal dPower_a)
+: WindProfile(X0_a, R0_a),
+dZRef(dZRef_a),
 VRef(pVRef),
-dPower(dPower)
+dPower(dPower_a)
 {
 	ASSERT(dZRef > 0.);
 	ASSERT(pVRef != 0);
@@ -325,16 +325,16 @@ PowerLawGR::Read(const DataManager* pDM, MBDynParser& HP)
 /* LogarithmicWindProfile - begin */
 
 LogarithmicWindProfile::LogarithmicWindProfile(
-	const Vec3& X0,
-	const Mat3x3& R0,
-	const doublereal dZRef,
+	const Vec3& X0_a,
+	const Mat3x3& R0_a,
+	const doublereal dZRef_a,
 	const DriveCaller *pVRef,
-	const doublereal dSurfaceRoughnessLength)
-: WindProfile(X0, R0),
-dZRef(dZRef),
+	const doublereal dSurfaceRoughnessLength_a)
+: WindProfile(X0_a, R0_a),
+dZRef(dZRef_a),
 VRef(pVRef),
-dSurfaceRoughnessLength(dSurfaceRoughnessLength),
-logZRefZ0(std::log(dZRef/dSurfaceRoughnessLength))
+dSurfaceRoughnessLength(dSurfaceRoughnessLength_a),
+logZRefZ0(std::log(dZRef_a/dSurfaceRoughnessLength_a))
 {
 	ASSERT(dZRef > 0.);
 	ASSERT(pVRef != 0);

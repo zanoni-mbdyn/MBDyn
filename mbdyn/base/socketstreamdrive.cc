@@ -85,21 +85,21 @@
 
 SocketStreamDrive::SocketStreamDrive(unsigned int uL,
 	const DriveHandler* pDH,
-	UseSocket *pUS, bool c,
-	const std::string& sFileName,
+	UseSocket *pUS_a, bool c,
+	const std::string& sFileName_a,
 	integer nd, const std::vector<doublereal>& v0,
-	StreamDrive::Modifier *pMod,
-	unsigned int ie, bool bReceiveFirst,
+	StreamDrive::Modifier *pMod_a,
+	unsigned int ie, bool bReceiveFirst_a,
 	int flags,
 	const struct timeval& st,
-	StreamDriveEcho *pSDE,
-	bool bMsgDontWait)
-: StreamDrive(uL, pDH, sFileName, nd, v0, c, pMod),
-InputEvery(ie), bReceiveFirst(bReceiveFirst), InputCounter(ie - 1),
-pUS(pUS), recv_flags(flags),
-bMsgDontWait(bMsgDontWait),
+	StreamDriveEcho *pSDE_a,
+	bool bMsgDontWait_a)
+: StreamDrive(uL, pDH, sFileName_a, nd, v0, c, pMod_a),
+InputEvery(ie), bReceiveFirst(bReceiveFirst_a), InputCounter(ie - 1),
+pUS(pUS_a), recv_flags(flags),
+bMsgDontWait(bMsgDontWait_a),
 SocketTimeout(st),
-pSDE(pSDE)
+pSDE(pSDE_a)
 {
 	// NOTE: InputCounter is set to InputEvery - 1 so that input
 	// is expected at initialization (initial time) and then every

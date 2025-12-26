@@ -296,10 +296,10 @@ private:
                  MyVectorHandler* pXPrime);
 
      struct IntegratorItem {
-          IntegratorItem(SolverBase::StepIntegratorType eType,
-                         tplStepNIntegratorBase* pInteg)
-               :eType(eType),
-                pInteg(pInteg) {
+          IntegratorItem(SolverBase::StepIntegratorType eType_a,
+                         tplStepNIntegratorBase* pInteg_a)
+               :eType(eType_a),
+                pInteg(pInteg_a) {
           }
 
           SolverBase::StepIntegratorType eType;

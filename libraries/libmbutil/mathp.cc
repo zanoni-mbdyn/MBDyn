@@ -57,16 +57,16 @@ typedef double (*mp_f2_f)(double, double);
 
 template <class Tin, class Tout, mp_f1_f F>
 static int
-mp_func_1(const MathParser::MathArgs& args)
+mp_func_1(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[0]->Type() == MathParser::AT_REAL);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[0]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	Tout *out = dynamic_cast<Tout *>(args[0]);
+	Tout *out = dynamic_cast<Tout *>(args_a[0]);
 	ASSERT(out != 0);
 
-	Tin *arg1 = dynamic_cast<Tin *>(args[1]);
+	Tin *arg1 = dynamic_cast<Tin *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	*out = F((*arg1)());
@@ -76,20 +76,20 @@ mp_func_1(const MathParser::MathArgs& args)
 
 template <class Tin, class Tout, mp_f2_f F>
 static int
-mp_func_2(const MathParser::MathArgs& args)
+mp_func_2(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 3);
-	ASSERT(args[0]->Type() == MathParser::AT_REAL);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
-	ASSERT(args[2]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 3);
+	ASSERT(args_a[0]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a[2]->Type() == MathParser::AT_REAL);
 
-	Tout *out = dynamic_cast<Tout *>(args[0]);
+	Tout *out = dynamic_cast<Tout *>(args_a[0]);
 	ASSERT(out != 0);
 
-	Tin *arg1 = dynamic_cast<Tin *>(args[1]);
+	Tin *arg1 = dynamic_cast<Tin *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
-	Tin *arg2 = dynamic_cast<Tin *>(args[2]);
+	Tin *arg2 = dynamic_cast<Tin *>(args_a[2]);
 	ASSERT(arg2 != 0);
 
 	Real a1 = (*arg1)();
@@ -100,12 +100,12 @@ mp_func_2(const MathParser::MathArgs& args)
 }
 
 static int
-mp_asin_t(const MathParser::MathArgs& args)
+mp_asin_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	const Real a1 = (*arg1)();
@@ -117,12 +117,12 @@ mp_asin_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_acos_t(const MathParser::MathArgs& args)
+mp_acos_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	const Real a1 = (*arg1)();
@@ -134,12 +134,12 @@ mp_acos_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_tan_t(const MathParser::MathArgs& args)
+mp_tan_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	Real a1 = (*arg1)();
@@ -153,12 +153,12 @@ mp_tan_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_acosh_t(const MathParser::MathArgs& args)
+mp_acosh_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	if ((*arg1)() <= 1.) {
@@ -169,12 +169,12 @@ mp_acosh_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_atanh_t(const MathParser::MathArgs& args)
+mp_atanh_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	Real a1 = (*arg1)();
@@ -186,12 +186,12 @@ mp_atanh_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_greater_than_0_t(const MathParser::MathArgs& args)
+mp_greater_than_0_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	if ((*arg1)() <= 0.) {
@@ -202,12 +202,12 @@ mp_greater_than_0_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_greater_than_or_equal_to_0_t(const MathParser::MathArgs& args)
+mp_greater_than_or_equal_to_0_t(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[1]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[1]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args[1]);
+	MathParser::MathArgReal_t *arg1 = dynamic_cast<MathParser::MathArgReal_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	if ((*arg1)() < 0.) {
@@ -218,12 +218,12 @@ mp_greater_than_or_equal_to_0_t(const MathParser::MathArgs& args)
 }
 
 static int
-mp_rand(const MathParser::MathArgs& args)
+mp_rand(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 0);
-	ASSERT(args[0]->Type() == MathParser::AT_INT);
+	ASSERT(args_a.size() == 1 + 0);
+	ASSERT(args_a[0]->Type() == MathParser::AT_INT);
 
-	MathParser::MathArgInt_t* out = dynamic_cast<MathParser::MathArgInt_t*>(args[0]);
+	MathParser::MathArgInt_t* out = dynamic_cast<MathParser::MathArgInt_t*>(args_a[0]);
 	ASSERT(out != 0);
 
 	*out = rand();
@@ -232,12 +232,12 @@ mp_rand(const MathParser::MathArgs& args)
 }
 
 static int
-mp_rndm(const MathParser::MathArgs& args)
+mp_rndm(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 0);
-	ASSERT(args[0]->Type() == MathParser::AT_REAL);
+	ASSERT(args_a.size() == 1 + 0);
+	ASSERT(args_a[0]->Type() == MathParser::AT_REAL);
 
-	MathParser::MathArgReal_t* out = dynamic_cast<MathParser::MathArgReal_t*>(args[0]);
+	MathParser::MathArgReal_t* out = dynamic_cast<MathParser::MathArgReal_t*>(args_a[0]);
 	ASSERT(out != 0);
 
 	*out = -1. + 2.*(Real(rand())/Real(RAND_MAX));
@@ -246,13 +246,13 @@ mp_rndm(const MathParser::MathArgs& args)
 }
 
 static int
-mp_srnd(const MathParser::MathArgs& args)
+mp_srnd(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 1);
-	ASSERT(args[0]->Type() == MathParser::AT_VOID);
-	ASSERT(args[1]->Type() == MathParser::AT_INT);
+	ASSERT(args_a.size() == 1 + 1);
+	ASSERT(args_a[0]->Type() == MathParser::AT_VOID);
+	ASSERT(args_a[1]->Type() == MathParser::AT_INT);
 
-	MathParser::MathArgInt_t *arg1 = dynamic_cast<MathParser::MathArgInt_t *>(args[1]);
+	MathParser::MathArgInt_t *arg1 = dynamic_cast<MathParser::MathArgInt_t *>(args_a[1]);
 	ASSERT(arg1 != 0);
 
 	srand((unsigned int)(*arg1)());
@@ -261,15 +261,15 @@ mp_srnd(const MathParser::MathArgs& args)
 }
 
 static int
-mp_sprintf(const MathParser::MathArgs& args)
+mp_sprintf(const MathParser::MathArgs& args_a)
 {
-	ASSERT(args.size() == 1 + 2);
-	ASSERT(args[0]->Type() == MathParser::AT_STRING);
-	ASSERT(args[1]->Type() == MathParser::AT_STRING);
-	ASSERT(args[2]->Type() == MathParser::AT_ANY);
+	ASSERT(args_a.size() == 1 + 2);
+	ASSERT(args_a[0]->Type() == MathParser::AT_STRING);
+	ASSERT(args_a[1]->Type() == MathParser::AT_STRING);
+	ASSERT(args_a[2]->Type() == MathParser::AT_ANY);
 
-	MathParser::MathArgString_t *arg1 = dynamic_cast<MathParser::MathArgString_t *>(args[1]);
-	MathParser::MathArgAny_t *arg2 = dynamic_cast<MathParser::MathArgAny_t *>(args[2]);
+	MathParser::MathArgString_t *arg1 = dynamic_cast<MathParser::MathArgString_t *>(args_a[1]);
+	MathParser::MathArgAny_t *arg2 = dynamic_cast<MathParser::MathArgAny_t *>(args_a[2]);
 	ASSERT(arg1 != 0);
 
 	char buf[BUFSIZ];
@@ -302,7 +302,7 @@ mp_sprintf(const MathParser::MathArgs& args)
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
-	MathParser::MathArgString_t* out = dynamic_cast<MathParser::MathArgString_t*>(args[0]);
+	MathParser::MathArgString_t* out = dynamic_cast<MathParser::MathArgString_t*>(args_a[0]);
 	ASSERT(out != 0);
 
 	*out = std::string(buf);
@@ -915,8 +915,8 @@ static const declarationmodifiernames DeclarationModifierNames[] = {
 TypedValue::ErrWrongType::ErrWrongType(MBDYN_EXCEPT_ARGS_DECL_NOOPT,
 	const TypedValue::Type& to,
 	const TypedValue::Type& from,
-	const std::string r)
-: MBDynErrBase(MBDYN_EXCEPT_ARGS_NOOPT_PASSTHRU, std::string("cannot cast \"") + GetTypeName(from) + "\" into \"" + GetTypeName(to) + "\"" + r)
+	const std::string r_a)
+: MBDynErrBase(MBDYN_EXCEPT_ARGS_NOOPT_PASSTHRU, std::string("cannot cast \"") + GetTypeName(from) + "\" into \"" + GetTypeName(to) + "\"" + r_a)
 {
 	NO_OP;
 }
@@ -950,8 +950,8 @@ TypedValue::TypedValue(const Real& r, bool isConst)
 	v.r = r;
 }
 
-TypedValue::TypedValue(const std::string& s, bool isConst)
-: type(TypedValue::VAR_STRING), bConst(isConst), s(s)
+TypedValue::TypedValue(const std::string& s_a, bool isConst)
+: type(TypedValue::VAR_STRING), bConst(isConst), s(s_a)
 {
 	NO_OP;
 }
@@ -1419,7 +1419,7 @@ TypedValue::Set(const Real& r)
 }
 
 const TypedValue&
-TypedValue::Set(const std::string& s)
+TypedValue::Set(const std::string& s_a)
 {
 	if (Const()) {
 		throw ErrConstraintViolation(MBDYN_EXCEPT_ARGS);
@@ -1432,7 +1432,7 @@ TypedValue::Set(const std::string& s)
 		throw ErrWrongType(MBDYN_EXCEPT_ARGS, GetType(), VAR_STRING);
 
 	case TypedValue::VAR_STRING:
-		this->s = s;
+		this->s = s_a;
 		break;
 
 	default:
@@ -1443,133 +1443,133 @@ TypedValue::Set(const std::string& s)
 }
 
 bool
-TypedValue::operator && (const TypedValue& v) const
+TypedValue::operator && (const TypedValue& v_a) const
 {
-	return (GetReal() && v.GetReal());
+	return (GetReal() && v_a.GetReal());
 }
 
 bool
-TypedValue::operator || (const TypedValue& v) const
+TypedValue::operator || (const TypedValue& v_a) const
 {
-	return (GetReal() || v.GetReal());
+	return (GetReal() || v_a.GetReal());
 }
 
 bool
-TypedValue::operator > (const TypedValue& v) const
+TypedValue::operator > (const TypedValue& v_a) const
 {
-	return (GetReal() > v.GetReal());
+	return (GetReal() > v_a.GetReal());
 }
 
 bool
-TypedValue::operator >= (const TypedValue& v) const
+TypedValue::operator >= (const TypedValue& v_a) const
 {
-	return (GetReal() >= v.GetReal());
+	return (GetReal() >= v_a.GetReal());
 }
 
 bool
-TypedValue::operator == (const TypedValue& v) const
+TypedValue::operator == (const TypedValue& v_a) const
 {
-	return (GetReal() == v.GetReal());
+	return (GetReal() == v_a.GetReal());
 }
 
 bool
-TypedValue::operator <= (const TypedValue& v) const
+TypedValue::operator <= (const TypedValue& v_a) const
 {
-	return (GetReal() <= v.GetReal());
+	return (GetReal() <= v_a.GetReal());
 }
 
 bool
-TypedValue::operator < (const TypedValue& v) const
+TypedValue::operator < (const TypedValue& v_a) const
 {
-	return (GetReal() < v.GetReal());
+	return (GetReal() < v_a.GetReal());
 }
 
 bool
-TypedValue::operator != (const TypedValue& v) const
+TypedValue::operator != (const TypedValue& v_a) const
 {
-	return (GetReal() != v.GetReal());
+	return (GetReal() != v_a.GetReal());
 }
 
 TypedValue
-TypedValue::operator + (const TypedValue& v) const
+TypedValue::operator + (const TypedValue& v_a) const
 {
 	if (GetType() == TypedValue::VAR_STRING) {
 		char buf[BUFSIZ];
 
-		switch (v.GetType()) {
+		switch (v_a.GetType()) {
 		case TypedValue::VAR_BOOL:
 		case TypedValue::VAR_INT:
-			snprintf(buf, sizeof(buf), "%ld", (long)v.GetInt());
+			snprintf(buf, sizeof(buf), "%ld", (long)v_a.GetInt());
 			return TypedValue(GetString() + buf);
 
 		case TypedValue::VAR_REAL:
-			snprintf(buf, sizeof(buf), "%e", (double)v.GetReal());
+			snprintf(buf, sizeof(buf), "%e", (double)v_a.GetReal());
 			return TypedValue(GetString() + buf);
 
 		case TypedValue::VAR_STRING:
-			return TypedValue(GetString() + v.GetString());
+			return TypedValue(GetString() + v_a.GetString());
 
 		default:
-			throw ErrWrongType(MBDYN_EXCEPT_ARGS, GetType(), v.GetType());
+			throw ErrWrongType(MBDYN_EXCEPT_ARGS, GetType(), v_a.GetType());
 		}
 	}
 
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return TypedValue(GetInt() + v.GetInt());
+		return TypedValue(GetInt() + v_a.GetInt());
 	}
 
-	return TypedValue(GetReal() + v.GetReal());
+	return TypedValue(GetReal() + v_a.GetReal());
 }
 
 TypedValue
-TypedValue::operator - (const TypedValue& v) const
+TypedValue::operator - (const TypedValue& v_a) const
 {
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return TypedValue(GetInt() - v.GetInt());
+		return TypedValue(GetInt() - v_a.GetInt());
 	}
 
-	return TypedValue(GetReal() - v.GetReal());
+	return TypedValue(GetReal() - v_a.GetReal());
 }
 
 TypedValue
-TypedValue::operator * (const TypedValue& v) const
+TypedValue::operator * (const TypedValue& v_a) const
 {
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return TypedValue(GetInt()*v.GetInt());
+		return TypedValue(GetInt()*v_a.GetInt());
 	}
 
-	return TypedValue(GetReal()*v.GetReal());
+	return TypedValue(GetReal()*v_a.GetReal());
 }
 
 TypedValue
-TypedValue::operator / (const TypedValue& v) const
+TypedValue::operator / (const TypedValue& v_a) const
 {
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return TypedValue(GetInt()/v.GetInt());
+		return TypedValue(GetInt()/v_a.GetInt());
 	}
 
-	return TypedValue(GetReal()/v.GetReal());
+	return TypedValue(GetReal()/v_a.GetReal());
 }
 
 TypedValue
-TypedValue::operator % (const TypedValue& v) const
+TypedValue::operator % (const TypedValue& v_a) const
 {
 	// bool is implicitly cast to Int
-	if (v.GetType() != TypedValue::VAR_BOOL && v.GetType() != TypedValue::VAR_INT)
+	if (v_a.GetType() != TypedValue::VAR_BOOL && v_a.GetType() != TypedValue::VAR_INT)
 	{
-		throw ErrWrongType(MBDYN_EXCEPT_ARGS, TypedValue::VAR_INT, v.GetType(), " in right argument");
+		throw ErrWrongType(MBDYN_EXCEPT_ARGS, TypedValue::VAR_INT, v_a.GetType(), " in right argument");
 	}
 
 	if (GetType() != TypedValue::VAR_BOOL && GetType() != TypedValue::VAR_INT)
@@ -1577,11 +1577,11 @@ TypedValue::operator % (const TypedValue& v) const
 		throw ErrWrongType(MBDYN_EXCEPT_ARGS, TypedValue::VAR_INT, GetType(), " in left argument");
 	}
 
-	return TypedValue(GetInt() % v.GetInt());
+	return TypedValue(GetInt() % v_a.GetInt());
 }
 
 const TypedValue&
-TypedValue::operator += (const TypedValue& v)
+TypedValue::operator += (const TypedValue& v_a)
 {
 	if (Const()) {
 		throw ErrConstraintViolation(MBDYN_EXCEPT_ARGS);
@@ -1590,107 +1590,107 @@ TypedValue::operator += (const TypedValue& v)
 	if (GetType() == TypedValue::VAR_STRING) {
 		char buf[BUFSIZ];
 
-		switch (v.GetType()) {
+		switch (v_a.GetType()) {
 		case TypedValue::VAR_BOOL:
 		case TypedValue::VAR_INT:
-			snprintf(buf, sizeof(buf), "%ld", (long)v.GetInt());
+			snprintf(buf, sizeof(buf), "%ld", (long)v_a.GetInt());
 			this->s += buf;
 			break;
 
 		case TypedValue::VAR_REAL:
-			snprintf(buf, sizeof(buf), "%e", (double)v.GetReal());
+			snprintf(buf, sizeof(buf), "%e", (double)v_a.GetReal());
 			this->s += buf;
 			break;
 
 		case TypedValue::VAR_STRING:
-			this->s += v.GetString();
+			this->s += v_a.GetString();
 			break;
 
 		default:
-			throw ErrWrongType(MBDYN_EXCEPT_ARGS, GetType(), v.GetType());
+			throw ErrWrongType(MBDYN_EXCEPT_ARGS, GetType(), v_a.GetType());
 		}
 
 		return *this;
 	}
 
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return Set(GetInt() + v.GetInt());
+		return Set(GetInt() + v_a.GetInt());
 	}
 
-	Real d = GetReal() + v.GetReal();
+	Real d = GetReal() + v_a.GetReal();
 	type = TypedValue::VAR_REAL;
 
 	return Set(d);
 }
 
 const TypedValue&
-TypedValue::operator -= (const TypedValue& v)
+TypedValue::operator -= (const TypedValue& v_a)
 {
 	if (Const()) {
 		throw ErrConstraintViolation(MBDYN_EXCEPT_ARGS);
 	}
 
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return Set(GetInt() - v.GetInt());
+		return Set(GetInt() - v_a.GetInt());
 	}
-	Real d = GetReal() - v.GetReal();
+	Real d = GetReal() - v_a.GetReal();
 	type = TypedValue::VAR_REAL;
 	return Set(d);
 }
 
 const TypedValue&
-TypedValue::operator *= (const TypedValue& v)
+TypedValue::operator *= (const TypedValue& v_a)
 {
 	if (Const()) {
 		throw ErrConstraintViolation(MBDYN_EXCEPT_ARGS);
 	}
 
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return Set(GetInt()*v.GetInt());
+		return Set(GetInt()*v_a.GetInt());
 	}
-	Real d = GetReal()*v.GetReal();
+	Real d = GetReal()*v_a.GetReal();
 	type = TypedValue::VAR_REAL;
 	return Set(d);
 }
 
 const TypedValue&
-TypedValue::operator /= (const TypedValue& v)
+TypedValue::operator /= (const TypedValue& v_a)
 {
 	if (Const()) {
 		throw ErrConstraintViolation(MBDYN_EXCEPT_ARGS);
 	}
 
 	if ((GetType() == TypedValue::VAR_BOOL || GetType() == TypedValue::VAR_INT)
-			&& (v.GetType() == TypedValue::VAR_BOOL || v.GetType() == TypedValue::VAR_INT))
+			&& (v_a.GetType() == TypedValue::VAR_BOOL || v_a.GetType() == TypedValue::VAR_INT))
 	{
 		// bool is implicitly cast to Int
-		return Set(GetInt()/v.GetInt());
+		return Set(GetInt()/v_a.GetInt());
 	}
-	Real d = GetReal()/v.GetReal();
+	Real d = GetReal()/v_a.GetReal();
 	type = TypedValue::VAR_REAL;
 	return Set(d);
 }
 
 const TypedValue&
-TypedValue::operator %= (const TypedValue& v)
+TypedValue::operator %= (const TypedValue& v_a)
 {
 	if (Const()) {
 		throw ErrConstraintViolation(MBDYN_EXCEPT_ARGS);
 	}
 
 	// bool is implicitly cast to Int
-	if (v.GetType() != TypedValue::VAR_BOOL && v.GetType() != TypedValue::VAR_INT)
+	if (v_a.GetType() != TypedValue::VAR_BOOL && v_a.GetType() != TypedValue::VAR_INT)
 	{
-		throw ErrWrongType(MBDYN_EXCEPT_ARGS, TypedValue::VAR_INT, v.GetType(), " in right argument");
+		throw ErrWrongType(MBDYN_EXCEPT_ARGS, TypedValue::VAR_INT, v_a.GetType(), " in right argument");
 	}
 
 	if (GetType() != TypedValue::VAR_BOOL && GetType() != TypedValue::VAR_INT)
@@ -1698,32 +1698,32 @@ TypedValue::operator %= (const TypedValue& v)
 		throw ErrWrongType(MBDYN_EXCEPT_ARGS, TypedValue::VAR_INT, GetType(), " in left argument");
 	}
 
-	Int i = GetInt() % v.GetInt();
+	Int i = GetInt() % v_a.GetInt();
 	type = TypedValue::VAR_INT;
 	return Set(i);
 }
 
 bool
-operator ! (const TypedValue& v)
+operator ! (const TypedValue& v_a)
 {
-	if (v.GetType() == TypedValue::VAR_STRING) {
-		return v.GetString().empty();
+	if (v_a.GetType() == TypedValue::VAR_STRING) {
+		return v_a.GetString().empty();
 	}
 
-	return (!v.GetReal());
+	return (!v_a.GetReal());
 }
 
 TypedValue
-operator - (const TypedValue& v)
+operator - (const TypedValue& v_a)
 {
-	switch (v.GetType()) {
+	switch (v_a.GetType()) {
 	case TypedValue::VAR_BOOL:
 		// bool is implicitly cast to Int
 	case TypedValue::VAR_INT:
-		return TypedValue(-v.GetInt());
+		return TypedValue(-v_a.GetInt());
 
 	case TypedValue::VAR_REAL:
-		return TypedValue(-v.GetReal());
+		return TypedValue(-v_a.GetReal());
 
 	case TypedValue::VAR_STRING:
 		throw TypedValue::ErrWrongType(MBDYN_EXCEPT_ARGS);
@@ -1736,24 +1736,24 @@ operator - (const TypedValue& v)
 }
 
 TypedValue
-operator + (const TypedValue& v)
+operator + (const TypedValue& v_a)
 {
-	return v;
+	return v_a;
 }
 
 std::ostream&
-operator << (std::ostream& out, const TypedValue& v)
+operator << (std::ostream& out, const TypedValue& v_a)
 {
-	switch (v.GetType()) {
+	switch (v_a.GetType()) {
 	case TypedValue::VAR_BOOL:
 	case TypedValue::VAR_INT:
-		return out << v.GetInt();
+		return out << v_a.GetInt();
 
 	case TypedValue::VAR_REAL: {
 		// FIXME: precision?
 		// make sure there is a (trailing) '.'
 		std::ostringstream os;
-		os << v.GetReal();
+		os << v_a.GetReal();
 		if (os.str().find('.') == std::string::npos) {
 			os << '.';
 		}
@@ -1761,7 +1761,7 @@ operator << (std::ostream& out, const TypedValue& v)
 		}
 
 	case TypedValue::VAR_STRING:
-		return out << '"' << v.GetString() << '"';
+		return out << '"' << v_a.GetString() << '"';
 
 	default:
 		throw TypedValue::ErrUnknownType(MBDYN_EXCEPT_ARGS);
@@ -2036,8 +2036,8 @@ MathParser::GetNameSpaceMap(void) const
 	return nameSpaceMap;
 }
 
-MathParser::NameSpace::NameSpace(const std::string& name)
-: name(name)
+MathParser::NameSpace::NameSpace(const std::string& name_a)
+: name(name_a)
 {
 	NO_OP;
 }
@@ -4598,10 +4598,10 @@ MathParser::stmtlist(void)
 #endif // ! DO_NOT_USE_EE
 
 
-MathParser::MathParser(const InputStream& strm, Table& t, bool bRedefineVars)
+MathParser::MathParser(const InputStream& strm, Table& t, bool bRedefineVars_a)
 : PlugIns(0),
 table(t),
-bRedefineVars(bRedefineVars),
+bRedefineVars(bRedefineVars_a),
 in(const_cast<InputStream*>(&strm)),
 defaultNameSpace(0),
 value(),
@@ -4622,10 +4622,10 @@ currtoken(UNKNOWNTOKEN)
 	srand(tm);
 }
 
-MathParser::MathParser(Table& t, bool bRedefineVars)
+MathParser::MathParser(Table& t, bool bRedefineVars_a)
 : PlugIns(0),
 table(t),
-bRedefineVars(bRedefineVars),
+bRedefineVars(bRedefineVars_a),
 in(0),
 defaultNameSpace(0),
 value(),
@@ -5916,8 +5916,8 @@ last_arg:
 	}
 
 #ifdef DEBUG
-	for (int i = 0; argv[i] != NULL; i++) {
-		silent_cout("argv[" << i << "]=" << argv[i]
+	for (int ii = 0; argv[ii] != NULL; ii++) {
+		silent_cout("argv[" << ii << "]=" << argv[ii]
 				<< std::endl);
 	}
 #endif // DEBUG
@@ -5944,8 +5944,8 @@ last_arg:
 	/*
 	 * pulizia ...
 	 */
-	for (int i = 0; argv[i] != NULL; i++) {
-		SAFEDELETEARR(argv[i]);
+	for (int ii = 0; argv[ii] != NULL; ii++) {
+		SAFEDELETEARR(argv[ii]);
 	}
 
 	return new EE_Var(v, defaultNameSpace);

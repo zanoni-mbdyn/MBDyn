@@ -478,13 +478,13 @@ class ViscoElasticBeam : public Beam {
                     FullSubMatrixHandler& WMB,
 		    doublereal dCoef,
 		    const VectorHandler& XCurr,
-		    const VectorHandler& XPrimeCurr);
+		    const VectorHandler& XPrimeCurr) override;
 
     virtual void
     AssStiffnessVec(SubVectorHandler& WorkVec,
                     doublereal dCoef,
 		    const VectorHandler& XCurr,
-		    const VectorHandler& XPrimeCurr);
+		    const VectorHandler& XPrimeCurr) override;
 
     /* Inizializza i dati */
     void Init(void);
@@ -538,28 +538,28 @@ class ViscoElasticBeam : public Beam {
     };
 
     /* Tipo di trave */
-    virtual Beam::Type GetBeamType(void) const {
+    virtual Beam::Type GetBeamType(void) const override {
         return Beam::VISCOELASTIC;
     };
 
     /* Settings iniziali, prima della prima soluzione */
     void SetValue(DataManager *pDM,
                   VectorHandler& /* X */ , VectorHandler& /* XP */ ,
-                  SimulationEntity::Hints *ph = 0);
+                  SimulationEntity::Hints *ph = 0) override;
 
     /* Prepara i parametri di riferimento dopo la predizione */
     virtual void
-    AfterPredict(VectorHandler& /* X */ , VectorHandler& /* XP */ );
+    AfterPredict(VectorHandler& /* X */ , VectorHandler& /* XP */ ) override;
 
     virtual void
-    AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
+    AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
     /* Inverse Dynamics */
     virtual void
     AfterConvergence(const VectorHandler& X, const VectorHandler& XP,
-    		const VectorHandler& XPP);
+    		const VectorHandler& XPP) override;
 
-    virtual doublereal dGetPrivData(unsigned int i) const;
+    virtual doublereal dGetPrivData(unsigned int i) const override;
 
     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 };

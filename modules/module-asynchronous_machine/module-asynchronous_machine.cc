@@ -89,42 +89,42 @@ public:
 	asynchronous_machine(unsigned uLabel, const DofOwner *pDO,
 		DataManager* pDM, MBDynParser& HP);
 	virtual ~asynchronous_machine(void);
-	virtual void Output(OutputHandler& OH) const;
-	virtual unsigned int iGetNumDof(void) const;
-	virtual DofOrder::Order GetDofType(unsigned int i) const;
-	virtual std::ostream& DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const;
-	virtual std::ostream& DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const;
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
-	virtual void SetInitialValue(VectorHandler& X);
-	virtual void Update(const VectorHandler& XCurr,const VectorHandler& XPrimeCurr);
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
-	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const;
+	virtual void Output(OutputHandler& OH) const override;
+	virtual unsigned int iGetNumDof(void) const override;
+	virtual DofOrder::Order GetDofType(unsigned int i) const override;
+	virtual std::ostream& DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const override;
+	virtual std::ostream& DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
+	virtual void SetInitialValue(VectorHandler& X) override;
+	virtual void Update(const VectorHandler& XCurr,const VectorHandler& XPrimeCurr) override;
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
+	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
 	VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 	SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
-	virtual int iGetNumConnectedNodes(void) const;
-	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const;
+		const VectorHandler& XPrimeCurr) override;
+	int iGetNumConnectedNodes(void) const;
+	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override;
 	virtual void SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
-			SimulationEntity::Hints *ph);
-	virtual std::ostream& Restart(std::ostream& out) const;
+			SimulationEntity::Hints *ph) override;
+	virtual std::ostream& Restart(std::ostream& out) const override;
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
-	virtual unsigned int iGetInitialNumDof(void) const;
+	virtual unsigned int iGetInitialNumDof(void) const override;
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const;
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
    	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		      const VectorHandler& XCurr);
+		      const VectorHandler& XCurr) override;
    	virtual SubVectorHandler&
-	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr);
+	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr) override;
 
 private:
 	bool IsMotorOn(void) const;
@@ -157,9 +157,9 @@ const doublereal asynchronous_machine::sm_SingTol = std::pow(std::numeric_limits
  * user defined: 1, asynchronous_machine, help;
  */
 asynchronous_machine::asynchronous_machine(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: 	UserDefinedElem(uLabel, pDO),
+: 	UserDefinedElem(uLabel_a, pDO),
 	m_pRotorNode(0),
 	m_pStatorNode(0),
 	m_MK(0.),

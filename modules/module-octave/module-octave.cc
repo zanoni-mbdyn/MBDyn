@@ -97,6 +97,11 @@
 
 #pragma GCC diagnostic pop
 
+#ifdef __clang__
+// FIXME: The issue is in Octave's DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
+#pragma clang diagnostic ignored "-Winconsistent-missing-override" 
+#endif
+
 #include "module-octave.h"
 #include "octave_object.h"
 
@@ -245,7 +250,7 @@ class ConstVectorHandlerInterface : public MBDynInterface {
 public:
         explicit ConstVectorHandlerInterface(OctaveInterface* pInterface = OctaveInterface::GetInterface(), const VectorHandler* pX=0);
         virtual ~ConstVectorHandlerInterface();
-        void Set(const VectorHandler* pX){ this->pX = const_cast<VectorHandler*>(pX); }
+        void Set(const VectorHandler* pX_a){ this->pX = const_cast<VectorHandler*>(pX_a); }
         virtual void print(std::ostream& os, bool pr_as_read_syntax = false) override;
         virtual octave_value operator()(const octave_value_list& idx) const override;
         virtual dim_vector dims (void) const override;
@@ -284,7 +289,7 @@ class OStreamInterface : public MBDynInterface {
 public:
         explicit OStreamInterface(OctaveInterface* pInterface = OctaveInterface::GetInterface(), std::ostream* pOS = 0);
         virtual ~OStreamInterface();
-        void Set(std::ostream* pOS){ this->pOS = pOS; }
+        void Set(std::ostream* pOS_a){ this->pOS = pOS_a; }
         std::ostream* Get() const { return pOS; }
 protected:
         BEGIN_METHOD_TABLE_DECLARE()
@@ -847,13 +852,13 @@ const std::string OctaveInterface::strADFunc("mbdyn_derivative");
 const std::string OctaveInterface::strIsMethod("ismethod");
 bool OctaveInterface::bHaveADPackage = false;
 
-OctaveInterface::OctaveInterface(const DataManager* pDM, MBDynParser* pHP)
+OctaveInterface::OctaveInterface(const DataManager* pDM_a, MBDynParser* pHP_a)
 : bFirstCall(true),
 bEmbedFileDirty(false),
-octDM(new DataManagerInterface(this, pDM, false)),
-octHP(new MBDynParserInterface(this, pHP, false)),
-pDM(pDM),
-pHP(pHP)
+octDM(new DataManagerInterface(this, pDM_a, false)),
+octHP(new MBDynParserInterface(this, pHP_a, false)),
+pDM(pDM_a),
+pHP(pHP_a)
 {
         TRACE("constructor");
 
@@ -1351,14 +1356,14 @@ OctaveInterface::EvalFunction(const std::string& func, const octave_value_list& 
         }
 
         if (bFirstCall) {
-            octave_value_list args;
-            args.append(octave_value("load"));
-            args.append(octave_value("mbdyn_util_oct"));
+            octave_value_list args_pkg;
+            args_pkg.append(octave_value("load"));
+            args_pkg.append(octave_value("mbdyn_util_oct"));
 
 #if OCTAVE_MAJOR_VERSION >= 5
-            octave::feval("pkg", args, 0);
+            octave::feval("pkg", args_pkg, 0);
 #else
-            feval("pkg", args, 0);
+            feval("pkg", args_pkg, 0);
 #endif
 
 #if OCTAVE_MAJOR_VERSION < 6
@@ -1625,8 +1630,8 @@ octave_value_list OctaveInterface::MakeArgList(doublereal dVar, const octave_val
         return fargs;
 }
 
-MBDynInterface::MBDynInterface(OctaveInterface* pInterface, bool bAddRef)
-: pInterface(pInterface), bAddRef(bAddRef)
+MBDynInterface::MBDynInterface(OctaveInterface* pInterface_a, bool bAddRef_a)
+: pInterface(pInterface_a), bAddRef(bAddRef_a)
 {
         TRACE("constructor");
         ASSERT(pInterface != 0);
@@ -1674,8 +1679,8 @@ END_METHOD_TABLE()
 DEFINE_OCTAVE_ALLOCATOR(MBDynInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(MBDynInterface, "MBDyn", "MBDyn");
 
-ConstVectorHandlerInterface::ConstVectorHandlerInterface(OctaveInterface* pInterface, const VectorHandler* X)
-        :MBDynInterface(pInterface),
+ConstVectorHandlerInterface::ConstVectorHandlerInterface(OctaveInterface* pInterface_a, const VectorHandler* X)
+        :MBDynInterface(pInterface_a),
          pX(const_cast<VectorHandler*>(X))
 {
         TRACE("constructor");
@@ -1878,8 +1883,8 @@ END_METHOD_TABLE()
 DEFINE_OCTAVE_ALLOCATOR(ConstVectorHandlerInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(ConstVectorHandlerInterface, "ConstVectorHandler", "ConstVectorHandler");
 
-VectorHandlerInterface::VectorHandlerInterface(OctaveInterface* pInterface, VectorHandler* X)
-        :ConstVectorHandlerInterface(pInterface, X)
+VectorHandlerInterface::VectorHandlerInterface(OctaveInterface* pInterface_a, VectorHandler* X)
+        :ConstVectorHandlerInterface(pInterface_a, X)
 {
         TRACE("constructor");
 }
@@ -2015,9 +2020,9 @@ DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(VectorHandlerInterface, "VectorHandler", "Ve
 
 const std::string OStreamInterface::strsprintf("sprintf");
 
-OStreamInterface::OStreamInterface(OctaveInterface* pInterface, std::ostream* pOS)
-: MBDynInterface(pInterface),
-  pOS(pOS)
+OStreamInterface::OStreamInterface(OctaveInterface* pInterface_a, std::ostream* pOS_a)
+: MBDynInterface(pInterface_a),
+  pOS(pOS_a)
 {
 
 }
@@ -2071,8 +2076,8 @@ DEFINE_OCTAVE_ALLOCATOR(OStreamInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(OStreamInterface, "ostream", "ostream");
 
 
-SimulationEntityInterface::SimulationEntityInterface(OctaveInterface* pInterface)
-: MBDynInterface(pInterface)
+SimulationEntityInterface::SimulationEntityInterface(OctaveInterface* pInterface_a)
+: MBDynInterface(pInterface_a)
 {
 
 }
@@ -2168,8 +2173,8 @@ BEGIN_METHOD_TABLE(SimulationEntityInterface, MBDynInterface)
         METHOD_DISPATCH(SimulationEntityInterface, dGetPrivData)
 END_METHOD_TABLE()
 
-NodeInterface::NodeInterface(OctaveInterface* pInterface)
-: SimulationEntityInterface(pInterface)
+NodeInterface::NodeInterface(OctaveInterface* pInterface_a)
+: SimulationEntityInterface(pInterface_a)
 {
 
 }
@@ -2394,9 +2399,9 @@ BEGIN_METHOD_TABLE(NodeInterface, SimulationEntityInterface)
         METHOD_DISPATCH(NodeInterface, dGetDofValuePrev)
 END_METHOD_TABLE()
 
-ScalarNodeInterface::ScalarNodeInterface(OctaveInterface* pInterface, ScalarNode* pNode)
-: NodeInterface(pInterface),
-pNode(pNode)
+ScalarNodeInterface::ScalarNodeInterface(OctaveInterface* pInterface_a, ScalarNode* pNode_a)
+: NodeInterface(pInterface_a),
+pNode(pNode_a)
 {
 
 }
@@ -2519,8 +2524,8 @@ END_METHOD_TABLE()
 DEFINE_OCTAVE_ALLOCATOR(ScalarNodeInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(ScalarNodeInterface, "ScalarNode", "ScalarNode");
 
-StructDispNodeBaseInterface::StructDispNodeBaseInterface(OctaveInterface* pInterface)
-: NodeInterface(pInterface)
+StructDispNodeBaseInterface::StructDispNodeBaseInterface(OctaveInterface* pInterface_a)
+: NodeInterface(pInterface_a)
 {
         TRACE("constructor");
 }
@@ -2715,9 +2720,9 @@ BEGIN_METHOD_TABLE(StructDispNodeBaseInterface, NodeInterface)
         METHOD_DISPATCH(StructNodeInterface, GetXPPPrev)
 END_METHOD_TABLE()
 
-StructDispNodeInterface::StructDispNodeInterface(OctaveInterface* pInterface, const StructDispNode* pNode)
-: StructDispNodeBaseInterface(pInterface),
-  pNode(pNode)
+StructDispNodeInterface::StructDispNodeInterface(OctaveInterface* pInterface_a, const StructDispNode* pNode_a)
+: StructDispNodeBaseInterface(pInterface_a),
+  pNode(pNode_a)
 {
 
 }
@@ -2735,9 +2740,9 @@ const StructDispNode* StructDispNodeInterface::Get() const
 DEFINE_OCTAVE_ALLOCATOR(StructDispNodeInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(StructDispNodeInterface, "StructDispNode", "StructDispNode");
 
-StructNodeInterface::StructNodeInterface(OctaveInterface* pInterface, const StructNode* pNode)
-: StructDispNodeBaseInterface(pInterface),
-pNode(pNode)
+StructNodeInterface::StructNodeInterface(OctaveInterface* pInterface_a, const StructNode* pNode_a)
+: StructDispNodeBaseInterface(pInterface_a),
+pNode(pNode_a)
 {
         TRACE("constructor");
 }
@@ -2901,9 +2906,9 @@ END_METHOD_TABLE()
 DEFINE_OCTAVE_ALLOCATOR(StructNodeInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(StructNodeInterface, "StructNode", "StructNode");
 
-DataManagerInterface::DataManagerInterface(OctaveInterface* pInterface, const DataManager* pDM, bool bAddRef)
-        :MBDynInterface(pInterface, bAddRef),
-         pDM(pDM)
+DataManagerInterface::DataManagerInterface(OctaveInterface* pInterface_a, const DataManager* pDM_a, bool bAddRef_a)
+        :MBDynInterface(pInterface_a, bAddRef_a),
+         pDM(pDM_a)
 {
         TRACE("constructor");
 
@@ -3228,9 +3233,9 @@ Node::Type DataManagerInterface::GetNodeType(const std::string& strType) const
                         { "HYDRAULIC",	Node::HYDRAULIC }
         };
 
-        static const int count = sizeof(nodeTypes) / sizeof(nodeTypes[0]);
+        static const int count_types = sizeof(nodeTypes) / sizeof(nodeTypes[0]);
 
-        for (int i = 0; i < count; ++i) {
+        for (int i = 0; i < count_types; ++i) {
                 if (strType == nodeTypes[i].name) {
                         return nodeTypes[i].type;
                 }
@@ -3295,14 +3300,14 @@ MBDynParserInterface::mbStringDelims[6] = {
                 { HighParser::DEFAULTDELIM,		"DEFAULTDELIM" }
 };
 
-MBDynParserInterface::MBDynParserInterface(OctaveInterface* pInterface, MBDynParser* pHP, bool bAddRef)
-        :MBDynInterface(pInterface, bAddRef),
-         pHP(pHP)
+MBDynParserInterface::MBDynParserInterface(OctaveInterface* pInterface_a, MBDynParser* pHP_a, bool bAddRef_a)
+        :MBDynInterface(pInterface_a, bAddRef_a),
+         pHP(pHP_a)
 {
-        if (!pHP) {
-                if (pInterface) {
+        if (!pHP_a) {
+                if (pInterface_a) {
                         ASSERT(0); // should not happen
-                        this->pHP = &pInterface->GetDataManager()->GetMBDynParser();
+                        this->pHP = &pInterface_a->GetDataManager()->GetMBDynParser();
                 }
         }
 }
@@ -3607,8 +3612,6 @@ METHOD_DEFINE(MBDynParserInterface, GetStringWithDelims, args, nargout)
                 return octave_value();
         }
 
-        std::string strDelims;
-
         if (args.length() > 2) {
                 error("%s: invalid number of arguments %ld\n"
                                 "expected 0-2 arguments",
@@ -3870,9 +3873,7 @@ METHOD_DEFINE(MBDynParserInterface, GetDriveCaller, args, nargout)
                 return octave_value();
         }
 
-        DriveCallerInterface* pInterface = new DriveCallerInterface(GetInterface(), pDC);
-
-        return octave_value(pInterface);
+        return octave_value(new DriveCallerInterface(GetInterface(), pDC));
 }
 
 BEGIN_METHOD_TABLE(MBDynParserInterface, MBDynInterface)
@@ -3895,8 +3896,8 @@ END_METHOD_TABLE()
 DEFINE_OCTAVE_ALLOCATOR(MBDynParserInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(MBDynParserInterface, "MBDynParser", "MBDynParser");
 
-DriveCallerInterface::DriveCallerInterface(OctaveInterface* pInterface, const DriveCaller* pDC)
-:MBDynInterface(pInterface), DC(pDC)
+DriveCallerInterface::DriveCallerInterface(OctaveInterface* pInterface_a, const DriveCaller* pDC_a)
+:MBDynInterface(pInterface_a), DC(pDC_a)
 {
 
 }
@@ -3990,12 +3991,12 @@ END_METHOD_TABLE()
 DEFINE_OCTAVE_ALLOCATOR(DriveCallerInterface)
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(DriveCallerInterface, "DriveCaller", "DriveCaller");
 
-OctaveDriveCaller::OctaveDriveCaller(const std::string& strFunc, OctaveInterface* pInterface, int iFlags, const octave_value_list& args)
+OctaveDriveCaller::OctaveDriveCaller(const std::string& strFunc_a, OctaveInterface* pInterface_a, int iFlags_a, const octave_value_list& args_a)
 : DriveCaller(0),
-  iFlags(iFlags),
-  strFunc(strFunc),
-  pInterface(pInterface),
-  args(args)
+  iFlags(iFlags_a),
+  strFunc(strFunc_a),
+  pInterface(pInterface_a),
+  args(args_a)
 {
         TRACE("constructor");
         TRACE("strFunc=" << strFunc);
@@ -4067,12 +4068,12 @@ octave_value_list OctaveDriveCaller::MakeArgList(doublereal dVar) const
 }
 
 template <class T>
-OctaveTplDriveCaller<T>::OctaveTplDriveCaller(const std::string& strFunction, OctaveInterface* pInterface, int iFlags, const octave_value_list& args)
-     :TplDriveCaller<T>(pInterface->GetDataManager()->pGetDrvHdl()),
-      strFunction(strFunction),
-      pInterface(pInterface),
-      iFlags(iFlags),
-      args(args)
+OctaveTplDriveCaller<T>::OctaveTplDriveCaller(const std::string& strFunction_a, OctaveInterface* pInterface_a, int iFlags_a, const octave_value_list& args_a)
+     :TplDriveCaller<T>(pInterface_a->GetDataManager()->pGetDrvHdl()),
+      strFunction(strFunction_a),
+      pInterface(pInterface_a),
+      iFlags(iFlags_a),
+      args(args_a)
 {
         TRACE("constructor");
 
@@ -4160,8 +4161,8 @@ OctaveTDCR<T>::Read(const DataManager* pDM, MBDynParser& HP)
         return new OctaveTplDriveCaller<T>(GetFunction(), GetInterface(), GetFlags(), GetArgs());
 };
 
-DerivativeDriveCaller::DerivativeDriveCaller(DriveCaller* pDriveCaller)
-        :DriveCaller(0), pDriveCaller(pDriveCaller)
+DerivativeDriveCaller::DerivativeDriveCaller(DriveCaller* pDriveCaller_a)
+        :DriveCaller(0), pDriveCaller(pDriveCaller_a)
 {
         TRACE("constructor");
         ASSERT(pDriveCaller->bIsDifferentiable());
@@ -4207,11 +4208,11 @@ doublereal DerivativeDriveCaller::dGetP(void) const
         return 0.;
 }
 
-OctaveScalarFunction::OctaveScalarFunction(const std::string& strFunc, OctaveInterface* pInterface, int iFlags, const octave_value_list& args)
-        :strFunc(strFunc),
-         pInterface(pInterface),
-         iFlags(iFlags),
-         args(args)
+OctaveScalarFunction::OctaveScalarFunction(const std::string& strFunc_a, OctaveInterface* pInterface_a, int iFlags_a, const octave_value_list& args_a)
+        :strFunc(strFunc_a),
+         pInterface(pInterface_a),
+         iFlags(iFlags_a),
+         args(args_a)
 {
 
 }
@@ -4241,10 +4242,10 @@ octave_value_list OctaveScalarFunction::MakeArgList(doublereal dVar) const
         return pInterface->MakeArgList(dVar, args, iFlags);
 }
 
-OctaveConstitutiveLawBase::OctaveConstitutiveLawBase(const std::string& strClass, OctaveInterface* pInterface, int iFlags)
-                : strClass(strClass),
-                  pInterface(pInterface),
-                  iFlags(iFlags)
+OctaveConstitutiveLawBase::OctaveConstitutiveLawBase(const std::string& strClass_a, OctaveInterface* pInterface_a, int iFlags_a)
+                : strClass(strClass_a),
+                  pInterface(pInterface_a),
+                  iFlags(iFlags_a)
 {
         pInterface->AddRef();
 }
@@ -4263,8 +4264,8 @@ const std::string OctaveConstitutiveLawBase::strGetConstLawType("GetConstLawType
 const std::string OctaveConstitutiveLawBase::strUpdate("Update");
 
 template <class T, class Tder>
-OctaveConstitutiveLaw<T, Tder>::OctaveConstitutiveLaw(const std::string& strClass, OctaveInterface* pInterface, int iFlags)
-: OctaveConstitutiveLawBase(strClass, pInterface, iFlags),
+OctaveConstitutiveLaw<T, Tder>::OctaveConstitutiveLaw(const std::string& strClass_a, OctaveInterface* pInterface_a, int iFlags_a)
+: OctaveConstitutiveLawBase(strClass_a, pInterface_a, iFlags_a),
   clType(ConstLawType::UNKNOWN)
 {
         octave_value_list args(GetInterface()->GetDataManagerInterface());
@@ -4611,9 +4612,9 @@ const std::string OctaveElement::strAfterPredict("AfterPredict");
 const std::string OctaveElement::strRestart("Restart");
 
 OctaveElement::OctaveElement(
-        unsigned uLabel, const DofOwner *pDO,
+        unsigned uLabel_a, const DofOwner *pDO,
         DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
   haveMethod(HAVE_DEFAULT)
 {
         // help
@@ -5130,7 +5131,7 @@ OctaveElement::GetConnectedNodes(std::vector<const Node *>& connectedNodes) cons
 
 void
 OctaveElement::SetValue(DataManager *pDM,
-        VectorHandler& X, VectorHandler& XP,
+        VectorHandler& X_a, VectorHandler& XP_a,
         SimulationEntity::Hints *ph)
 {
         if (!(haveMethod & HAVE_SET_VALUE)) {
@@ -5138,8 +5139,8 @@ OctaveElement::SetValue(DataManager *pDM,
         }
 
         octave_value_list args(octObject);
-        args.append(octave_value(new VectorHandlerInterface(GetInterface(), &X)));
-        args.append(octave_value(new VectorHandlerInterface(GetInterface(), &XP)));
+        args.append(octave_value(new VectorHandlerInterface(GetInterface(), &X_a)));
+        args.append(octave_value(new VectorHandlerInterface(GetInterface(), &XP_a)));
 
         GetInterface()->EvalFunction(strSetValue, args, 0, GetFlags());
 }
@@ -5358,15 +5359,15 @@ void OctaveElement::AfterPredict(VectorHandler& XCurr, VectorHandler& XPrimeCurr
         XP->Set(0);
 }
 
-void OctaveElement::AfterConvergence(const VectorHandler& X,
-                        const VectorHandler& XP)
+void OctaveElement::AfterConvergence(const VectorHandler& X_a,
+                                     const VectorHandler& XP_a)
 {
         if ( !(haveMethod & HAVE_AFTER_CONVERGENCE) ) {
                 return;
         }
 
-        this->X->Set(&X);
-        this->XP->Set(&XP);
+        this->X->Set(&X_a);
+        this->XP->Set(&XP_a);
 
         octave_value_list args(octObject);
         args.append(this->X);
@@ -5374,8 +5375,8 @@ void OctaveElement::AfterConvergence(const VectorHandler& X,
 
         octave_value_list ans = GetInterface()->EvalFunction(strAfterConvergence, args, 1, GetFlags());
 
-        this->X->Set(0);
-        this->XP->Set(0);
+        this->X->Set(nullptr);
+        this->XP->Set(nullptr);
 
         ASSERT(ans.length() == 1);
 
@@ -5557,14 +5558,14 @@ OctaveElement::InitialAssRes(
         return WorkVec;
 }
 
-void OctaveElement::SetInitialValue(VectorHandler& X)
+void OctaveElement::SetInitialValue(VectorHandler& X_a)
 {
         if (!(haveMethod & HAVE_SET_INITIAL_VALUE)) {
                 return;
         }
 
         octave_value_list args(octObject);
-        args.append(octave_value(new VectorHandlerInterface(GetInterface(), &X)));
+        args.append(octave_value(new VectorHandlerInterface(GetInterface(), &X_a)));
 
         GetInterface()->EvalFunction(strSetInitialValue, args, 0, GetFlags());
 }
@@ -5733,9 +5734,9 @@ OctaveElement::AssMatrix(VariableSubMatrixHandler& WorkMatVar, const Matrix& Jac
         return WorkMatVar;
 }
 
-OctaveElementInterface::OctaveElementInterface(OctaveInterface* pInterface, OctaveElement* pElem)
-: MBDynInterface(pInterface),
-pElem(pElem)
+OctaveElementInterface::OctaveElementInterface(OctaveInterface* pInterface_a, OctaveElement* pElem_a)
+: MBDynInterface(pInterface_a),
+pElem(pElem_a)
 {
 
 }

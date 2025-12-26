@@ -312,23 +312,23 @@ main(int argc, char *const argv[])
 }
 
 static void*
-get_method_data(method_t curr_method, const char* optarg)
+get_method_data(method_t curr_method, const char* optarg_a)
 {
    	switch (curr_method) {
 	case METHOD_CUBIC:
 	case METHOD_RADAU_II:
-		if (strcasecmp(optarg, "linear") == 0) {
+		if (strcasecmp(optarg_a, "linear") == 0) {
 			bool *pi = new bool;
 			*pi = true;
 			return pi;
 
-		} else if (strcasecmp(optarg, "cubic") == 0) {
+		} else if (strcasecmp(optarg_a, "cubic") == 0) {
 			bool *pi = new bool;
 			*pi = false;
 			return pi;
 
 		} else {
-      			std::cerr << "unknown data \"" << optarg << "\""
+      			std::cerr << "unknown data \"" << optarg_a << "\""
 				<< std::endl;
 			return NULL;
 		}

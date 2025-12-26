@@ -59,17 +59,17 @@ DeformableJoint::DeformableJoint(unsigned int uL,
 	ConstitutiveLaw6D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
-	const OrientationDescription& od,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
+	const OrientationDescription& od_a,
 	flag fOut)
 : Joint(uL, pDO, fOut),
 pNode1(pN1), pNode2(pN2),
-tilde_f1(tilde_f1), tilde_f2(tilde_f2),
-tilde_R1h(tilde_R1h), tilde_R2h(tilde_R2h),
-od(od),
+tilde_f1(tilde_f1_a), tilde_f2(tilde_f2_a),
+tilde_R1h(tilde_R1h_a), tilde_R2h(tilde_R2h_a),
+od(od_a),
 tilde_k(Zero6), tilde_kPrime(Zero6),
 bFirstRes(false),
 pDC(pCL)
@@ -148,10 +148,10 @@ void
 DeformableJoint::Output(OutputHandler& OH) const
 {
 	if (bToBeOutput()) {
-		Mat3x3 R1h(pNode1->GetRCurr()*tilde_R1h);
+		Mat3x3 R1h_local(pNode1->GetRCurr()*tilde_R1h);
 		Mat3x3 R2h(pNode2->GetRCurr()*tilde_R2h);
-		Mat3x3 R(R1h.MulTM(R2h));
-		Vec3 F(pDC->GetF().GetVec1());
+		Mat3x3 R(R1h_local.MulTM(R2h));
+		Vec3 F_local(pDC->GetF().GetVec1());
 		Vec3 M(pDC->GetF().GetVec2());
 		Vec3 E;
 
@@ -184,7 +184,7 @@ DeformableJoint::Output(OutputHandler& OH) const
 
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
-			Joint::NetCDFOutput(OH, R1h*F, R1h*M, F, M);
+			Joint::NetCDFOutput(OH, R1h_local*F_local, R1h_local*M, F_local, M);
 			switch (od) {
 			case EULER_123:
 			case EULER_313:
@@ -203,7 +203,7 @@ DeformableJoint::Output(OutputHandler& OH) const
 #endif // USE_NETCDF
 		if (OH.UseText(OutputHandler::JOINTS)) {
 			Joint::Output(OH.Joints(), "DeformableJoint", GetLabel(),
-				F, M, R1h*F, R1h*M);
+				F_local, M, R1h_local*F_local, R1h_local*M);
 
 			// linear strain
 			OH.Joints() << " " << tilde_k.GetVec1() << " ";
@@ -820,13 +820,13 @@ ElasticJoint::ElasticJoint(unsigned int uL,
 	ConstitutiveLaw6D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
-	const OrientationDescription& od,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
+	const OrientationDescription& od_a,
 	flag fOut)
-: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, od, fOut),
+: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, od_a, fOut),
 ThetaRef(Zero3)
 {
 	/*
@@ -1021,13 +1021,13 @@ ElasticJointInv::ElasticJointInv(unsigned int uL,
 	ConstitutiveLaw6D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
-	const OrientationDescription& od,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
+	const OrientationDescription& od_a,
 	flag fOut)
-: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, od, fOut),
+: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, od_a, fOut),
 ThetaRef(Zero3)
 {
 	/*
@@ -1202,13 +1202,13 @@ ViscousJoint::ViscousJoint(unsigned int uL,
 	ConstitutiveLaw6D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
-	const OrientationDescription& od,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
+	const OrientationDescription& od_a,
 	flag fOut)
-: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, od, fOut)
+: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, od_a, fOut)
 {
 	/*
 	 * Chiede la matrice tangente di riferimento
@@ -1336,13 +1336,13 @@ ViscoElasticJoint::ViscoElasticJoint(unsigned int uL,
 	ConstitutiveLaw6D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
-	const OrientationDescription& od,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
+	const OrientationDescription& od_a,
 	flag fOut)
-: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, od, fOut),
+: DeformableJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, od_a, fOut),
 ThetaRef(Zero3)
 {
 	/*

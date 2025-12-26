@@ -96,7 +96,7 @@ DiscreteControlARXProcess_Debug::DiscreteControlARXProcess_Debug(integer iNumOut
 	integer iNumIn,
 	integer iOrdA,
 	integer iOrdB,
-	const std::string& infile)
+	const std::string& infile_a)
 : iNumOutputs(iNumOut),
 iNumInputs(iNumIn),
 iOrderA(iOrdA),
@@ -165,10 +165,10 @@ iRefB(0)
 	 * beta_p
 	 */
 
-	std::ifstream In(infile.c_str());
+	std::ifstream In(infile_a.c_str());
 	if (!In) {
 		silent_cerr("DiscreteControlARXProcess_Debug: "
-			"unable to open control data file \"" << infile << "\""
+			"unable to open control data file \"" << infile_a << "\""
 			<< std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
@@ -370,7 +370,7 @@ DAC_Process_Debug::DAC_Process_Debug(integer iNumOut,
 	DriveCaller* pTrig,
 	std::vector<DriveCaller *>& vDesOut,
 	const std::string& sf,
-	unsigned f_proc)
+	unsigned f_proc_a)
 : iNumOutputs(iNumOut),
 iNumInputs(iNumIn),
 iOrderA(iOrdA),
@@ -382,7 +382,7 @@ pdA(0),
 pdY(0),
 pdB(0),
 pdU(0),
-f_proc(f_proc),
+f_proc(f_proc_a),
 pdC(0),
 pdE(0),
 pdMd(0),
@@ -606,7 +606,7 @@ DAC_Process_Debug::PutOutput(const std::vector<doublereal>& dOut,
 		}
 		iRefMd--;
 
-		doublereal* pdOff = pdYd + iNumOutputs*iRefMd;
+		pdOff = pdYd + iNumOutputs*iRefMd;
 		for (int i = iNumOutputs; i-- > 0; ) {
 			pdOff[i] = vDesiredOut[i]->dGet();
 		}

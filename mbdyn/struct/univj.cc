@@ -686,11 +686,11 @@ UniversalRotationJoint::UniversalRotationJoint(unsigned int uL,
 	const StructNode* pN2,
 	const Mat3x3& R1hTmp,
 	const Mat3x3& R2hTmp,
-	const OrientationDescription& od,
+	const OrientationDescription& od_a,
 	flag fOut)
 : Joint(uL, pDO, fOut),
 pNode1(pN1), pNode2(pN2),
-R1h(R1hTmp), R2h(R2hTmp), dM(0.), od(od)
+R1h(R1hTmp), R2h(R2hTmp), dM(0.), od(od_a)
 {
 	NO_OP;
 }
@@ -1312,8 +1312,8 @@ UniversalPinJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 	Vec3 Tmp(e2.Cross(e3));
 
 	for (int iCnt = 1; iCnt <= 3; iCnt++) {
-		doublereal d = Tmp(iCnt);
-		WM.PutCoef(3 + iCnt, 10, -d);
+		doublereal dd = Tmp(iCnt);
+		WM.PutCoef(3 + iCnt, 10, -dd);
 	}
 
 	/* Modifica: divido le equazioni di vincolo per dCoef */
@@ -1324,8 +1324,8 @@ UniversalPinJoint::AssJac(VariableSubMatrixHandler& WorkMat,
 		WM.PutCoef(6 + iCnt, iCnt, -1.);
 
 		// orientation, delta g
-		doublereal d = Tmp(iCnt);
-		WM.PutCoef(6 + 3 + 1, 3 + iCnt, -d);
+		doublereal dd = Tmp(iCnt);
+		WM.PutCoef(6 + 3 + 1, 3 + iCnt, -dd);
 	}
 
 	// position, delta g
@@ -1542,9 +1542,9 @@ UniversalPinJoint::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 	WM.Add(10, 17, Mat3x3(MatCross, dTmp));
 
 	for (int iCnt = 1; iCnt <= 3; iCnt++) {
-		doublereal d = Tmp(iCnt);
-		WM.PutCoef(3 + iCnt, 16, d);
-		WM.PutCoef(9 + iCnt, 20, d);
+		doublereal dd = Tmp(iCnt);
+		WM.PutCoef(3 + iCnt, 16, dd);
+		WM.PutCoef(9 + iCnt, 20, dd);
 
 		WM.PutCoef(9 + iCnt, 16, TmpPrime(iCnt));
 	}
@@ -1558,12 +1558,12 @@ UniversalPinJoint::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 
 	/* Equazioni di vincolo di rotazione: e2b~e3a */
 	for (int iCnt = 1; iCnt <= 3; iCnt++) {
-		doublereal d = -Tmp(iCnt);
-		WM.PutCoef(16, 3 + iCnt, d);
+		doublereal dd = -Tmp(iCnt);
+		WM.PutCoef(16, 3 + iCnt, dd);
 
 		/* Queste sono per la derivata dell'equazione, sono qui solo per
 		 * ottimizzazione */
-		WM.PutCoef(20, 9 + iCnt, d);
+		WM.PutCoef(20, 9 + iCnt, dd);
 	}
 
 	/* Derivate delle equazioni di vincolo di rotazione: e2b~e3a */

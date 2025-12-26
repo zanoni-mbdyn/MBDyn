@@ -268,9 +268,9 @@ public:
 };
 
 MBDynMD::MBDynMD(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_iCoupling(0),
 m_iCouplingCounter(0)
 {

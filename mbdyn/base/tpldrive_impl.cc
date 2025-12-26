@@ -489,8 +489,8 @@ protected:
 
 template <class T>
 struct DrivesArray: public DrivesArrayBase<T> {
-     explicit DrivesArray(DriveCaller* pDC, const T& t)
-          : DrivesArrayBase<T>(pDC), t(t) {
+     explicit DrivesArray(DriveCaller* pDC, const T& t_a)
+          : DrivesArrayBase<T>(pDC), t(t_a) {
      }
 
      DrivesArray(DrivesArray&& oDR)

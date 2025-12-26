@@ -252,12 +252,12 @@ DerivativeSolver::DerivativeSolver(const doublereal Tl,
 		const doublereal dC,
 		const integer iMaxIt,
 		const bool bmod_res_test,
-		const integer iMaxIterCoef,
-		const doublereal dFactorCoef)
+		const integer iMaxIterCoef_a,
+		const doublereal dFactorCoef_a)
 : ImplicitStepIntegrator(iMaxIt, Tl, dSolTl, 1, 1, bmod_res_test),
 dCoef(dC),
-iMaxIterCoef(iMaxIterCoef),
-dFactorCoef(dFactorCoef)
+iMaxIterCoef(iMaxIterCoef_a),
+dFactorCoef(dFactorCoef_a)
 {
 	NO_OP;
 }
@@ -729,9 +729,9 @@ InverseDynamicsStepSolver::TestScale(const NonlinearSolverTest *pTest, doublerea
 }
 
 void
-InverseDynamicsStepSolver::SetOrder(InverseDynamics::Order iOrder)
+InverseDynamicsStepSolver::SetOrder(InverseDynamics::Order iOrder_a)
 {
-	this->iOrder = iOrder;
+	this->iOrder = iOrder_a;
 }
 
 InverseDynamics::Order

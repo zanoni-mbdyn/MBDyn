@@ -45,8 +45,8 @@ public:
 	~cleanup(void);
 };
 
-cleanup::cleanup(mbdyn_cleanup_f handler)
-: handler(handler), data(0)
+cleanup::cleanup(mbdyn_cleanup_f handler_a)
+: handler(handler_a), data(0)
 {
 	NO_OP;
 }

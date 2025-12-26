@@ -119,62 +119,62 @@ public:
 	virtual ~DeformableJoint(void);
 
 	/* Tipo di Joint */
-	virtual Joint::Type GetJointType(void) const {
+	virtual Joint::Type GetJointType(void) const override {
 		return Joint::DEFORMABLEJOINT;
 	};
     
 	/* Deformable element */
-	virtual bool bIsDeformable() const {
+	virtual bool bIsDeformable() const override {
 		return true;
 	};
 
 	/* Contributo al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
-	void OutputPrepare(OutputHandler& OH);
-	virtual void Output(OutputHandler& OH) const;
+	void OutputPrepare(OutputHandler& OH) override;
+	virtual void Output(OutputHandler& OH) const override;
 
 	void SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	virtual Hint *
-	ParseHint(DataManager *pDM, const char *s) const;
+	ParseHint(DataManager *pDM, const char *s) const override;
 	         
 	/* inverse dynamics capable element */
-	virtual bool bInverseDynamics(void) const;
+	virtual bool bInverseDynamics(void) const override;
  
 	/* Tipo di DeformableJoint */
 	virtual ConstLawType::Type GetConstLawType(void) const = 0;
 
-	virtual unsigned int iGetNumDof(void) const {
+	virtual unsigned int iGetNumDof(void) const override{
 		return 0;
 	};
 
-	virtual DofOrder::Order GetDofType(unsigned int /* i */ ) const {
+	virtual DofOrder::Order GetDofType(unsigned int /* i */ ) const override {
 		return DofOrder::UNKNOWN;
 	};
 
-	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
 		*piNumCols = 12;
 	};
 
 	/* funzioni usate nell'assemblaggio iniziale */
 
-	virtual unsigned int iGetInitialNumDof(void) const {
+	virtual unsigned int iGetInitialNumDof(void) const override {
 		return 0;
 	};
 
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	   utile per l'assemblaggio della matrice di connessione fra i dofs */
-	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(2);
 		connectedNodes[0] = pNode1;
 		connectedNodes[1] = pNode2;
@@ -186,21 +186,21 @@ public:
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio jacobiano */
 	virtual void
 	AssMats(VariableSubMatrixHandler& WorkMatA,
 		VariableSubMatrixHandler& WorkMatB,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio residuo */
 	virtual SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* Inverse Dynamics residual assembly */
 	SubVectorHandler&
@@ -208,14 +208,14 @@ public:
 		const VectorHandler& XCurr,
 		const VectorHandler&  XPrimeCurr,
 		const VectorHandler&  XPrimePrimeCurr,
-		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	/* Contributo al residuo durante l'assemblaggio iniziale */
 	virtual SubVectorHandler&
-	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr);
+	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr) override;
 
 	/* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* DeformableJoint - end */
@@ -231,8 +231,8 @@ protected:
 
 	void AssMats(FullSubMatrixHandler& WMA,
 		FullSubMatrixHandler& WMB,
-		doublereal dCoef);
-	void AssVec(SubVectorHandler& WorkVec);
+		doublereal dCoef) override;
+	void AssVec(SubVectorHandler& WorkVec) override;
 
 public:
 	ElasticJoint(unsigned int uL,
@@ -250,12 +250,12 @@ public:
 	~ElasticJoint(void);
 
 	/* Tipo di DeformableDispHinge */
-	virtual ConstLawType::Type GetConstLawType(void) const {
+	virtual ConstLawType::Type GetConstLawType(void) const override {
 		return ConstLawType::ELASTIC;
 	};
 
 	virtual void
-	AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
+	AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
 	/* assemblaggio jacobiano */
 	using Elem::AssMats;
@@ -263,26 +263,26 @@ public:
 	AssMats(VariableSubMatrixHandler& WorkMatA,
 		VariableSubMatrixHandler& WorkMatB,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* Inverse Dynamics Jacobian matrix assembly */
 	using DeformableJoint::AssJac;
 	VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 	/* Aggiorna le deformazioni ecc. */
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 
 	/* Inverse Dynamics update */
-	void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+	void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	virtual void AfterConvergence(const VectorHandler& X,
 			const VectorHandler& XP,
-			const VectorHandler& XPP);
+			const VectorHandler& XPP) override;
 
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
 		*piNumCols = 12;
 	};
@@ -290,7 +290,7 @@ public:
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 };
 
@@ -306,8 +306,8 @@ protected:
 
 	void AssMats(FullSubMatrixHandler& WMA,
 		FullSubMatrixHandler& WMB,
-		doublereal dCoef);
-	void AssVec(SubVectorHandler& WorkVec);
+		doublereal dCoef) override;
+	void AssVec(SubVectorHandler& WorkVec) override;
 
 public:
 	ElasticJointInv(unsigned int uL,
@@ -325,25 +325,25 @@ public:
 	~ElasticJointInv(void);
 
 	/* Tipo di DeformableDispHinge */
-	virtual ConstLawType::Type GetConstLawType(void) const {
+	virtual ConstLawType::Type GetConstLawType(void) const override {
 		return ConstLawType::ELASTIC;
 	};
 
 	virtual void
-	AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
+	AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
 	/* assemblaggio jacobiano */
 	virtual void
 	AssMats(VariableSubMatrixHandler& WorkMatA,
 		VariableSubMatrixHandler& WorkMatB,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* Aggiorna le deformazioni ecc. */
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
 		*piNumCols = 12;
 	};
@@ -351,7 +351,7 @@ public:
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 };
 
@@ -366,8 +366,8 @@ protected:
 	using Elem::AssMats;
 	void AssMats(FullSubMatrixHandler& WMA,
 		FullSubMatrixHandler& WMB,
-		doublereal dCoef);
-	void AssVec(SubVectorHandler& WorkVec);
+		doublereal dCoef) override;
+	void AssVec(SubVectorHandler& WorkVec) override;
 
 public:
 	ViscousJoint(unsigned int uL,
@@ -385,19 +385,19 @@ public:
 	~ViscousJoint(void);
 
 	/* Tipo di DeformableDispHinge */
-	virtual ConstLawType::Type GetConstLawType(void) const {
+	virtual ConstLawType::Type GetConstLawType(void) const override {
 		return ConstLawType::VISCOUS;
 	};
 
 	virtual void
-	AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
+	AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
 	/* Aggiorna le deformazioni ecc. */
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 
 	/* Aggiorna le deformazioni ecc. */
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
 		*piNumCols = 12;
 	};
@@ -405,7 +405,7 @@ public:
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 };
 
@@ -425,8 +425,8 @@ protected:
 	using Elem::AssMats;
 	void AssMats(FullSubMatrixHandler& WorkMatA,
 		FullSubMatrixHandler& WorkMatB,
-		doublereal dCoef);
-	void AssVec(SubVectorHandler& WorkVec);
+		doublereal dCoef) override;
+	void AssVec(SubVectorHandler& WorkVec) override;
 
 public:
 	ViscoElasticJoint(unsigned int uL,
@@ -444,19 +444,19 @@ public:
 	~ViscoElasticJoint(void);
 
 	/* Tipo di DeformableDispHinge */
-	virtual ConstLawType::Type GetConstLawType(void) const {
+	virtual ConstLawType::Type GetConstLawType(void) const override {
 		return ConstLawType::VISCOELASTIC;
 	};
 
 	virtual void
-	AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
+	AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
 	/* Aggiorna le deformazioni ecc. */
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 
 	/* Aggiorna le deformazioni ecc. */
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 12;
 		*piNumCols = 12;
 	};
@@ -464,7 +464,7 @@ public:
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 };
 

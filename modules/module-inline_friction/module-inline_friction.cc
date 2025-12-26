@@ -133,9 +133,9 @@ public:
 };
 
 InlineFriction::InlineFriction(
-        unsigned uLabel, const DofOwner *pDO,
+        unsigned uLabel_a, const DofOwner *pDO,
         DataManager* pDM, MBDynParser& HP)
-:       UserDefinedElem(uLabel, pDO),
+:       UserDefinedElem(uLabel_a, pDO),
         pNode1(0),
         o1(Zero3),
         e(Eye3),

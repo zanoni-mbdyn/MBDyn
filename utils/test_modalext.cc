@@ -209,12 +209,12 @@ retry_1:;
 			}
 
 			if (modes) {
-				for (unsigned m = 0; m < modes; m++) {
-					fin >> q[m] >> qp[m];
+				for (unsigned mm = 0; mm < modes; mm++) {
+					fin >> q[mm] >> qp[mm];
 					if (!fin) {
 						goto done;
 					}
-					fprintf(stdout, "mode #%d: %+16.8e %+16.8e\n", m, q[m], qp[m]);
+					fprintf(stdout, "mode #%d: %+16.8e %+16.8e\n", mm, q[mm], qp[mm]);
 				}
 			}
 
@@ -244,10 +244,10 @@ retry_1:;
 			}
 
 			if (modes) {
-				for (unsigned m = 0; m < modes; m++) {
-					p[m] = (double)(m + 1);
+				for (unsigned mm = 0; mm < modes; mm++) {
+					p[mm] = (double)(mm + 1);
 
-					fout << p[m] << std::endl;
+					fout << p[mm] << std::endl;
 				}
 			}
 

@@ -101,9 +101,9 @@ M3diff(0.)
 	ASSERT(pNode1->GetNodeType() == Node::STRUCTURAL);
 	ASSERT(pNode2->GetNodeType() == Node::STRUCTURAL);
 
-	Mat3x3 R1(pNode1->GetRCurr());
-	Mat3x3 R2(pNode2->GetRCurr());
-	Mat3x3 R1R1h(R1*R1h);
+	R1 = pNode1->GetRCurr();
+	R2 = pNode2->GetRCurr();
+	R1R1h = R1*R1h;
 //	Mat3x3 R2R2h(R2*R2h);
 	
 	R1f1 = R1 * f1;
@@ -192,11 +192,11 @@ void //TODO
 ScrewJoint::Output(OutputHandler& OH) const
 {
 	if (bToBeOutput()) {
-		Mat3x3 R1(pNode1->GetRCurr()*R1h);
+		Mat3x3 R1_local(pNode1->GetRCurr()*R1h);
 		Vec3 FTilde(F1 * dLambda);
 		Vec3 MTilde(C1 * dLambda + e1hz*M3diff);
-		Vec3 F(R1*F1 * dLambda);
-		Vec3 M(R1*(C1 * dLambda + e1hz*M3diff));
+		Vec3 F(R1_local*F1 * dLambda);
+		Vec3 M(R1_local*(C1 * dLambda + e1hz*M3diff));
 		
 		if (OH.UseText(OutputHandler::JOINTS)) {
 			std::ostream &of = Joint::Output(OH.Joints(), "ScrewJoint", GetLabel(),
@@ -271,7 +271,7 @@ ScrewJoint::AfterConvergence(const VectorHandler& X,
 		Vec3 Omega2(pNode2->GetWCurr());
 
 		Vec3 OmegaTheta = R1.MulTV(Omega2 - Omega1);
-		doublereal vrel = e1hz.Dot(OmegaTheta) * cos_pitch_angle_r;
+		vrel = e1hz.Dot(OmegaTheta) * cos_pitch_angle_r;
 
 		//compute
 		doublereal modF, v;
@@ -831,10 +831,10 @@ ScrewJoint::AssVec(SubVectorHandler& WorkVec, doublereal dCoef,
 	C2 = ( R1.MulMT(GammaInv) * e1hz * (dPitch / ( 2. * M_PI )) -
 		R2f2.Cross(e1hz) );
 		
-	doublereal eq = dPitch / (2. * M_PI) * (dTheta - dTheta0) - (dD - dD0);
+	doublereal equation = dPitch / (2. * M_PI) * (dTheta - dTheta0) - (dD - dD0);
 // 	std::cerr << "XXXXXXXXXXX " << nTheta << " " << dTheta << " " << dThetaCurr << " " << dThetaPrev << 
 // 		" " << dTheta0 << " " << dD << " " << dD0 <<  
-// 		" " << eq  << " " << dCoef << 
+// 		" " << deq  << " " << dCoef <<
 // 		" " << dPitch / (2. * M_PI) * (dTheta - dTheta0) << 
 // 		" " << (dD - dD0) << std::endl;
 
@@ -852,7 +852,7 @@ ScrewJoint::AssVec(SubVectorHandler& WorkVec, doublereal dCoef,
 	WorkVec.Add(6 + 1, F1 * dLambda);
 	WorkVec.Sub(6 + 3 + 1, C2 * dLambda);
 	ASSERT(dCoef != 0.);
-	WorkVec.DecCoef(13, eq / dCoef);
+	WorkVec.DecCoef(13, equation / dCoef);
 
 	if (fc) {
 		bool ChangeJac(false);

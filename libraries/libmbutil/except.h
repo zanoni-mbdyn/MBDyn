@@ -39,21 +39,21 @@
 // Use this macro instead of the required set of args when declaring the constructor
 // of classes derived from Err_base
 #define MBDYN_EXCEPT_ARGS_DECL_NOOPT \
-	const char *file, int line, const char *func
+	const char *file_a, int line_a, const char *func_a
 #define MBDYN_EXCEPT_ARGS_DECL \
-	MBDYN_EXCEPT_ARGS_DECL_NOOPT , const std::string r = std::string()
+	MBDYN_EXCEPT_ARGS_DECL_NOOPT , const std::string r_a = std::string()
 // Use this macro instead of the required set of args when coding, not inline, the constructor
 // of classes derived from Err_base
 #define MBDYN_EXCEPT_ARGS_DECL_NOOPT_NODEF \
-	const char *file, int line, const char *func
+	const char *file_a, int line_a, const char *func_a
 #define MBDYN_EXCEPT_ARGS_DECL_NODEF \
-	MBDYN_EXCEPT_ARGS_DECL_NOOPT_NODEF , const std::string r
+	MBDYN_EXCEPT_ARGS_DECL_NOOPT_NODEF , const std::string r_a
 // Use this macro to pass the required set of args thru to Err_base from the constructor
 // of derived classes
 #define MBDYN_EXCEPT_ARGS_NOOPT_PASSTHRU \
-	file, line, func
+	file_a, line_a, func_a
 #define MBDYN_EXCEPT_ARGS_PASSTHRU \
-	MBDYN_EXCEPT_ARGS_NOOPT_PASSTHRU , r
+	MBDYN_EXCEPT_ARGS_NOOPT_PASSTHRU , r_a
 // Use this macro to pass the required set of args to error classes derived from Err_base
 #if __GNUC__ >= 2
 #define MBDYN_EXCEPT_ARGS \

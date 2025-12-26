@@ -47,11 +47,11 @@ static const doublereal dFromFile = -std::numeric_limits<doublereal>::max();
 
 FixedStepFileDrive::FixedStepFileDrive(unsigned int uL,
 		const DriveHandler* pDH,
-		const char* const sFileName,
+		const char* const sFileName_a,
 		integer ins, integer ind,
 		doublereal t0, doublereal dt,
 		bool bl, bool pz, Drive::Bailout bo)
-: FileDrive(uL, pDH, sFileName, ind, v0),
+: FileDrive(uL, pDH, sFileName_a, ind, v0),
 dT0(t0), dDT(dt), iNumSteps(ins),
 bLinear(bl), bPadZeroes(pz), boWhen(bo), pd(0), pvd(0)
 {

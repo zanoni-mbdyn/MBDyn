@@ -127,15 +127,15 @@ public:
 	};
 
 	struct ScaleOpt {
-		ScaleOpt(ScaleWhen when = SCALEW_NEVER,
+		ScaleOpt(ScaleWhen when_a = SCALEW_NEVER,
 				 ScaleAlgorithm alg = SCALEA_UNDEF,
-				 integer iMaxIter = 100,
-				 doublereal dTol = sqrt(std::numeric_limits<doublereal>::epsilon()),
+				 integer iMaxIter_a = 100,
+				 doublereal dTol_a = sqrt(std::numeric_limits<doublereal>::epsilon()),
 				 unsigned flags = SCALEF_DEFAULT):
-			when(when),
+			when(when_a),
 			algorithm(alg),
-			iMaxIter(iMaxIter),
-			dTol(dTol),
+			iMaxIter(iMaxIter_a),
+			dTol(dTol_a),
 			uFlags(flags)
 		{
 

@@ -127,11 +127,11 @@ GenericAerodynamicForce::AssVec(SubVectorHandler& WorkVec)
 			doublereal d1Beta = (pData->Beta[iBeta + 1] - dBeta)/ddBeta;
 			doublereal d2Beta = (dBeta - pData->Beta[iBeta])/ddBeta;
 
-			GenericAerodynamicData::GenericAerodynamicCoef c
+			GenericAerodynamicData::GenericAerodynamicCoef aero_c
 				= pData->Data[iBeta][0]*d1Beta + pData->Data[iBeta + 1][0]*d2Beta;
 
-			tilde_F = Vec3(&c.dCoef[0])*(dScaleForce*dSmoothAlpha);
-			tilde_M = Vec3(&c.dCoef[3])*(dScaleMoment*dSmoothAlpha);
+			tilde_F = Vec3(&aero_c.dCoef[0])*(dScaleForce*dSmoothAlpha);
+			tilde_M = Vec3(&aero_c.dCoef[3])*(dScaleMoment*dSmoothAlpha);
 		}
 
 	} else if (dAlpha > pData->Alpha[nAlpha]) {
@@ -165,11 +165,11 @@ GenericAerodynamicForce::AssVec(SubVectorHandler& WorkVec)
 			doublereal d1Beta = (pData->Beta[iBeta + 1] - dBeta)/ddBeta;
 			doublereal d2Beta = (dBeta - pData->Beta[iBeta])/ddBeta;
 
-			GenericAerodynamicData::GenericAerodynamicCoef c
+			GenericAerodynamicData::GenericAerodynamicCoef aero_c
 				= pData->Data[iBeta][nAlpha]*d1Beta + pData->Data[iBeta + 1][nAlpha]*d2Beta;
 
-			tilde_F = Vec3(&c.dCoef[0])*(dScaleForce*dSmoothAlpha);
-			tilde_M = Vec3(&c.dCoef[3])*(dScaleMoment*dSmoothAlpha);
+			tilde_F = Vec3(&aero_c.dCoef[0])*(dScaleForce*dSmoothAlpha);
+			tilde_M = Vec3(&aero_c.dCoef[3])*(dScaleMoment*dSmoothAlpha);
 		}
 
 	} else {
@@ -187,22 +187,22 @@ GenericAerodynamicForce::AssVec(SubVectorHandler& WorkVec)
 			doublereal dBetaX = (dBeta - pData->Beta[0])/(-::dBetaMax[bAlphaFirst] - pData->Beta[0]);
 			doublereal dSmoothBeta = (std::cos(::dBetaMax[bAlphaFirst]*dBetaX) + 1)/2.;
 
-			GenericAerodynamicData::GenericAerodynamicCoef c
+			GenericAerodynamicData::GenericAerodynamicCoef aero_c
 				= pData->Data[0][iAlpha]*d1Alpha + pData->Data[0][iAlpha + 1]*d2Alpha;
 
-			tilde_F = Vec3(&c.dCoef[0])*(dScaleForce*dSmoothBeta);
-			tilde_M = Vec3(&c.dCoef[3])*(dScaleMoment*dSmoothBeta);
+			tilde_F = Vec3(&aero_c.dCoef[0])*(dScaleForce*dSmoothBeta);
+			tilde_M = Vec3(&aero_c.dCoef[3])*(dScaleMoment*dSmoothBeta);
 
 		} else if (dBeta > pData->Beta[nBeta]) {
 			/* smooth out coefficients if Beta does not span -180 => 180 */
 			doublereal dBetaX = (dBeta - pData->Beta[nBeta])/(::dBetaMax[bAlphaFirst] - pData->Beta[nBeta]);
 			doublereal dSmoothBeta = (std::cos(::dBetaMax[bAlphaFirst]*dBetaX) + 1)/2.;
 
-			GenericAerodynamicData::GenericAerodynamicCoef c
+			GenericAerodynamicData::GenericAerodynamicCoef aero_c
 				= pData->Data[nBeta][iAlpha]*d1Alpha + pData->Data[nBeta][iAlpha + 1]*d2Alpha;
 
-			tilde_F = Vec3(&c.dCoef[0])*(dScaleForce*dSmoothBeta);
-			tilde_M = Vec3(&c.dCoef[3])*(dScaleMoment*dSmoothBeta);
+			tilde_F = Vec3(&aero_c.dCoef[0])*(dScaleForce*dSmoothBeta);
+			tilde_M = Vec3(&aero_c.dCoef[3])*(dScaleMoment*dSmoothBeta);
 
 		} else {
 			int iBeta = bisec<doublereal>(&pData->Beta[0], dBeta, 0, nBeta);
@@ -219,10 +219,10 @@ GenericAerodynamicForce::AssVec(SubVectorHandler& WorkVec)
 			GenericAerodynamicData::GenericAerodynamicCoef c2
 				= pData->Data[iBeta + 1][iAlpha]*d1Alpha + pData->Data[iBeta + 1][iAlpha + 1]*d2Alpha;
 			
-			GenericAerodynamicData::GenericAerodynamicCoef c = c1*d1Beta + c2*d2Beta;
+			GenericAerodynamicData::GenericAerodynamicCoef aero_c = c1*d1Beta + c2*d2Beta;
 
-			tilde_F = Vec3(&c.dCoef[0])*dScaleForce;
-			tilde_M = Vec3(&c.dCoef[3])*dScaleMoment;
+			tilde_F = Vec3(&aero_c.dCoef[0])*dScaleForce;
+			tilde_M = Vec3(&aero_c.dCoef[3])*dScaleMoment;
 		}
 	}
 
@@ -233,19 +233,19 @@ GenericAerodynamicForce::AssVec(SubVectorHandler& WorkVec)
 	WorkVec.Add(4, M);
 }
 
-GenericAerodynamicForce::GenericAerodynamicForce(unsigned int uLabel,
+GenericAerodynamicForce::GenericAerodynamicForce(unsigned int uLabel_a,
 	const DofOwner *pDO,
 	const StructNode* pN,
 	const Vec3& fTmp, const Mat3x3& RaTmp,
-	doublereal dS, doublereal dL, bool bAlphaFirst,
+	doublereal dS, doublereal dL, bool bAlphaFirst_a,
 	GenericAerodynamicData *pD,
 	flag fOut)
-: InitialAssemblyElem(uLabel, fOut),
+: InitialAssemblyElem(uLabel_a, fOut),
 AerodynamicElem(pDO),
 pNode(pN),
 dRefSurface(dS),
 dRefLength(dL),
-bAlphaFirst(bAlphaFirst),
+bAlphaFirst(bAlphaFirst_a),
 tilde_f(fTmp),
 tilde_Ra(RaTmp),
 tilde_F(Zero3),

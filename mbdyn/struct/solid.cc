@@ -547,31 +547,31 @@ protected:
           template <typename T>
           inline void
           ComputeStressElastic(const sp_grad::SpMatrix<T, 3, 3>& G,
-                               const sp_grad::SpMatrix<T, 3, 3>& F,
-                               sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma,
+                               const sp_grad::SpMatrix<T, 3, 3>& F_a,
+                               sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma_a,
                                const sp_grad::SpGradExpDofMapHelper<T>& oDofMap,
                                const SolidElemStatic* pElem) {
-               oConstLaw.Update(G, sigma, oDofMap);
-               UpdateStressStrain(sigma, F, pElem);
+               oConstLaw.Update(G, sigma_a, oDofMap);
+               UpdateStressStrain(sigma_a, F_a, pElem);
           }
 
           template <typename T>
           inline void
-          ComputeStressElasticDefGrad(const sp_grad::SpMatrix<T, 3, 3>& F,
-                                      sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma,
+          ComputeStressElasticDefGrad(const sp_grad::SpMatrix<T, 3, 3>& F_a,
+                                      sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma_a,
                                       const sp_grad::SpGradExpDofMapHelper<T>& oDofMap,
                                       const SolidElemStatic* pElem) {
                using namespace sp_grad;
 
-               oConstLaw.Update(F, sigma, oDofMap);
+               oConstLaw.Update(F_a, sigma_a, oDofMap);
 
                T detF;
 
-               Det(F, detF, oDofMap);
+               Det(F_a, detF, oDofMap);
 
                SpMatrix<T, 3, 3> invF(3, 3, 0);
 
-               Inv(F, invF, detF, oDofMap);
+               Inv(F_a, invF, detF, oDofMap);
 
                using TFS = TensorFormat::Symmetric3x3;
                using TFU = TensorFormat::Unsymmetric3x3;
@@ -579,45 +579,45 @@ protected:
                SpMatrix<T, 3, 3> PK1(3, 3, 0);
 
                for (index_type i = 0; i < 9; ++i) {
-                    PK1(TFU::i1[i], TFU::i2[i]) = sigma(i + 1);
+                    PK1(TFU::i1[i], TFU::i2[i]) = sigma_a(i + 1);
                }
 
                const SpMatrix<T, 3, 3> PK2(invF * PK1, oDofMap);
 
                for (index_type i = 0; i < 6; ++i) {
-                    sigma(i + 1) = PK2(TFS::i1[i], TFS::i2[i]);
+                    sigma_a(i + 1) = PK2(TFS::i1[i], TFS::i2[i]);
                }
 
 #ifdef DEBUG
                for (index_type i = 7; i <= 9; ++i) {
-                    SpGradientTraits<T>::ResizeReset(sigma(i), std::numeric_limits<doublereal>::max(), 0);
+                    SpGradientTraits<T>::ResizeReset(sigma_a(i), std::numeric_limits<doublereal>::max(), 0);
                }
 #endif
-               UpdateStressStrain(sigma, F, pElem);
+               UpdateStressStrain(sigma_a, F_a, pElem);
           }
 
           template <typename T>
           inline void
           ComputeStressElasticIncompr(const sp_grad::SpMatrix<T, 3, 3>& G,
-                                      const sp_grad::SpMatrix<T, 3, 3>& F,
-                                      sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma,
+                                      const sp_grad::SpMatrix<T, 3, 3>& F_a,
+                                      sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma_a,
                                       const T& ptilde,
                                       const sp_grad::SpGradExpDofMapHelper<T>& oDofMap,
                                       const SolidElemStatic* pElem) {
-               oConstLaw.Update(G, sigma, ptilde, oDofMap);
-               UpdateStressStrain(sigma, F, pElem);
+               oConstLaw.Update(G, sigma_a, ptilde, oDofMap);
+               UpdateStressStrain(sigma_a, F_a, pElem);
           }
 
           template <typename T>
           inline void
           ComputeStressViscoElastic(const sp_grad::SpMatrix<T, 3, 3>& G,
                                     const sp_grad::SpMatrix<T, 3, 3>& GP,
-                                    const sp_grad::SpMatrix<T, 3, 3>& F,
-                                    sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma,
+                                    const sp_grad::SpMatrix<T, 3, 3>& F_a,
+                                    sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma_a,
                                     const sp_grad::SpGradExpDofMapHelper<T>& oDofMap,
                                     const SolidElemStatic* pElem) {
-               oConstLaw.Update(G, GP, sigma, oDofMap);
-               UpdateStressStrain(sigma, F, pElem);
+               oConstLaw.Update(G, GP, sigma_a, oDofMap);
+               UpdateStressStrain(sigma_a, F_a, pElem);
           }
 
           inline void
@@ -626,14 +626,14 @@ protected:
                              const SolidElemStatic* pElem);
 
           inline void
-          UpdateStressStrain(const sp_grad::SpColVector<sp_grad::SpGradient, SolidCSLType::iDim>& sigma,
-                             const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& F,
+          UpdateStressStrain(const sp_grad::SpColVector<sp_grad::SpGradient, SolidCSLType::iDim>& sigma_a,
+                             const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& F_a,
                              const SolidElemStatic* pElem) {
           }
 
           inline void
-          UpdateStressStrain(const sp_grad::SpColVector<sp_grad::GpGradProd, SolidCSLType::iDim>& sigma,
-                             const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& F,
+          UpdateStressStrain(const sp_grad::SpColVector<sp_grad::GpGradProd, SolidCSLType::iDim>& sigma_a,
+                             const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& F_a,
                              const SolidElemStatic* pElem) {
           }
 
@@ -844,9 +844,9 @@ private:
      typename MassMatrixHelper<eMassMatrix>::template MassMatrix<iNumDof, iNumNodes>::Type M;
 };
 
-SolidElem::SolidElem(unsigned uLabel,
+SolidElem::SolidElem(unsigned uLabel_a,
                      flag fOut)
-     :InitialAssemblyElem{uLabel, fOut}
+     :InitialAssemblyElem{uLabel_a, fOut}
 {
 }
 
@@ -992,18 +992,18 @@ template <typename ElementType, typename CollocationType, typename SolidCSLType,
 constexpr sp_grad::index_type SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::iNumDof;
 
 template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
-SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::SolidElemStatic(unsigned uLabel,
+SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::SolidElemStatic(unsigned uLabel_a,
                                                                                              const std::array<const StructDispNodeAd*, iNumNodes>& rgNodesDisp,
-                                                                                             const std::array<const ScalarNodeAd*, iNumNodesPressure>& rgNodesPressure,
-                                                                                             const sp_grad::SpColVector<doublereal, iNumNodes>& rhon,
+                                                                                             const std::array<const ScalarNodeAd*, iNumNodesPressure>& rgNodesPressure_a,
+                                                                                             const sp_grad::SpColVector<doublereal, iNumNodes>& rhon_a,
                                                                                              std::array<typename SolidCSLType::ConstLawPtr, iNumEvalPointsStiffness>&& rgMaterialData,
-                                                                                             const RigidBodyKinematics* pRBK,
+                                                                                             const RigidBodyKinematics* pRBK_a,
                                                                                              flag fOut)
-: SolidElem{uLabel, fOut},
-  IncomprSolidElemType{rgNodesPressure},
+: SolidElem{uLabel_a, fOut},
+  IncomprSolidElemType{rgNodesPressure_a},
   rgNodes{rgNodesDisp},
-  rhon{rhon},
-  pRBK{pRBK}
+  rhon{rhon_a},
+  pRBK{pRBK_a}
 {
      using namespace sp_grad;
 
@@ -2148,7 +2148,7 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Com
 template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
 void
 SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::CollocData::Init(const sp_grad::index_type iColloc,
-                                                                                              const sp_grad::SpMatrix<doublereal, 3, iNumNodes>& x0,
+                                                                                              const sp_grad::SpMatrix<doublereal, 3, iNumNodes>& x0_a,
                                                                                               typename SolidCSLType::ConstLawPtr&& pConstLawTmp,
                                                                                               const SolidElemStatic* const pElem)
 {
@@ -2162,9 +2162,9 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Col
      CollocationType::GetPositionStiffness(iColloc, r);
      ElementType::ElemTypeDisplacement::ShapeFunction(r, h);
      ElementType::ElemTypeDisplacement::ShapeFunctionDeriv(r, hd);
-     CollocDataUPC::Init(r, x0, pElem);
+     CollocDataUPC::Init(r, x0_a, pElem);
 
-     const SpMatrix<doublereal, 3, 3> J = Transpose(x0 * hd);
+     const SpMatrix<doublereal, 3, 3> J = Transpose(x0_a * hd);
      SpMatrixA<doublereal, 3, 3> invJ;
 
      Inv(J, invJ, detJ);
@@ -2201,8 +2201,8 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Col
 template <typename ElementType, typename CollocationType, typename SolidCSLType, typename StructNodeType>
 template <typename T>
 void
-SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::CollocData::AddInternalForceVector(const sp_grad::SpMatrix<T, 3, 3>& F,
-                                                                                                                const sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma,
+SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::CollocData::AddInternalForceVector(const sp_grad::SpMatrix<T, 3, 3>& F_a,
+                                                                                                                const sp_grad::SpColVector<T, SolidCSLType::iDim>& sigma_a,
                                                                                                                 const doublereal alpha,
                                                                                                                 sp_grad::SpColVector<T, iNumDof>& R,
                                                                                                                 const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) const
@@ -2223,12 +2223,12 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Col
 
      for (index_type i = 1; i <= 3; ++i) {
           for (index_type j = i; j <= 3; ++j) { // exploit symmetry of stress and strain tensor
-               const T& Sij = sigma(idxS[i - 1][j - 1]);
+               const T& Sij = sigma_a(idxS[i - 1][j - 1]);
                const doublereal c2 = (i == j) ? c1 : 2. * c1; // because we are exploiting symmetry
 
                for (index_type k = 1; k <= 3; ++k) {
-                    oDofMap.MapAssign(a4, c2 * F(k, j) * Sij);
-                    oDofMap.MapAssign(a5, c2 * F(k, i) * Sij);
+                    oDofMap.MapAssign(a4, c2 * F_a(k, j) * Sij);
+                    oDofMap.MapAssign(a5, c2 * F_a(k, i) * Sij);
 
                     for (index_type l = 1; l <= iNumNodes; ++l) {
                          oDofMap.Sub(R((l - 1) * 3 + k), a4 * h0d(l, i) + a5 * h0d(l, j));
@@ -2239,14 +2239,14 @@ SolidElemStatic<ElementType, CollocationType, SolidCSLType, StructNodeType>::Col
 }
 
 template <typename ElementType, typename CollocationType, typename SolidCSLType, MassMatrixType eMassMatrix>
-SolidElemDynamic<ElementType, CollocationType, SolidCSLType, eMassMatrix>::SolidElemDynamic(unsigned uLabel,
-                                                                                            const std::array<const StructDispNodeAd*, iNumNodes>& rgNodes,
-                                                                                            const std::array<const ScalarNodeAd*, iNumNodesPressure>& rgNodesPressure,
-                                                                                            const sp_grad::SpColVector<doublereal, iNumNodes>& rhon,
+SolidElemDynamic<ElementType, CollocationType, SolidCSLType, eMassMatrix>::SolidElemDynamic(unsigned uLabel_a,
+                                                                                            const std::array<const StructDispNodeAd*, iNumNodes>& rgNodes_a,
+                                                                                            const std::array<const ScalarNodeAd*, iNumNodesPressure>& rgNodesPressure_a,
+                                                                                            const sp_grad::SpColVector<doublereal, iNumNodes>& rhon_a,
                                                                                             std::array<typename SolidCSLType::ConstLawPtr, iNumEvalPointsStiffness>&& rgMaterialData,
-                                                                                            const RigidBodyKinematics* const pRBK,
+                                                                                            const RigidBodyKinematics* const pRBK_a,
                                                                                             flag fOut)
-:SolidElemStaticType{uLabel, rgNodes, rgNodesPressure, rhon, std::move(rgMaterialData), pRBK, fOut}
+:SolidElemStaticType{uLabel_a, rgNodes_a, rgNodesPressure_a, rhon_a, std::move(rgMaterialData), pRBK_a, fOut}
 {
      MassMatrixHelper<eMassMatrix>::AssMassMatrix(*this, M);
 }

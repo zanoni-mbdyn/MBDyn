@@ -119,13 +119,13 @@ int main(void) {
         dQ3.Link(1, &dQ1);
 
         FullSubMatrixHandler X1(3, 3), X2(3, 3), X3(3,3);
-        for (int i = 1; i <= 3; i++) {
-            X1.PutRowIndex(i, i);
-            X1.PutColIndex(i, i);
-            X2.PutRowIndex(i, i);
-            X2.PutColIndex(i, i);
-            X3.PutRowIndex(i, i);
-            X3.PutColIndex(i, i);
+        for (int ii = 1; ii <= 3; ii++) {
+            X1.PutRowIndex(ii, ii);
+            X1.PutColIndex(ii, ii);
+            X2.PutRowIndex(ii, ii);
+            X2.PutColIndex(ii, ii);
+            X3.PutRowIndex(ii, ii);
+            X3.PutColIndex(ii, ii);
         }
         X1.Reset();
         X2.Reset();
@@ -147,11 +147,11 @@ int main(void) {
 
         // std::cout << X1M << std::endl;
         Mat3x3 X1MM, X2MM, X3MM;
-        for (int i=1; i<=3; i++) {
+        for (int ii=1; ii<=3; ii++) {
             for (int j=1; j<=3; j++) {
-                X1MM(i, j) = X1M(i, j);
-                X2MM(i, j) = X2M(i, j);
-                X3MM(i, j) = X3M(i, j);
+                X1MM(ii, j) = X1M(ii, j);
+                X2MM(ii, j) = X2M(ii, j);
+                X3MM(ii, j) = X3M(ii, j);
             }
 
         }

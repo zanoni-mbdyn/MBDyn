@@ -89,15 +89,15 @@ void MatrixScaleBase::PrepareRows(const MatrixHandler& mh, integer& nrows)
 			"invalid null or negative row number");
 	}
 
-	if (rowScale.empty()) {
-		rowScale.resize(nrows, 0.);
+	if (rowScaleVec.empty()) {
+		rowScaleVec.resize(nrows, 0.);
 	} else {
-		if (rowScale.size() != unsigned(nrows)) {
+		if (rowScaleVec.size() != unsigned(nrows)) {
 			// error
 			throw ErrGeneric(MBDYN_EXCEPT_ARGS,
 				"row number mismatch");
 		}
-		rowScale.assign(nrows, 0.);
+		rowScaleVec.assign(nrows, 0.);
 	}
 }
 
@@ -111,14 +111,14 @@ void MatrixScaleBase::PrepareCols(const MatrixHandler& mh, integer& ncols)
 			"invalid null or negative column number");
 	}
 
-	if (colScale.empty()) {
-		colScale.resize(ncols, 0.);
+	if (colScaleVec.empty()) {
+		colScaleVec.resize(ncols, 0.);
 	} else {
-		if (colScale.size() != unsigned(ncols)) {
+		if (colScaleVec.size() != unsigned(ncols)) {
 			// error
 			throw ErrGeneric(MBDYN_EXCEPT_ARGS,
 				"column number mismatch");
 		}
-		colScale.assign(ncols, 0.);
+		colScaleVec.assign(ncols, 0.);
 	}
 }

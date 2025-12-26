@@ -191,6 +191,7 @@ PKG_PROG_PKG_CONFIG
 dnl ----------------------------------------------------------------
 dnl General "enable" options
 OL_ARG_ENABLE(Werror,[  --enable-Werror          enable building with -Werror], yes)dnl
+OL_ARG_ENABLE(Wshadow,[  --enable-Wshadow          enable building with -Wshadow], yes)dnl
 OL_ARG_ENABLE(debug,[  --enable-debug          enable debugging], no)dnl
 OL_ARG_WITH(debug_mode,[  --with-debug-mode[={none|mem}] with debug mode {none|mem}],none,[none mem])
 OL_ARG_ENABLE(override_operator_new,[  --enable-override-operator-new         operator new will return memory initialized to unusual values (e.g. 0xFF 0xFE ...)],auto,[auto yes no])
@@ -3785,6 +3786,16 @@ if test "$ol_enable_Werror" != no ; then
           AX_CHECK_COMPILE_FLAG([-fopenmp],CXXFLAGS="$CXXFLAGS -fopenmp", , [-Werror])
         fi
         AC_LANG([C])
+        FFLAGS="$FFLAGS"
+fi
+
+dnl ----------------------------------------------------------------
+dnl Deal with -Wshadow.
+dnl ----------------------------------------------------------------
+
+if test "$ol_enable_Wshadow" != no ; then
+        CFLAGS="$CFLAGS -Wshadow"
+        CXXFLAGS="$CXXFLAGS -Wshadow"
         FFLAGS="$FFLAGS"
 fi
 

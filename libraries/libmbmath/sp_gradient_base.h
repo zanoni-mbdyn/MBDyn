@@ -147,8 +147,8 @@ namespace sp_grad {
      }
 
      struct SpDerivRec {
-          SpDerivRec(index_type iDof, doublereal dDer) noexcept
-               :iDof(iDof), dDer(dDer) {
+          SpDerivRec(index_type iDof_a, doublereal dDer_a) noexcept
+               :iDof(iDof_a), dDer(dDer_a) {
           }
 
           bool operator<(const SpDerivRec& oRec) const {
@@ -162,18 +162,18 @@ namespace sp_grad {
      class SpDerivData {
      public:
           friend class SpGradient;
-          SpDerivData(doublereal dVal,
-                      index_type iSizeRes,
-                      index_type iSizeCurr,
-                      unsigned uFlags,
-                      index_type iRefCnt,
-                      SpMatrixData<SpGradient>* pOwner) noexcept
-               :dVal(dVal),
-                iSizeRes(iSizeRes),
-                iSizeCurr(iSizeCurr),
-                uFlags(uFlags),
-                iRefCnt(iRefCnt),
-                pOwner(pOwner) {
+          SpDerivData(doublereal dVal_a,
+                      index_type iSizeRes_a,
+                      index_type iSizeCurr_a,
+                      unsigned uFlags_a,
+                      index_type iRefCnt_a,
+                      SpMatrixData<SpGradient>* pOwner_a) noexcept
+               :dVal(dVal_a),
+                iSizeRes(iSizeRes_a),
+                iSizeCurr(iSizeCurr_a),
+                uFlags(uFlags_a),
+                iRefCnt(iRefCnt_a),
+                pOwner(pOwner_a) {
           }
 
           bool bHaveRefTo(const SpMatrixData<SpGradient>* pMatData) const {

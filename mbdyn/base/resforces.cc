@@ -188,8 +188,8 @@ LocalNodeResForces::Moment(void) const
 	return (Cr = pNode->GetRCurr().Transpose()*C);
 }
 
-ResForceSet::ResForceSet(unsigned int uLabel, ResForces *p) 
-: WithLabel(uLabel), pRes(p)
+ResForceSet::ResForceSet(unsigned int uLabel_a, ResForces *p)
+: WithLabel(uLabel_a), pRes(p)
 {
 	ASSERT(pRes);
 }

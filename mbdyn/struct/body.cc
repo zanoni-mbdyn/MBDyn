@@ -43,12 +43,12 @@
 /* Mass - begin */
 
 Mass::Mass(unsigned int uL,
-	const StructDispNode *pNode,
-	doublereal dMass,
+	const StructDispNode *pNode_a,
+	doublereal dMass_a,
 	flag fOut)
 : InitialAssemblyElem(uL, fOut),
-pNode(pNode),
-dMass(dMass)
+pNode(pNode_a),
+dMass(dMass_a)
 {
 	ASSERT(pNode != NULL);
 	ASSERT(pNode->GetNodeType() == Node::STRUCTURAL);
@@ -217,10 +217,10 @@ Mass::AssMatsRBK_int(
 /* DynamicMass - begin */
 
 DynamicMass::DynamicMass(unsigned int uL,
-	const DynamicStructDispNode* pNode,
-	doublereal dMass,
+	const DynamicStructDispNode* pNode_a,
+	doublereal dMass_a,
 	flag fOut)
-: Mass(uL, pNode, dMass, fOut)
+: Mass(uL, pNode_a, dMass_a, fOut)
 {
 	NO_OP;
 }
@@ -473,10 +473,10 @@ Vec3 DynamicMass::GetG_int(void) const
 /* StaticMass - begin */
 
 StaticMass::StaticMass(unsigned int uL,
-	const StaticStructDispNode* pNode,
-	doublereal dMass,
+	const StaticStructDispNode* pNode_a,
+	doublereal dMass_a,
 	flag fOut)
-: Mass(uL, pNode, dMass, fOut)
+: Mass(uL, pNode_a, dMass_a, fOut)
 {
 	NO_OP;
 }
@@ -717,15 +717,15 @@ StaticMass::SetValue(DataManager *pDM,
 /* Body - begin */
 
 Body::Body(unsigned int uL,
-	const StructNode *pNode,
-	doublereal dMass,
-	const Vec3& Xgc,
+	const StructNode *pNode_a,
+	doublereal dMass_a,
+	const Vec3& Xgc_a,
 	const Mat3x3& J,
 	flag fOut)
 : InitialAssemblyElem(uL, fOut),
-pNode(pNode),
-dMass(dMass),
-Xgc(Xgc),
+pNode(pNode_a),
+dMass(dMass_a),
+Xgc(Xgc_a),
 S0(Xgc*dMass),
 J0(J)
 {
@@ -985,12 +985,12 @@ Body::AssMatsRBK_int(
 /* DynamicBody - begin */
 
 DynamicBody::DynamicBody(unsigned int uL,
-	const DynamicStructNode* pNode,
-	doublereal dMass,
-	const Vec3& Xgc,
+	const DynamicStructNode* pNode_a,
+	doublereal dMass_a,
+	const Vec3& Xgc_a,
 	const Mat3x3& J,
 	flag fOut)
-: Body(uL, pNode, dMass, Xgc, J, fOut)
+: Body(uL, pNode_a, dMass_a, Xgc_a, J, fOut)
 {
 	NO_OP;
 }
@@ -1394,7 +1394,8 @@ DynamicBody::GetG_int(void) const
 	const Vec3& V(pNode->GetVCurr());
 	const Vec3& W(pNode->GetWCurr());
 
-	Vec3 STmp(R*S0);
+	// Vec3 STmp(R*S0);
+	STmp = R*S0;
 
 	// NOTE: with respect to the origin of the global reference frame!
 	return (STmp + X*dMass).Cross(V) + R*(J0*(R.MulTV(W)))
@@ -1406,12 +1407,12 @@ DynamicBody::GetG_int(void) const
 /* ModalBody - begin */
 
 ModalBody::ModalBody(unsigned int uL,
-	const ModalNode* pNode,
-	doublereal dMass,
-	const Vec3& Xgc,
+	const ModalNode* pNode_a,
+	doublereal dMass_a,
+	const Vec3& Xgc_a,
 	const Mat3x3& J,
 	flag fOut)
-: DynamicBody(uL, pNode, dMass, Xgc, J, fOut),
+: DynamicBody(uL, pNode_a, dMass_a, Xgc_a, J, fOut),
   XPP(::Zero3),
   WP(::Zero3)
 {
@@ -1646,12 +1647,12 @@ ModalBody::SetValue(DataManager *pDM,
 /* StaticBody - begin */
 
 StaticBody::StaticBody(unsigned int uL,
-	const StaticStructNode* pNode,
-	doublereal dMass,
-	const Vec3& Xgc,
+	const StaticStructNode* pNode_a,
+	doublereal dMass_a,
+	const Vec3& Xgc_a,
 	const Mat3x3& J,
 	flag fOut)
-: Body(uL, pNode, dMass, Xgc, J, fOut)
+: Body(uL, pNode_a, dMass_a, Xgc_a, J, fOut)
 {
 	NO_OP;
 }

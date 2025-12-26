@@ -464,8 +464,8 @@ CompactSparseMatrixHandler_tpl<off, idx_type>::const_iterator::reset(bool is_end
 }
 
 template <int off, typename idx_type>
-CompactSparseMatrixHandler_tpl<off, idx_type>::const_iterator::const_iterator(const CompactSparseMatrixHandler_tpl<off, idx_type>& m, bool is_end)
-: m(m)
+CompactSparseMatrixHandler_tpl<off, idx_type>::const_iterator::const_iterator(const CompactSparseMatrixHandler_tpl<off, idx_type>& m_a, bool is_end)
+: m(m_a)
 {
 	reset(is_end);
 }

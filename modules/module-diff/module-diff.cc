@@ -98,9 +98,9 @@ public:
 };
 
 ModuleDiffDrive::ModuleDiffDrive(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 DriveOwner(0),
 iNumDrives(0),  
 m_pDM(pDM),

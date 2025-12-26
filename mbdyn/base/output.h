@@ -396,7 +396,7 @@ public:
                 std::string attr;
                 std::string val;
                 AttrVal(void) { NO_OP; };
-                AttrVal(const std::string& attr, const std::string& val) : attr(attr), val(val) { NO_OP; };
+                AttrVal(const std::string& attr_a, const std::string& val_a) : attr(attr_a), val(val_a) { NO_OP; };
         };
 
         typedef std::vector<OutputHandler::AttrVal> AttrValVec;
@@ -476,12 +476,12 @@ public:
 /* Unit system related stuff */
 private:
         std::unordered_map<Dimensions, std::string> Units;
-        void SetDerivedUnits(std::unordered_map<Dimensions, std::string>& Units );
-        void SetUnspecifiedUnits(std::unordered_map<Dimensions, std::string>& Units);
-        void SetMKSUnits(std::unordered_map<Dimensions, std::string>& Units);
-        void SetCGSUnits(std::unordered_map<Dimensions, std::string>& Units);
-        void SetMMTMSUnits(std::unordered_map<Dimensions, std::string>& Units);
-        void SetMMKGMSUnits(std::unordered_map<Dimensions, std::string>& Units);
+        void SetDerivedUnits();
+        void SetUnspecifiedUnits();
+        void SetMKSUnits();
+        void SetCGSUnits();
+        void SetMMTMSUnits();
+        void SetMMKGMSUnits();
 }; /* End class OutputHandler */
 
 #ifdef USE_NETCDF

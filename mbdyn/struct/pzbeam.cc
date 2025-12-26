@@ -102,9 +102,9 @@ void PiezoActuatorBeam::AssStiffnessVec(SubVectorHandler& WorkVec,
 }
 
 
-void PiezoActuatorBeam::AddInternalForces(Vec6& AzLoc, unsigned int iSez)
+void PiezoActuatorBeam::AddInternalForces(Vec6& AzLoc_a, unsigned int iSez)
 {
-   AzLoc += Vec6(PiezoMat[STRAIN][iSez]*V, PiezoMat[CURVAT][iSez]*V);
+   AzLoc_a += Vec6(PiezoMat[STRAIN][iSez]*V, PiezoMat[CURVAT][iSez]*V);
 }
       
 
@@ -331,9 +331,9 @@ void PiezoActuatorVEBeam::AssStiffnessVec(SubVectorHandler& WorkVec,
 }
 
 
-void PiezoActuatorVEBeam::AddInternalForces(Vec6& AzLoc, unsigned int iSez)
+void PiezoActuatorVEBeam::AddInternalForces(Vec6& AzLoc_a, unsigned int iSez)
 {
-   AzLoc += Vec6(PiezoMat[STRAIN][iSez]*V, PiezoMat[CURVAT][iSez]*V);
+   AzLoc_a += Vec6(PiezoMat[STRAIN][iSez]*V, PiezoMat[CURVAT][iSez]*V);
 }
       
 

@@ -70,12 +70,12 @@ void ConstForgettingFactor::Update(const doublereal* /* pErr */ )
 
 DynamicForgettingFactor::DynamicForgettingFactor(integer n1,
 						 integer n2, 
-						 integer i,
+						 integer i_a,
 						 doublereal r, 
 						 doublereal f,
 						 doublereal kr, 
 						 doublereal kl)
-: ForgettingFactor(i), 
+: ForgettingFactor(i_a),
 N1(n1), N2(n2), dRho(r), dFact(f), dkRef(kr), dkLim(kl),
 dk(kr), pdErrM(NULL), pdErrS(NULL), iRef1(n1-1), iRef2(n1-n2-1),
 dErr1M(0.), dErr1S(0.), dErr2M(0.), dErr2S(0.) {
@@ -155,12 +155,12 @@ void DynamicForgettingFactor::Update(const doublereal* pErr) {
 
 DynamicForgettingFactor2::DynamicForgettingFactor2(integer n1,
 						   integer n2, 
-						   integer i,
+						   integer i_a,
 						   doublereal r,
 						   doublereal f,
 						   doublereal kr,
 						   doublereal kl)
-: ForgettingFactor(i), 
+: ForgettingFactor(i_a),
 N1(n1), N2(n2), dRho(r), dFact(f), dkRef(kr), dkLim(kl),
 dk(kr), pdErr(NULL), ppdErr(NULL), iRef1(n1-1), iRef2(n1-n2-1),
 pdErr1M(NULL), pdErr1S(NULL), pdErr2M(NULL), pdErr2S(NULL) {

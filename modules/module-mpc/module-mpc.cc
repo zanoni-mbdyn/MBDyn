@@ -160,9 +160,9 @@ private:
      sp_grad::SpMatrix<doublereal> C;
 };
 
-MPC::MPC(unsigned uLabel, const DofOwner *pDO,
+MPC::MPC(unsigned uLabel_a, const DofOwner *pDO,
         DataManager* pDM, MBDynParser& HP)
-:       UserDefinedElem(uLabel, pDO)
+:       UserDefinedElem(uLabel_a, pDO)
 {
         // help
         if (HP.IsKeyWord("help")) {

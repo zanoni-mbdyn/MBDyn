@@ -178,8 +178,8 @@ protected:
 private:
         friend struct PredictForStageHelper;
         struct PredictForStageHelper {
-                PredictForStageHelper(const tplStageNIntegrator& parent, unsigned S)
-                       :parent(parent), S(S) {
+                PredictForStageHelper(const tplStageNIntegrator& parent_a, unsigned S_a)
+                       :parent(parent_a), S(S_a) {
                 }
 
                 void PredictDofForStageS(const int DCount,

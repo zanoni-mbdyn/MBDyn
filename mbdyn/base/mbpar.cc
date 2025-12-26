@@ -3025,12 +3025,12 @@ MBDynParser::TplManip<T>::~TplManip(void)
 
 template <class T>
 MBDynParser::RefTplManip<T>::RefTplManip(
-	MBDynParser& HP,
-	const ReferenceFrame& rf,
-	VecMatOpType type)
-: HP(HP),
-rf(rf),
-type(type)
+	MBDynParser& HP_a,
+	const ReferenceFrame& rf_a,
+	VecMatOpType type_a)
+: HP(HP_a),
+rf(rf_a),
+type(type_a)
 {
 	NO_OP;
 }
@@ -3042,10 +3042,10 @@ MBDynParser::RefTplManip<T>::~RefTplManip(void)
 }
 
 MBDynParser::RefVec3Manip::RefVec3Manip(
-	MBDynParser& HP,
-	const ReferenceFrame& rf,
-	VecMatOpType type)
-: RefTplManip<Vec3>(HP, rf, type)
+	MBDynParser& HP_a,
+	const ReferenceFrame& rf_a,
+	VecMatOpType type_a)
+: RefTplManip<Vec3>(HP_a, rf_a, type_a)
 {
 	NO_OP;
 }
@@ -3212,9 +3212,9 @@ MBDynParser::RefVec3Manip::Get(const Vec3& v) const
 }
 
 MBDynParser::VecRelManip::VecRelManip(
-	MBDynParser& HP,
-	const ReferenceFrame& rf)
-: RefVec3Manip(HP, rf, VM_VECREL)
+	MBDynParser& HP_a,
+	const ReferenceFrame& rf_a)
+: RefVec3Manip(HP_a, rf_a, VM_VECREL)
 {
 	NO_OP;
 }
@@ -3225,9 +3225,9 @@ MBDynParser::VecRelManip::~VecRelManip(void)
 }
 
 MBDynParser::VecAbsManip::VecAbsManip(
-	MBDynParser& HP,
-	const ReferenceFrame& rf)
-: RefVec3Manip(HP, rf, VM_VECABS)
+	MBDynParser& HP_a,
+	const ReferenceFrame& rf_a)
+: RefVec3Manip(HP_a, rf_a, VM_VECABS)
 {
 	NO_OP;
 }

@@ -84,20 +84,20 @@ const Motor::PrivData Motor::rgPrivData[iNumPrivData] = {
 Motor::Motor(const unsigned int uL, const DofOwner* pD, 
 		const StructNode* pN1, const StructNode* pN2,
 		const ElectricNode* pV1, const ElectricNode* pV2,
-		const Mat3x3& Rn, doublereal dG,
-		const doublereal dL, DriveCaller* dR, const doublereal i0,
-		integer p,
+		const Mat3x3& Rn_a, doublereal dG,
+		const doublereal dL_a, DriveCaller* dR_a, const doublereal i0,
+		integer p_a,
 		const DriveCaller* pM0,
 		const DriveCaller* pM1,
 		const flag fOut)
 : Electric(uL, pD, fOut),
 pStrNode1(pN1), pStrNode2(pN2), pVoltage1(pV1), pVoltage2(pV2),
-Rn(Rn), dGain(dG), dL(dL), dR(dR), p(p), M0(pM0), M1(pM1), M(i0 * dG), i(i0)
+Rn(Rn_a), dGain(dG), dL(dL_a), dR(dR_a), p(p_a), M0(pM0), M1(pM1), M(i0 * dG), i(i0)
 {
 	const doublereal dU  = dGetVoltage();
 	const doublereal omega = dGetOmega();
 
-	iP = (dU - dGain * omega - dR->dGet(fabs(i)) * i) / dL;
+	iP = (dU - dGain * omega - dR.dGet(fabs(i)) * i) / dL;
 
 	Phi_m = dGetPhiMechanical();
 	Phi_e = dGetPhiElectric(Phi_m);
@@ -149,7 +149,7 @@ Motor::iGetNumDof(void) const
 }
 
 DofOrder::Order
-Motor::GetDofType(unsigned int i) const
+Motor::GetDofType(unsigned int idx) const
 {
 	return DofOrder::DIFFERENTIAL;
 }
@@ -199,7 +199,7 @@ Motor::AssJac(VariableSubMatrixHandler& WorkMat,
 	WM.PutColIndex(8, iElecNode2FirstIndex);
 	WM.PutColIndex(9, iFirstIndex);
 
-	const doublereal i = XCurr(iFirstIndex);
+	const doublereal di = XCurr(iFirstIndex);
 	const Mat3x3& R1 = pStrNode1->GetRCurr();
 	const Mat3x3& R2 = pStrNode2->GetRCurr();
 	const Mat3x3& R1_0 = pStrNode1->GetRRef();
@@ -224,8 +224,8 @@ Motor::AssJac(VariableSubMatrixHandler& WorkMat,
 	const Vec3 dM0_dg2_T = dPhi_dg2_T * dM0_dPhi;
 	const Vec3 dM1_dg1_T = dPhi_dg1_T * dM1_dPhi;
 	const Vec3 dM1_dg2_T = dPhi_dg2_T * dM1_dPhi;
-	const Vec3 dM_dg1_T = dM0_dg1_T + dM1_dg1_T * i;
-	const Vec3 dM_dg2_T = dM0_dg2_T + dM1_dg2_T * i;
+	const Vec3 dM_dg1_T = dM0_dg1_T + dM1_dg1_T * di;
+	const Vec3 dM_dg2_T = dM0_dg2_T + dM1_dg2_T * di;
 	const Mat3x3 dC1_dg1 = Mat3x3(MatCross, R1_0 * Rn.GetCol(3) * M) - (R1 * Rn.GetCol(3)).Tens(dM_dg1_T);
 	const Mat3x3 dC1_dg2 = (-(R1 * Rn.GetCol(3))).Tens(dM_dg2_T);
 	const Vec3 dC1_di = -(R1 * Rn.GetCol(3) * (dGain + M1.dGet(Phi_e)));
@@ -241,8 +241,8 @@ Motor::AssJac(VariableSubMatrixHandler& WorkMat,
 	const Vec3 dfi_dgP2_T = dOmega_dgP2_T * (-dGain);
 	const doublereal dfi_du1 = -1;
 	const doublereal dfi_du2 = 1;
-	const doublereal abs_i = fabs(i);
-	const doublereal dfi_di = -dR.dGet(abs_i) - dR.dGetP(abs_i) * i;
+	const doublereal abs_i = fabs(di);
+	const doublereal dfi_di = -dR.dGet(abs_i) - dR.dGetP(abs_i) * di;
 	const doublereal dfi_diP = -dL;
 
 	WM.Put(1, 1, dC1_dg1 * (-dCoef));
@@ -334,16 +334,16 @@ doublereal Motor::dGetPhiMechanical() const {
 	return atan2(DeltaR_e1(2), DeltaR_e1(1));
 }
 
-doublereal Motor::dGetPhiElectric(doublereal Phi_m) const {
-	doublereal Phi_e = fmod(p * Phi_m, 2 * M_PI);
+doublereal Motor::dGetPhiElectric(doublereal Phi_m_a) const {
+	doublereal Phi_e_local = fmod(p * Phi_m_a, 2 * M_PI);
 
-	if (Phi_e < 0.) {
-		Phi_e += 2 * M_PI;
+	if (Phi_e_local < 0.) {
+		Phi_e_local += 2 * M_PI;
 	}
 
-	ASSERT(Phi_e >= 0 && Phi_e <= 2 * M_PI);
+	ASSERT(Phi_e_local >= 0 && Phi_e_local <= 2 * M_PI);
 
-	return Phi_e;
+	return Phi_e_local;
 }
 
 void
@@ -384,9 +384,9 @@ unsigned int Motor::iGetNumPrivData(void) const
 
 unsigned int Motor::iGetPrivDataIdx(const char *s) const
 {
-	for (int i = 0; i < iNumPrivData; ++i ) {
-		if (0 == strcmp(rgPrivData[i].name, s)) {
-			return rgPrivData[i].index;
+	for (int ii = 0; ii < iNumPrivData; ++ii ) {
+		if (0 == strcmp(rgPrivData[ii].name, s)) {
+			return rgPrivData[ii].index;
 		}
 	}
 

@@ -108,47 +108,47 @@ class PlaneHingeJoint : public Joint {
    /* Distruttore */
    ~PlaneHingeJoint(void);
 
-   virtual void ReadInitialState(MBDynParser& HP);
+   virtual void ReadInitialState(MBDynParser& HP) override;
    
    /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
+   virtual std::ostream& Restart(std::ostream& out) const override;
 
    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
    /* Tipo di Joint */
-   virtual Joint::Type GetJointType(void) const { 
+   virtual Joint::Type GetJointType(void) const override { 
       return Joint::PLANEHINGE;
    };
    
-   virtual unsigned int iGetNumDof(void) const;
+   virtual unsigned int iGetNumDof(void) const override;
 
    virtual std::ostream& DescribeDof(std::ostream& out,
 		   const char *prefix = "",
-		   bool bInitial = false) const;
+		   bool bInitial = false) const override;
    
    virtual void DescribeDof(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+		   bool bInitial = false, int i = -1) const override;
    
    virtual std::ostream& DescribeEq(std::ostream& out,
 		   const char *prefix = "",
-		   bool bInitial = false) const;
+		   bool bInitial = false) const override;
    
    virtual void DescribeEq(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+		   bool bInitial = false, int i = -1) const override;
    
-   DofOrder::Order GetDofType(unsigned int i) const;
+   DofOrder::Order GetDofType(unsigned int i) const override;
 
    virtual void SetValue(DataManager *pDM,
 		   VectorHandler& X, VectorHandler& XP,
-		   SimulationEntity::Hints *ph = 0);
+		   SimulationEntity::Hints *ph = 0) override;
 
 	virtual Hint *
-	ParseHint(DataManager *pDM, const char *s) const;
+	ParseHint(DataManager *pDM, const char *s) const override;
 	         
    virtual void AfterConvergence(const VectorHandler& X, 
-			const VectorHandler& XP);
+			const VectorHandler& XP) override;
 
-   void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const { 
+   void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override { 
       *piNumRows = NumDof;
       *piNumCols = NumDof;
       if (fc) {
@@ -161,46 +161,46 @@ class PlaneHingeJoint : public Joint {
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
 				    doublereal dCoef,
 				    const VectorHandler& XCurr, 
-				    const VectorHandler& XPrimeCurr);
+				    const VectorHandler& XPrimeCurr) override;
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 			    doublereal dCoef,
 			    const VectorHandler& XCurr, 
-			    const VectorHandler& XPrimeCurr);
+			    const VectorHandler& XPrimeCurr) override;
 			    
-   DofOrder::Order GetEqType(unsigned int i) const;
+   DofOrder::Order GetEqType(unsigned int i) const override;
    
-   void OutputPrepare(OutputHandler &OH);
-   void Output(OutputHandler& OH) const;
+   void OutputPrepare(OutputHandler &OH) override;
+   void Output(OutputHandler& OH) const override;
  
 
    /* funzioni usate nell'assemblaggio iniziale */
    
-   virtual unsigned int iGetInitialNumDof(void) const { 
+   virtual unsigned int iGetInitialNumDof(void) const override { 
       return 10;
    };
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-				    integer* piNumCols) const {
+				    integer* piNumCols) const override {
       *piNumRows = 34; 
       *piNumCols = 34;
    };
    
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-					   const VectorHandler& XCurr);
+					   const VectorHandler& XCurr) override;
    
    /* Contributo al residuo durante l'assemblaggio iniziale */   
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-				   const VectorHandler& XCurr);
+				   const VectorHandler& XCurr) override;
    
    /* Dati privati */
-   virtual unsigned int iGetNumPrivData(void) const;
-   virtual unsigned int iGetPrivDataIdx(const char *s) const;
-   virtual doublereal dGetPrivData(unsigned int i) const;
+   virtual unsigned int iGetNumPrivData(void) const override;
+   virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+   virtual doublereal dGetPrivData(unsigned int i) const override;
    
    /* *******PER IL SOLUTORE PARALLELO******** */        
    /* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
       utile per l'assemblaggio della matrice di connessione fra i dofs */
-   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
      connectedNodes.resize(2);
      connectedNodes[0] = pNode1;
      connectedNodes[1] = pNode2;
@@ -208,7 +208,7 @@ class PlaneHingeJoint : public Joint {
    /* ************************************************ */
 
    /* return s the dimension of the component */
-   const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+   const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* PlaneHingeJoint - end */
@@ -562,54 +562,54 @@ class PlanePinJoint : public Joint {
    ~PlanePinJoint(void);
 
    /* Tipo di Joint */
-   virtual Joint::Type GetJointType(void) const { 
+   virtual Joint::Type GetJointType(void) const override { 
       return Joint::PIN; 
    };
    
    /* legge lo sato iniziale*/
-   virtual void ReadInitialState(MBDynParser& HP);
+   virtual void ReadInitialState(MBDynParser& HP) override;
    
    /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
+   virtual std::ostream& Restart(std::ostream& out) const override;
      
    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
-   virtual unsigned int iGetNumDof(void) const { 
+   virtual unsigned int iGetNumDof(void) const override { 
       return 5;
    };
 
    virtual std::ostream& DescribeDof(std::ostream& out,
 		   const char *prefix = "",
-		   bool bInitial = false) const;
+		   bool bInitial = false) const override;
    
    virtual void DescribeDof(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+		   bool bInitial = false, int i = -1) const override;
    
    virtual std::ostream& DescribeEq(std::ostream& out,
 		   const char *prefix = "",
-		   bool bInitial = false) const;
+		   bool bInitial = false) const override;
    
    virtual void DescribeEq(std::vector<std::string>& desc,
-		   bool bInitial = false, int i = -1) const;
+		   bool bInitial = false, int i = -1) const override;
    
-   virtual DofOrder::Order GetDofType(unsigned int i) const {
+   virtual DofOrder::Order GetDofType(unsigned int i) const override {
       ASSERT(i >= 0 && i < 5);
       return DofOrder::ALGEBRAIC;
    };
 
-	DofOrder::Order GetEqType(unsigned int i) const;
+	DofOrder::Order GetEqType(unsigned int i) const override;
 
    virtual void SetValue(DataManager *pDM,
 		   VectorHandler& X, VectorHandler& XP,
-		   SimulationEntity::Hints *ph = 0);
+		   SimulationEntity::Hints *ph = 0) override;
 
 	virtual Hint *
-	ParseHint(DataManager *pDM, const char *s) const;
+	ParseHint(DataManager *pDM, const char *s) const override;
 	         
 	virtual void AfterConvergence(const VectorHandler& X, 
-			const VectorHandler& XP);
+			const VectorHandler& XP) override;
 
-   virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const { 
+   virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override { 
       *piNumRows = 11; 
       *piNumCols = 11;
    };
@@ -617,51 +617,51 @@ class PlanePinJoint : public Joint {
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
 				    doublereal dCoef,
 				    const VectorHandler& XCurr, 
-				    const VectorHandler& XPrimeCurr);
+				    const VectorHandler& XPrimeCurr) override;
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 			    doublereal dCoef,
 			    const VectorHandler& XCurr, 
-			    const VectorHandler& XPrimeCurr);
+			    const VectorHandler& XPrimeCurr) override;
    
-   void OutputPrepare(OutputHandler& OH);
-   virtual void Output(OutputHandler& OH) const;
+   void OutputPrepare(OutputHandler& OH) override;
+   virtual void Output(OutputHandler& OH) const override;
  
    
    /* funzioni usate nell'assemblaggio iniziale */
    
-   virtual unsigned int iGetInitialNumDof(void) const { 
+   virtual unsigned int iGetInitialNumDof(void) const override { 
       return 10;
    };
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-				    integer* piNumCols) const { 
+				    integer* piNumCols) const override { 
       *piNumRows = 22; 
       *piNumCols = 22; 
    };
    
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-					   const VectorHandler& XCurr);
+					   const VectorHandler& XCurr) override;
    
    /* Contributo al residuo durante l'assemblaggio iniziale */   
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-				   const VectorHandler& XCurr);
+				   const VectorHandler& XCurr) override;
 
    /* Dati privati */
-   virtual unsigned int iGetNumPrivData(void) const;
-   virtual unsigned int iGetPrivDataIdx(const char *s) const;
-   virtual doublereal dGetPrivData(unsigned int i) const;
+   virtual unsigned int iGetNumPrivData(void) const override;
+   virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+   virtual doublereal dGetPrivData(unsigned int i) const override;
    
  /* *******PER IL SOLUTORE PARALLELO******** */        
    /* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
       utile per l'assemblaggio della matrice di connessione fra i dofs */
-   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
      connectedNodes.resize(1);
      connectedNodes[0] = pNode;
    };
    /* ************************************************ */
 
    /* return s the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* PlanePinJoint - end */

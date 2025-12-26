@@ -110,9 +110,9 @@ VectorPX::VectorPX(int i, DriveCaller** pp)
    
    SAFENEWARR(pvDrives, DriveOwner*, iNumDrives);
    
-   for (int i = iNumDrives; i-- > 0; ) {
-      pvDrives[i] = NULL;
-      SAFENEWWITHCONSTRUCTOR(pvDrives[i], DriveOwner, DriveOwner(pp[i]));
+   for (int ii = iNumDrives; ii-- > 0; ) {
+      pvDrives[ii] = NULL;
+      SAFENEWWITHCONSTRUCTOR(pvDrives[ii], DriveOwner, DriveOwner(pp[ii]));
    }
    
    SAFEDELETEARR(pp);

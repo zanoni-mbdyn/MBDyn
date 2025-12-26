@@ -184,21 +184,21 @@ ncCount1x3x3(3,1)
 {
         OutputHandler_int();
         Init(sFName, iExtNum);
-        SetUnspecifiedUnits(Units);
+        SetUnspecifiedUnits();
 }
 
 void OutputHandler::ReadOutputUnits(MBDynParser& HP) {
         if (HP.IsKeyWord("MKS")) {
-                SetMKSUnits(Units);
+                SetMKSUnits();
                 Log() << "Unit for the whole model: MKS" << std::endl;
         } else if (HP.IsKeyWord("CGS")) {
-                SetCGSUnits(Units);
+                SetCGSUnits();
                 Log() << "Unit for the whole model: CGS" << std::endl;
         } else if (HP.IsKeyWord("MMTMS")) {
-                SetMMTMSUnits(Units);
+                SetMMTMSUnits();
                 Log() << "Unit for the whole model: MMTMS" << std::endl;
         } else if (HP.IsKeyWord("MMKGMS")) {
-                SetMMKGMSUnits(Units);
+                SetMMKGMSUnits();
                 Log() << "Unit for the whole model: MMKGMS" << std::endl;
         } else if (HP.IsKeyWord("Custom")) {
                 Log() << "Unit for the whole model: Custom" << std::endl;
@@ -222,7 +222,7 @@ void OutputHandler::ReadOutputUnits(MBDynParser& HP) {
                                 throw DataManager::ErrGeneric(MBDYN_EXCEPT_ARGS);
                         }
                 }
-                SetDerivedUnits(Units);
+                SetDerivedUnits();
         } else {
                 silent_cerr("Error while reading the model Units at line"
                                                 << HP.GetLineData()
@@ -234,7 +234,7 @@ void OutputHandler::ReadOutputUnits(MBDynParser& HP) {
         }
 }
 
-void OutputHandler::SetDerivedUnits(std::unordered_map<Dimensions, std::string>& Units ) {
+void OutputHandler::SetDerivedUnits() {
         Units[Dimensions::Angle] = "rad";
         Units[Dimensions::Area] = Units[Dimensions::Length] + "^2";
         Units[Dimensions::Force] = Units[Dimensions::Mass] + " " +
@@ -314,19 +314,19 @@ void OutputHandler::SetDerivedUnits(std::unordered_map<Dimensions, std::string>&
         Units[Dimensions::UnknownDimension] = "UnknownDimension";
 };
 
-void OutputHandler::SetUnspecifiedUnits(std::unordered_map<Dimensions, std::string>& Units) {
+void OutputHandler::SetUnspecifiedUnits() {
         for (auto i = DimensionNames.begin(); i != DimensionNames.end(); i++) {
                 Units[i->first] = i->second;
         }
 }
 
-void OutputHandler::SetMKSUnits(std::unordered_map<Dimensions, std::string>& Units) {
+void OutputHandler::SetMKSUnits() {
         Units[Dimensions::Length] = "m";
         Units[Dimensions::Mass] = "kg";
         Units[Dimensions::Time] = "s";
         Units[Dimensions::Current] = "A";
         Units[Dimensions::Temperature] = "K";
-        SetDerivedUnits(Units);
+        SetDerivedUnits();
         Units[Dimensions::Force] = "N";
         Units[Dimensions::Moment] = "N m";
         Units[Dimensions::Work] = "J";
@@ -337,13 +337,13 @@ void OutputHandler::SetMKSUnits(std::unordered_map<Dimensions, std::string>& Uni
         Units[Dimensions::Frequency] = "Hz";
 };
 
-void OutputHandler::SetCGSUnits(std::unordered_map<Dimensions, std::string>& Units) {
+void OutputHandler::SetCGSUnits() {
         Units[Dimensions::Length] = "cm";
         Units[Dimensions::Mass] = "kg";
         Units[Dimensions::Time] = "s";
         Units[Dimensions::Current] = "A";
         Units[Dimensions::Temperature] = "K";
-        SetDerivedUnits(Units);
+        SetDerivedUnits();
         Units[Dimensions::Force] = "dyn";
         Units[Dimensions::Pressure] = "dyn cm^-2";
         Units[Dimensions::Moment] = "dyn cm";
@@ -353,13 +353,13 @@ void OutputHandler::SetCGSUnits(std::unordered_map<Dimensions, std::string>& Uni
         Units[Dimensions::Charge] = "C";
 }
 
-void OutputHandler::SetMMTMSUnits(std::unordered_map<Dimensions, std::string>& Units) {
+void OutputHandler::SetMMTMSUnits() {
         Units[Dimensions::Length] = "mm";
         Units[Dimensions::Mass] = "ton";
         Units[Dimensions::Time] = "ms";
         Units[Dimensions::Current] = "A";
         Units[Dimensions::Temperature] = "K";
-        SetDerivedUnits(Units);
+        SetDerivedUnits();
         Units[Dimensions::Force] = "N";
         Units[Dimensions::Moment] = "N mm";
         Units[Dimensions::Work] = "N mm";
@@ -369,13 +369,13 @@ void OutputHandler::SetMMTMSUnits(std::unordered_map<Dimensions, std::string>& U
         Units[Dimensions::Charge] = "mC";
 }
 
-void OutputHandler::SetMMKGMSUnits(std::unordered_map<Dimensions, std::string>& Units) {
+void OutputHandler::SetMMKGMSUnits() {
         Units[Dimensions::Length] = "mm";
         Units[Dimensions::Mass] = "kg";
         Units[Dimensions::Time] = "ms";
         Units[Dimensions::Current] = "A";
         Units[Dimensions::Temperature] = "K";
-        SetDerivedUnits(Units);
+        SetDerivedUnits();
         Units[Dimensions::Force] = "kN";
         Units[Dimensions::Moment] = "N m";
         Units[Dimensions::Work] = "N m";
@@ -900,15 +900,15 @@ OutputHandler::RestartOpen(bool openResXSol)
                         ASSERT(!IsOpen(RESTARTXSOL));
 
                         char *resXSolExt = NULL;
-                        int n = nCurrRestartFile > 0 ?
+                        int nn = nCurrRestartFile > 0 ?
                                 (int)log10(nCurrRestartFile) + 1 : 1;
                         int lenXSolExt = STRLENOF(".")
-                                + n
+                                + nn
                                 + STRLENOF(".rst.X")
                                 + 1;
 
                         SAFENEWARR(resXSolExt, char, lenXSolExt);
-                        snprintf(resXSolExt, lenXSolExt, ".%.*d.rst.X", n, nCurrRestartFile);
+                        snprintf(resXSolExt, lenXSolExt, ".%.*d.rst.X", nn, nCurrRestartFile);
                         /* Apre lo stream */
                         OutData[RESTARTXSOL].pof->open(_sPutExt(resXSolExt));
                         if(!(*OutData[RESTARTXSOL].pof)) {
@@ -1255,8 +1255,8 @@ ToBeOutput::sGetOutputNameBase(void) const
         return m_sOutputNameBase;
 }
 
-Traceable::Traceable(flag fTrace)
-:fTrace(fTrace)
+Traceable::Traceable(flag fTrace_a)
+:fTrace(fTrace_a)
 {
 
 }
