@@ -49,7 +49,7 @@ SphericalHingeJoint::SphericalHingeJoint(unsigned int uL, const DofOwner* pDO,
 					 const StructNode* pN2,
 					 const Vec3& dTmp1, const Mat3x3& RTmp1h,
 					 const Vec3& dTmp2, const Mat3x3& RTmp2h,
-					 const OrientationDescription& od,
+					 const OrientationDescription& od_a,
 					 flag fOut,
                      const doublereal rr,
                      const doublereal pref,
@@ -62,7 +62,7 @@ d2(dTmp2), R2h(RTmp2h),
 F(Zero3),
 Sh_c(sh), fc(f), preF(pref), r(rr),
 Q(Eye3), Qold(Eye3), Fold(Zero3), reset_Q(true), compute_Q(false),
-od(od)
+od(od_a)
 {
    NO_OP;
 }
@@ -141,25 +141,25 @@ SphericalHingeJoint::DescribeDof(std::vector<std::string>& desc, bool bInitial, 
 			nfc = desc.size();
 		}
 		desc.resize(nfc + nself);
-		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[i];
+		for (unsigned ii = nfc; ii-- > 0; ) {
+			desc[nself + ii] = os.str() + ": " + desc[ii];
 		}
 
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": reaction force f" << xyz[i];
-			desc[i] = os.str();
+			os << ": reaction force f" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": reaction force derivative fP" << xyz[i];
-				desc[3 + i] = os.str();
+				os << ": reaction force derivative fP" << xyz[ii];
+				desc[3 + ii] = os.str();
 			}
 		}
 
@@ -250,25 +250,25 @@ SphericalHingeJoint::DescribeEq(std::vector<std::string>& desc, bool bInitial, i
 			nfc = desc.size();
 		}
 		desc.resize(nfc + nself);
-		for (unsigned i = nfc; i-- > 0; ) {
-			desc[nself + i] = os.str() + ": " + desc[i];
+		for (unsigned ii = nfc; ii-- > 0; ) {
+			desc[nself + ii] = os.str() + ": " + desc[ii];
 		}
 
 		std::string name = os.str();
 
-		for (unsigned i = 0; i < 3; i++) {
+		for (unsigned ii = 0; ii < 3; ii++) {
 			os.str(name);
 			os.seekp(0, std::ios_base::end);
-			os << ": position constraint P" << xyz[i];
-			desc[i] = os.str();
+			os << ": position constraint P" << xyz[ii];
+			desc[ii] = os.str();
 		}
 
 		if (bInitial) {
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned ii = 0; ii < 3; ii++) {
 				os.str(name);
 				os.seekp(0, std::ios_base::end);
-				os << ": position constraint derivative v" << xyz[i];
-				desc[3 + i] = os.str();
+				os << ": position constraint derivative v" << xyz[ii];
+				desc[3 + ii] = os.str();
 			}
 
 		}
@@ -1313,11 +1313,11 @@ SphericalHingeJoint::GetEquationDimension(integer index) const {
 PinJoint::PinJoint(unsigned int uL, const DofOwner* pDO,	       
 		   const StructNode* pN,
 		   const Vec3& X0Tmp, const Vec3& dTmp,
-		   const OrientationDescription& od,
+		   const OrientationDescription& od_a,
 		   flag fOut)
 : Joint(uL, pDO, fOut), pNode(pN), X0(X0Tmp), d(dTmp), 
 F(Zero3),
-od(od)
+od(od_a)
 {
    NO_OP;
 }

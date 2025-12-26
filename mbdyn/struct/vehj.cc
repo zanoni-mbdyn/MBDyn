@@ -47,16 +47,16 @@ DeformableHingeJoint::DeformableHingeJoint(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
 : Joint(uL, pDO, fOut),
 pNode1(pN1),
 pNode2(pN2),
-tilde_R1h(tilde_R1h),
-tilde_R2h(tilde_R2h),
-od(od),
+tilde_R1h(tilde_R1h_a),
+tilde_R2h(tilde_R2h_a),
+od(od_a),
 pDC(pCL),
 bFirstRes(false)
 {
@@ -587,11 +587,11 @@ ElasticHingeJoint::ElasticHingeJoint(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
-: DeformableHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, od, fOut),
+: DeformableHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, od_a, fOut),
 ThetaRef(Zero3)
 {
 	// force update of MDE/MDEPrime as needed
@@ -958,11 +958,11 @@ ElasticHingeJointInv::ElasticHingeJointInv(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
-: ElasticHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, od, fOut)
+: ElasticHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, od_a, fOut)
 {
 	NO_OP;
 }
@@ -1025,11 +1025,11 @@ ViscousHingeJoint::ViscousHingeJoint(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
-: DeformableHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, od, fOut)
+: DeformableHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, od_a, fOut)
 {
 	// force update of MDE/MDEPrime as needed
 	AfterPredictHelper();
@@ -1315,10 +1315,10 @@ ViscousHingeJoint::InitialAssRes(SubVectorHandler& WorkVec,
 		pDC->Update(Zero3, Omega);
 	}
 
-	Vec3 M(R1h*pDC->GetF());
+	Vec3 M_local(R1h*pDC->GetF());
 
-	WorkVec.Add(1, M);
-	WorkVec.Sub(4, M);
+	WorkVec.Add(1, M_local);
+	WorkVec.Sub(4, M_local);
 
 	return WorkVec;
 }
@@ -1333,11 +1333,11 @@ ViscousHingeJointInv::ViscousHingeJointInv(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
-: ViscousHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, od, fOut)
+: ViscousHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, od_a, fOut)
 {
 	NO_OP;
 }
@@ -1434,11 +1434,11 @@ ViscoElasticHingeJoint::ViscoElasticHingeJoint(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
-: DeformableHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, od, fOut),
+: DeformableHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, od_a, fOut),
 ThetaRef(Zero3)
 {
 	// force update of MDE/MDEPrime as needed
@@ -1767,11 +1767,11 @@ ViscoElasticHingeJointInv::ViscoElasticHingeJointInv(unsigned int uL,
 		ConstitutiveLaw3D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
-		const OrientationDescription& od,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
+		const OrientationDescription& od_a,
 		flag fOut)
-: ViscoElasticHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, od, fOut)
+: ViscoElasticHingeJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, od_a, fOut)
 {
 	NO_OP;
 }

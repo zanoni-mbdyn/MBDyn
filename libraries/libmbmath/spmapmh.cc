@@ -464,8 +464,8 @@ SpMapMatrixHandler::const_iterator::reset(bool is_end)
 	}
 }
 
-SpMapMatrixHandler::const_iterator::const_iterator(const SpMapMatrixHandler& m, bool is_end)
-: m(m)
+SpMapMatrixHandler::const_iterator::const_iterator(const SpMapMatrixHandler& m_a, bool is_end)
+: m(m_a)
 {
 	reset(is_end);
 }

@@ -46,10 +46,10 @@
 /* StreamOutElem - begin */
 
 StreamOutElem::StreamOutElem(unsigned int uL,
-	const std::string& name,
+	const std::string& name_a,
 	unsigned int oe)
 : Elem(uL, flag(0)),
-name(name),
+name(name_a),
 OutputEvery(oe), OutputCounter(0)
 {
 	ASSERT(OutputEvery > 0);
@@ -459,10 +459,10 @@ ReadStreamContent(DataManager *pDM, MBDynParser& HP, StreamContent::Type type)
 
 /* StreamOutEcho - begin */
 
-StreamOutEcho::StreamOutEcho(std::string& sOutFileName, int iPrecision, doublereal dShift)
-: sOutFileName(sOutFileName),
-iPrecision(iPrecision),
-dShift(dShift)
+StreamOutEcho::StreamOutEcho(std::string& sOutFileName_a, int iPrecision_a, doublereal dShift_a)
+: sOutFileName(sOutFileName_a),
+iPrecision(iPrecision_a),
+dShift(dShift_a)
 {
 	(void) StreamOutEcho::dShift;
 	NO_OP;

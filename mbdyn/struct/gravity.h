@@ -141,6 +141,7 @@ public:
 
 	virtual ~UniformGravity(void);
 
+        using Gravity::Restart;
 	/* Scrive il contributo dell'elemento al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const override;
 
@@ -193,6 +194,7 @@ public:
 
 	virtual ~CentralGravity(void);
 
+        using Gravity::Restart;
 	/* Scrive il contributo dell'elemento al file di restart */
 	virtual std::ostream& Restart(std::ostream& out) const;
 

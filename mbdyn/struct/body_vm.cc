@@ -41,14 +41,14 @@
 /* VariableBody - begin */
 
 VariableBody::VariableBody(unsigned int uL,
-	const StructNode *pNode,
+	const StructNode *pNode_a,
 	const DriveCaller *pDCMass,
 	const TplDriveCaller<Vec3> *pDCXgc,
 	const TplDriveCaller<Mat3x3> *pDCJgc_vm,
 	const TplDriveCaller<Mat3x3> *pDCJgc_vg,
 	flag fOut)
 : InitialAssemblyElem(uL, fOut),
-  pNode(pNode),
+  pNode(pNode_a),
   m_Mass(pDCMass),
   m_Xgc(pDCXgc),
   m_Jgc_vm(pDCJgc_vm),
@@ -309,13 +309,13 @@ VariableBody::AssMatsRBK_int(
 /* DynamicVariableBody - begin */
 
 DynamicVariableBody::DynamicVariableBody(unsigned int uL,
-	const DynamicStructNode* pNode,
+	const DynamicStructNode* pNode_a,
 	const DriveCaller *pDCMass,
 	const TplDriveCaller<Vec3> *pDCXgc,
 	const TplDriveCaller<Mat3x3> *pDCJgc_vm,
 	const TplDriveCaller<Mat3x3> *pDCJgc_vg,
 	flag fOut)
-: VariableBody(uL, pNode, pDCMass, pDCXgc, pDCJgc_vm, pDCJgc_vg, fOut)
+: VariableBody(uL, pNode_a, pDCMass, pDCXgc, pDCJgc_vm, pDCJgc_vg, fOut)
 {
 	NO_OP;
 }
@@ -734,13 +734,13 @@ DynamicVariableBody::GetG_int(void) const
 /* StaticVariableBody - begin */
 
 StaticVariableBody::StaticVariableBody(unsigned int uL,
-	const StaticStructNode* pNode,
+	const StaticStructNode* pNode_a,
 	const DriveCaller *pDCMass,
 	const TplDriveCaller<Vec3> *pDCXgc,
 	const TplDriveCaller<Mat3x3> *pDCJgc_vm,
 	const TplDriveCaller<Mat3x3> *pDCJgc_vg,
 	flag fOut)
-: VariableBody(uL, pNode, pDCMass, pDCXgc, pDCJgc_vm, pDCJgc_vg, fOut)
+: VariableBody(uL, pNode_a, pDCMass, pDCXgc, pDCJgc_vm, pDCJgc_vg, fOut)
 {
 	NO_OP;
 }

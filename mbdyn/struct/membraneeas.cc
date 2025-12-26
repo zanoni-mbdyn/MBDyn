@@ -119,7 +119,7 @@ Membrane4EAS::Membrane4EAS(unsigned int uL,
 	const ConstitutiveLaw<vh, fmh>** pDTmp, 
 #else // ! USE_CL_IN_MEMBRANE
 	const fmh& pDTmp,
-	const vh& PreStress,
+	const vh& PreStress_a,
 #endif // ! USE_CL_IN_MEMBRANE
 	flag fOut)
 : 
@@ -139,8 +139,8 @@ epsilon_hat(3),                     // 1x12
 epsilon(3),                         // 1x12
 
 #ifndef USE_CL_IN_MEMBRANE
-bPreStress(PreStress.Norm() > 0.),
-PreStress(PreStress),
+bPreStress(PreStress_a.Norm() > 0.),
+PreStress(PreStress_a),
 #endif // ! USE_CL_IN_MEMBRANE
 
 DRef(NUMIP, fmh(3, 3)),            // 12x12

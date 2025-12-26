@@ -106,9 +106,9 @@ NoChangeTSR::Read(Solver *s, MBDynParser& HP)
 	return new NoChange(s);
 }
 
-ChangeStep::ChangeStep(Solver *_s, DriveCaller* pStrategyChangeDrive)
+ChangeStep::ChangeStep(Solver *_s, DriveCaller* pStrategyChangeDrive_a)
 : s(_s),
-pStrategyChangeDrive(pStrategyChangeDrive),
+pStrategyChangeDrive(pStrategyChangeDrive_a),
 dMinTimeStep(-1.)
 {
 	(void) s; // silence not used warning
@@ -131,11 +131,11 @@ ChangeStep::SetDriveHandler(const DriveHandler* driveHandler)
 }
 
 void
-ChangeStep::Init(integer iMaxIterations, doublereal dMinTimeStep, const DriveOwner& MaxTimeStep, doublereal dInitialTimeStep)
+ChangeStep::Init(integer iMaxIterations_a, doublereal dMinTimeStep_a, const DriveOwner& MaxTimeStep_a, doublereal dInitialTimeStep)
 {
 	this->dCurrTimeStep = dInitialTimeStep;
-	this->MaxTimeStep.Set(MaxTimeStep.pGetDriveCaller()->pCopy());
-	this->dMinTimeStep = dMinTimeStep;
+	this->MaxTimeStep.Set(MaxTimeStep_a.pGetDriveCaller()->pCopy());
+	this->dMinTimeStep = dMinTimeStep_a;
 
 	doublereal dInitialMaxTimeStep ;
 	{
@@ -175,19 +175,19 @@ ChangeStepTSR::Read(Solver *s, MBDynParser& HP)
 }
 
 Factor::Factor(Solver *_s,
-	doublereal dReductionFactor,
-	doublereal iStepsBeforeReduction,
-	doublereal dRaiseFactor,
-	doublereal iStepsBeforeRaise,
-	doublereal iMinIters,
-	doublereal iMaxIters)
+	doublereal dReductionFactor_a,
+	doublereal iStepsBeforeReduction_a,
+	doublereal dRaiseFactor_a,
+	doublereal iStepsBeforeRaise_a,
+	doublereal iMinIters_a,
+	doublereal iMaxIters_a)
 : s(_s),
-dReductionFactor(dReductionFactor),
-iStepsBeforeReduction(iStepsBeforeReduction),
-dRaiseFactor(dRaiseFactor),
-iStepsBeforeRaise(iStepsBeforeRaise),
-iMinIters(iMinIters),
-iMaxIters(iMaxIters),
+dReductionFactor(dReductionFactor_a),
+iStepsBeforeReduction(iStepsBeforeReduction_a),
+dRaiseFactor(dRaiseFactor_a),
+iStepsBeforeRaise(iStepsBeforeRaise_a),
+iMinIters(iMinIters_a),
+iMaxIters(iMaxIters_a),
 bLastChance(false),
 iStepsAfterReduction(0),
 iStepsAfterRaise(0),
@@ -252,11 +252,11 @@ Factor::dGetNewStepTime(StepIntegrator::StepChange Why, doublereal iPerformedIte
 
 
 void
-Factor::Init(integer iMaxIterations, doublereal dMinTimeStep, const DriveOwner& MaxTimeStep, doublereal dInitialTimeStep)
+Factor::Init(integer iMaxIterations, doublereal dMinTimeStep_a, const DriveOwner& MaxTimeStep_a, doublereal dInitialTimeStep)
 {
 	this->dCurrTimeStep = dInitialTimeStep;
-	this->MaxTimeStep.Set(MaxTimeStep.pGetDriveCaller()->pCopy());
-	this->dMinTimeStep = dMinTimeStep;
+	this->MaxTimeStep.Set(MaxTimeStep_a.pGetDriveCaller()->pCopy());
+	this->dMinTimeStep = dMinTimeStep_a;
 
 	if (iMaxIters <= iMinIters) {
 		silent_cerr("error: maximum number of iterations " << iMaxIters << " less than or equal to minimum " << iMinIters << std::endl);

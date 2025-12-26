@@ -46,35 +46,35 @@
 /* Costruttore */
 StructMappingExtForce::StructMappingExtForce(unsigned int uL,
 	DataManager *pDM,
-	const StructNode *pRefNode,
-	bool bUseReferenceNodeForces,
-	bool bRotateReferenceNodeForces,
+	const StructNode *pRefNode_a,
+	bool bUseReferenceNodeForces_a,
+	bool bRotateReferenceNodeForces_a,
 	std::vector<const StructDispNode *>& nodes,
 	std::vector<Vec3>& offsets,
 	std::vector<unsigned>& labels,
-	SpMapMatrixHandler *pH,
+	SpMapMatrixHandler *pH_a,
 	std::vector<uint32_t>& mappedlabels,
-	bool bLabels,
-	bool bOutputAccelerations,
-	unsigned uRRot,
-	ExtFileHandlerBase *pEFH,
-	bool bSendAfterPredict,
-	int iCoupling,
+	bool bLabels_a,
+	bool bOutputAccelerations_a,
+	unsigned uRRot_a,
+	ExtFileHandlerBase *pEFH_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
 	flag fOut)
-: ExtForce(uL, pDM, pEFH, bSendAfterPredict, iCoupling, fOut), 
-pRefNode(pRefNode),
-bUseReferenceNodeForces(bUseReferenceNodeForces),
-bRotateReferenceNodeForces(bRotateReferenceNodeForces),
+: ExtForce(uL, pDM, pEFH_a, bSendAfterPredict_a, iCoupling_a, fOut),
+pRefNode(pRefNode_a),
+bUseReferenceNodeForces(bUseReferenceNodeForces_a),
+bRotateReferenceNodeForces(bRotateReferenceNodeForces_a),
 F0(Zero3), M0(Zero3),
 F1(Zero3), M1(Zero3),
 F2(Zero3), M2(Zero3),
-pH(pH),
+pH(pH_a),
 m_uResSize(0),
 uPoints(nodes.size()),
 uMappedPoints(pH ? unsigned(pH->iGetNumRows())/3 : 0),
-bLabels(bLabels),
-bOutputAccelerations(bOutputAccelerations),
-uRRot(uRRot),
+bLabels(bLabels_a),
+bOutputAccelerations(bOutputAccelerations_a),
+uRRot(uRRot_a),
 m_qlabels(pH ? mappedlabels : labels),
 m_x(3*uPoints),
 m_xP(3*uPoints),
@@ -238,16 +238,16 @@ StructMappingExtForce::WorkSpaceDim(integer* piNumRows, integer* piNumCols) cons
 }
 
 bool
-StructMappingExtForce::Prepare(ExtFileHandlerBase *pEFH)
+StructMappingExtForce::Prepare(ExtFileHandlerBase *pEFH_a)
 {
 	bool bResult = true;
 
-	switch (pEFH->NegotiateRequest()) {
+	switch (pEFH_a->NegotiateRequest()) {
 	case ExtFileHandlerBase::NEGOTIATE_NO:
 		break;
 
 	case ExtFileHandlerBase::NEGOTIATE_CLIENT: {
-		std::ostream *outfp = pEFH->GetOutStream();
+		std::ostream *outfp = pEFH_a->GetOutStream();
 		if (outfp) {
 
 #ifdef USE_SOCKET
@@ -271,9 +271,9 @@ StructMappingExtForce::Prepare(ExtFileHandlerBase *pEFH)
 
 			uint32_ptr[1] = uPoints;
 
-			ssize_t rc = sendn(pEFH->GetOutFileDes(),
+			ssize_t rc = sendn(pEFH_a->GetOutFileDes(),
 				(const char *)buf, sizeof(buf),
-				pEFH->GetSendFlags());
+				pEFH_a->GetSendFlags());
 			if (rc == -1) {
 				int save_errno = WSAGetLastError();
 				char *err_msg = strerror(save_errno);
@@ -303,7 +303,7 @@ StructMappingExtForce::Prepare(ExtFileHandlerBase *pEFH)
 		bool bA = false;
 		bool bL = false;
 
-		std::istream *infp = pEFH->GetInStream();
+		std::istream *infp = pEFH_a->GetInStream();
 		if (infp) {
 			// TODO: stream negotiation?
 
@@ -312,9 +312,9 @@ StructMappingExtForce::Prepare(ExtFileHandlerBase *pEFH)
 			char buf[sizeof(uint32_t) + sizeof(uint32_t)];
 			uint32_t *uint32_ptr;
 
-			ssize_t rc = recvn(pEFH->GetInFileDes(),
+			ssize_t rc = recvn(pEFH_a->GetInFileDes(),
 				(char *)buf, sizeof(buf),
-				pEFH->GetRecvFlags());
+				pEFH_a->GetRecvFlags());
 			if (rc == -1) {
 				int save_errno = WSAGetLastError();
 				char *err_msg = strerror(save_errno);
@@ -413,14 +413,14 @@ StructMappingExtForce::Prepare(ExtFileHandlerBase *pEFH)
  * Send output to companion software
  */
 void
-StructMappingExtForce::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen when)
+StructMappingExtForce::Send(ExtFileHandlerBase *pEFH_a, ExtFileHandlerBase::SendWhen when)
 {
-	std::ostream *outfp = pEFH->GetOutStream();
+	std::ostream *outfp = pEFH_a->GetOutStream();
 	if (outfp) {
 		SendToStream(*outfp, when);
 
 	} else {
-		SendToFileDes(pEFH->GetOutFileDes(), when);
+		SendToFileDes(pEFH_a->GetOutFileDes(), when);
 	}
 }
 
@@ -761,14 +761,14 @@ StructMappingExtForce::SendToFileDes(int outfd, ExtFileHandlerBase::SendWhen whe
 }
 
 void
-StructMappingExtForce::Recv(ExtFileHandlerBase *pEFH)
+StructMappingExtForce::Recv(ExtFileHandlerBase *pEFH_a)
 {
-	std::istream *infp = pEFH->GetInStream();
+	std::istream *infp = pEFH_a->GetInStream();
 	if (infp) {
 		RecvFromStream(*infp);
 
 	} else {
-		RecvFromFileDes(pEFH->GetInFileDes());
+		RecvFromFileDes(pEFH_a->GetInFileDes());
 	}
 }
 
@@ -1147,27 +1147,27 @@ StructMappingExtForce::GetConnectedNodes(std::vector<const Node *>& connectedNod
 /* Costruttore */
 StructMembraneMappingExtForce::StructMembraneMappingExtForce(unsigned int uL,
 	DataManager *pDM,
-	const StructNode *pRefNode,
-	bool bUseReferenceNodeForces,
-	bool bRotateReferenceNodeForces,
+	const StructNode *pRefNode_a,
+	bool bUseReferenceNodeForces_a,
+	bool bRotateReferenceNodeForces_a,
 	std::vector<const StructDispNode *>& nodes,
 	std::vector<Vec3>& offsets,
 	std::vector<unsigned>& labels,
 	std::vector<NodeConnData>& nodesConn,
-	SpMapMatrixHandler *pH,
-	std::vector<uint32_t>& mappedlabels,
-	bool bLabels,
-	bool bOutputAccelerations,
-	unsigned uRRot,
-	ExtFileHandlerBase *pEFH,
-	bool bSendAfterPredict,
-	int iCoupling,
+	SpMapMatrixHandler *pH_a,
+	std::vector<uint32_t>& mappedlabels_a,
+	bool bLabels_a,
+	bool bOutputAccelerations_a,
+	unsigned uRRot_a,
+	ExtFileHandlerBase *pEFH_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
 	flag fOut)
 : StructMappingExtForce(uL, pDM,
-	pRefNode, bUseReferenceNodeForces, bRotateReferenceNodeForces,
-	nodes, offsets, labels, pH, mappedlabels,
-	bLabels, bOutputAccelerations, uRRot,
-	pEFH, bSendAfterPredict, iCoupling,
+	pRefNode_a, bUseReferenceNodeForces_a, bRotateReferenceNodeForces_a,
+	nodes, offsets, labels, pH_a, mappedlabels_a,
+	bLabels_a, bOutputAccelerations_a, uRRot_a,
+	pEFH_a, bSendAfterPredict_a, iCoupling_a,
 	fOut)
 {
 	NodesConn.resize(Nodes.size());
@@ -1983,14 +1983,14 @@ ReadStructMappingExtForce(DataManager* pDM,
 		if (HP.IsKeyWord("membrane")) {
 			bMembrane = true;
 
-			for (unsigned n = 0; n < 4; n++) {
+			for (unsigned nn = 0; nn < 4; nn++) {
 				const StructDispNode *pNn = pDM->ReadNode<const StructDispNode, Node::STRUCTURAL>(HP);
-				if ((n%2) && pNn == ncd.pNode[n - 1]) {
+				if ((nn%2) && pNn == ncd.pNode[nn - 1]) {
 					silent_cerr("StructMappingExtForce(" << uLabel << "): "
-						"nodes #" << n << " and #" << n - 1 << " are the same in \"membrane\" mapping for StructNode(" << uL << ") at line " << HP.GetLineData() << std::endl);
+						"nodes #" << nn << " and #" << nn - 1 << " are the same in \"membrane\" mapping for StructNode(" << uL << ") at line " << HP.GetLineData() << std::endl);
 					throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 				}
-				ncd.pNode[n] = pNn;
+				ncd.pNode[nn] = pNn;
 			}
 
 			// first node
@@ -2400,33 +2400,33 @@ ReadStructMappingExtForce(DataManager* pDM,
 				in.putback(c);
 
 				for (unsigned l = 0; l < unsigned(nMappedPoints); l++) {
-					int i;
-					in >> i;
+					int ii;
+					in >> ii;
 					if (!in) {
 						silent_cerr("StructMappingExtForce(" << uLabel << "): "
 							"unable to read mapped label #" << l << "/" << nMappedPoints
 							<< " from mapped labels file \"" << sFileName << "\"" << std::endl);
 						throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 					}
-					if (i < 0) {
+					if (ii < 0) {
 						silent_cerr("StructMappingExtForce(" << uLabel << "): "
 							"invalid (negative) mapped label #" << l << "/" << nMappedPoints
 							<< " from mapped labels file \"" << sFileName << "\"" << std::endl);
 						throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 					}
-					MappedLabels[l] = i;
+					MappedLabels[l] = ii;
 				}
 
 			} else {
 				for (unsigned l = 0; l < unsigned(nMappedPoints); l++) {
-					int i = HP.GetInt();
-					if (i < 0) {
+					int ii = HP.GetInt();
+					if (ii < 0) {
 						silent_cerr("StructMappingExtForce(" << uLabel << "): "
 							"invalid (negative) mapped label #" << l << "/" << nMappedPoints
 							<< std::endl);
 						throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 					}
-					MappedLabels[l] = i;
+					MappedLabels[l] = ii;
 				}
 			}
 

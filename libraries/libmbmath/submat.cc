@@ -64,9 +64,9 @@ FullSubMatrixHandler::FullSubMatrixHandler(integer iIntSize,
                                            integer* piTmpVec,
                                            integer iDoubleSize,
                                            doublereal* pdTmpMat,
-                                           integer iMaxCols,
-                                           doublereal **ppdCols)
-     : FullMatrixHandler(pdTmpMat, ppdCols, iDoubleSize, 1, 1, iMaxCols),
+                                           integer iMaxCols_a,
+                                           doublereal **ppdCols_a)
+     : FullMatrixHandler(pdTmpMat, ppdCols_a, iDoubleSize, 1, 1, iMaxCols_a),
        iVecSize(iIntSize), piRow(0), piRowm1(0), piColm1(0)
 {
 #ifdef DEBUG
@@ -1009,8 +1009,8 @@ FullSubMatrixHandler::PutT(integer iRow,
 
 FullSubMatrixHandlerAd::FullSubMatrixHandlerAd(integer iIntSize, integer* piTmpVec,
                                                integer iDoubleSize, doublereal* pdTmpMat,
-                                               integer iMaxCols, doublereal **ppdCols)
-     :FullSubMatrixHandler(iIntSize, piTmpVec, iDoubleSize, pdTmpMat, iMaxCols, ppdCols)
+                                               integer iMaxCols_a, doublereal **ppdCols_a)
+     :FullSubMatrixHandler(iIntSize, piTmpVec, iDoubleSize, pdTmpMat, iMaxCols_a, ppdCols_a)
 {
 }
 
@@ -1732,8 +1732,8 @@ SparseSubMatrixHandlerAd::SparseSubMatrixHandlerAd(integer iTmpInt, integer* piT
 {
 }
 
-SparseSubMatrixHandlerAd::SparseSubMatrixHandlerAd(integer iNumItems)
-     :SparseSubMatrixHandler(iNumItems)
+SparseSubMatrixHandlerAd::SparseSubMatrixHandlerAd(integer iNumItems_a)
+     : SparseSubMatrixHandler(iNumItems_a)
 {
 }
 

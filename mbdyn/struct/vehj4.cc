@@ -90,14 +90,14 @@ DeformableAxialJoint::DeformableAxialJoint(unsigned int uL,
 		ConstitutiveLaw1D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
 		flag fOut)
 : Joint(uL, pDO, fOut),
 pNode1(pN1),
 pNode2(pN2),
-tilde_R1h(tilde_R1h),
-tilde_R2h(tilde_R2h),
+tilde_R1h(tilde_R1h_a),
+tilde_R2h(tilde_R2h_a),
 bFirstRes(false),
 dTol(0.),
 pDC(pCL)
@@ -343,10 +343,10 @@ ElasticAxialJoint::ElasticAxialJoint(unsigned int uL,
 		ConstitutiveLaw1D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
 		flag fOut)
-: DeformableAxialJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, fOut),
+: DeformableAxialJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, fOut),
 dThetaRef(0.)
 {
 	// force update of MDE/MDEPrime as needed
@@ -669,10 +669,10 @@ ViscousAxialJoint::ViscousAxialJoint(unsigned int uL,
 		ConstitutiveLaw1D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
 		flag fOut)
-: DeformableAxialJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, fOut)
+: DeformableAxialJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, fOut)
 {
 	// force update of MDE/MDEPrime as needed
 	AfterPredict();
@@ -974,10 +974,10 @@ ViscoElasticAxialJoint::ViscoElasticAxialJoint(unsigned int uL,
 		ConstitutiveLaw1D*const pCL,
 		const StructNode* pN1,
 		const StructNode* pN2,
-		const Mat3x3& tilde_R1h,
-		const Mat3x3& tilde_R2h,
+		const Mat3x3& tilde_R1h_a,
+		const Mat3x3& tilde_R2h_a,
 		flag fOut)
-: DeformableAxialJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h, tilde_R2h, fOut),
+: DeformableAxialJoint(uL, pDO, pCL, pN1, pN2, tilde_R1h_a, tilde_R2h_a, fOut),
 dThetaRef(0.)
 {
 	// force update of MDE/MDEPrime as needed

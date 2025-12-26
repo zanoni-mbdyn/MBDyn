@@ -519,8 +519,8 @@ namespace sp_grad {
      public:
           static constexpr SpGradCommon::ExprEvalFlags eExprEvalFlags = SpGradCommon::ExprEvalDuplicate;
 
-          constexpr explicit GpGradProd(doublereal dVal = 0., doublereal dDer = 0.)
-               :dVal(dVal), dDer(dDer) {
+          constexpr explicit GpGradProd(doublereal dVal_a = 0., doublereal dDer_a = 0.)
+               :dVal(dVal_a), dDer(dDer_a) {
           }
 
           void Reset(doublereal dNewVal = 0., doublereal dNewDer = 0.) {

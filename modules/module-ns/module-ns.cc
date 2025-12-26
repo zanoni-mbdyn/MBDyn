@@ -82,9 +82,9 @@ public:
 };
 
 ModuleNS1::ModuleNS1(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_dE(0.)
 {
 	// help

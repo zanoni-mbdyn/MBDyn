@@ -42,26 +42,26 @@
 /* Costruttore */
 ModalMappingExt::ModalMappingExt(unsigned int uL,
 	DataManager *pDM,
-	const StructNode *pRefNode,
+	const StructNode *pRefNode_a,
 	std::vector<const StructNode *>& n,
-	SpMapMatrixHandler *pH,
-	bool bOutputAccelerations,
-	ExtFileHandlerBase *pEFH,
-	ExtModalForceBase* pEMF,
-	bool bSendAfterPredict,
-	int iCoupling,
+	SpMapMatrixHandler *pH_a,
+	bool bOutputAccelerations_a,
+	ExtFileHandlerBase *pEFH_a,
+	ExtModalForceBase* pEMF_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
 	ExtModalForceBase::BitMask bm,
-	bool bUseReferenceNodeForces,
-	bool bRotateReferenceNodeForces,
+	bool bUseReferenceNodeForces_a,
+	bool bRotateReferenceNodeForces_a,
 	flag fOut)
-: ExtForce(uL, pDM, pEFH, bSendAfterPredict, iCoupling, fOut),
-pEMF(pEMF),
+: ExtForce(uL, pDM, pEFH_a, bSendAfterPredict_a, iCoupling_a, fOut),
+pEMF(pEMF_a),
 uFlags(ExtModalForceBase::EMF_NONE),
-bOutputAccelerations(bOutputAccelerations),
-bUseReferenceNodeForces(bUseReferenceNodeForces),
-bRotateReferenceNodeForces(bRotateReferenceNodeForces),
-pRefNode(pRefNode),
-pH(pH),
+bOutputAccelerations(bOutputAccelerations_a),
+bUseReferenceNodeForces(bUseReferenceNodeForces_a),
+bRotateReferenceNodeForces(bRotateReferenceNodeForces_a),
+pRefNode(pRefNode_a),
+pH(pH_a),
 F0(Zero3), M0(Zero3),
 F1(Zero3), M1(Zero3),
 F2(Zero3), M2(Zero3)
@@ -138,9 +138,9 @@ ModalMappingExt::~ModalMappingExt(void)
 }
 
 bool
-ModalMappingExt::Prepare(ExtFileHandlerBase *pEFH)
+ModalMappingExt::Prepare(ExtFileHandlerBase *pEFH_a)
 {
-	return pEMF->Prepare(pEFH, GetLabel(),
+	return pEMF->Prepare(pEFH_a, GetLabel(),
 		uFlags & ExtModalForceBase::EMF_RIGID,
 		pH->iGetNumRows());
 }
@@ -149,7 +149,7 @@ ModalMappingExt::Prepare(ExtFileHandlerBase *pEFH)
  * Send output to companion software
  */
 void
-ModalMappingExt::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen when)
+ModalMappingExt::Send(ExtFileHandlerBase *pEFH_a, ExtFileHandlerBase::SendWhen when)
 {
 	Vec3 X;
 	Mat3x3 R;
@@ -193,14 +193,14 @@ ModalMappingExt::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen whe
 	pH->MatVecMul(q, x);
 	pH->MatVecMul(qP, xP);
 
-	pEMF->Send(pEFH, uFlags, GetLabel(), X, R, V, W, q, qP);
+	pEMF->Send(pEFH_a, uFlags, GetLabel(), X, R, V, W, q, qP);
 }
 
 void
-ModalMappingExt::Recv(ExtFileHandlerBase *pEFH)
+ModalMappingExt::Recv(ExtFileHandlerBase *pEFH_a)
 {
-	unsigned uLabel = 0;
-	unsigned uOutFlags = pEMF->Recv(pEFH, uFlags, uLabel, F0, M0, p);
+	unsigned uLabel_local = 0;
+	unsigned uOutFlags = pEMF->Recv(pEFH_a, uFlags, uLabel_local, F0, M0, p);
 
 	if (uOutFlags & ExtModalForceBase::EMF_ERR) {
 		silent_cerr("ModalMappingExt(" << GetLabel() << "): "

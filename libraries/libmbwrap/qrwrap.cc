@@ -53,9 +53,9 @@
 #include "qrwrap.h"
 #include "linsol.h"
 
-QrDenseSolver::QrDenseSolver(Data* pData)
+QrDenseSolver::QrDenseSolver(Data* pData_a)
         : LinearSolver(nullptr),
-          pData(pData)
+          pData(pData_a)
 {
 
 }

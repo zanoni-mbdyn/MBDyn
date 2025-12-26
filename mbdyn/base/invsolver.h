@@ -75,7 +75,7 @@ protected:
 	bool bFullResTest;
 
    	/* Lettura dati */
-   	void ReadData(MBDynParser& HP);
+   	void ReadData();
 
 public:   
    	/* costruttore */

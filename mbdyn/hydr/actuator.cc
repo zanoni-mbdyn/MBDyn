@@ -232,8 +232,8 @@ Actuator::AssJac(VariableSubMatrixHandler& WorkMat,
    doublereal p1 = pNodeHyd1->dGetX();
    doublereal p2 = pNodeHyd2->dGetX();
    
-   doublereal density1 = HF1->dGetDensity(p1);
-   doublereal density2 = HF2->dGetDensity(p2);
+   density1 = HF1->dGetDensity(p1);
+   density2 = HF2->dGetDensity(p2);
    doublereal densityDP1 = HF1->dGetDensityDPres(p1);
    doublereal densityDP2 = HF2->dGetDensityDPres(p2);
    

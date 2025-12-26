@@ -84,9 +84,9 @@ public:
 };
 
 MBDynCUDATest::MBDynCUDATest(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_pNode(0),
 m_pCUDATest(0)
 {

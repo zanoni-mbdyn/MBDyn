@@ -119,9 +119,9 @@ public:
 };
 
 LoadIncNorm::LoadIncNorm(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_FirstSteps(2),
 m_dS(0.),
 m_dPMax(1.),
@@ -618,9 +618,9 @@ public:
 };
 
 LoadIncForce::LoadIncForce(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_pDrivenLoadIncNorm(0)
 {
 	// help

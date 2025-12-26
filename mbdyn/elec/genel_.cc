@@ -36,12 +36,12 @@
 
 /* GenelClamp - begin */
 
-GenelClamp::GenelClamp(unsigned int uLabel,
+GenelClamp::GenelClamp(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	const DriveCaller* pDC,
 	const ScalarDof& sd,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 DriveOwner(pDC), SD(sd), dRct(0.)
 {
 	NO_OP;
@@ -234,13 +234,13 @@ GenelClamp::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) con
 
 /* GenelDistance - begin */
 
-GenelDistance::GenelDistance(unsigned int uLabel,
+GenelDistance::GenelDistance(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	const DriveCaller* pDC,
 	const ScalarDof& sd1,
 	const ScalarDof& sd2,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 DriveOwner(pDC), SD1(sd1), SD2(sd2), dRct(0.)
 {
 	NO_OP;
@@ -440,13 +440,13 @@ GenelDistance::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) 
 
 /* GenelSpring - begin */
 
-GenelSpring::GenelSpring(unsigned int uLabel,
+GenelSpring::GenelSpring(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	ConstitutiveLaw1D*const pCL,
 	const ScalarDof& sd1,
 	const ScalarDof& sd2,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 SD1(sd1), SD2(sd2), dVal(0.), pDC(pCL)
 {
 	NO_OP;
@@ -604,11 +604,11 @@ GenelSpring::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) co
 
 /* GenelSpringSupport - begin */
 
-GenelSpringSupport::GenelSpringSupport(unsigned int uLabel,
+GenelSpringSupport::GenelSpringSupport(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	ConstitutiveLaw1D*const pCL,
-	const ScalarDof& sd, doublereal X0, flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	const ScalarDof& sd, doublereal X0, flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 SD(sd), dVal(0.), dInitVal(X0), pDC(pCL)
 {
 	ASSERT(SD.iOrder == 0);
@@ -766,13 +766,13 @@ GenelSpringSupport::DescribeEq(std::ostream& out, const char *prefix, bool bInit
 
 /* GenelCrossSpringSupport - begin */
 
-GenelCrossSpringSupport::GenelCrossSpringSupport(unsigned int uLabel,
+GenelCrossSpringSupport::GenelCrossSpringSupport(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	ConstitutiveLaw1D*const pCL,
 	const ScalarDof& sdrow,
 	const ScalarDof& sdcol,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 SDRow(sdrow), SDCol(sdcol), dVal(0.), pDC(pCL)
 {
 	ASSERT(SDCol.iOrder == 0);
@@ -905,12 +905,12 @@ GenelCrossSpringSupport::DescribeEq(std::ostream& out, const char *prefix, bool 
 /* GenelCrossSpringDamperSupport - begin */
 
 GenelCrossSpringDamperSupport::GenelCrossSpringDamperSupport(
-	unsigned int uLabel, const DofOwner* pDO,
+	unsigned int uLabel_a, const DofOwner* pDO,
 	ConstitutiveLaw1D*const pCL,
 	const ScalarDof& sdrow,
 	const ScalarDof& sdcol,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 SDRow(sdrow), SDCol(sdcol),
 dVal(0.), dValPrime(0.), pDC(pCL)
 {
@@ -1045,11 +1045,11 @@ GenelCrossSpringDamperSupport::DescribeEq(std::ostream& out, const char *prefix,
 
 /* GenelSpringDamperSupport - begin */
 
-GenelSpringDamperSupport::GenelSpringDamperSupport(unsigned int uLabel,
+GenelSpringDamperSupport::GenelSpringDamperSupport(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	ConstitutiveLaw1D*const pCL,
-	const ScalarDof& sd, doublereal X0, flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	const ScalarDof& sd, doublereal X0, flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 SD(sd), dVal(0.), dInitVal(X0), dValPrime(0.), pDC(pCL)
 {
 	ASSERT(sd.pNode->GetDofType(0) == DofOrder::DIFFERENTIAL);
@@ -1179,10 +1179,10 @@ GenelSpringDamperSupport::DescribeEq(std::ostream& out, const char *prefix, bool
 
 /* GenelMass - begin */
 
-GenelMass::GenelMass(unsigned int uLabel,
+GenelMass::GenelMass(unsigned int uLabel_a,
 	const DofOwner* pDO, const DriveCaller* pDC,
-	const ScalarDof& sd, flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	const ScalarDof& sd, flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 DriveOwner(pDC), SD(sd)
 {
 	NO_OP;

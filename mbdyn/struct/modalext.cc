@@ -336,18 +336,18 @@ ModalExt::ModalExt(unsigned int uL,
 	DataManager *pDM,
 	const Modal *pmodal,
 	const StructNode *pnode,
-	bool bOutputAccelerations,
-	ExtFileHandlerBase *pEFH,
-	ExtModalForceBase* pEMF,
-	bool bSendAfterPredict,
-	int iCoupling,
+	bool bOutputAccelerations_a,
+	ExtFileHandlerBase *pEFH_a,
+	ExtModalForceBase* pEMF_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
 	ExtModalForceBase::BitMask bm,
 	flag fOut)
-: ExtForce(uL, pDM, pEFH, bSendAfterPredict, iCoupling, fOut),
+: ExtForce(uL, pDM, pEFH_a, bSendAfterPredict_a, iCoupling_a, fOut),
 pModal(pmodal),
 pNode(pnode),
-bOutputAccelerations(bOutputAccelerations),
-pEMF(pEMF),
+bOutputAccelerations(bOutputAccelerations_a),
+pEMF(pEMF_a),
 uFlags(ExtModalForceBase::EMF_NONE),
 F(Zero3),
 M(Zero3)
@@ -388,9 +388,9 @@ ModalExt::~ModalExt(void)
 }
 
 bool
-ModalExt::Prepare(ExtFileHandlerBase *pEFH)
+ModalExt::Prepare(ExtFileHandlerBase *pEFH_a)
 {
-	return pEMF->Prepare(pEFH, GetLabel(),
+	return pEMF->Prepare(pEFH_a, GetLabel(),
 		uFlags & ExtModalForceBase::EMF_RIGID,
 		pModal ? pModal->uGetNModes() : 0);
 }
@@ -399,7 +399,7 @@ ModalExt::Prepare(ExtFileHandlerBase *pEFH)
  * Send output to companion software
  */
 void
-ModalExt::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen when)
+ModalExt::Send(ExtFileHandlerBase *pEFH_a, ExtFileHandlerBase::SendWhen when)
 {
 	Vec3 x;
 	Mat3x3 R;
@@ -429,7 +429,7 @@ ModalExt::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen when)
 		}
 	}
 
-	pEMF->Send(pEFH, uFlags, GetLabel(), x, R, v, w, q, qP);
+	pEMF->Send(pEFH_a, uFlags, GetLabel(), x, R, v, w, q, qP);
 
 #if 0
 	if (uFlags & ExtModalForceBase::EMF_RIGID) {
@@ -465,10 +465,10 @@ ModalExt::Send(ExtFileHandlerBase *pEFH, ExtFileHandlerBase::SendWhen when)
 }
 
 void
-ModalExt::Recv(ExtFileHandlerBase *pEFH)
+ModalExt::Recv(ExtFileHandlerBase *pEFH_a)
 {
-	unsigned uLabel = 0;
-	unsigned uOutFlags = pEMF->Recv(pEFH, uFlags, uLabel, F, M, f);
+	unsigned uLabel_local = 0;
+	unsigned uOutFlags = pEMF->Recv(pEFH_a, uFlags, uLabel_local, F, M, f);
 
 	if (uOutFlags & ExtModalForceBase::EMF_ERR) {
 		silent_cerr("ModalExt(" << GetLabel() << "): "

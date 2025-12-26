@@ -60,9 +60,9 @@ int main(int argn, const char* const argv[])
 	 std::cin >> d[M12] >> d[M13] 
 	 	>> d[M21] >> d[M22] >> d[M23] >> d[M31] >> d[M32] >> d[M33];
 	 Vec3 phi(RotManip::VecRot(Mat3x3(d, 3)));
-	 doublereal d = phi.Norm();
-	 if (d != 0.) {
-	    std::cout << d*180./M_PI << " " << phi/d << std::endl;
+	 doublereal d_local = phi.Norm();
+	 if (d_local != 0.) {
+	    std::cout << d_local*180./M_PI << " " << phi/d_local << std::endl;
 	 } else {
 	    std::cout << 0. << " " << 0. << " " << 0. << " " << 0. << std::endl;
 	 }

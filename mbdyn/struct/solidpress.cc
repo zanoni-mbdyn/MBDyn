@@ -477,9 +477,9 @@ PressureFromNodes<iNumNodes>::GetNodalPressure(sp_grad::SpColVector<T, iNumNodes
      }
 }
 
-SurfaceLoadElem::SurfaceLoadElem(unsigned uLabel,
+SurfaceLoadElem::SurfaceLoadElem(unsigned uLabel_a,
 				 flag fOut)
-     :InitialAssemblyElem(uLabel, fOut),
+     :InitialAssemblyElem(uLabel_a, fOut),
       Ftot(::Zero3)
 {
 }
@@ -535,11 +535,11 @@ void SurfaceLoadElem::Output(OutputHandler& OH) const
 }
 
 template <typename ElementType, typename CollocationType, typename PressureSource>
-SurfaceLoad<ElementType, CollocationType, PressureSource>::SurfaceLoad(unsigned uLabel,
+SurfaceLoad<ElementType, CollocationType, PressureSource>::SurfaceLoad(unsigned uLabel_a,
 								       const std::array<const StructDispNodeAd*, iNumNodes>& rgNodesTmp,
 								       PressureSource&& oPressureTmp,
 								       flag fOut)
-     :SurfaceLoadElem(uLabel, fOut),
+     :SurfaceLoadElem(uLabel_a, fOut),
       rgNodes(rgNodesTmp),
       oPressure(std::move(oPressureTmp)),
       A0(0.)
@@ -673,11 +673,11 @@ SurfaceLoad<ElementType, CollocationType, PressureSource>::InitCollocData(std::a
 }
 
 template <typename ElementType, typename CollocationType, typename PressureSource>
-PressureLoad<ElementType, CollocationType, PressureSource>::PressureLoad(unsigned uLabel,
+PressureLoad<ElementType, CollocationType, PressureSource>::PressureLoad(unsigned uLabel_a,
 									 const std::array<const StructDispNodeAd*, iNumNodes>& rgNodesTmp,
 									 PressureSource&& oPressureTmp,
 									 flag fOut)
-:BaseType(uLabel, rgNodesTmp, std::move(oPressureTmp), fOut)
+:BaseType(uLabel_a, rgNodesTmp, std::move(oPressureTmp), fOut)
 {
      BaseType::InitCollocData(rgCollocData);
 }
@@ -877,12 +877,12 @@ PressureLoad<ElementType, CollocationType, PressureSource>::InitialWorkSpaceDim(
 }
 
 template <typename ElementType, typename CollocationType, typename PressureSource, SurfaceTractionType eType>
-SurfaceTraction<ElementType, CollocationType, PressureSource, eType>::SurfaceTraction(unsigned uLabel,
+SurfaceTraction<ElementType, CollocationType, PressureSource, eType>::SurfaceTraction(unsigned uLabel_a,
 										      const std::array<const StructDispNodeAd*, iNumNodes>& rgNodesTmp,
 										      PressureSource&& oPressureTmp,
 										      const std::array<Mat3x3, iNumEvalPoints>& Rf,
 										      flag fOut)
-:BaseType(uLabel, rgNodesTmp, std::move(oPressureTmp), fOut)
+:BaseType(uLabel_a, rgNodesTmp, std::move(oPressureTmp), fOut)
 {
      using namespace sp_grad;
 
@@ -1205,11 +1205,11 @@ SurfaceTraction<ElementType, CollocationType, PressureSource, eType>::InitialWor
 }
 
 struct UnilateralContactParam {
-     UnilateralContactParam(doublereal epsilon, doublereal dContactScale, doublereal gref, doublereal pref)
-	  :epsilon(epsilon),
-	   dContactScale(dContactScale),
-	   gref(gref),
-	   pref(pref) {
+     UnilateralContactParam(doublereal epsilon_a, doublereal dContactScale_a, doublereal gref_a, doublereal pref_a)
+	  :epsilon(epsilon_a),
+	   dContactScale(dContactScale_a),
+	   gref(gref_a),
+	   pref(pref_a) {
      }
      const doublereal epsilon;
      const doublereal dContactScale;
@@ -1321,19 +1321,19 @@ protected:
 };
 
 template <typename ElementType, typename CollocationType, typename ContactTraits>
-UnilateralInPlaneContact<ElementType, CollocationType, ContactTraits>::UnilateralInPlaneContact(unsigned uLabel,
+UnilateralInPlaneContact<ElementType, CollocationType, ContactTraits>::UnilateralInPlaneContact(unsigned uLabel_a,
 												const std::array<const StructDispNodeAd*, iNumNodes>& rgNodesTmp,
-												const StructNodeAd* pNode0,
-												const Mat3x3& Rn0,
-												const Vec3& o0,
+												const StructNodeAd* pNode0_a,
+												const Mat3x3& Rn0_a,
+												const Vec3& o0_a,
 												const UnilateralContactParam& oContactParam,
 												PressureFromNodes<iNumNodes>&& oPressureTmp,
 												flag fOut)
-:BaseType(uLabel, rgNodesTmp, std::move(oPressureTmp), fOut),
+:BaseType(uLabel_a, rgNodesTmp, std::move(oPressureTmp), fOut),
  UnilateralContactParam(oContactParam),
- pNode0(pNode0),
- Rn0(Rn0),
- o0(o0),
+ pNode0(pNode0_a),
+ Rn0(Rn0_a),
+ o0(o0_a),
  F0tot(3, 0),
  M0tot(3, 0)
 {

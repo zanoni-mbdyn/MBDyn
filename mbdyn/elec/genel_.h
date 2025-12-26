@@ -51,57 +51,57 @@ public:
 
 	virtual ~GenelClamp(void);
 
-	virtual unsigned int iGetNumDof(void) const;
+	virtual unsigned int iGetNumDof(void) const override;
 
 	/* esegue operazioni sui dof di proprieta' dell'elemento */
-	virtual DofOrder::Order GetDofType(unsigned int i) const;
+	virtual DofOrder::Order GetDofType(unsigned int i) const override;
 
 	/* esegue operazioni sui dof di proprieta' dell'elemento */
-	virtual DofOrder::Order GetEqType(unsigned int i) const;
+	virtual DofOrder::Order GetEqType(unsigned int i) const override;
 
 	/* Scrive il contributo dell'elemento al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
 	/* Tipo di Genel */
-	virtual Genel::Type GetGenelType(void) const;
+	virtual Genel::Type GetGenelType(void) const override;
 
 	/* Dimensioni del workspace */
-	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const;
+	virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
 
-	void Output(OutputHandler& OH ) const;
+	void Output(OutputHandler& OH ) const override;
 
 	/* assemblaggio jacobiano */
 	virtual VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& XPrimeCurr);
+		const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio residuo */
 	virtual SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
 		const VectorHandler& XCurr,
-		const VectorHandler& /* XPrimeCurr */ );
+		const VectorHandler& /* XPrimeCurr */ ) override;
 
 	void SetValue(DataManager *pDM,
 		VectorHandler& X, VectorHandler& XP,
-		SimulationEntity::Hints *ph = 0);
+		SimulationEntity::Hints *ph = 0) override;
 
 	/* *******PER IL SOLUTORE PARALLELO******** */
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
-	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const;
+	virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override;
 	/* ************************************************ */
 
 	/* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 
 	/* describes the dimension of components of equation */
     virtual std::ostream& DescribeEq(std::ostream& out,
 		  const char *prefix = "",
-		  bool bInitial = false) const;
+		  bool bInitial = false) const override;
 };
 
 /* GenelClamp - end */

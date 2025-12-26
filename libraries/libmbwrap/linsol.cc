@@ -424,13 +424,13 @@ LinSol::SetSolverFlags(unsigned f)
 }
 
 bool
-LinSol::AddSolverFlags(unsigned mask, unsigned flag)
+LinSol::AddSolverFlags(unsigned mask, unsigned flag_a)
 {
-        ASSERT((mask & flag) == flag);
+        ASSERT((mask & flag_a) == flag_a);
 	
-        if ((::solver[currSolver].s_flags & flag) == flag) {
+        if ((::solver[currSolver].s_flags & flag_a) == flag_a) {
 	        solverFlags &= ~mask;
-		solverFlags |= flag;
+		solverFlags |= flag_a;
 		return true;
 	}
 

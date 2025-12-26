@@ -113,9 +113,9 @@ public:
 // Warning: IDETC/CIE 2014 version uses ADOL-C instead of finite differences !!!!
 
 HydrodynamicBearing01::HydrodynamicBearing01(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 pNode1(0), pNode2(0)
 {
    DEBUGCOUT("Entering HydrodynamicBearing01 constructor" << std::endl);
@@ -658,9 +658,9 @@ HydrodynamicBearing01::FForce(doublereal Xi[], doublereal Fi[]) const
 }
 
 
-doublereal HydrodynamicBearing01::hi(doublereal cr, doublereal x, doublereal y, doublereal v) const
+doublereal HydrodynamicBearing01::hi(doublereal cr_a, doublereal x, doublereal y, doublereal v) const
 {
-   return cr-x*cos(v)-y*sin(v);
+   return cr_a-x*cos(v)-y*sin(v);
 };
 
 

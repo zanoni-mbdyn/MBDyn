@@ -2325,8 +2325,8 @@ FullMatrixHandler::const_iterator::reset(bool is_end)
 	}
 }
 
-FullMatrixHandler::const_iterator::const_iterator(const FullMatrixHandler& m, bool is_end)
-: m(m)
+FullMatrixHandler::const_iterator::const_iterator(const FullMatrixHandler& m_a, bool is_end)
+: m(m_a)
 {
 	reset(is_end);
 }

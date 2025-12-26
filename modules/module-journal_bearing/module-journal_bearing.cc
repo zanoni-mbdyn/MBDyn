@@ -151,9 +151,9 @@ private:
 };
 
 JournalBearing::JournalBearing(
-        unsigned uLabel, const DofOwner *pDO,
+        unsigned uLabel_a, const DofOwner *pDO,
         DataManager* pDM, MBDynParser& HP)
-:       UserDefinedElem(uLabel, pDO),
+:       UserDefinedElem(uLabel_a, pDO),
         pNode1(0),
         o1(Zero3),
         e(Eye3),
@@ -614,16 +614,16 @@ JournalBearing::AssRes(SpGradientAssVec<T>& WorkVec,
         pNode2->GetXCurr(X2, dCoef, func);
         pNode2->GetRCurr(R2, dCoef, func);
 
-        SpColVector<T, 2> lambda(2, 1);
+        SpColVector<T, 2> lambda_sp(2, 1);
 
-        XCurr.GetVec(iFirstIndex + 1, lambda, 1.); // Note: for algebraic variables dCoef is always one
+        XCurr.GetVec(iFirstIndex + 1, lambda_sp, 1.); // Note: for algebraic variables dCoef is always one
 
-        SaveLambda(lambda);
+        SaveLambda(lambda_sp);
 
         const SpColVector<T, 3> R2o2 = R2 * o2;
         const SpColVector<T, 3> l1 = X2 + R2o2 - X1;
 
-        const SpColVector<T, 3> F1 = R1 * (e.GetCol(2) * lambda(1) + e.GetCol(3) * lambda(2));
+        const SpColVector<T, 3> F1 = R1 * (e.GetCol(2) * lambda_sp(1) + e.GetCol(3) * lambda_sp(2));
         SpColVector<T, 3> M1 = Cross(l1, F1);
         const SpColVector<T, 3> F2 = -F1;
         SpColVector<T, 3> M2 = Cross(R2o2, F2);
@@ -634,14 +634,14 @@ JournalBearing::AssRes(SpGradientAssVec<T>& WorkVec,
                 pNode2->GetWCurr(omega2, dCoef, func);
 
                 const T domega = Dot(e.GetCol(1), Transpose(R1) * (omega2 - omega1));
-                T mf = kv * domega;
+                T mf_T = kv * domega;
 
                 if (muc > 0)
                 {
-                        T z, zP;
+                        T z_T, zP_T;
 
-                        XCurr.dGetCoef(iFirstIndex + 3, z, dCoef);
-                        XPrimeCurr.dGetCoef(iFirstIndex + 3, zP, 1.);
+                        XCurr.dGetCoef(iFirstIndex + 3, z_T, dCoef);
+                        XPrimeCurr.dGetCoef(iFirstIndex + 3, zP_T, 1.);
 
                         T g;
 
@@ -653,19 +653,19 @@ JournalBearing::AssRes(SpGradientAssVec<T>& WorkVec,
                              SpGradientTraits<T>::ResizeReset(g, mus, 0);
                         }
 
-                        const T f = v - sigma0 * fabs(v) / g * z - zP;
-                        const T mu = sigma0 * z + sigma1 * zP;
+                        const T f = v - sigma0 * fabs(v) / g * z_T - zP_T;
+                        const T mu = sigma0 * z_T + sigma1 * zP_T;
 
-                        if (lambda(1) != 0. || lambda(2) != 0) {
-                                mf += (0.5 * d) * mu * sqrt(lambda(1) * lambda(1) + lambda(2) * lambda(2));
+                        if (lambda_sp(1) != 0. || lambda_sp(2) != 0) {
+                                mf_T += (0.5 * d) * mu * sqrt(lambda_sp(1) * lambda_sp(1) + lambda_sp(2) * lambda_sp(2));
                         }
 
                         WorkVec.AddItem(iFirstIndex + 3, f);
                 }
 
-                SaveFriction(domega, mf);
+                SaveFriction(domega, mf_T);
 
-                const SpColVector<T, 3> Mf = (R1 * e.GetCol(1)) * mf;
+                const SpColVector<T, 3> Mf = (R1 * e.GetCol(1)) * mf_T;
 
                 M1 += Mf;
                 M2 -= Mf;
@@ -683,15 +683,15 @@ JournalBearing::AssRes(SpGradientAssVec<T>& WorkVec,
         }
 }
 
-void JournalBearing::SaveLambda(const sp_grad::SpColVector<doublereal, 2>& lambda)
+void JournalBearing::SaveLambda(const sp_grad::SpColVector<doublereal, 2>& lambda_a)
 {
-        this->lambda = lambda;
+        this->lambda = lambda_a;
 }
 
-void JournalBearing::SaveFriction(doublereal omega, doublereal mf)
+void JournalBearing::SaveFriction(doublereal omega_a, doublereal mf_a)
 {
-        this->omega = omega;
-        this->mf = mf;
+        this->omega = omega_a;
+        this->mf = mf_a;
 }
 
 int
@@ -804,30 +804,30 @@ JournalBearing::InitialAssRes(SpGradientAssVec<T>& WorkVec,
         const integer iFirstIndexNode2 = pNode2->iGetFirstIndex();
         const integer iFirstIndex = iGetFirstIndex();
 
-        SpColVector<T, 2> lambda(2, 1), lambdaP(2, 1);
+        SpColVector<T, 2> lambda_sp(2, 1), lambdaP_sp(2, 1);
 
         for (integer i = 1; i <= 2; ++i) {
-                XCurr.dGetCoef(iFirstIndex + i, lambda(i), 1.);
-                XCurr.dGetCoef(iFirstIndex + i + 2, lambdaP(i), 1.);
+                XCurr.dGetCoef(iFirstIndex + i, lambda_sp(i), 1.);
+                XCurr.dGetCoef(iFirstIndex + i + 2, lambdaP_sp(i), 1.);
         }
 
-        SaveLambda(lambda);
+        SaveLambda(lambda_sp);
 
         const SpColVector<T, 3> R2o2 = R2 * o2;
         const SpColVector<T, 3> l1 = X2 + R2o2 - X1;
 
-        const SpColVector<T, 3> F1 = R1 * (e.GetCol(2) * lambda(1) + e.GetCol(3) * lambda(2));
+        const SpColVector<T, 3> F1 = R1 * (e.GetCol(2) * lambda_sp(1) + e.GetCol(3) * lambda_sp(2));
         const SpColVector<T, 3> M1 = Cross(l1, F1);
-        const SpColVector<T, 3> FP1 = Cross(omega1, R1 * (e.GetCol(2) * lambda(1) + e.GetCol(3) * lambda(2)))
-                + R1 * (e.GetCol(2) * lambdaP(1) + e.GetCol(3) * lambdaP(2));
+        const SpColVector<T, 3> FP1 = Cross(omega1, R1 * (e.GetCol(2) * lambda_sp(1) + e.GetCol(3) * lambda_sp(2)))
+                + R1 * (e.GetCol(2) * lambdaP_sp(1) + e.GetCol(3) * lambdaP_sp(2));
         const SpColVector<T, 3> MP1 = -Cross(F1, XP2 + Cross(omega2, R2o2) - XP1) + Cross(l1, FP1);
         const SpColVector<T, 3> F2 = -F1;
         const SpColVector<T, 3> M2 = Cross(R2o2, F2);
         const SpColVector<T, 3> FP2 = -FP1;
         const SpColVector<T, 3> MP2 = Cross(Cross(omega2, R2o2), F2) + Cross(R2o2, FP2);
 
-        const SpColVector<T, 3> a = Transpose(R1) * l1 - o1;
-        const SpColVector<T, 3> aP = Transpose(R1) * (Cross(l1, omega1) + XP2 + Cross(omega2, R2o2) - XP1);
+        const SpColVector<T, 3> a_sp = Transpose(R1) * l1 - o1;
+        const SpColVector<T, 3> aP_sp = Transpose(R1) * (Cross(l1, omega1) + XP2 + Cross(omega2, R2o2) - XP1);
 
         WorkVec.AddItem(iFirstIndexNode1 + 1, F1);
         WorkVec.AddItem(iFirstIndexNode1 + 4, M1);
@@ -840,8 +840,8 @@ JournalBearing::InitialAssRes(SpGradientAssVec<T>& WorkVec,
         WorkVec.AddItem(iFirstIndexNode2 + 10, MP2);
 
         for (integer i = 1; i <= 2; ++i) {
-                WorkVec.AddItem(iFirstIndex + i, Dot(e.GetCol(i + 1), a));
-                WorkVec.AddItem(iFirstIndex + i + 2, Dot(e.GetCol(i + 1), aP));
+                WorkVec.AddItem(iFirstIndex + i, Dot(e.GetCol(i + 1), a_sp));
+                WorkVec.AddItem(iFirstIndex + i + 2, Dot(e.GetCol(i + 1), aP_sp));
         }
 }
 

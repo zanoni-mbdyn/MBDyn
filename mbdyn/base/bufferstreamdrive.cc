@@ -41,12 +41,12 @@
 BufferStreamDrive_base::BufferStreamDrive_base(unsigned int uL,
 	const DriveHandler* pDH,
 	integer nd, const std::vector<doublereal>& v0,
-	StreamDrive::Modifier *pMod,
+	StreamDrive::Modifier *pMod_a,
 	unsigned int ie,
-	StreamDriveEcho *pSDE)
-: StreamDrive(uL, pDH, "buffer", nd, v0, true, pMod),
+	StreamDriveEcho *pSDE_a)
+: StreamDrive(uL, pDH, "buffer", nd, v0, true, pMod_a),
 InputEvery(ie), InputCounter(ie - 1),
-pSDE(pSDE)
+pSDE(pSDE_a)
 {
 	// NOTE: InputCounter is set to InputEvery - 1 so that input
 	// is expected at initialization (initial time) and then every
@@ -103,10 +103,10 @@ BufferStreamDrive_base::ServePending(const doublereal& t)
 BufferStreamDrive::BufferStreamDrive(unsigned int uL,
 	const DriveHandler* pDH,
 	integer nd, const std::vector<doublereal>& v0,
-	StreamDrive::Modifier *pMod,
+	StreamDrive::Modifier *pMod_a,
 	unsigned int ie,
-	StreamDriveEcho *pSDE)
-: BufferStreamDrive_base(uL, pDH, nd, v0, pMod, ie, pSDE),
+	StreamDriveEcho *pSDE_a)
+: BufferStreamDrive_base(uL, pDH, nd, v0, pMod_a, ie, pSDE_a),
 buffer(nd)
 {
 	NO_OP;
@@ -148,11 +148,11 @@ BufferStreamDrive::Restart(std::ostream& out) const
 BufferStreamDriveRaw::BufferStreamDriveRaw(unsigned int uL,
 	const DriveHandler* pDH,
 	integer nd, const std::vector<doublereal>& v0,
-	StreamDrive::Modifier *pMod,
+	StreamDrive::Modifier *pMod_a,
 	unsigned int ie,
-	StreamDriveEcho *pSDE,
+	StreamDriveEcho *pSDE_a,
 	bool bOwnsMemory)
-: BufferStreamDrive_base(uL, pDH, nd, v0, pMod, ie, pSDE),
+: BufferStreamDrive_base(uL, pDH, nd, v0, pMod_a, ie, pSDE_a),
 m_bOwnsMemory(bOwnsMemory),
 m_pBuffer(0)
 {

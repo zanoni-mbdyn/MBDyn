@@ -484,12 +484,12 @@ SocketDrive::ServePending(const doublereal& /* t */ )
 	    		}
 
 	    		if (strncasecmp(nextline, "value:", STRLENOF("value:")) == 0) {
-	       			char *p = nextline + STRLENOF("value:");
-	       			while (isspace(p[0])) {
-	 				p++;
-				}
+	       			char *pp = nextline + STRLENOF("value:");
+	       			while (isspace(pp[0])) {
+						pp++;
+					}
 
-	       			if (sscanf(p, "%lf", &value) != 1) {
+	       			if (sscanf(pp, "%lf", &value) != 1) {
 	  				silent_cerr("SocketDrive(" << GetLabel() << "): "
 						"unable to read value"
 						<< std::endl);
@@ -499,12 +499,12 @@ SocketDrive::ServePending(const doublereal& /* t */ )
 				got_value = 1;
 
     			} else if (strncasecmp(nextline, "inc:", STRLENOF("inc:")) == 0) {
-       				char *p = nextline + STRLENOF("inc:");
-       				while (isspace(p[0])) {
-	  				p++;
+       				char *pp = nextline + STRLENOF("inc:");
+       				while (isspace(pp[0])) {
+						pp++;
        				}
 
-       				if (strncasecmp(p, "yes", STRLENOF("yes")) == 0) {
+       				if (strncasecmp(pp, "yes", STRLENOF("yes")) == 0) {
 					pFlags[label] = SocketDrive::INCREMENTAL;
 
 				} else if (strncasecmp(p, "no", STRLENOF("no")) == 0) {
@@ -522,15 +522,15 @@ SocketDrive::ServePending(const doublereal& /* t */ )
 				nextline = NULL;
 
 			} else if (strncasecmp(nextline, "imp:", STRLENOF("imp:")) == 0) {
-				char *p = nextline + STRLENOF("imp:");
-				while (isspace(p[0])) {
-					p++;
+				char *pp = nextline + STRLENOF("imp:");
+				while (isspace(pp[0])) {
+					pp++;
 				}
 
-				if (strncasecmp(p, "yes", STRLENOF("yes")) == 0) {
+				if (strncasecmp(pp, "yes", STRLENOF("yes")) == 0) {
 					pFlags[label] = SocketDrive::IMPULSIVE;
 
-				} else if (strncasecmp(p, "no", STRLENOF("no")) == 0) {
+				} else if (strncasecmp(pp, "no", STRLENOF("no")) == 0) {
 					pFlags[label] = SocketDrive::DEFAULT;
 
 				} else {

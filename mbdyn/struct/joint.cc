@@ -131,7 +131,7 @@ Joint::OutputPrepare_int(const std::string& type, OutputHandler &OH)
 /* Output specifico dei vincoli */
 std::ostream&
 Joint::Output(std::ostream& out, const char* /* sJointName */ ,
-	unsigned int uLabel,
+	unsigned int uLabel_a,
 	const Vec3& FLocal, const Vec3& MLocal,
 	const Vec3& FGlobal, const Vec3& MGlobal) const
 {
@@ -142,12 +142,12 @@ Joint::Output(std::ostream& out, const char* /* sJointName */ ,
 
    /* Nota: non c'e' *std::endl* perche' i vincoli possono aggiungere outut
     * ulteriore a quello comune a tutti */
-   return out << sJointName << std::setw(16+8-strlen(sJointName)) << uLabel << " "
+   return out << sJointName << std::setw(16+8-strlen(sJointName)) << uLabel_a << " "
      << FLocal << " " << MLocal << " " << FGlobal << " " << MGlobal;
 #endif
 
 	return out
-		<< std::setw(8) << uLabel
+		<< std::setw(8) << uLabel_a
 		<< " " << FLocal << " " << MLocal
 		<< " " << FGlobal << " " << MGlobal;
 }
@@ -841,18 +841,18 @@ ReadJoint(DataManager* pDM,
 
 		OrientationDescription od = UNKNOWN_ORIENTATION_DESCRIPTION;
 		switch (CurrKeyWord) {
-		case GIMBALROTATION:
-		case SPHERICALHINGE:
-		case UNIVERSALROTATION:
-		case CARDANOROTATION:
-		case REVOLUTEHINGE:
-		case AXIALROTATION:
-		case REVOLUTEROTATION:
-			od = ReadOptionalOrientationDescription(pDM, HP);
-			break;
+			case GIMBALROTATION:
+			case SPHERICALHINGE:
+			case UNIVERSALROTATION:
+			case CARDANOROTATION:
+			case REVOLUTEHINGE:
+			case AXIALROTATION:
+			case REVOLUTEROTATION:
+				od = ReadOptionalOrientationDescription(pDM, HP);
+				break;
 
-		default:
-			break;
+			default:
+				break;
 		}
 
 		flag fOut = pDM->fReadOutput(HP, Elem::JOINT);
@@ -971,7 +971,7 @@ ReadJoint(DataManager* pDM,
 			Vec3 Dir(Zero3);
 #endif
 
-			DriveCaller *pDC = HP.GetDriveCaller();
+			pDC = HP.GetDriveCaller();
 
 			SAFENEWWITHCONSTRUCTOR(pEl,
 				Brake,
@@ -1535,7 +1535,7 @@ ReadJoint(DataManager* pDM,
 			}
 
 			bOffset = true;
-			ReferenceFrame RF1(pNode1);
+			// ReferenceFrame RF1(pNode1);
 			f1 = HP.GetPosRel(RF1);
 			DEBUGCOUT("Offset 1: " << f1 << std::endl);
 

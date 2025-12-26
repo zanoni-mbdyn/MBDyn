@@ -465,9 +465,9 @@ ScalarDifferentialNode::DescribeEq(std::ostream& out, const char *prefix, bool b
 ScalarAlgebraicNode::ScalarAlgebraicNode(unsigned int uL,
                                          const DofOwner* pDO,
                                          doublereal dx,
-                                         DofOrder::Equality eEqualityType,
+                                         DofOrder::Equality eEqualityType_a,
                                          flag fOut)
-: ScalarNode(uL, pDO, fOut), dX(dx), dXPrev(dx), eEqualityType(eEqualityType)
+: ScalarNode(uL, pDO, fOut), dX(dx), dXPrev(dx), eEqualityType(eEqualityType_a)
 {
 	NO_OP;
 }

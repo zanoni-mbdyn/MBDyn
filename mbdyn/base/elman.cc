@@ -714,18 +714,18 @@ DataManager::ElemOutputPrepare(OutputHandler& OH)
 
 				integer iNumElems = ElemData[et].ElemContainer.size();
 
-				OutputHandler::AttrValVec attrs(1);
-				attrs[0] = OutputHandler::AttrVal("description", std::string(ElemData[et].Desc) + " elements labels");
+				OutputHandler::AttrValVec attrs_local(1);
+				attrs_local[0] = OutputHandler::AttrVal("description", std::string(ElemData[et].Desc) + " elements labels");
 
-				OutputHandler::NcDimVec dim(1);
-				dim[0] = OH.CreateDim(std::string(ElemData[et].ShortDesc) + "_elem_labels_dim", iNumElems);
+				OutputHandler::NcDimVec dim_local(1);
+				dim_local[0] = OH.CreateDim(std::string(ElemData[et].ShortDesc) + "_elem_labels_dim", iNumElems);
 
-				MBDynNcVar VarLabels = OH.CreateVar(std::string("elem.") + ElemData[et].ShortDesc, MbNcInt, attrs, dim);
+				MBDynNcVar VarLabels = OH.CreateVar(std::string("elem.") + ElemData[et].ShortDesc, MbNcInt, attrs_local, dim_local);
 				ElemContainerType::const_iterator p = ElemData[et].ElemContainer.begin();
 				for (unsigned i = 0; i < unsigned(iNumElems); i++, p++) {
-					const std::vector<size_t> ncStartPos(1, i);
+					const std::vector<size_t> ncStartPos_local(1, i);
 					const long l = p->second->GetLabel();
-					VarLabels.putVar(ncStartPos, &l);
+					VarLabels.putVar(ncStartPos_local, &l);
 				}
 			}
 		}

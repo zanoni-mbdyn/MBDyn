@@ -187,10 +187,10 @@ public:
 		NO_OP;
 	}
 
-        void Init(const T* pStart, unsigned iSize, unsigned iOffset = 0, unsigned iStep = 1) {
-                VecIter<T>::Init(pStart, iSize);
-                this->iOffset = iOffset;
-                this->iStep = iStep;
+        void Init(const T* pStart_a, unsigned iSize_a, unsigned iOffset_a = 0, unsigned iStep_a = 1) {
+                VecIter<T>::Init(pStart_a, iSize_a);
+                this->iOffset = iOffset_a;
+                this->iStep = iStep_a;
                 bSecondRound = false;
         }
 	/* NOTE: it must be called only once */

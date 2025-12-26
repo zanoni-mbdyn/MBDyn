@@ -348,9 +348,9 @@ void SedlanConstLawTest(ConstitutiveLaw<TStress, TStressDerStrain, TStrain>& oCS
 	  MBDYN_TESTSUITE_ASSERT(std::fabs(N[i] / Nref[i] - 1.) < dTol);
      }
 
-     typedef ConstitutiveLaw<TStress, TStressDerStrain, TStrain> ConstLawType;
+     typedef ConstitutiveLaw<TStress, TStressDerStrain, TStrain> ConstLawType_template;
 
-     const auto Href = IsotropicElasticityHelper<ConstLawType>::TangentOperator(E, nu);
+     const auto Href = IsotropicElasticityHelper<ConstLawType_template>::TangentOperator(E, nu);
 
      const doublereal dTolTangentOperator = std::pow(std::numeric_limits<doublereal>::epsilon(), 0.7) * E;
 

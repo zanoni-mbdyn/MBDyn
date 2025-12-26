@@ -56,8 +56,8 @@ namespace sp_grad {
      template <>
      class SpGradientVectorHandler<doublereal> {
      public:
-          SpGradientVectorHandler(const VectorHandler& vh)
-               :vh(vh) {
+          SpGradientVectorHandler(const VectorHandler& vh_a)
+               :vh(vh_a) {
 
           }
 
@@ -79,8 +79,8 @@ namespace sp_grad {
      template <>
      class SpGradientVectorHandler<SpGradient> {
      public:
-          SpGradientVectorHandler(const VectorHandler& vh)
-               :vh(vh) {
+          SpGradientVectorHandler(const VectorHandler& vh_a)
+               :vh(vh_a) {
 
           }
 
@@ -101,8 +101,8 @@ namespace sp_grad {
      template <>
      class SpGradientVectorHandler<GpGradProd> {
      public:
-          SpGradientVectorHandler(const VectorHandler& X, const VectorHandler& Y)
-               :X(X), Y(Y) {
+          SpGradientVectorHandler(const VectorHandler& X_a, const VectorHandler& Y_a)
+               :X(X_a), Y(Y_a) {
           }
 
           void dGetCoef(integer iRow, GpGradProd& gVal, doublereal dCoef) const {
@@ -277,8 +277,8 @@ namespace sp_grad {
      template <>
      class SpGradientAssVec<GpGradProd>: public SpGradientAssVecBase {
      public:
-          explicit SpGradientAssVec(VectorHandler& Jac, SpAssMode mode = RESET)
-               :Jac(Jac) {
+          explicit SpGradientAssVec(VectorHandler& Jac_a, SpAssMode mode = RESET)
+               :Jac(Jac_a) {
           }
 
           template <typename T>

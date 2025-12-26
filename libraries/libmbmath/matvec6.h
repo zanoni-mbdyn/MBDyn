@@ -71,8 +71,8 @@ class Vec6: public sp_grad::SpConstMatElemAdapter<Vec6>
    };
 
    template <typename DERIVED>
-   explicit Vec6(const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& v)
-        :Vec6(v.begin()) {
+   explicit Vec6(const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& v_a)
+        :Vec6(v_a.begin()) {
       typedef sp_grad::SpMatElemExprBase<doublereal, DERIVED> VecType;
       static_assert(VecType::iNumRowsStatic == 6, "size mismatch");
       static_assert(VecType::iNumColsStatic == 1, "size mismatch");
@@ -116,21 +116,21 @@ class Vec6: public sp_grad::SpConstMatElemAdapter<Vec6>
    };
 
    template <typename DERIVED>
-   Vec6& operator = (const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& v) {
+   Vec6& operator = (const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& v_a) {
       using namespace sp_grad;
 
       static_assert(SpMatElemExprBase<doublereal, DERIVED>::iNumRowsStatic == iNumRowsStatic, "vector size does not match");
       static_assert(SpMatElemExprBase<doublereal, DERIVED>::iNumColsStatic == iNumColsStatic, "vector size does not match");
 
       for (index_type i = 1; i <= iNumRowsStatic; ++i) {
-         (*this)(i) = v.dGetValue(i, 1);
+         (*this)(i) = v_a.dGetValue(i, 1);
       }
 
       return *this;
    }
 
-   bool IsExactlySame(const Vec6& v) const {
-      return GetVec1().IsExactlySame(v.GetVec1()) && GetVec2().IsExactlySame(v.GetVec2());
+   bool IsExactlySame(const Vec6& v_a) const {
+      return GetVec1().IsExactlySame(v_a.GetVec1()) && GetVec2().IsExactlySame(v_a.GetVec2());
    }
 
    inline Vec6& operator += (const Vec6& x) {
@@ -357,8 +357,8 @@ class Mat6x6: public sp_grad::SpConstMatElemAdapter<Mat6x6>
    };
 
    template <typename DERIVED>
-   explicit Mat6x6(const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& m)
-        :Mat6x6(m.begin(), m.iGetColOffset()) {
+   explicit Mat6x6(const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& m_a)
+        :Mat6x6(m_a.begin(), m_a.iGetColOffset()) {
       typedef sp_grad::SpMatElemExprBase<doublereal, DERIVED> VecType;
       static_assert(VecType::iNumRowsStatic == 6, "size mismatch");
       static_assert(VecType::iNumColsStatic == 6, "size mismatch");
@@ -491,7 +491,7 @@ class Mat6x6: public sp_grad::SpConstMatElemAdapter<Mat6x6>
    };
 
      template <typename DERIVED>
-     Mat6x6& operator = (const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& m) {
+     Mat6x6& operator = (const sp_grad::SpMatElemExprBase<doublereal, DERIVED>& m_a) {
           using namespace sp_grad;
 
           static_assert(SpMatElemExprBase<doublereal, DERIVED>::iNumRowsStatic == iNumRowsStatic, "matrix size does not match");
@@ -499,7 +499,7 @@ class Mat6x6: public sp_grad::SpConstMatElemAdapter<Mat6x6>
 
           for (index_type j = 1; j <= iNumColsStatic; ++j) {
                for (index_type i = 1; i <= iNumRowsStatic; ++i) {
-                    (*this)(i, j) = m.dGetValue(i, j);
+                    (*this)(i, j) = m_a.dGetValue(i, j);
                }
           }
           

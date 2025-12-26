@@ -200,7 +200,7 @@ Shell4EASANS::InterpolateOrientation(void)
 				DRot_I_phi_tilde_n_MT_T_overline[n];
 		}
 	}
-	Vec3 phi_tilde_0 = Interp(phi_tilde_n, xi_0);
+	phi_tilde_0 = Interp(phi_tilde_n, xi_0);
 	T_0 = T_overline * RotManip::Rot(phi_tilde_0);
 	for (integer i = 0; i < NUMSSEP; i++) {
 		phi_tilde_A[i] = Interp(phi_tilde_n, xi_A[i]);
@@ -264,7 +264,7 @@ Shell4EASANS::Shell4EASANS(unsigned int uL,
 	const ConstitutiveLaw<vh, fmh>** pDTmp, 
 #else // ! USE_CL_IN_SHELL
 	const fmh& pDTmp,
-	const vh& PreStress,
+	const vh& PreStress_a,
 #endif // ! USE_CL_IN_SHELL
 	flag fOut)
 : 
@@ -290,8 +290,8 @@ epsilon_hat(12),
 epsilon(12),
 
 #ifndef USE_CL_IN_SHELL
-bPreStress(PreStress.Norm() > 0.),
-PreStress(PreStress),
+bPreStress(PreStress_a.Norm() > 0.),
+PreStress(PreStress_a),
 #endif // ! USE_CL_IN_SHELL
 
 DRef(NUMIP, fmh(12, 12)),

@@ -144,22 +144,22 @@ TotalJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
         const integer iNode2FirstMomIndex = pNode2->iGetFirstMomentumIndex();
         const integer iFirstReactionIndex = iGetFirstIndex();
 
-        SpColVectorA<T, 3> F, M;
+        SpColVectorA<T, 3> F_sp, M_sp;
 
         for (unsigned iCnt = 0; iCnt < nPosConstraints; iCnt++) {
-                XCurr.dGetCoef(iFirstReactionIndex + 1 + iPosEqIndex[iCnt], F(iPosIncid[iCnt]), 1.);
+                XCurr.dGetCoef(iFirstReactionIndex + 1 + iPosEqIndex[iCnt], F_sp(iPosIncid[iCnt]), 1.);
         }
 
         for (unsigned iCnt = 0; iCnt < nRotConstraints; iCnt++) {
-                XCurr.dGetCoef(iFirstReactionIndex + 1 + iRotEqIndex[iCnt], M(iRotIncid[iCnt]), 1.);
+                XCurr.dGetCoef(iFirstReactionIndex + 1 + iRotEqIndex[iCnt], M_sp(iRotIncid[iCnt]), 1.);
         }
 
         for (unsigned iCnt = 0; iCnt < nVelConstraints; iCnt++) {
-                XCurr.dGetCoef(iFirstReactionIndex + 1 + iVelEqIndex[iCnt], F(iVelIncid[iCnt]), 1.);
+                XCurr.dGetCoef(iFirstReactionIndex + 1 + iVelEqIndex[iCnt], F_sp(iVelIncid[iCnt]), 1.);
         }
 
         for (unsigned iCnt = 0; iCnt < nAgvConstraints; iCnt++) {
-                XCurr.dGetCoef(iFirstReactionIndex + 1 + iAgvEqIndex[iCnt], M(iAgvIncid[iCnt]), 1.);
+                XCurr.dGetCoef(iFirstReactionIndex + 1 + iAgvEqIndex[iCnt], M_sp(iAgvIncid[iCnt]), 1.);
         }
 
         SpColVectorA<T, 3> X1, X2, V1, V2, W1, W2;
@@ -198,7 +198,7 @@ TotalJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
                 VDelta = Transpose(R1R1h) * (Cross(b1, W1) + V2 - Cross(b2, W2) - V1) - XDrv.Get();
         }
 
-        SpColVectorA<T, 3> ThetaDelta;
+        SpColVectorA<T, 3> ThetaDelta_sp;
 
         if (nRotConstraints) {
                 SpMatrix<T, 3, 3> R2r = R2 * R2hr;
@@ -215,7 +215,7 @@ TotalJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
                 }
                 SpMatrix<doublereal, 3, 3> R0 = MatRotVec(ThetaDrvTmp);
                 SpMatrix<T, 3, 3> RDelta = Transpose(R1r) * (R2r * Transpose(R0));
-                ThetaDelta = VecRotMat(RDelta);
+                ThetaDelta_sp = VecRotMat(RDelta);
         }
 
         SpColVectorA<T, 3> WDelta;
@@ -224,8 +224,8 @@ TotalJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
                 WDelta = Transpose(R1r) * (W2 - W1) - ThetaDrv.Get();
         }
 
-        SpColVector<T, 3> FTmp = R1R1h * F;
-        SpColVector<T, 3> MTmp = R1r * M;
+        SpColVector<T, 3> FTmp = R1R1h * F_sp;
+        SpColVector<T, 3> MTmp = R1r * M_sp;
 
         WorkVec.AddItem(iNode1FirstMomIndex + 1, FTmp);
         WorkVec.AddItem(iNode1FirstMomIndex + 4, SpColVector<T, 3>(MTmp + Cross(b1, FTmp)));
@@ -238,7 +238,7 @@ TotalJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
         }
 
         for (unsigned iCnt = 0; iCnt < nRotConstraints; iCnt++) {
-                WorkVec.AddItem(iFirstReactionIndex + iRotEqIndex[iCnt] + 1, ThetaDelta(iRotIncid[iCnt]) / -dCoef);
+                WorkVec.AddItem(iFirstReactionIndex + iRotEqIndex[iCnt] + 1, ThetaDelta_sp(iRotIncid[iCnt]) / -dCoef);
         }
 
         for (unsigned iCnt = 0; iCnt < nVelConstraints; iCnt++) {
@@ -249,9 +249,9 @@ TotalJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
                 WorkVec.AddItem(iFirstReactionIndex + iAgvEqIndex[iCnt] + 1, -WDelta(iAgvIncid[iCnt]));
         }
 
-        UpdateThetaDelta(ThetaDelta);
-        UpdateF(F);
-        UpdateM(M);
+        UpdateThetaDelta(ThetaDelta_sp);
+        UpdateF(F_sp);
+        UpdateM(M_sp);
 }
 
 void
@@ -412,22 +412,22 @@ TotalPinJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      const integer iNode1FirstMomIndex = pNode->iGetFirstMomentumIndex();
      const integer iFirstReactionIndex = iGetFirstIndex();
 
-     SpColVectorA<T, 3> F, M;
+     SpColVectorA<T, 3> F_sp, M_sp;
 
      for (unsigned iCnt = 0; iCnt < nPosConstraints; iCnt++) {
-          XCurr.dGetCoef(iFirstReactionIndex + 1 + iPosEqIndex[iCnt], F(iPosIncid[iCnt]), 1.);
+          XCurr.dGetCoef(iFirstReactionIndex + 1 + iPosEqIndex[iCnt], F_sp(iPosIncid[iCnt]), 1.);
      }
 
      for (unsigned iCnt = 0; iCnt < nRotConstraints; iCnt++) {
-          XCurr.dGetCoef(iFirstReactionIndex + 1 + iRotEqIndex[iCnt], M(iRotIncid[iCnt]), 1.);
+          XCurr.dGetCoef(iFirstReactionIndex + 1 + iRotEqIndex[iCnt], M_sp(iRotIncid[iCnt]), 1.);
      }
 
      for (unsigned iCnt = 0; iCnt < nVelConstraints; iCnt++) {
-          XCurr.dGetCoef(iFirstReactionIndex + 1 + iVelEqIndex[iCnt], F(iVelIncid[iCnt]), 1.);
+          XCurr.dGetCoef(iFirstReactionIndex + 1 + iVelEqIndex[iCnt], F_sp(iVelIncid[iCnt]), 1.);
      }
 
      for (unsigned iCnt = 0; iCnt < nAgvConstraints; iCnt++) {
-          XCurr.dGetCoef(iFirstReactionIndex + 1 + iAgvEqIndex[iCnt], M(iAgvIncid[iCnt]), 1.);
+          XCurr.dGetCoef(iFirstReactionIndex + 1 + iAgvEqIndex[iCnt], M_sp(iAgvIncid[iCnt]), 1.);
      }
 
      SpColVectorA<T, 3> X1, V1, W1;
@@ -457,7 +457,7 @@ TotalPinJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
           VDelta = RchT * (V1 - Cross(fn, W1)) - XDrv.Get();
      }
 
-     SpColVectorA<T, 3> ThetaDelta;
+     SpColVectorA<T, 3> ThetaDelta_sp;
 
      if (nRotConstraints) {
           SpMatrix<T, 3, 3> Rnhr = R1 * tilde_Rnhr;
@@ -475,7 +475,7 @@ TotalPinJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
           }
           SpMatrix<doublereal, 3, 3> R0 = MatRotVec(ThetaDrvTmp);
           SpMatrix<T, 3, 3> RDelta = RchrT * (Rnhr * Transpose(R0));
-          ThetaDelta = VecRotMat(RDelta);
+          ThetaDelta_sp = VecRotMat(RDelta);
      }
 
      SpColVectorA<T, 3> WDelta;
@@ -484,8 +484,8 @@ TotalPinJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
           WDelta = RchT * W1 - ThetaDrv.Get();
      }
 
-     SpColVector<T, 3> FTmp = -Rch * F;
-     SpColVector<T, 3> MTmp = -Rchr * M;
+     SpColVector<T, 3> FTmp = -Rch * F_sp;
+     SpColVector<T, 3> MTmp = -Rchr * M_sp;
 
      WorkVec.AddItem(iNode1FirstMomIndex + 1, FTmp);
      WorkVec.AddItem(iNode1FirstMomIndex + 4, SpColVector<T, 3>(MTmp + Cross(fn, FTmp)));
@@ -495,7 +495,7 @@ TotalPinJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
      }
 
      for (unsigned iCnt = 0; iCnt < nRotConstraints; iCnt++) {
-          WorkVec.AddItem(iFirstReactionIndex + iRotEqIndex[iCnt] + 1, ThetaDelta(iRotIncid[iCnt]) / -dCoef);
+          WorkVec.AddItem(iFirstReactionIndex + iRotEqIndex[iCnt] + 1, ThetaDelta_sp(iRotIncid[iCnt]) / -dCoef);
      }
 
      for (unsigned iCnt = 0; iCnt < nVelConstraints; iCnt++) {
@@ -506,9 +506,9 @@ TotalPinJointAd::AssRes(sp_grad::SpGradientAssVec<T>& WorkVec,
           WorkVec.AddItem(iFirstReactionIndex + iAgvEqIndex[iCnt] + 1, -WDelta(iAgvIncid[iCnt]));
      }
 
-     UpdateThetaDelta(ThetaDelta);
-     UpdateF(F);
-     UpdateM(M);
+     UpdateThetaDelta(ThetaDelta_sp);
+     UpdateF(F_sp);
+     UpdateM(M_sp);
 }
 
 void

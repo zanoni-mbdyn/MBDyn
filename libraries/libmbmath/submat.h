@@ -1171,12 +1171,12 @@ public:
 
 private:
      struct ResidualItem {
-          ResidualItem(integer iEquationIdx, const sp_grad::SpGradient& oResidual)
-               :iEquationIdx(iEquationIdx),
+          ResidualItem(integer iEquationIdx_a, const sp_grad::SpGradient& oResidual_a)
+               :iEquationIdx(iEquationIdx_a),
 #ifdef USE_MULTITHREAD
                 bInserted(false),
 #endif
-                oResidual(oResidual) {
+                oResidual(oResidual_a) {
           }
 
           integer iEquationIdx;

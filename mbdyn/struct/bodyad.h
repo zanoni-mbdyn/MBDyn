@@ -73,12 +73,12 @@ protected:
                    const sp_grad::SpMatrix<doublereal, 3, 3>& JTmp) const;
 
      void
-     UpdateInertia(const sp_grad::SpColVector<sp_grad::SpGradient, 3>& STmp,
-                   const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& JTmp) const {}
+     UpdateInertia(const sp_grad::SpColVector<sp_grad::SpGradient, 3>& STmp_a,
+                   const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& JTmp_a) const {}
 
      void
-     UpdateInertia(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>& STmp,
-                   const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& JTmp) const {}
+     UpdateInertia(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>& STmp_a,
+                   const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& JTmp_a) const {}
 private:
      const StructNodeAd* const pNode;
 };

@@ -225,10 +225,10 @@ SpGradientSparseMatrixHandler::const_iterator SpGradientSparseMatrixHandler::end
      return const_iterator(oRows, oRows.end(), nullptr);
 }
 
-SpGradientSparseMatrixHandler::const_iterator::const_iterator(const std::vector<SparseRow>& oRows,
-							      std::vector<SparseRow>::const_iterator pCurrRow,
-							      const sp_grad::SpDerivRec* pCurrCol)
-     :oRows(oRows), pCurrRow(pCurrRow), pCurrCol(pCurrCol) {
+SpGradientSparseMatrixHandler::const_iterator::const_iterator(const std::vector<SparseRow>& oRows_a,
+							      std::vector<SparseRow>::const_iterator pCurrRow_a,
+							      const sp_grad::SpDerivRec* pCurrCol_a)
+     :oRows(oRows_a), pCurrRow(pCurrRow_a), pCurrCol(pCurrCol_a) {
 
      SP_GRAD_ASSERT(pCurrRow <= oRows.end());
      SP_GRAD_ASSERT(pCurrRow != oRows.end() ? pCurrCol < pCurrRow->end() : true);

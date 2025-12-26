@@ -986,9 +986,9 @@ namespace sp_grad_test {
 
                          rgVec.reserve(10);
 
-                         for (index_type i = 1; i <= 3; ++i) {
+                         for (index_type ii = 1; ii <= 3; ++ii) {
                               for (index_type j = 1; j <= 3; ++j) {
-                                   rgVec.emplace_back(std::move(X3e(i,j)));
+                                   rgVec.emplace_back(std::move(X3e(ii,j)));
                               }
                          }
 

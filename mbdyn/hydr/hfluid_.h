@@ -49,13 +49,13 @@ class IncompressibleHydraulicFluid : public HydraulicFluid {
    
  public:
    IncompressibleHydraulicFluid(unsigned int Label, 
-				const doublereal& dDensity,
-				const doublereal& dViscosity = 0.,
-				const doublereal& dPres0 = -1.,
-				const doublereal& dTemp0 = -1.,
+				const doublereal& dDensity_a,
+				const doublereal& dViscosity_a = 0.,
+				const doublereal& dPres0_a = -1.,
+				const doublereal& dTemp0_a = -1.,
                                 const doublereal& dAlpha = 0.)
-     : HydraulicFluid(Label, dPres0, dTemp0), 
-       dDensity(dDensity), dViscosity(dViscosity), dDensityDTemp(-dDensity * dAlpha) {
+     : HydraulicFluid(Label, dPres0_a, dTemp0_a),
+       dDensity(dDensity_a), dViscosity(dViscosity_a), dDensityDTemp(-dDensity_a * dAlpha) {
 	NO_OP;
      };
    IncompressibleHydraulicFluid(const IncompressibleHydraulicFluid& HF)
@@ -234,15 +234,15 @@ class LinearCompressibleTHydraulicFluid
    
  public:
    LinearCompressibleTHydraulicFluid(unsigned int Label, 
-				     const doublereal& dDensity,
-				     const doublereal& dBeta,
-				     const doublereal& dPres0,
-				     const doublereal& dAlpha,
-				     const doublereal& dTemp0,
-				     const doublereal& dViscosity = 0.)
-     : LinearCompressibleHydraulicFluid(Label, dDensity, dBeta, dPres0, dViscosity, dTemp0),
-   dAlpha(dAlpha),
-   dDensityDTemp(-dDensity*dAlpha) {
+				     const doublereal& dDensity_a,
+				     const doublereal& dBeta_a,
+				     const doublereal& dPres0_a,
+				     const doublereal& dAlpha_a,
+				     const doublereal& dTemp0_a,
+				     const doublereal& dViscosity_a = 0.)
+     : LinearCompressibleHydraulicFluid(Label, dDensity_a, dBeta_a, dPres0_a, dViscosity_a, dTemp0_a),
+   dAlpha(dAlpha_a),
+   dDensityDTemp(-dDensity_a*dAlpha_a) {
       NO_OP;
    };
    

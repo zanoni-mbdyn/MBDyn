@@ -370,13 +370,13 @@ doublereal NodeRotDriveCaller::dGetP(const doublereal& dVar) const
 
 NodeRotDriveCaller::NodeRotDriveCaller(
 		const DriveHandler* pDH,
-		const StructNode* pNode1,
-		const Mat3x3& e1,
-		const StructNode* pNode2,
-		const Mat3x3& e2)
+		const StructNode* pNode1_a,
+		const Mat3x3& e1_a,
+		const StructNode* pNode2_a,
+		const Mat3x3& e2_a)
 : DriveCaller(pDH),
-  pNode1(pNode1), e1(e1),
-  pNode2(pNode2), e2(e2)
+  pNode1(pNode1_a), e1(e1_a),
+  pNode2(pNode2_a), e2(e2_a)
 {
 	NO_OP;
 };

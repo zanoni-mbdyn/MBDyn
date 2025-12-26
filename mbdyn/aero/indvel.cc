@@ -55,7 +55,7 @@ extern "C" {
 /* InducedVelocity - begin */
 
 InducedVelocity::InducedVelocity(
-	const StructNode *pCraft,
+	const StructNode *pCraft_a,
 	ResForceSet **ppres)
 : 
 // Elem(uL, fOut),
@@ -66,7 +66,7 @@ pDispl(0),
 ReqV(MPI::REQUEST_NULL),
 pIndVelDataType(0),
 #endif /* USE_MPI */
-pCraft(pCraft),
+pCraft(pCraft_a),
 ppRes(ppres)
 {
 #ifdef USE_MPI
@@ -382,10 +382,10 @@ InducedVelocityElem::dGetPrivData(unsigned int i) const
 
 InducedVelocityElem::InducedVelocityElem(unsigned int uL, 
 	const DofOwner* pDO,
-	const StructNode *pCraft,
+	const StructNode *pCraft_a,
 	ResForceSet **ppres, flag fOut)
 : AerodynamicElem(pDO),
-InducedVelocity(pCraft, ppres),
+InducedVelocity(pCraft_a, ppres),
 Elem(uL, fOut)
 {
 	NO_OP;

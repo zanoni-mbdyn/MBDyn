@@ -172,8 +172,8 @@ AeroMemory::GetNumPoints(void) const
 
 /* C81Data - begin */
 
-C81Data::C81Data(unsigned int uLabel)
-: WithLabel(uLabel)
+C81Data::C81Data(unsigned int uLabel_a)
+: WithLabel(uLabel_a)
 {
 	NO_OP;
 }
@@ -278,10 +278,10 @@ AeroData::GetForcesJacForwardDiff_int(int i, const doublereal* W, doublereal* TN
 	const doublereal nu = 1.e-9;
 
 	Vec3 V(&W[0]);
-	Vec3 Omega(&W[3]);
+	Vec3 Omega_local(&W[3]);
 
 	doublereal dv = V.Norm();
-	doublereal dw = Omega.Norm();
+	doublereal dw = Omega_local.Norm();
 
 	doublereal TNG[6];
 
@@ -320,10 +320,10 @@ AeroData::GetForcesJacCenteredDiff_int(int i, const doublereal* W, doublereal* T
 	const doublereal nu = 1.e-9;
 
 	Vec3 V(&W[0]);
-	Vec3 Omega(&W[3]);
+	Vec3 Omega_local(&W[3]);
 
 	doublereal dv = V.Norm();
-	doublereal dw = Omega.Norm();
+	doublereal dw = Omega_local.Norm();
 
 	doublereal TNGp[6];
 	doublereal TNGm[6];

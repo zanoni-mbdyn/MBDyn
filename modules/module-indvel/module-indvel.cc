@@ -108,9 +108,9 @@ public:
 };
 
 ModuleIndVel::ModuleIndVel(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 InducedVelocity(0, 0),
 iFirstAssembly(2)
 {
@@ -168,7 +168,7 @@ ModuleIndVel::bSectionalForces(void) const
 
 Vec3
 ModuleIndVel::GetInducedVelocity(Elem::Type type,
-		unsigned uLabel, unsigned uPnt, const Vec3& X) const
+		unsigned uLabel_a, unsigned uPnt, const Vec3& X) const
 {
 	return Zero3;
 }
@@ -199,13 +199,13 @@ ModuleIndVel::AddSectionalForce(Elem::Type type,
 		m_data[idx].X = Zero3;
 
 	} else {
-		const Mat3x3& R(pCraft->GetRCurr());
+		const Mat3x3& R_local(pCraft->GetRCurr());
 
 		// resolve force, moment and point in craft's reference frame
-		m_data_iter->F = R.MulTV(F);
-		m_data_iter->M = R.MulTV(M);
+		m_data_iter->F = R_local.MulTV(F);
+		m_data_iter->M = R_local.MulTV(M);
 		m_data_iter->dW = dW;
-		m_data_iter->X = R.MulTV(X - pCraft->GetXCurr());
+		m_data_iter->X = R_local.MulTV(X - pCraft->GetXCurr());
 
 		++m_data_iter;
 	}

@@ -45,16 +45,16 @@ DeformableDispJoint::DeformableDispJoint(unsigned int uL,
 	ConstitutiveLaw3D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
 	flag fOut)
 : Joint(uL, pDO, fOut),
 pNode1(pN1), pNode2(pN2),
-tilde_f1(tilde_f1), tilde_f2(tilde_f2),
-tilde_R1h(tilde_R1h), tilde_R2h(tilde_R2h),
-tilde_R1hT_tilde_f1(tilde_R1h.Transpose()*tilde_f1),
+tilde_f1(tilde_f1_a), tilde_f2(tilde_f2_a),
+tilde_R1h(tilde_R1h_a), tilde_R2h(tilde_R2h_a),
+tilde_R1hT_tilde_f1(tilde_R1h_a.Transpose()*tilde_f1_a),
 tilde_d(Zero3), tilde_dPrime(Zero3),
 bFirstRes(false), 
 F(Zero3),
@@ -549,8 +549,8 @@ DeformableDispJoint::dGetPrivData(unsigned int i) const
 		 * and the components of tilde_R1h that is actually required */
 		Vec3 d2(pNode2->GetRCurr()*tilde_f2);
 		Mat3x3 R1h(pNode1->GetRCurr()*tilde_R1h);
-		Vec3 tilde_d(R1h.MulTV(pNode2->GetXCurr() + d2 - pNode1->GetXCurr()) - tilde_R1hT_tilde_f1);
-		return tilde_d(i);
+		Vec3 tilde_d_local(R1h.MulTV(pNode2->GetXCurr() + d2 - pNode1->GetXCurr()) - tilde_R1hT_tilde_f1);
+		return tilde_d_local(i);
 	}
 
 	case 4:
@@ -561,9 +561,9 @@ DeformableDispJoint::dGetPrivData(unsigned int i) const
 		Mat3x3 R1h(pNode1->GetRCurr());
 		Vec3 d1(pNode2->GetXCurr() + d2 - pNode1->GetXCurr());
 		Vec3 d1Prime(pNode2->GetVCurr() + pNode2->GetWCurr().Cross(d2) - pNode1->GetVCurr());
-		Vec3 tilde_dPrime(R1h.MulTV(d1Prime - pNode1->GetWCurr().Cross(d1)));
+		Vec3 tilde_dPrime_local(R1h.MulTV(d1Prime - pNode1->GetWCurr().Cross(d1)));
 
-		return tilde_dPrime(i - 3);
+		return tilde_dPrime_local(i - 3);
 	}
 
 	case 7:
@@ -591,12 +591,12 @@ ElasticDispJoint::ElasticDispJoint(unsigned int uL,
 	ConstitutiveLaw3D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
 	flag fOut)
-: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, fOut)
+: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, fOut)
 {
 	/*
 	 * Chiede la matrice tangente di riferimento
@@ -863,12 +863,12 @@ ElasticDispJointInv::ElasticDispJointInv(unsigned int uL,
 	ConstitutiveLaw3D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
 	flag fOut)
-: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, fOut)
+: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, fOut)
 {
 	/*
 	 * Chiede la matrice tangente di riferimento
@@ -1117,12 +1117,12 @@ ViscousDispJoint::ViscousDispJoint(unsigned int uL,
 	ConstitutiveLaw3D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
 	flag fOut)
-: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, fOut)
+: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, fOut)
 {
 	/*
 	 * Chiede la matrice tangente di riferimento
@@ -1256,12 +1256,12 @@ ViscousDispJoint::AssVec(SubVectorHandler& WorkVec)
 		pDC->Update(Zero3, tilde_dPrime);
 	}
 
-	Vec3 F(R1h*pDC->GetF());
+	Vec3 F_local(R1h*pDC->GetF());
 
-	WorkVec.Add(1, F);
-	WorkVec.Add(4, d1.Cross(F));
-	WorkVec.Sub(6 + 1, F);
-	WorkVec.Sub(6 + 4, d2.Cross(F));
+	WorkVec.Add(1, F_local);
+	WorkVec.Add(4, d1.Cross(F_local));
+	WorkVec.Sub(6 + 1, F_local);
+	WorkVec.Sub(6 + 4, d2.Cross(F_local));
 }
 
 void
@@ -1321,18 +1321,18 @@ ViscousDispJoint::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 	Vec3 Omega1(pNode1->GetWRef());
 	Vec3 Omega2(pNode2->GetWRef());
 
-	Vec3 F(R1h*pDC->GetF());
-	Mat3x3 FDEPrime(R1h*pDC->GetFDEPrime()*R1h.Transpose());
-	Mat3x3 Tmp(Mat3x3(MatCross, F) - FDEPrime*Mat3x3(MatCross, Omega2 - Omega1));
+	Vec3 F_local(R1h*pDC->GetF());
+	Mat3x3 FDEPrime_local(R1h*pDC->GetFDEPrime()*R1h.Transpose());
+	Mat3x3 Tmp(Mat3x3(MatCross, F_local) - FDEPrime_local*Mat3x3(MatCross, Omega2 - Omega1));
 
 	WM.Add(1, 1, Tmp);
 	WM.Sub(4, 1, Tmp);
 
-	WM.Add(1, 4, FDEPrime);
-	WM.Add(4, 6 + 4, FDEPrime);
+	WM.Add(1, 4, FDEPrime_local);
+	WM.Add(4, 6 + 4, FDEPrime_local);
 
-	WM.Sub(1, 6 + 4, FDEPrime);
-	WM.Sub(4, 4, FDEPrime);
+	WM.Sub(1, 6 + 4, FDEPrime_local);
+	WM.Sub(4, 4, FDEPrime_local);
 
 	return WorkMat;
 }
@@ -1371,10 +1371,10 @@ ViscousDispJoint::InitialAssRes(SubVectorHandler& WorkVec,
 	tilde_dPrime = R1h.Transpose()*(Omega2 - Omega1);
 	pDC->Update(tilde_d, tilde_dPrime);
 
-	Vec3 F(R1h*pDC->GetF());
+	Vec3 F_local(R1h*pDC->GetF());
 
-	WorkVec.Add(1, F);
-	WorkVec.Sub(4, F);
+	WorkVec.Add(1, F_local);
+	WorkVec.Sub(4, F_local);
 
 	return WorkVec;
 }
@@ -1389,12 +1389,12 @@ ViscoElasticDispJoint::ViscoElasticDispJoint(unsigned int uL,
 	ConstitutiveLaw3D*const pCL,
 	const StructNode* pN1,
 	const StructNode* pN2,
-	const Vec3& tilde_f1,
-	const Vec3& tilde_f2,
-	const Mat3x3& tilde_R1h,
-	const Mat3x3& tilde_R2h,
+	const Vec3& tilde_f1_a,
+	const Vec3& tilde_f2_a,
+	const Mat3x3& tilde_R1h_a,
+	const Mat3x3& tilde_R2h_a,
 	flag fOut)
-: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1, tilde_f2, tilde_R1h, tilde_R2h, fOut)
+: DeformableDispJoint(uL, pDO, pCL, pN1, pN2, tilde_f1_a, tilde_f2_a, tilde_R1h_a, tilde_R2h_a, fOut)
 {
 	/*
 	 * Chiede la matrice tangente di riferimento
@@ -1533,12 +1533,12 @@ ViscoElasticDispJoint::AssVec(SubVectorHandler& WorkVec)
 		pDC->Update(tilde_d, tilde_dPrime);
 	}
 
-	Vec3 F(R1h*pDC->GetF());
+	Vec3 F_local(R1h*pDC->GetF());
 
-	WorkVec.Add(1, F);
-	WorkVec.Add(4, d1.Cross(F));
-	WorkVec.Sub(6 + 1, F);
-	WorkVec.Sub(6 + 4, d2.Cross(F));
+	WorkVec.Add(1, F_local);
+	WorkVec.Add(4, d1.Cross(F_local));
+	WorkVec.Sub(6 + 1, F_local);
+	WorkVec.Sub(6 + 4, d2.Cross(F_local));
 }
 
 void
@@ -1599,25 +1599,25 @@ ViscoElasticDispJoint::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 	Vec3 Omega1(pNode1->GetWRef());
 	Vec3 Omega2(pNode2->GetWRef());
 
-	Vec3 F(R1h*pDC->GetF());
-	Mat3x3 FDE(R1h*pDC->GetFDE().MulMT(R1h));
-	Mat3x3 FDEPrime(R1h*pDC->GetFDEPrime().MulMT(R1h));
+	Vec3 F_local(R1h*pDC->GetF());
+	Mat3x3 FDE_local(R1h*pDC->GetFDE().MulMT(R1h));
+	Mat3x3 FDEPrime_local(R1h*pDC->GetFDEPrime().MulMT(R1h));
 
-	Mat3x3 Tmp(Mat3x3(MatCross, F) - FDEPrime*Mat3x3(MatCross, Omega2 - Omega1) + FDE);
+	Mat3x3 Tmp(Mat3x3(MatCross, F_local) - FDEPrime_local*Mat3x3(MatCross, Omega2 - Omega1) + FDE_local);
 
 	// FIXME: check and rewrite
 
 	WM.Add(1, 1, Tmp);
 	WM.Sub(4, 1, Tmp);
 
-	WM.Add(4, 6 + 1, FDE);
-	WM.Sub(1, 6 + 1, FDE);
+	WM.Add(4, 6 + 1, FDE_local);
+	WM.Sub(1, 6 + 1, FDE_local);
 
-	WM.Add(1, 4, FDEPrime);
-	WM.Add(4, 6 + 4, FDEPrime);
+	WM.Add(1, 4, FDEPrime_local);
+	WM.Add(4, 6 + 4, FDEPrime_local);
 
-	WM.Sub(1, 6 + 4, FDEPrime);
-	WM.Sub(4, 4, FDEPrime);
+	WM.Sub(1, 6 + 4, FDEPrime_local);
+	WM.Sub(4, 4, FDEPrime_local);
 
 	return WorkMat;
 }
@@ -1657,12 +1657,12 @@ ViscoElasticDispJoint::InitialAssRes(SubVectorHandler& WorkVec,
 
 	pDC->Update(tilde_d, tilde_dPrime);
 
-	Vec3 F(R1h*pDC->GetF());
+	Vec3 F_local(R1h*pDC->GetF());
 
-	WorkVec.Add(1, F);
-	WorkVec.Add(4, d1.Cross(F));
-	WorkVec.Sub(6 + 1, F);
-	WorkVec.Sub(6 + 4, d2.Cross(F));
+	WorkVec.Add(1, F_local);
+	WorkVec.Add(4, d1.Cross(F_local));
+	WorkVec.Sub(6 + 1, F_local);
+	WorkVec.Sub(6 + 4, d2.Cross(F_local));
 
 	return WorkVec;
 }

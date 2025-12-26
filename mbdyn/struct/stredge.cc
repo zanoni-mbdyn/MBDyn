@@ -45,24 +45,24 @@
 /* Costruttore */
 StructExtEDGEForce::StructExtEDGEForce(unsigned int uL,
 	DataManager *pDM,
-	const StructNode *pRefNode,
-	bool bUseReferenceNodeForces,
-	bool bRotateReferenceNodeForces,
+	const StructNode *pRefNode_a,
+	bool bUseReferenceNodeForces_a,
+	bool bRotateReferenceNodeForces_a,
 	std::vector<unsigned>& labels,
 	std::vector<const StructNode *>& nodes,
 	std::vector<Vec3>& offsets,
-	bool bSorted,
-	bool bLabels,
-	bool bOutputAccelerations,
-	unsigned uRot,
-	ExtFileHandlerBase *pEFH,
-	bool bSendAfterPredict,
-	int iCoupling,
-	unsigned uOutputFlags,
+	bool bSorted_a,
+	bool bLabels_a,
+	bool bOutputAccelerations_a,
+	unsigned uRot_a,
+	ExtFileHandlerBase *pEFH_a,
+	bool bSendAfterPredict_a,
+	int iCoupling_a,
+	unsigned uOutputFlags_a,
 	flag fOut)
-: StructExtForce(uL, pDM, pRefNode, bUseReferenceNodeForces, bRotateReferenceNodeForces,
-	labels, nodes, offsets, bSorted, bLabels, bOutputAccelerations, uRot,
-	pEFH, bSendAfterPredict, iCoupling, uOutputFlags, fOut),
+: StructExtForce(uL, pDM, pRefNode_a, bUseReferenceNodeForces_a, bRotateReferenceNodeForces_a,
+	labels, nodes, offsets, bSorted_a, bLabels_a, bOutputAccelerations_a, uRot_a,
+	pEFH_a, bSendAfterPredict_a, iCoupling_a, uOutputFlags_a, fOut),
 m_x(nodes.size()),
 m_v(nodes.size())
 {
@@ -183,8 +183,8 @@ velocity, RF, 3, 121, 0
 	outf <<
 		"str_coordinates, RF, 3, " << m_Points.size() << ", 0\n";
 
-	for (int c = 1; c <= 3; c++) {
-		int cnt = 0;
+	for (int cc = 1; cc <= 3; cc++) {
+		cnt = 0;
 		for (std::vector<Vec3>::const_iterator i = m_x.cbegin(); i != m_x.cend(); ++i, ++cnt) {
 			if (cnt > 0) {
 				if ((cnt%6) == 0) {
@@ -194,7 +194,7 @@ velocity, RF, 3, 121, 0
 				}
 			}
 
-			outf << (*i)(c);
+			outf << (*i)(cc);
 		}
 		outf << "\n";
 	}
@@ -203,8 +203,8 @@ velocity, RF, 3, 121, 0
 	outf <<
 		"velocity, RF, 3, " << m_Points.size() << ", 0\n";
 
-	for (int c = 1; c <= 3; c++) {
-		int cnt = 0;
+	for (int cc = 1; cc <= 3; cc++) {
+		cnt = 0;
 		for (std::vector<Vec3>::const_iterator i = m_v.cbegin(); i != m_v.cend(); ++i, ++cnt) {
 			if (cnt > 0) {
 				if ((cnt%6) == 0) {
@@ -214,7 +214,7 @@ velocity, RF, 3, 121, 0
 				}
 			}
 
-			outf << (*i)(c);
+			outf << (*i)(cc);
 		}
 		outf << "\n";
 	}
@@ -547,32 +547,32 @@ force, RF, 3, 121, 0
 				throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 			}
 
-			for (RIndexType::iterator p = points.begin(); p != points.end(); p++) {
+			for (RIndexType::iterator pi = points.begin(); pi != points.end(); pi++) {
 				double d;
 
 				inf >> d;
 
-				(*p)->F(1) = d;
+				(*pi)->F(1) = d;
 			}
 
 			mbedge_goto_eol(inf, buf, sizeof(buf));
 
-			for (RIndexType::const_iterator p = points.cbegin(); p != points.cend(); p++) {
+			for (RIndexType::const_iterator pi = points.cbegin(); pi != points.cend(); pi++) {
 				double d;
 
 				inf >> d;
 
-				(*p)->F(2) = d;
+				(*pi)->F(2) = d;
 			}
 
 			mbedge_goto_eol(inf, buf, sizeof(buf));
 
-			for (RIndexType::const_iterator p = points.cbegin(); p != points.cend(); p++) {
+			for (RIndexType::const_iterator pi = points.cbegin(); pi != points.cend(); pi++) {
 				double d;
 
 				inf >> d;
 
-				(*p)->F(3) = d;
+				(*pi)->F(3) = d;
 			}
 
 			mbedge_goto_eol(inf, buf, sizeof(buf));

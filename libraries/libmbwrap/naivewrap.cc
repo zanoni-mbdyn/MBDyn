@@ -320,8 +320,8 @@ template<class T>
 NaiveSparsePermSolutionManager<T>::NaiveSparsePermSolutionManager(
         const integer Dim,
         const doublereal dMP,
-        const ScaleOpt& scale)
-: NaiveSparseSolutionManager(Dim, dMP, scale),
+        const ScaleOpt& scale_a)
+: NaiveSparseSolutionManager(Dim, dMP, scale_a),
 dMinPiv(dMP < 0 ? 0 : dMP),
 TmpH(Dim),
 ePermState(PERM_NO)

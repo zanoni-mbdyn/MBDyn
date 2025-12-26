@@ -48,14 +48,14 @@
 
 OffsetDispJointAd::OffsetDispJointAd(unsigned int uL,
                                      const DofOwner* pD,
-                                     const StructNodeAd* pNode1,
-                                     const Vec3& o1,
-                                     const StructDispNodeAd* pNode2,
+                                     const StructNodeAd* pNode1_a,
+                                     const Vec3& o1_a,
+                                     const StructDispNodeAd* pNode2_a,
                                      flag fOut)
      :Joint(uL, pD, fOut),
-      pNode1(pNode1),
-      pNode2(pNode2),
-      o1(o1),
+      pNode1(pNode1_a),
+      pNode2(pNode2_a),
+      o1(o1_a),
       F1Tmp(::Zero3),
       M1Tmp(::Zero3)
 {

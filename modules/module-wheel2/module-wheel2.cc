@@ -127,9 +127,9 @@ public:
 	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr);
 };
 
-Wheel2::Wheel2(unsigned uLabel, const DofOwner *pDO,
+Wheel2::Wheel2(unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {

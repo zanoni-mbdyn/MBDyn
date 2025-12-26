@@ -62,15 +62,15 @@ public:
 
 	virtual bool bIsActive(void) const;
 
-	virtual void OutputPrepare(OutputHandler& OH);
-	virtual void Output(OutputHandler& OH) const;
+	virtual void OutputPrepare(OutputHandler& OH) override;
+	virtual void Output(OutputHandler& OH) const override;
 
 	virtual void SetValue(DataManager *pdm,
 			VectorHandler& X, VectorHandler& XP,
-			SimulationEntity::Hints *ph = 0);
+			SimulationEntity::Hints *ph = 0) override;
 
 	/* Scrive il contributo dell'elemento al file di restart */
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
@@ -82,49 +82,49 @@ public:
 	virtual void BeforePredict(VectorHandler& X,
 		VectorHandler& XP,
 		std::deque<VectorHandler*>& qXPr,
-		std::deque<VectorHandler*>& qXPPr) const;
+		std::deque<VectorHandler*>& qXPPr) const override;
 
-	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+	virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
 
 	/* Aggiorna dati in base alla soluzione */
 	virtual void Update(const VectorHandler& XCurr,
-			const VectorHandler& XPrimeCurr);
+			const VectorHandler& XPrimeCurr) override;
 
 	virtual void AfterConvergence(const VectorHandler& X,
-     			const VectorHandler& XP);
+     			const VectorHandler& XP) override;
 
 	/* assemblaggio jacobiano */
 	virtual VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
 			doublereal dCoef,
 	    		const VectorHandler& XCurr,
-	    		const VectorHandler& XPrimeCurr);
+	    		const VectorHandler& XPrimeCurr) override;
 
      	virtual void AssMats(VariableSubMatrixHandler& WorkMatA,
  			VariableSubMatrixHandler& WorkMatB,
  			const VectorHandler& XCurr,
- 			const VectorHandler& XPrimeCurr);
+ 			const VectorHandler& XPrimeCurr) override;
 
 	/* assemblaggio residuo */
      	virtual SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 			doublereal dCoef,
 			const VectorHandler& XCurr,
-			const VectorHandler& XPrimeCurr);
+			const VectorHandler& XPrimeCurr) override;
 
 	/*
 	 * Returns the current value of a private data
 	 * with 0 < i <= iGetNumPrivData()
 	 */
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* Inverse Dynamics: */
 	virtual void Update(const VectorHandler& XCurr,
-			InverseDynamics::Order iOrder);
+			InverseDynamics::Order iOrder) override;
 
 	/* inverse dynamics Jacobian matrix assembly */
 	virtual VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 	/* inverse dynamics residual assembly */
 	virtual SubVectorHandler&
@@ -132,52 +132,52 @@ public:
 		const VectorHandler& XCurr,
 		const VectorHandler& XPrimeCurr,
 		const VectorHandler& XPrimePrimeCurr,
-		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	/* Inverse Dynamics: */
 	virtual void AfterConvergence(const VectorHandler& X,
-     		const VectorHandler& XP, const VectorHandler& XPP);
+     		const VectorHandler& XP, const VectorHandler& XPP) override;
 
 	/* InitialAssemblyElem */
 public:
-	virtual unsigned int iGetInitialNumDof(void) const;
+	virtual unsigned int iGetInitialNumDof(void) const override;
 
 	/* Dimensione del workspace durante l'assemblaggio iniziale. Occorre tener
 	 * conto del numero di dof che l'elemento definisce in questa fase e dei
 	 * dof dei nodi che vengono utilizzati. Sono considerati dof indipendenti
 	 * la posizione e la velocita' dei nodi */
 	virtual void InitialWorkSpaceDim(integer* piNumRows,
-		integer* piNumCols) const;
+		integer* piNumCols) const override;
 
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 	/* Contributo al residuo durante l'assemblaggio iniziale */
 	virtual SubVectorHandler&
 	InitialAssRes(SubVectorHandler& WorkVec,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 	/* ElemGravityOwner */
 protected:
-	virtual Vec3 GetS_int(void) const;
-	virtual Mat3x3 GetJ_int(void) const;
+	virtual Vec3 GetS_int(void) const override;
+	virtual Mat3x3 GetJ_int(void) const override;
 
-	virtual Vec3 GetB_int(void) const;
+	virtual Vec3 GetB_int(void) const override;
 
 	// NOTE: gravity owners must provide the momenta moment
 	// with respect to the origin of the global reference frame!
-	virtual Vec3 GetG_int(void) const;
+	virtual Vec3 GetG_int(void) const override;
 
 public:
-	virtual doublereal dGetM(void) const;
+	virtual doublereal dGetM(void) const override;
 	Vec3 GetS(void) const;
 	Mat3x3 GetJ(void) const;
 
 	/* ElemDofOwner */
 public:
-	virtual void SetInitialValue(VectorHandler& X);
+	virtual void SetInitialValue(VectorHandler& X) override;
 };
 
 #endif /* DRIVEN_H */

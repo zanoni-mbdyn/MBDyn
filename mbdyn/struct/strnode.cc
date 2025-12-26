@@ -108,7 +108,7 @@ StructDispNode::StructDispNode(unsigned int uL,
         const RigidBodyKinematics *pRBK,
         doublereal dPosStiff,
         doublereal dVelStiff,
-        OrientationDescription od,
+        OrientationDescription od_a,
         flag fOut)
 : Node(uL, pDO, fOut),
 XPrev(X0),
@@ -118,7 +118,7 @@ VCurr(V0),
 XPPCurr(Zero3),
 XPPPrev(Zero3),
 pRefNode(pRN),
-od(od),
+od(od_a),
 dPositionStiffness(dPosStiff),
 dVelocityStiffness(dVelStiff),
 pRefRBK(pRBK),
@@ -3799,13 +3799,13 @@ DummyStructNode::ComputeAccelerations(bool b)
 OffsetDummyStructNode::OffsetDummyStructNode(unsigned int uL,
         const DofOwner* pDO,
         const StructNode* pN,
-        const Vec3& f,
-        const Mat3x3& R,
+        const Vec3& f_a,
+        const Mat3x3& R_a,
         OrientationDescription ood,
         flag fOut)
 :
 StructDispNode(uL, pDO, ::Zero3, ::Zero3, 0, 0, 0., 0., ood, fOut),
-DummyStructNode(uL, pDO, pN, ood, fOut), f(f), R(R)
+DummyStructNode(uL, pDO, pN, ood, fOut), f(f_a), R(R_a)
 {
         if (pNode->bOutputAccelerations()) {
                 bOutputAccels = true;
@@ -3998,14 +3998,14 @@ PivotRelFrameDummyStructNode::PivotRelFrameDummyStructNode(unsigned int uL,
         const Vec3& fh,
         const Mat3x3& Rh,
         const StructNode* pNR2,
-        const Vec3& fh2,
-        const Mat3x3& Rh2,
+        const Vec3& fh2_a,
+        const Mat3x3& Rh2_a,
         OrientationDescription ood,
         flag fOut)
 :
 StructDispNode(uL, pDO, ::Zero3, ::Zero3, 0, 0, 0., 0., ood, fOut),
 RelFrameDummyStructNode(uL, pDO, pN, pNR, fh, Rh, ood, fOut),
-pNodeRef2(pNR2), Rh2(Rh2), fh2(fh2)
+pNodeRef2(pNR2), Rh2(Rh2_a), fh2(fh2_a)
 {
         ASSERT(pNodeRef2 != NULL);
 

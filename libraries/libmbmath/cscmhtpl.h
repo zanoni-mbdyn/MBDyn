@@ -60,8 +60,8 @@ public:
           :NCols(0), NZ(0), pAx(nullptr), pAi(nullptr), pAp(nullptr) {
      }
      
-     CSCMatrixHandlerTpl(value_type* pAx, idx_type* pAi, idx_type* pAp, idx_type NCols, idx_type NZ)
-	  :NCols(NCols), NZ(NZ), pAx(pAx), pAi(pAi), pAp(pAp) {
+     CSCMatrixHandlerTpl(value_type* pAx_a, idx_type* pAi_a, idx_type* pAp_a, idx_type NCols_a, idx_type NZ_a)
+	  :NCols(NCols_a), NZ(NZ_a), pAx(pAx_a), pAi(pAi_a), pAp(pAp_a) {
 
 	  ASSERT(NCols >= 0);
 	  ASSERT(NZ == 0 || pAp[0] == offset);
@@ -181,8 +181,8 @@ public:
 	       }
 	  }
 
-	  const_iterator(const CSCMatrixHandlerTpl& A, idx_type iIdx, idx_type iCol)
-	       :A(A), iIdx(iIdx) {
+	  const_iterator(const CSCMatrixHandlerTpl& A_a, idx_type iIdx_a, idx_type iCol)
+	       :A(A_a), iIdx(iIdx_a) {
 
 	       elem.iCol = iCol;
 

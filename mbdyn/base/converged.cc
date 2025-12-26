@@ -34,8 +34,8 @@
 #include "converged.h"
 #include "dataman.h"
 
-Converged::Converged(DataManager *pDM)
-: pDM(pDM), idx(unsigned(-1))
+Converged::Converged(DataManager *pDM_a)
+: pDM(pDM_a), idx(unsigned(-1))
 {
 	if (pDM) {
 		Register();

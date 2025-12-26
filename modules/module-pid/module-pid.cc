@@ -6,9 +6,9 @@
 #include <fstream>
 #include "module-pid.h"
 
-Pid::Pid(unsigned int uLabel, const DofOwner *pDO,
+Pid::Pid(unsigned int uLabel_a, const DofOwner *pDO,
             DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
     if (HP.IsKeyWord("help")) {
         silent_cout("\nModule: PID\n"

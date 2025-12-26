@@ -225,9 +225,9 @@ DamperGandhi::Get(doublereal& f, doublereal& fde, doublereal& fdeprime) const
 }
 
 DamperGandhi::DamperGandhi(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_f(0.),
 m_dot_f(0.),
 m_g(0.),

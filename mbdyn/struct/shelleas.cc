@@ -226,7 +226,7 @@ Shell4EAS::Shell4EAS(unsigned int uL,
 	const ConstitutiveLaw<vh, fmh>** pDTmp, 
 #else // ! USE_CL_IN_SHELL
 	const fmh& pDTmp,
-	const vh& PreStress,
+	const vh& PreStress_a,
 #endif // ! USE_CL_IN_SHELL
 	flag fOut)
 : 
@@ -245,8 +245,8 @@ epsilon_hat(12),
 epsilon(12),
 
 #ifndef USE_CL_IN_SHELL
-bPreStress(PreStress.Norm() > 0.),
-PreStress(PreStress),
+bPreStress(PreStress_a.Norm() > 0.),
+PreStress(PreStress_a),
 #endif // ! USE_CL_IN_SHELL
 
 DRef(NUMIP, fmh(12, 12)),

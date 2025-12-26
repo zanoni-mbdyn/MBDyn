@@ -46,7 +46,7 @@ __FC_DECL__(dggbal)(char *JOB, integer *N, doublereal *pdA, integer *LDA,
 
 /* GenelStateSpaceSISO - begin */
 
-GenelStateSpaceSISO::GenelStateSpaceSISO(unsigned int uLabel,
+GenelStateSpaceSISO::GenelStateSpaceSISO(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	const ScalarDof& y,
 	ScalarValue* u,
@@ -59,8 +59,8 @@ GenelStateSpaceSISO::GenelStateSpaceSISO(unsigned int uLabel,
 	bool bBalance,
 	doublereal *pdX0,
 	doublereal *pdXP0,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 SD_y(y), SV_u(u),
 iNumDofs(Order),
 pdE(pE), pdA(pA), pdB(pB), pdC(pC), dD(D),
@@ -433,7 +433,7 @@ GenelStateSpaceSISO::DescribeEq(std::ostream& out, const char *prefix, bool bIni
 
 /* GenelStateSpaceMIMO - begin */
 
-GenelStateSpaceMIMO::GenelStateSpaceMIMO(unsigned int uLabel,
+GenelStateSpaceMIMO::GenelStateSpaceMIMO(unsigned int uLabel_a,
 	const DofOwner* pDO,
 	unsigned int iNumOut,
 	const ScalarDof* y,
@@ -447,8 +447,8 @@ GenelStateSpaceMIMO::GenelStateSpaceMIMO(unsigned int uLabel,
 	bool bBalance,
 	doublereal *pdX0,
 	doublereal *pdXP0,
-	flag fOutput)
-: Genel(uLabel, pDO, fOutput),
+	flag fOutput_a)
+: Genel(uLabel_a, pDO, fOutput_a),
 iNumOutputs(iNumOut), iNumInputs(u.size()),
 pvSD_y(const_cast<ScalarDof *>(y)), SV_u(u),
 iNumDofs(Order),

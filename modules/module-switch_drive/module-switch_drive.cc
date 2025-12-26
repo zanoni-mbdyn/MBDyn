@@ -88,12 +88,12 @@ struct SwitchDriveDCR : public DriveCallerRead {
 };
 
 SwitchDriveCaller::SwitchDriveCaller(const DriveHandler* pDH,
-                                     const DriveOwner& oSwitch,
-                                     Type eType, 
+                                     const DriveOwner& oSwitch_a,
+                                     Type eType_a, 
                                      const std::vector<DriveOwner>& drives)
 : DriveCaller(pDH),
-  oSwitch(oSwitch),
-  eType(eType),
+  oSwitch(oSwitch_a),
+  eType(eType_a),
   rgDrives(drives)
 {
 	NO_OP;

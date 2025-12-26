@@ -897,9 +897,9 @@ DataManager::InsertSym(const char* const s, const Int& v, int redefine)
 
 /* default orientation description */
 void
-DataManager::SetOrientationDescription(OrientationDescription od)
+DataManager::SetOrientationDescription(OrientationDescription od_a)
 {
-	this->od = od;
+	this->od = od_a;
 }
 
 OrientationDescription
@@ -910,17 +910,17 @@ DataManager::GetOrientationDescription(void) const
 
 /* default output */
 void
-DataManager::SetOutput(Elem::Type t, unsigned flags, OrientationDescription od)
+DataManager::SetOutput(Elem::Type t, unsigned flags, OrientationDescription od_a)
 {
 	ElemData[t].uOutputFlags = flags;
-	ElemData[t].od = od;
+	ElemData[t].od = od_a;
 }
 
 void
-DataManager::GetOutput(Elem::Type t, unsigned& flags, OrientationDescription& od) const
+DataManager::GetOutput(Elem::Type t, unsigned& flags, OrientationDescription& od_a) const
 {
 	flags = ElemData[t].uOutputFlags;
-	od = ElemData[t].od;
+	od_a = ElemData[t].od;
 }
 
 NonlinearSolver* DataManager::pGetNonlinearSolver() const

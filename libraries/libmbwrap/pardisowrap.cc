@@ -56,8 +56,8 @@
 #include "constexpr_math.h"
 
 template <typename MKL_INT_TYPE>
-PardisoSolver<MKL_INT_TYPE>::PardisoSolver(SolutionManager* pSM, integer iDim, doublereal dPivot, integer iNumThreads, integer iNumIter, integer iVerbose)
-     :LinearSolver(pSM),
+PardisoSolver<MKL_INT_TYPE>::PardisoSolver(SolutionManager* pSM_a, integer iDim, doublereal dPivot, integer iNumThreads, integer iNumIter, integer iVerbose)
+     :LinearSolver(pSM_a),
       pAx(nullptr),
       pAi(nullptr),
       pAp(nullptr),

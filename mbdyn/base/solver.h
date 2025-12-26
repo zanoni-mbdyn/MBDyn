@@ -321,8 +321,8 @@ protected:
         
 	class StepIntegratorGuard {
 	public:
-             explicit StepIntegratorGuard(Solver& oSolver)
-                  :oSolver(oSolver),
+             explicit StepIntegratorGuard(Solver& oSolver_a)
+                  :oSolver(oSolver_a),
                    pCurrStepIntegrator(oSolver.pCurrStepIntegrator) {
              }
 
@@ -413,7 +413,7 @@ protected:
    	inline void Flip(void);
 
    	/* Lettura dati */
-   	void ReadData(MBDynParser& HP);
+   	void ReadData();
 
 	/* Alloca Solman */
 	SolutionManager *const AllocateSolman(integer iNLD, integer iLWS = 0);

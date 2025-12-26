@@ -590,10 +590,10 @@ UmfpackSparseCCSolutionManager<CC>::UmfpackSparseCCSolutionManager(integer Dim,
 								   doublereal dPivot,
 								   doublereal dDropTolerance,
 								   const unsigned& blockSize,
-								   const ScaleOpt& scale,
+								   const ScaleOpt& scale_a,
 								   integer iMaxIter,
 								   integer iVerbose)
-: UmfpackSparseSolutionManager(Dim, dPivot, dDropTolerance, blockSize, scale, iMaxIter, iVerbose),
+: UmfpackSparseSolutionManager(Dim, dPivot, dDropTolerance, blockSize, scale_a, iMaxIter, iVerbose),
 CCReady(false),
 Ac(nullptr)
 {

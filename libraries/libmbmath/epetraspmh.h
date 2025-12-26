@@ -194,20 +194,20 @@ public:
 	       }
 	  }
 
-	  const_iterator(const integer* rowptr,
-                         const integer* colind,
-                         const doublereal* values,
-                         integer NRows,                         
-                         integer iIdx,
+	  const_iterator(const integer* rowptr_a,
+                         const integer* colind_a,
+                         const doublereal* values_a,
+                         integer NRows_a,                         
+                         integer iIdx_a,
                          integer iRow)
-	       :rowptr(rowptr),
-                colind(colind),
-                values(values),
+	       :rowptr(rowptr_a),
+                colind(colind_a),
+                values(values_a),
 #ifdef DEBUG
-                NRows(NRows),
+                NRows(NRows_a),
 #endif
-                NZ(rowptr[NRows] - rowptr[0]),
-                iIdx(iIdx) {
+                NZ(rowptr[NRows_a] - rowptr_a[0]),
+                iIdx(iIdx_a) {
 
 	       elem.iRow = iRow;
 

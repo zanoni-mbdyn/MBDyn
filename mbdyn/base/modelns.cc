@@ -1177,8 +1177,8 @@ model_curr(const MathParser::MathArgs& args)
 	return 0;
 }
 
-ModelNameSpace::ModelNameSpace(const DataManager *pDM)
-: MathParser::NameSpace("model"), pDM(pDM)
+ModelNameSpace::ModelNameSpace(const DataManager *pDM_a)
+: MathParser::NameSpace("model"), pDM(pDM_a)
 {
 	MathParser::MathFunc_t *f;
 
@@ -3044,15 +3044,15 @@ ModelNameSpace::GetTable(void)
 }
 
 bool
-ModelNameSpace::PushCurrData(const std::string& name, const TypedValue& value)
+ModelNameSpace::PushCurrData(const std::string& name_a, const TypedValue& value)
 {
-	return currData.insert(currDataType::value_type(name, value)).second;
+	return currData.insert(currDataType::value_type(name_a, value)).second;
 }
 
 bool
-ModelNameSpace::PopCurrData(const std::string& name)
+ModelNameSpace::PopCurrData(const std::string& name_a)
 {
-	currDataType::iterator i = currData.find(name);
+	currDataType::iterator i = currData.find(name_a);
 	if (i == currData.end()) {
 		return false;
 	}
@@ -3063,9 +3063,9 @@ ModelNameSpace::PopCurrData(const std::string& name)
 }
 
 bool
-ModelNameSpace::GetCurrData(const std::string& name, TypedValue& value) const
+ModelNameSpace::GetCurrData(const std::string& name_a, TypedValue& value) const
 {
-	currDataType::const_iterator i = currData.find(name);
+	currDataType::const_iterator i = currData.find(name_a);
 	if (i == currData.end()) {
 		return false;
 	}

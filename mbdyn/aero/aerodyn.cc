@@ -72,13 +72,13 @@
 
 AirProperties::AirProperties(const TplDriveCaller<Vec3>* pDC,
 		std::vector<const Gust *>& g,
-		const RigidBodyKinematics *pRBK,
+		const RigidBodyKinematics *pRBK_a,
 		flag fOut)
 : InitialAssemblyElem(1, fOut),
 TplDriveOwner<Vec3>(pDC),
 Velocity(Zero3),
 gust(g),
-pRBK(pRBK)
+pRBK(pRBK_a)
 {
 	for (std::vector<const Gust *>::iterator i = gust.begin();
 		i != gust.end(); ++i)
@@ -222,7 +222,7 @@ AirProperties::GetVelocity(const Vec3& X, Vec3& V) const
 	if (pRBK) {
 		// X is the position of the point in the relative frame
 		// Xabs is the position of the point in the absolute frame
-		Vec3 Xabs = pRBK->GetX();
+		Xabs = pRBK->GetX();
 		Xabs += pRBK->GetR()*X;
 
 	} else {
@@ -312,8 +312,8 @@ AirProperties::dGetPrivData(unsigned int i) const
 
 BasicAirProperties::BasicAirProperties(const TplDriveCaller<Vec3>* pDC,
 	const DriveCaller *pRho, doublereal dSS, std::vector<const Gust *>& g,
-	const RigidBodyKinematics *pRBK, flag fOut)
-: AirProperties(pDC, g, pRBK, fOut),
+	const RigidBodyKinematics *pRBK_a, flag fOut)
+: AirProperties(pDC, g, pRBK_a, fOut),
 AirDensity(pRho),
 dSoundSpeed(dSS)
 {
@@ -377,20 +377,20 @@ BasicAirProperties::GetAirProps(const Vec3& X, doublereal& rho,
 /* StdAirProperties - begin */
 
 StdAirProperties::StdAirProperties(const TplDriveCaller<Vec3>* pDC,
-	doublereal PRef, const DriveCaller *RhoRef, doublereal TRef,
-	doublereal a, doublereal R, doublereal g0,
-	doublereal z0, doublereal z1, doublereal z2,
-	std::vector<const Gust *>& g, const RigidBodyKinematics *pRBK, flag fOut)
-: AirProperties(pDC, g, pRBK, fOut),
-PRef(PRef),
-RhoRef(RhoRef),
-TRef(TRef),
-a(a),
-R(R),
-g0(g0),
-z0(z0),
-z1(z1),
-z2(z2)
+	doublereal PRef_a, const DriveCaller *RhoRef_a, doublereal TRef_a,
+	doublereal a_a, doublereal R_a, doublereal g0_a,
+	doublereal z0_a, doublereal z1_a, doublereal z2_a,
+	std::vector<const Gust *>& g, const RigidBodyKinematics *pRBK_a, flag fOut)
+: AirProperties(pDC, g, pRBK_a, fOut),
+PRef(PRef_a),
+RhoRef(RhoRef_a),
+TRef(TRef_a),
+a(a_a),
+R(R_a),
+g0(g0_a),
+z0(z0_a),
+z1(z1_a),
+z2(z2_a)
 {
 	ASSERT(PRef > 0.);
 	ASSERT(RhoRef != NULL);

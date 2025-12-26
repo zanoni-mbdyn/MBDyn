@@ -599,7 +599,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 	}
 
 	if (HP.IsKeyWord("low" "rank" "compression")) {
-	     const char* sKeyWords[] = {
+	     const char* sKeyWords_lrc[] = {
 		  "hss",
 		  "blr",
 		  "hodlr",
@@ -611,7 +611,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 		  NULL
 	     };
 
-	     enum KeyWords {
+	     enum KeyWords_lrc {
 		  HSS,
 		  BLR,
 		  HODLR,
@@ -620,13 +620,13 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 		  RQRCP,
 		  TQRCP,
 		  RQRRT,		
-		  LASTKEYWORD
+		  LASTKEYWORDLRC
 	     };
 
-	     KeyTable K(HP, sKeyWords);
+	     KeyTable K_lrc(HP, sKeyWords_lrc);
 	     unsigned uKeyWord = HP.GetWord();
 
-	     if (!(uKeyWord >= HSS && uKeyWord < LASTKEYWORD)) {
+	     if (!(uKeyWord >= HSS && uKeyWord < LASTKEYWORDLRC)) {
 		  silent_cerr("keywords {hss|blr|hodlr|svd|pqrcp|rqrcp|tqrcp|rqrrt} expected at line " << HP.GetLineData() << std::endl);
 		  throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	     }
@@ -635,11 +635,11 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 	     	     
 	     if (currSolver.s_flags & uCompression) {
 		  cs.AddSolverFlags(LinSol::SOLVER_FLAGS_COMPRESSION_MASK, uCompression);
-		  pedantic_cout("using compression " << sKeyWords[uKeyWord] << " for "
+		  pedantic_cout("using compression " << sKeyWords_lrc[uKeyWord] << " for "
 				<< currSolver.s_name
 				<< " solver" << std::endl);
 	     } else {
-		  pedantic_cerr("compression " << sKeyWords[uKeyWord] << " is meaningless for "
+		  pedantic_cerr("compression " << sKeyWords_lrc[uKeyWord] << " is meaningless for "
 				<< currSolver.s_name
 				<< " solver" << std::endl);
 	     }

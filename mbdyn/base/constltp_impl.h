@@ -298,7 +298,7 @@ public:
 		NO_OP;
 	}
 
-	virtual ConstitutiveLaw<T, Tder>* pCopy(void) const {
+	virtual ConstitutiveLaw<T, Tder>* pCopy(void) const override {
 		ConstitutiveLaw<T, Tder>* pCL = 0;
 
 		typedef LinearElasticIsotropicConstitutiveLaw<T, Tder> cl;
@@ -310,19 +310,19 @@ public:
 		return pCL;
 	}
 
-	virtual std::ostream& Restart(std::ostream& out) const {
+	virtual std::ostream& Restart(std::ostream& out) const override {
 		out << "linear elastic isotropic, " << dStiffness;
 		return ElasticConstitutiveLaw<T, Tder>::Restart_int(out);
 	}
 
 	using ConstitutiveLawAd<T, Tder>::Update;
-	virtual void Update(const T& Eps, const T& /* EpsPrime */  = mb_zero<T>()) {
+	virtual void Update(const T& Eps, const T& /* EpsPrime */  = mb_zero<T>()) override {
 		ElasticConstitutiveLaw<T, Tder>::Epsilon = Eps;
 		ConstitutiveLaw<T, Tder>::F = ElasticConstitutiveLaw<T, Tder>::PreStress
 			+ (ElasticConstitutiveLaw<T, Tder>::Epsilon - ElasticConstitutiveLaw<T, Tder>::Get())*dStiffness;
 	}
 
-        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
              NO_OP;
         }
 };
@@ -350,7 +350,7 @@ public:
 		NO_OP;
 	}
 
-	virtual ConstitutiveLaw<T, Tder>* pCopy(void) const {
+	virtual ConstitutiveLaw<T, Tder>* pCopy(void) const override {
 		ConstitutiveLaw<T, Tder>* pCL = 0;
 
 		typedef LinearElasticGenericConstitutiveLaw<T, Tder> cl;
@@ -362,20 +362,20 @@ public:
 		return pCL;
 	}
 
-	virtual std::ostream& Restart(std::ostream& out) const {
+	virtual std::ostream& Restart(std::ostream& out) const override {
 		out << "linear elastic generic, ",
 			Write(out, ConstitutiveLaw<T, Tder>::FDE, ", ");
 		return ElasticConstitutiveLaw<T, Tder>::Restart_int(out);
 	}
 
 	using ConstitutiveLawAd<T, Tder>::Update;
-	virtual void Update(const T& Eps, const T& /* EpsPrime */ = mb_zero<T>()) {
+	virtual void Update(const T& Eps, const T& /* EpsPrime */ = mb_zero<T>()) override {
 		ConstitutiveLaw<T, Tder>::Epsilon = Eps;
 		ConstitutiveLaw<T, Tder>::F = ElasticConstitutiveLaw<T, Tder>::PreStress
 			+ ConstitutiveLaw<T, Tder>::FDE*(ConstitutiveLaw<T, Tder>::Epsilon - ElasticConstitutiveLaw<T, Tder>::Get());
 	}
 
-        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
              NO_OP;
         }
 };
@@ -604,10 +604,10 @@ public:
         using ElasticConstitutiveLaw1D::Update;
 
 	CubicElasticGenericConstitutiveLaw(const TplDriveCaller<doublereal>* pDC,
-			const doublereal& PStress, const doublereal& Stiff1,
-			const doublereal& Stiff2, const doublereal& Stiff3)
+			const doublereal& PStress, const doublereal& Stiff1_a,
+			const doublereal& Stiff2_a, const doublereal& Stiff3_a)
 	: ElasticConstitutiveLaw1D(pDC, PStress),
-		Stiff1(Stiff1), Stiff2(Stiff2), Stiff3(Stiff3)
+		Stiff1(Stiff1_a), Stiff2(Stiff2_a), Stiff3(Stiff3_a)
 	{
 		NO_OP;
 	};
@@ -660,10 +660,10 @@ protected:
 
 public:
 	CubicElasticGenericConstitutiveLaw(const TplDriveCaller<Vec3>* pDC,
-			const Vec3& PStress, const Vec3& Stiff1,
-			const Vec3& Stiff2, const Vec3& Stiff3)
+			const Vec3& PStress, const Vec3& Stiff1_a,
+			const Vec3& Stiff2_a, const Vec3& Stiff3_a)
 	: ElasticConstitutiveLaw3D(pDC, PStress),
-		Stiff1(Stiff1), Stiff2(Stiff2), Stiff3(Stiff3)
+		Stiff1(Stiff1_a), Stiff2(Stiff2_a), Stiff3(Stiff3_a)
 	{
 		NO_OP;
 	};
@@ -721,9 +721,9 @@ class CubicElasticGenericConstitutiveLawAd<doublereal, doublereal>
      : public CubicElasticGenericConstitutiveLaw<doublereal, doublereal> {
 public:
      CubicElasticGenericConstitutiveLawAd(const TplDriveCaller<doublereal>* pDC,
-                                          const doublereal& PStress, const doublereal& Stiff1,
-                                          const doublereal& Stiff2, const doublereal& Stiff3)
-          :CubicElasticGenericConstitutiveLaw<doublereal, doublereal>(pDC, PStress, Stiff1, Stiff2, Stiff3) {
+                                          const doublereal& PStress, const doublereal& Stiff1_a,
+                                          const doublereal& Stiff2_a, const doublereal& Stiff3_a)
+          :CubicElasticGenericConstitutiveLaw<doublereal, doublereal>(pDC, PStress, Stiff1_a, Stiff2_a, Stiff3_a) {
      }
 
      virtual ~CubicElasticGenericConstitutiveLawAd() {
@@ -743,14 +743,14 @@ public:
      }
 
      template <typename T>
-     void UpdateElasticTpl(const T& Eps, T& F, const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) {
+     void UpdateElasticTpl(const T& Eps, T& F_a, const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) {
           using namespace sp_grad;
           const T e1 = Eps - this->Get();
           const T f1 = fabs(e1);
           const T e2 = oDofMap.MapEval(e1 * e1);
           const T f2 = oDofMap.MapEval(f1 * e1);
           const T e3 = oDofMap.MapEval(e2 * e1);
-          oDofMap.MapAssign(F, this->PreStress + Stiff1*e1 + Stiff2*f2 + Stiff3*e3);
+          oDofMap.MapAssign(F_a, this->PreStress + Stiff1*e1 + Stiff2*f2 + Stiff3*e3);
      }
 
      virtual void Update(const doublereal& Eps, const doublereal&) override {
@@ -784,9 +784,9 @@ class CubicElasticGenericConstitutiveLawAd<Vec3, Mat3x3>
 : public CubicElasticGenericConstitutiveLaw<Vec3, Mat3x3> {
 public:
         CubicElasticGenericConstitutiveLawAd(const TplDriveCaller<Vec3>* pDC,
-                        const Vec3& PStress, const Vec3& Stiff1,
-                        const Vec3& Stiff2, const Vec3& Stiff3)
-             : CubicElasticGenericConstitutiveLaw<Vec3, Mat3x3>(pDC, PStress, Stiff1, Stiff2, Stiff3) {
+                        const Vec3& PStress, const Vec3& Stiff1_a,
+                        const Vec3& Stiff2_a, const Vec3& Stiff3_a)
+             : CubicElasticGenericConstitutiveLaw<Vec3, Mat3x3>(pDC, PStress, Stiff1_a, Stiff2_a, Stiff3_a) {
         }
 
         virtual ~CubicElasticGenericConstitutiveLawAd() {
@@ -805,7 +805,7 @@ public:
         }
 
         template <typename VectorType>
-        void UpdateElasticTpl(const VectorType& Eps, VectorType& F, const sp_grad::SpGradExpDofMapHelper<typename VectorType::ValueType>& oDofMap) {
+        void UpdateElasticTpl(const VectorType& Eps, VectorType& F_a, const sp_grad::SpGradExpDofMapHelper<typename VectorType::ValueType>& oDofMap) {
              using namespace sp_grad;
              typedef typename VectorType::ValueType T;
 
@@ -818,7 +818,7 @@ public:
                   const T f2 = oDofMap.MapEval(f1 * e1);
                   const T e3 = oDofMap.MapEval(e2 * e1);
 
-                  oDofMap.MapAssign(F(iCnt), this->PreStress(iCnt) + Stiff1(iCnt) * e1 + Stiff2(iCnt) * f2 + Stiff3(iCnt) * e3);
+                  oDofMap.MapAssign(F_a(iCnt), this->PreStress(iCnt) + Stiff1(iCnt) * e1 + Stiff2(iCnt) * f2 + Stiff3(iCnt) * e3);
              }
         }
 
@@ -1334,9 +1334,9 @@ public:
 
 	ContactConstitutiveLaw(const TplDriveCaller<doublereal>* pDC,
 			const doublereal& PStress,
-			const doublereal& dKappa,
-			const doublereal& dGamma)
-	: ElasticConstitutiveLaw1D(pDC, PStress), dKappa(dKappa), dGamma(dGamma) {
+			const doublereal& dKappa_a,
+			const doublereal& dGamma_a)
+	: ElasticConstitutiveLaw1D(pDC, PStress), dKappa(dKappa_a), dGamma(dGamma_a) {
 		NO_OP;
 	};
 
@@ -1391,9 +1391,9 @@ private:
 public:
 	ContactConstitutiveLaw(const TplDriveCaller<Vec3>* pDC,
 			const Vec3& PStress,
-			const doublereal& dKappa,
-			const doublereal& dGamma)
-	: ElasticConstitutiveLaw3D(pDC, PStress), dKappa(dKappa), dGamma(dGamma) {
+			const doublereal& dKappa_a,
+			const doublereal& dGamma_a)
+	: ElasticConstitutiveLaw3D(pDC, PStress), dKappa(dKappa_a), dGamma(dGamma_a) {
 		F = Zero3;
 		FDE = Zero3x3;
 	};
@@ -1494,7 +1494,7 @@ class LinearViscousIsotropicConstitutiveLaw
       ConstitutiveLaw<T, Tder>::F = ConstitutiveLaw<T, Tder>::EpsilonPrime*dStiffnessPrime;
    }
 
-   virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) {
+   virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) {
         NO_OP;
    }
 };
@@ -1518,11 +1518,11 @@ class LinearViscousGenericConstitutiveLaw
       NO_OP;
    };
 
-	ConstLawType::Type GetConstLawType(void) const {
+	ConstLawType::Type GetConstLawType(void) const override {
 		return ConstLawType::VISCOUS;
 	};
 
-   virtual ConstitutiveLaw<T, Tder>* pCopy(void) const {
+   virtual ConstitutiveLaw<T, Tder>* pCopy(void) const override {
       ConstitutiveLaw<T, Tder>* pCL = 0;
 
       typedef LinearViscousGenericConstitutiveLaw<T, Tder> cl;
@@ -1534,18 +1534,18 @@ class LinearViscousGenericConstitutiveLaw
       return pCL;
    };
 
-   virtual std::ostream& Restart(std::ostream& out) const {
+   virtual std::ostream& Restart(std::ostream& out) const override {
       out << "linear viscous generic, ",
         Write(out, ConstitutiveLaw<T, Tder>::FDEPrime, ", ");
       return ElasticConstitutiveLaw<T, Tder>::Restart_int(out);
    };
 
-     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+     virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
           NO_OP;
      }
      
    using ConstitutiveLawAd<T, Tder>::Update;
-   virtual void Update(const T& /* Eps */ , const T& EpsPrime = mb_zero<T>()) {
+   virtual void Update(const T& /* Eps */ , const T& EpsPrime = mb_zero<T>()) override {
       ConstitutiveLaw<T, Tder>::EpsilonPrime = EpsPrime;
       ConstitutiveLaw<T, Tder>::F = ConstitutiveLaw<T, Tder>::FDEPrime*ConstitutiveLaw<T, Tder>::EpsilonPrime;
    };
@@ -1639,11 +1639,11 @@ class LinearViscoElasticGenericConstitutiveLaw
       NO_OP;
    }
 
-   ConstLawType::Type GetConstLawType(void) const {
+   ConstLawType::Type GetConstLawType(void) const override {
       return ConstLawType::VISCOELASTIC;
    }
 
-   virtual ConstitutiveLaw<T, Tder>* pCopy(void) const {
+   virtual ConstitutiveLaw<T, Tder>* pCopy(void) const override {
       ConstitutiveLaw<T, Tder>* pCL = 0;
 
       typedef LinearViscoElasticGenericConstitutiveLaw<T, Tder> cl;
@@ -1657,7 +1657,7 @@ class LinearViscoElasticGenericConstitutiveLaw
       return pCL;
    }
 
-   virtual std::ostream& Restart(std::ostream& out) const {
+   virtual std::ostream& Restart(std::ostream& out) const override {
      out << "linear viscoelastic generic, ",
        Write(out, ConstitutiveLaw<T, Tder>::FDE, ", ") << ", ",
        Write(out, ConstitutiveLaw<T, Tder>::FDEPrime, ", ");
@@ -1665,7 +1665,7 @@ class LinearViscoElasticGenericConstitutiveLaw
    }
 
    using ConstitutiveLawAd<T, Tder>::Update;
-   virtual void Update(const T& Eps, const T& EpsPrime = mb_zero<T>()) {
+   virtual void Update(const T& Eps, const T& EpsPrime = mb_zero<T>()) override {
       ConstitutiveLaw<T, Tder>::Epsilon = Eps;
       ConstitutiveLaw<T, Tder>::EpsilonPrime = EpsPrime;
       ConstitutiveLaw<T, Tder>::F = ElasticConstitutiveLaw<T, Tder>::PreStress
@@ -1673,7 +1673,7 @@ class LinearViscoElasticGenericConstitutiveLaw
 	+ConstitutiveLaw<T, Tder>::FDEPrime*ConstitutiveLaw<T, Tder>::EpsilonPrime;
    }
 
-   virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+   virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
            NO_OP;
    }         
 };
@@ -1817,11 +1817,11 @@ public:
 		NO_OP;
 	}
 
-	ConstLawType::Type GetConstLawType(void) const {
+	ConstLawType::Type GetConstLawType(void) const override {
 		return ConstLawType::VISCOELASTIC;
 	}
 
-	virtual ConstitutiveLaw<T, Tder>* pCopy(void) const {
+	virtual ConstitutiveLaw<T, Tder>* pCopy(void) const override {
 		ConstitutiveLaw<T, Tder>* pCL = 0;
 
 		typedef LTVViscoElasticGenericConstitutiveLaw<T, Tder> cl;
@@ -1837,7 +1837,7 @@ public:
 		return pCL;
 	}
 
-	virtual std::ostream& Restart(std::ostream& out) const {
+	virtual std::ostream& Restart(std::ostream& out) const override {
 		out << "linear time variant viscoelastic generic, ",
 			Write(out, FDERef, ", ") << ", ",
 			FDECoef.pGetDriveCaller()->Restart(out) << ", ",
@@ -1847,7 +1847,7 @@ public:
 	}
 
 	using ConstitutiveLawAd<T, Tder>::Update;
-	virtual void Update(const T& Eps, const T& EpsPrime = mb_zero<T>()) {
+	virtual void Update(const T& Eps, const T& EpsPrime = mb_zero<T>()) override {
 		ConstitutiveLaw<T, Tder>::Epsilon = Eps;
 		ConstitutiveLaw<T, Tder>::EpsilonPrime = EpsPrime;
 		doublereal dCurrScaleFactor = FDECoef.dGet();
@@ -1865,7 +1865,7 @@ public:
 			+ ConstitutiveLaw<T, Tder>::FDEPrime*ConstitutiveLaw<T, Tder>::EpsilonPrime;
 	}
 
-        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) override {
+        virtual void Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) override {
              NO_OP;
         }                
 };
@@ -2025,11 +2025,11 @@ public:
         using ElasticConstitutiveLaw1D::Update;
 
 	CubicViscoElasticGenericConstitutiveLaw(const TplDriveCaller<doublereal>* pDC,
-			const doublereal& PStress, const doublereal& Stiff1,
-			const doublereal& Stiff2, const doublereal& Stiff3,
+			const doublereal& PStress, const doublereal& Stiff1_a,
+			const doublereal& Stiff2_a, const doublereal& Stiff3_a,
 			const doublereal& StiffPrime)
 	: ElasticConstitutiveLaw1D(pDC, PStress),
-		Stiff1(Stiff1), Stiff2(Stiff2), Stiff3(Stiff3)
+		Stiff1(Stiff1_a), Stiff2(Stiff2_a), Stiff3(Stiff3_a)
 	{
 		ConstitutiveLaw1D::FDEPrime = StiffPrime;
 	}
@@ -2083,11 +2083,11 @@ private:
 
 public:
 	CubicViscoElasticGenericConstitutiveLaw(const TplDriveCaller<Vec3>* pDC,
-			const Vec3& PStress, const Vec3& Stiff1,
-			const Vec3& Stiff2, const Vec3& Stiff3,
+			const Vec3& PStress, const Vec3& Stiff1_a,
+			const Vec3& Stiff2_a, const Vec3& Stiff3_a,
 			const Mat3x3& StiffPrime)
 	: ElasticConstitutiveLaw3D(pDC, PStress),
-		Stiff1(Stiff1), Stiff2(Stiff2), Stiff3(Stiff3)
+		Stiff1(Stiff1_a), Stiff2(Stiff2_a), Stiff3(Stiff3_a)
 	{
 		ConstitutiveLaw3D::FDEPrime = StiffPrime;
 	};

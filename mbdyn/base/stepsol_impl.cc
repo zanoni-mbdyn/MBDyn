@@ -469,21 +469,21 @@ HopeSolver::dPredStateAlg(const doublereal dXm1mN[2],
 
 /* Hope - end */
 
-HybridStepIntegrator::HybridStepIntegrator(const SolverBase::StepIntegratorType eDefaultIntegrator,
-                                           const doublereal dTol,
+HybridStepIntegrator::HybridStepIntegrator(const SolverBase::StepIntegratorType eDefaultIntegrator_a,
+                                           const doublereal dTol_a,
                                            const doublereal dSolutionTol,
                                            const integer iMaxIterations,
                                            const DriveCaller* pRho,
                                            const DriveCaller* pAlgRho,
-                                           const bool bModResTest)
+                                           const bool bModResTest_a)
      :ImplicitStepIntegrator(iMaxIterations,
-                             dTol,
+                             dTol_a,
                              dSolutionTol,
                              2,
                              1,
-                             bModResTest),
+                             bModResTest_a),
       pDefaultInteg(nullptr),
-      eDefaultIntegrator(eDefaultIntegrator),
+      eDefaultIntegrator(eDefaultIntegrator_a),
       m_Rho(pRho),
       m_AlgebraicRho(pAlgRho)
 {
@@ -495,9 +495,9 @@ HybridStepIntegrator::~HybridStepIntegrator()
 }
 
 void
-HybridStepIntegrator::SetDataManager(DataManager* pDM)
+HybridStepIntegrator::SetDataManager(DataManager* pDM_a)
 {
-     ImplicitStepIntegrator::SetDataManager(pDM);
+     ImplicitStepIntegrator::SetDataManager(pDM_a);
 
      rgIntegItems.clear();
      rgIntegItems.reserve(SolverBase::INT_COUNT);

@@ -176,7 +176,7 @@ InLineJoint::AssJac(VariableSubMatrixHandler& WorkMat,
        //shape function
        doublereal shc = Sh_c->Sh_c();
        //compute relative velocity
-       doublereal v = (pNode1->GetVCurr()-pNode2->GetVCurr()).Dot(e3a);
+       v = (pNode1->GetVCurr()-pNode2->GetVCurr()).Dot(e3a);
        //reaction norm
        doublereal modF = std::max(F.Norm(), preF); // F is not updated inside AssJac?
        //reaction moment

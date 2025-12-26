@@ -216,9 +216,9 @@ static FullMatrixHandler IPa;
 static bool bIRa(false);
 
 
-ModuleNonsmoothNode::ModuleNonsmoothNode( unsigned uLabel, const DofOwner *pDO,
+ModuleNonsmoothNode::ModuleNonsmoothNode( unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_pDM(pDM),
 m_pNode(0),
 bStepToggle(false),

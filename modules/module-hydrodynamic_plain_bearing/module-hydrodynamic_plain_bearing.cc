@@ -264,9 +264,9 @@ const HydrodynamicPlainBearing::PrivData HydrodynamicPlainBearing::sm_rgPrivData
 };
 
 HydrodynamicPlainBearing::HydrodynamicPlainBearing(
-     unsigned uLabel, const DofOwner *pDO,
+     unsigned uLabel_a, const DofOwner *pDO,
      DataManager* pDM, MBDynParser& HP)
-     :  UserDefinedElem(uLabel, pDO),
+     :  UserDefinedElem(uLabel_a, pDO),
         m_pShaft(0),
         m_pBearing(0),
         m_o1_R1(0.,0.,0.),
@@ -777,7 +777,7 @@ void HydrodynamicPlainBearing::ComputeResidual(OutputData<T>& oOutput,
                                                sp_grad::SpFunctionCall eFunc) const
 {
      using namespace sp_grad;
-     typedef SpColVector<T, 3> Vec3;
+     typedef SpColVector<T, 3> Vec3_type;
 
      SpColVectorA<T, 3> X1, X2, X1_dot, X2_dot, omega1, omega2;
      SpMatrixA<T, 3, 3> R1, R2;
@@ -800,8 +800,8 @@ void HydrodynamicPlainBearing::ComputeResidual(OutputData<T>& oOutput,
 
      o2_R2(3) += r * m_bdat.b;
 
-     const Vec3 v_R2 = Transpose(R2) * Vec3(X1 - X2 + R1 * o1_R1) - o2_R2;
-     const Vec3 d1_R2 = Transpose(R2) * R1.GetCol(3);
+     const Vec3_type v_R2 = Transpose(R2) * Vec3_type(X1 - X2 + R1 * o1_R1) - o2_R2;
+     const Vec3_type d1_R2 = Transpose(R2) * R1.GetCol(3);
 
      T lambda(0.);
 
@@ -811,8 +811,8 @@ void HydrodynamicPlainBearing::ComputeResidual(OutputData<T>& oOutput,
 
      oOutput.e_R2 = v_R2 + d1_R2 * lambda;
 
-     const Vec3 v_dot_R2 = Transpose(R2) * Vec3(X1_dot - X2_dot + Cross(omega2, X2 - X1) + Cross(omega1 - omega2, R1 * o1_R1));
-     const Vec3 d1_dot_R2 = Transpose(R2) * Vec3(Cross(omega1 - omega2, R1.GetCol(3)));
+     const Vec3_type v_dot_R2 = Transpose(R2) * Vec3_type(X1_dot - X2_dot + Cross(omega2, X2 - X1) + Cross(omega1 - omega2, R1 * o1_R1));
+     const Vec3_type d1_dot_R2 = Transpose(R2) * Vec3_type(Cross(omega1 - omega2, R1.GetCol(3)));
      T lambda_dot(0.);
 
      if (m_lambda) {
@@ -820,11 +820,11 @@ void HydrodynamicPlainBearing::ComputeResidual(OutputData<T>& oOutput,
      }
 
      // e_dot_R2 = R2^T * e_dot_I
-     oOutput.e_dot_R2 = Transpose(R2) * Vec3( X1_dot - X2_dot + Cross(omega1,  R1 * o1_R1 ) - Cross(omega2, R2 * o2_R2)
+     oOutput.e_dot_R2 = Transpose(R2) * Vec3_type( X1_dot - X2_dot + Cross(omega1,  R1 * o1_R1 ) - Cross(omega2, R2 * o2_R2)
                                               + R1.GetCol(3) * lambda_dot + Cross(omega1, R1.GetCol(3)) * lambda);
-     const Vec3 l2_R2 = o2_R2 + oOutput.e_R2;
-     const Vec3 lambda_d1_R1{T(0.), T(0.), lambda};
-     const Vec3 l1_I = R1 * Vec3( o1_R1 + lambda_d1_R1 );
+     const Vec3_type l2_R2 = o2_R2 + oOutput.e_R2;
+     const Vec3_type lambda_d1_R1{T(0.), T(0.), lambda};
+     const Vec3_type l1_I = R1 * Vec3_type( o1_R1 + lambda_d1_R1 );
 
      oOutput.omega_proj(1) = Dot(R2.GetCol(3), omega1);
      oOutput.omega_proj(2) = Dot(R2.GetCol(3), omega2);
@@ -847,7 +847,7 @@ void HydrodynamicPlainBearing::ComputeResidual(OutputData<T>& oOutput,
      oOutput.M2_R2 *= alpha;
 
      oOutput.F2_I = R2 * oOutput.F2_R2;
-     oOutput.M2_I = R2 * Vec3(Cross(l2_R2, oOutput.F2_R2) + oOutput.M2_R2);
+     oOutput.M2_I = R2 * Vec3_type(Cross(l2_R2, oOutput.F2_R2) + oOutput.M2_R2);
      oOutput.F1_I = -oOutput.F2_I;
      oOutput.M1_I = -Cross(l1_I, oOutput.F2_I) - R2 * oOutput.M2_R2;
 }

@@ -78,47 +78,47 @@ Gmres::~Gmres(void)
 }
 	
 void
-Gmres::GeneratePlaneRotation(const doublereal &dx, const doublereal &dy, 
-		doublereal &cs, doublereal &sn) const 
+Gmres::GeneratePlaneRotation(const doublereal &dx_a, const doublereal &dy_a,
+		doublereal &cs_a, doublereal &sn_a) const
 {
-	if (fabs(dy) < std::numeric_limits<doublereal>::epsilon()) {
-		cs = 1.0;
-		sn = 0.0;
+	if (fabs(dy_a) < std::numeric_limits<doublereal>::epsilon()) {
+		cs_a = 1.0;
+		sn_a = 0.0;
 
-	} else if (fabs(dy) > fabs(dx)) {
-		doublereal temp = dx / dy; 
-		sn = 1.0 / sqrt( 1.0 + temp*temp );
-		cs = temp * sn;
+	} else if (fabs(dy_a) > fabs(dx_a)) {
+		doublereal temp = dx_a / dy_a;
+		sn_a = 1.0 / sqrt( 1.0 + temp*temp );
+		cs_a = temp * sn_a;
 
 	} else {
-		doublereal temp = dy / dx; 
-		cs = 1.0 / sqrt( 1.0 + temp*temp );
-		sn = temp * cs;
+		doublereal temp = dy_a / dx_a;
+		cs_a = 1.0 / sqrt( 1.0 + temp*temp );
+		sn_a = temp * cs_a;
 	}
 }
 
 void
-Gmres::ApplyPlaneRotation(doublereal &dx, doublereal &dy, 
-		const doublereal &cs, const doublereal &sn) const 
+Gmres::ApplyPlaneRotation(doublereal &dx_a, doublereal &dy_a,
+		const doublereal &cs_a, const doublereal &sn_a) const
 { 
-	doublereal temp = cs * dx + sn * dy; 
-	dy = -sn * dx + cs * dy;
-	dx = temp;
+	doublereal temp = cs_a * dx_a + sn_a * dy_a;
+	dy_a = -sn_a * dx_a + cs_a * dy_a;
+	dx_a = temp;
 }
 
 void
 Gmres::Backsolve(VectorHandler& x, integer sz,
-		VectorHandler& s, MyVectorHandler* v) 
+		VectorHandler& s_a, MyVectorHandler* v_a)
 { 
 	for (int i = sz+1; i > 0; i--) {
-    		s.PutCoef(i, s(i) / H(i, i));
+    		s_a.PutCoef(i, s_a(i) / H(i, i));
     		for (int j = i - 1; j > 0; j--) {
-      			s.DecCoef(j, H(j, i) * s(i));
+      			s_a.DecCoef(j, H(j, i) * s_a(i));
 		}
   	}
 
   	for (int j = 0; j <= sz; j++) {
-    		x.ScalarAddMul(v[j], s(j+1));
+    		x.ScalarAddMul(v_a[j], s_a(j+1));
 	}
 }
 

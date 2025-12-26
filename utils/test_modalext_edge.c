@@ -86,7 +86,7 @@ static const char *cmd2str(int cmd)
 }
 
 static int
-check_flag(const char *flag, int sleeptime)
+check_flag(const char *flag_a, int sleeptime_a)
 {
 	int rc;
 
@@ -95,39 +95,39 @@ check_flag(const char *flag, int sleeptime)
 		FILE *f;
 		char c = ' ';
 
-		f = fopen(flag, "r");
+		f = fopen(flag_a, "r");
 		if (f == NULL && errno == ENOENT) {
-			fprintf(stderr, "test_modalext_edge: file \"%s\" missing\n", flag);
+			fprintf(stderr, "test_modalext_edge: file \"%s\" missing\n", flag_a);
 			return 1;
 		}
 
 		if ( fgets(buf, sizeof(buf), f) == NULL ) {
-			fprintf(stderr, "test_modalext_edge: unable to read line from file \"%s\"\n", flag);
+			fprintf(stderr, "test_modalext_edge: unable to read line from file \"%s\"\n", flag_a);
 			return -1;
 		}
 
 		if (strcmp(buf, "UPDATE,N,0,0,1\n") != 0) {
 			size_t len = strlen(buf);
 			buf[len - 1] = '\0';
-			fprintf(stderr, "test_modalext_edge: expecting \"UPDATE,N,0,0,1\", got \"%s\" from file \"%s\"\n", buf, flag);
+			fprintf(stderr, "test_modalext_edge: expecting \"UPDATE,N,0,0,1\", got \"%s\" from file \"%s\"\n", buf, flag_a);
 			fclose(f);
 			return -1;
 		}
 		if ( fgets(buf, sizeof(buf), f) == NULL ) {
-			fprintf(stderr, "test_modalext_edge: unable to read line from file \"%s\"\n", flag);
+			fprintf(stderr, "test_modalext_edge: unable to read line from file \"%s\"\n", flag_a);
 			return -1;
 		}
 		if (strcmp(buf, "FLAG,I,1,1,0\n") != 0) {
 			size_t len = strlen(buf);
 			buf[len - 1] = '\0';
-			fprintf(stderr, "test_modalext_edge: expecting \"FLAG,I,1,1,0\", got \"%s\" from file \"%s\"\n", buf, flag);
+			fprintf(stderr, "test_modalext_edge: expecting \"FLAG,I,1,1,0\", got \"%s\" from file \"%s\"\n", buf, flag_a);
 			fclose(f);
 			return -1;
 		}
 		rc = fread((void *)&c, 1, 1, f);
 		fclose(f);
 		if (rc == 1) {
-			fprintf(stderr, "test_modalext_edge: got %c (%s) from file \"%s\"\n", c, cmd2str(c - '0'), flag);
+			fprintf(stderr, "test_modalext_edge: got %c (%s) from file \"%s\"\n", c, cmd2str(c - '0'), flag_a);
 
 			switch (c) {
 			case '0':
@@ -143,8 +143,8 @@ check_flag(const char *flag, int sleeptime)
 			}
 		}
 
-		if (sleeptime) {
-			fprintf(stderr, "test_modalext_edge: sleeping %d s\n", sleeptime);
+		if (sleeptime_a) {
+			fprintf(stderr, "test_modalext_edge: sleeping %d s\n", sleeptime_a);
 			mbsleep(&mbt);
 		}
 	}
@@ -153,7 +153,7 @@ check_flag(const char *flag, int sleeptime)
 }
 
 static int
-put_flag(const char *flag, int cmd)
+put_flag(const char *flag_a, int cmd)
 {
 	FILE *f;
 	char ftmpname[] = "mbedgeXXXXXX";
@@ -166,13 +166,13 @@ put_flag(const char *flag, int cmd)
 	} else
 #endif // HAVE_MKSTEMP
 	{
-		f = fopen(flag, "w");
+		f = fopen(flag_a, "w");
 	}
 
 	if (f == NULL) {
 		int save_errno = errno;
 		fprintf(stderr, "unable to open flag file \"%s\" for writing (%d: %s)\n",
-			flag, save_errno, strerror(save_errno));
+			flag_a, save_errno, strerror(save_errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -183,7 +183,7 @@ put_flag(const char *flag, int cmd)
 
 	if (do_rename) {
 retry:;
-		if (rename(ftmpname, flag) == -1) {
+		if (rename(ftmpname, flag_a) == -1) {
 			switch (errno) {
 			case EBUSY:
 				mbsleep(&mbt);
@@ -192,7 +192,7 @@ retry:;
 			default: {
 				int save_errno = errno;
 				fprintf(stderr, "unable to rename flag file \"%s\" (errno=%d: %s)\n",
-					flag, save_errno, strerror(save_errno));
+					flag_a, save_errno, strerror(save_errno));
 				exit(EXIT_FAILURE);
 				}
 			}

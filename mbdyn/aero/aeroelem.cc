@@ -146,7 +146,7 @@ AerodynamicOutput::IsNODE(void) const
 static const bool bDefaultUseJacobian = false;
 
 template <unsigned iNN>
-Aerodynamic2DElem<iNN>::Aerodynamic2DElem(unsigned int uLabel,
+Aerodynamic2DElem<iNN>::Aerodynamic2DElem(unsigned int uLabel_a,
 	const DofOwner *pDO,
 	InducedVelocityElem* pR, bool bPassive,
 	const Shape* pC, const Shape* pF,
@@ -158,7 +158,7 @@ Aerodynamic2DElem<iNN>::Aerodynamic2DElem(unsigned int uLabel,
 	OrientationDescription ood,
 	flag fOut)
 : AerodynamicElem(pDO),
-InitialAssemblyElem(uLabel, fOut),
+InitialAssemblyElem(uLabel_a, fOut),
 DriveOwner(pDC),
 AerodynamicOutput(fOut, iNN*iN, ood),
 aerodata(a),
@@ -732,7 +732,7 @@ Aerodynamic2DElem<iNN>::AddSectionalForce_int(unsigned uPnt,
 
 /* AerodynamicBody - begin */
 
-AerodynamicBody::AerodynamicBody(unsigned int uLabel,
+AerodynamicBody::AerodynamicBody(unsigned int uLabel_a,
 	const DofOwner *pDO,
 	const StructNode* pN, InducedVelocityElem* pR, bool bPassive,
 	const Vec3& fTmp, doublereal dS,
@@ -745,7 +745,7 @@ AerodynamicBody::AerodynamicBody(unsigned int uLabel,
 	bool bUseJacobian,
 	OrientationDescription ood,
 	flag fOut)
-: Aerodynamic2DElem<1>(uLabel, pDO, pR, bPassive, pC, pF, pV, pT, pTL, iN,
+: Aerodynamic2DElem<1>(uLabel_a, pDO, pR, bPassive, pC, pF, pV, pT, pTL, iN,
 	a, pDC, bUseJacobian, ood, fOut),
 pNode(pN),
 f(fTmp),
@@ -1631,7 +1631,7 @@ ReadAerodynamicBody(DataManager* pDM,
 
 /* AerodynamicBeam - begin */
 
-AerodynamicBeam::AerodynamicBeam(unsigned int uLabel,
+AerodynamicBeam::AerodynamicBeam(unsigned int uLabel_a,
 	const DofOwner *pDO,
 	const Beam* pB, InducedVelocityElem* pR, bool bPassive,
 	const Vec3& fTmp1,
@@ -1648,7 +1648,7 @@ AerodynamicBeam::AerodynamicBeam(unsigned int uLabel,
 	bool bUseJacobian,
 	OrientationDescription ood,
 	flag fOut)
-: Aerodynamic2DElem<3>(uLabel, pDO, pR, bPassive,
+: Aerodynamic2DElem<3>(uLabel_a, pDO, pR, bPassive,
 	pC, pF, pV, pT, pTL, iN, a, pDC, bUseJacobian, ood, fOut),
 pBeam(pB),
 f1(fTmp1),
@@ -1895,14 +1895,14 @@ AerodynamicBeam::AssJac(VariableSubMatrixHandler& WorkMat,
 			doublereal dXds = DxDcsi3N(ds,
 				Xn[NODE1], Xn[NODE2], Xn[NODE3]);
 
-			doublereal dN1 = ShapeFunc3N(ds, 1);
-			doublereal dN2 = ShapeFunc3N(ds, 2);
-			doublereal dN3 = ShapeFunc3N(ds, 3);
+			doublereal dN1_scalar = ShapeFunc3N(ds, 1);
+			doublereal dN2_scalar = ShapeFunc3N(ds, 2);
+			doublereal dN3_scalar = ShapeFunc3N(ds, 3);
 
-			Vec3 Xr(X1Tmp*dN1 + X2Tmp*dN2 + X3Tmp*dN3);
-			Vec3 Vr(V1Tmp*dN1 + V2Tmp*dN2 + V3Tmp*dN3);
-			Vec3 Wr(Wn1*dN1 + Wn2*dN2 + Wn3*dN3);
-			Vec3 gr(g1*dN1 + g3*dN3);
+			Vec3 Xr(X1Tmp*dN1_scalar + X2Tmp*dN2_scalar + X3Tmp*dN3_scalar);
+			Vec3 Vr(V1Tmp*dN1_scalar + V2Tmp*dN2_scalar + V3Tmp*dN3_scalar);
+			Vec3 Wr(Wn1*dN1_scalar + Wn2*dN2_scalar + Wn3*dN3_scalar);
+			Vec3 gr(g1*dN1_scalar + g3*dN3_scalar);
 			Mat3x3 Gamma(ER_Rot::MatG, gr);
 
 			/* Contributo di velocita' del vento */
@@ -1991,32 +1991,32 @@ AerodynamicBeam::AssJac(VariableSubMatrixHandler& WorkMat,
 
 			Vec3 d(Xr - Xn[iNode]);
 
-			Mat3x3 Theta1(RR2*Gamma*GammaInv1.MulMT(RR2*dN1));
-			Mat3x3 Theta3(RR2*Gamma*GammaInv3.MulMT(RR2*dN3));
+			Mat3x3 Theta1(RR2*Gamma*GammaInv1.MulMT(RR2*dN1_scalar));
+			Mat3x3 Theta3(RR2*Gamma*GammaInv3.MulMT(RR2*dN3_scalar));
 			Mat3x3 Theta2(Eye3 - Theta1 - Theta3);
 
 			Vec3 Vrc(Vr*dCoef);
-			Mat3x3 Bv1(Vrc.Cross(Theta1) - Mat3x3(MatCross, Omega1Crossf1*(dN1*dCoef)));
-			Mat3x3 Bv2(Vrc.Cross(Theta2) - Mat3x3(MatCross, Omega2Crossf2*(dN2*dCoef)));
-			Mat3x3 Bv3(Vrc.Cross(Theta3) - Mat3x3(MatCross, Omega3Crossf3*(dN3*dCoef)));
+			Mat3x3 Bv1(Vrc.Cross(Theta1) - Mat3x3(MatCross, Omega1Crossf1*(dN1_scalar*dCoef)));
+			Mat3x3 Bv2(Vrc.Cross(Theta2) - Mat3x3(MatCross, Omega2Crossf2*(dN2_scalar*dCoef)));
+			Mat3x3 Bv3(Vrc.Cross(Theta3) - Mat3x3(MatCross, Omega3Crossf3*(dN3_scalar*dCoef)));
 
 			Vec3 Wrc(Wr*dCoef);
-			Mat3x3 Bw1(Wrc.Cross(Theta1) - Mat3x3(MatCross, Wn1*(dN1*dCoef)));
-			Mat3x3 Bw2(Wrc.Cross(Theta2) - Mat3x3(MatCross, Wn2*(dN2*dCoef)));
-			Mat3x3 Bw3(Wrc.Cross(Theta3) - Mat3x3(MatCross, Wn3*(dN3*dCoef)));
+			Mat3x3 Bw1(Wrc.Cross(Theta1) - Mat3x3(MatCross, Wn1*(dN1_scalar*dCoef)));
+			Mat3x3 Bw2(Wrc.Cross(Theta2) - Mat3x3(MatCross, Wn2*(dN2_scalar*dCoef)));
+			Mat3x3 Bw3(Wrc.Cross(Theta3) - Mat3x3(MatCross, Wn3*(dN3_scalar*dCoef)));
 
 			if (iNumDof) {
 				// prepare (v/dot{x} + dCoef*v/x) and so
 				Mat3x3 RRlocT(RRloc.Transpose());
 	
-				vx.PutMat3x3(1, RRlocT*dN1);
-				vx.PutMat3x3(4, RRloc.MulTM(Bv1 - Mat3x3(MatCross, f1Tmp*dN1)));
+				vx.PutMat3x3(1, RRlocT*dN1_scalar);
+				vx.PutMat3x3(4, RRloc.MulTM(Bv1 - Mat3x3(MatCross, f1Tmp*dN1_scalar)));
 
-				vx.PutMat3x3(6 + 1, RRlocT*dN2);
-				vx.PutMat3x3(6 + 4, RRloc.MulTM(Bv2 - Mat3x3(MatCross, f2Tmp*dN2)));
+				vx.PutMat3x3(6 + 1, RRlocT*dN2_scalar);
+				vx.PutMat3x3(6 + 4, RRloc.MulTM(Bv2 - Mat3x3(MatCross, f2Tmp*dN2_scalar)));
 
-				vx.PutMat3x3(12 + 1, RRlocT*dN3);
-				vx.PutMat3x3(12 + 4, RRloc.MulTM(Bv3 - Mat3x3(MatCross, f3Tmp*dN3)));
+				vx.PutMat3x3(12 + 1, RRlocT*dN3_scalar);
+				vx.PutMat3x3(12 + 4, RRloc.MulTM(Bv3 - Mat3x3(MatCross, f3Tmp*dN3_scalar)));
 
 				wx.PutMat3x3(4, RRlocT + Bw1);
 				wx.PutMat3x3(6 + 4, RRlocT + Bw2);
@@ -2055,52 +2055,52 @@ AerodynamicBeam::AssJac(VariableSubMatrixHandler& WorkMat,
 			Mat3x3 WM_F2[6];
 
 			// f <-> x
-			WM_F2[DELTAx1] = JFaR.GetMat11()*dN1;
+			WM_F2[DELTAx1] = JFaR.GetMat11()*dN1_scalar;
 
-			WM_F2[DELTAx2] = JFaR.GetMat11()*dN2;
+			WM_F2[DELTAx2] = JFaR.GetMat11()*dN2_scalar;
 
-			WM_F2[DELTAx3] = JFaR.GetMat11()*dN3;
+			WM_F2[DELTAx3] = JFaR.GetMat11()*dN3_scalar;
 
 			doublereal delta;
 
 			// c <-> x
 			delta = (iNode == NODE1) ? 1. : 0.;
-			WM_M[DELTAx1] += JFaR.GetMat21()*dN1 - Mat3x3(MatCross, fTmp*(dN1 - delta));
+			WM_M[DELTAx1] += JFaR.GetMat21()*dN1_scalar - Mat3x3(MatCross, fTmp*(dN1_scalar - delta));
 
 			delta = (iNode == NODE2) ? 1. : 0.;
-			WM_M[DELTAx2] += JFaR.GetMat21()*dN2 - Mat3x3(MatCross, fTmp*(dN2 - delta));
+			WM_M[DELTAx2] += JFaR.GetMat21()*dN2_scalar - Mat3x3(MatCross, fTmp*(dN2_scalar - delta));
 
 			delta = (iNode == NODE3) ? 1. : 0.;
-			WM_M[DELTAx3] += JFaR.GetMat21()*dN3 - Mat3x3(MatCross, fTmp*(dN3 - delta));
+			WM_M[DELTAx3] += JFaR.GetMat21()*dN3_scalar - Mat3x3(MatCross, fTmp*(dN3_scalar - delta));
 
 			// f <-> g
-			WM_F2[DELTAg1] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f1Tmp))*dN1;
+			WM_F2[DELTAg1] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f1Tmp))*dN1_scalar;
 			WM_F2[DELTAg1] += JFaR.GetMat11()*Bv1 + JFaR.GetMat12()*Bw1;
 			WM_F2[DELTAg1] -= fTmp.Cross(Theta1);
 		
-			WM_F2[DELTAg2] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f2Tmp))*dN2;
+			WM_F2[DELTAg2] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f2Tmp))*dN2_scalar;
 			WM_F2[DELTAg2] += JFaR.GetMat11()*Bv2 + JFaR.GetMat12()*Bw2;
 			WM_F2[DELTAg2] -= fTmp.Cross(Theta2);
 		
-			WM_F2[DELTAg3] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f3Tmp))*dN3;
+			WM_F2[DELTAg3] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f3Tmp))*dN3_scalar;
 			WM_F2[DELTAg3] += JFaR.GetMat11()*Bv3 + JFaR.GetMat12()*Bw3;
 			WM_F2[DELTAg3] -= fTmp.Cross(Theta3);
 
 			// c <-> g
-			WM_M[DELTAg1] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f1Tmp))*dN1;
+			WM_M[DELTAg1] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f1Tmp))*dN1_scalar;
 			WM_M[DELTAg1] += JFaR.GetMat21()*Bv1 + JFaR.GetMat22()*Bw1;
 			WM_M[DELTAg1] -= cTmp.Cross(Theta1);
-			WM_M[DELTAg1] += Mat3x3(MatCrossCross, fTmp, f1Tmp*dN1);
+			WM_M[DELTAg1] += Mat3x3(MatCrossCross, fTmp, f1Tmp*dN1_scalar);
 
-			WM_M[DELTAg2] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f2Tmp))*dN2;
+			WM_M[DELTAg2] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f2Tmp))*dN2_scalar;
 			WM_M[DELTAg2] += JFaR.GetMat21()*Bv2 + JFaR.GetMat22()*Bw2;
 			WM_M[DELTAg2] -= cTmp.Cross(Theta2);
-			WM_M[DELTAg2] += Mat3x3(MatCrossCross, fTmp, f2Tmp*dN2);
+			WM_M[DELTAg2] += Mat3x3(MatCrossCross, fTmp, f2Tmp*dN2_scalar);
 
-			WM_M[DELTAg3] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f3Tmp))*dN3;
+			WM_M[DELTAg3] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f3Tmp))*dN3_scalar;
 			WM_M[DELTAg3] += JFaR.GetMat21()*Bv3 + JFaR.GetMat22()*Bw3;
 			WM_M[DELTAg3] -= cTmp.Cross(Theta3);
-			WM_M[DELTAg3] += Mat3x3(MatCrossCross, fTmp, f3Tmp*dN3);
+			WM_M[DELTAg3] += Mat3x3(MatCrossCross, fTmp, f3Tmp*dN3_scalar);
 
 			for (int iCnt = 0; iCnt < 2*LASTNODE; iCnt++) {
 				WM_F[iCnt] += WM_F2[iCnt];
@@ -2309,13 +2309,13 @@ AerodynamicBeam::AssVec(SubVectorHandler& WorkVec,
 			doublereal dXds = DxDcsi3N(ds,
 				Xn[NODE1], Xn[NODE2], Xn[NODE3]);
 
-			doublereal dN1 = ShapeFunc3N(ds, 1);
-			doublereal dN2 = ShapeFunc3N(ds, 2);
-			doublereal dN3 = ShapeFunc3N(ds, 3);
+			doublereal dN1_scalar = ShapeFunc3N(ds, 1);
+			doublereal dN2_scalar = ShapeFunc3N(ds, 2);
+			doublereal dN3_scalar = ShapeFunc3N(ds, 3);
 
-			Vec3 Xr(X1Tmp*dN1 + X2Tmp*dN2 + X3Tmp*dN3);
-			Vec3 Vr(V1Tmp*dN1 + V2Tmp*dN2 + V3Tmp*dN3);
-			Vec3 Wr(Wn1*dN1 + Wn2*dN2 + Wn3*dN3);
+			Vec3 Xr(X1Tmp*dN1_scalar + X2Tmp*dN2_scalar + X3Tmp*dN3_scalar);
+			Vec3 Vr(V1Tmp*dN1_scalar + V2Tmp*dN2_scalar + V3Tmp*dN3_scalar);
+			Vec3 Wr(Wn1*dN1_scalar + Wn2*dN2_scalar + Wn3*dN3_scalar);
 
 			/* Contributo di velocita' del vento */
 			/* Airstream speed contribution */
@@ -2361,7 +2361,7 @@ AerodynamicBeam::AssVec(SubVectorHandler& WorkVec,
 			 * reference system to the global one
 			 *
 			 */
-			Mat3x3 RRloc(RR2*Mat3x3(ER_Rot::MatR, g1*dN1 + g3*dN3));
+			Mat3x3 RRloc(RR2*Mat3x3(ER_Rot::MatR, g1*dN1_scalar + g3*dN3_scalar));
 			if (dTw != 0.) {
 				doublereal dCosT = cos(dTw);
 				doublereal dSinT = sin(dTw);
@@ -2704,7 +2704,7 @@ ReadAerodynamicBeam(DataManager* pDM,
 /* AerodynamicBeam2 - begin */
 
 AerodynamicBeam2::AerodynamicBeam2(
-	unsigned int uLabel,
+	unsigned int uLabel_a,
 	const DofOwner *pDO,
 	const Beam2* pB,
 	InducedVelocityElem* pR, bool bPassive,
@@ -2724,7 +2724,7 @@ AerodynamicBeam2::AerodynamicBeam2(
 	OrientationDescription ood,
 	flag fOut
 )
-: Aerodynamic2DElem<2>(uLabel, pDO, pR, bPassive,
+: Aerodynamic2DElem<2>(uLabel_a, pDO, pR, bPassive,
 	pC, pF, pV, pT, pTL, iN, a, pDC, bUseJacobian, ood, fOut),
 pBeam(pB),
 f1(fTmp1),
@@ -2936,19 +2936,19 @@ AerodynamicBeam2::AssJac(VariableSubMatrixHandler& WorkMat,
 			doublereal dXds = DxDcsi2N(ds,
 				Xn[NODE1], Xn[NODE2]);
 
-			doublereal dN1 = ShapeFunc2N(ds, 1);
-			doublereal dN2 = ShapeFunc2N(ds, 2);
+			doublereal dN1_scalar = ShapeFunc2N(ds, 1);
+			doublereal dN2_scalar = ShapeFunc2N(ds, 2);
 
 			// note: identical to dN1 and dN2; see tecman.pdf
 #if 0
-			doublereal dNN1 = (1. + dN1 - dN2)/2.;
-			doublereal dNN2 = (1. + dN2 - dN1)/2.;
+			doublereal dNN1 = (1. + dN1_scalar - dN2_scalar)/2.;
+			doublereal dNN2 = (1. + dN2_scalar - dN1_scalar)/2.;
 #endif
 
-			Vec3 Xr(X1Tmp*dN1 + X2Tmp*dN2);
-			Vec3 Vr(V1Tmp*dN1 + V2Tmp*dN2);
-			Vec3 Wr(Wn1*dN1 + Wn2*dN2);
-			Vec3 thetar(overline_theta*dN2);
+			Vec3 Xr(X1Tmp*dN1_scalar + X2Tmp*dN2_scalar);
+			Vec3 Vr(V1Tmp*dN1_scalar + V2Tmp*dN2_scalar);
+			Vec3 Wr(Wn1*dN1_scalar + Wn2*dN2_scalar);
+			Vec3 thetar(overline_theta*dN2_scalar);
 
 			/* Contributo di velocita' del vento */
 			/* Airstream speed contribution */
@@ -3037,21 +3037,21 @@ AerodynamicBeam2::AssJac(VariableSubMatrixHandler& WorkMat,
 
 			Vec3 d(Xr - Xn[iNode]);
 
-			Mat3x3 Bv1(MatCross, (Vr - Omega1Crossf1)*(dN1*dCoef));
-			Mat3x3 Bv2(MatCross, (Vr - Omega2Crossf2)*(dN2*dCoef));
+			Mat3x3 Bv1(MatCross, (Vr - Omega1Crossf1)*(dN1_scalar*dCoef));
+			Mat3x3 Bv2(MatCross, (Vr - Omega2Crossf2)*(dN2_scalar*dCoef));
 
-			Mat3x3 Bw1(MatCross, (Wr - Wn1)*(dN1*dCoef));
-			Mat3x3 Bw2(MatCross, (Wr - Wn2)*(dN2*dCoef));
+			Mat3x3 Bw1(MatCross, (Wr - Wn1)*(dN1_scalar*dCoef));
+			Mat3x3 Bw2(MatCross, (Wr - Wn2)*(dN2_scalar*dCoef));
 
 			if (iNumDof) {
 				// prepare (v/dot{x} + dCoef*v/x) and so
 				Mat3x3 RRlocT(RRloc.Transpose());
 	
-				vx.PutMat3x3(1, RRlocT*dN1);
-				vx.PutMat3x3(4, RRloc.MulTM(Bv1 - Mat3x3(MatCross, f1Tmp*dN1)));
+				vx.PutMat3x3(1, RRlocT*dN1_scalar);
+				vx.PutMat3x3(4, RRloc.MulTM(Bv1 - Mat3x3(MatCross, f1Tmp*dN1_scalar)));
 
-				vx.PutMat3x3(6 + 1, RRlocT*dN2);
-				vx.PutMat3x3(6 + 4, RRloc.MulTM(Bv2 - Mat3x3(MatCross, f2Tmp*dN2)));
+				vx.PutMat3x3(6 + 1, RRlocT*dN2_scalar);
+				vx.PutMat3x3(6 + 4, RRloc.MulTM(Bv2 - Mat3x3(MatCross, f2Tmp*dN2_scalar)));
 
 				wx.PutMat3x3(4, RRlocT + Bw1);
 				wx.PutMat3x3(6 + 4, RRlocT + Bw2);
@@ -3089,38 +3089,38 @@ AerodynamicBeam2::AssJac(VariableSubMatrixHandler& WorkMat,
 			Mat3x3 WM_F2[4];
 
 			// f <-> x
-			WM_F2[DELTAx1] = JFaR.GetMat11()*dN1;
+			WM_F2[DELTAx1] = JFaR.GetMat11()*dN1_scalar;
 
-			WM_F2[DELTAx2] = JFaR.GetMat11()*dN2;
+			WM_F2[DELTAx2] = JFaR.GetMat11()*dN2_scalar;
 
 			doublereal delta;
 
 			// c <-> x
 			delta = (iNode == NODE1) ? 1. : 0.;
-			WM_M[DELTAx1] += JFaR.GetMat21()*dN1 - Mat3x3(MatCross, fTmp*(dN1 - delta));
+			WM_M[DELTAx1] += JFaR.GetMat21()*dN1_scalar - Mat3x3(MatCross, fTmp*(dN1_scalar - delta));
 
 			delta = (iNode == NODE2) ? 1. : 0.;
-			WM_M[DELTAx2] += JFaR.GetMat21()*dN2 - Mat3x3(MatCross, fTmp*(dN2 - delta));
+			WM_M[DELTAx2] += JFaR.GetMat21()*dN2_scalar - Mat3x3(MatCross, fTmp*(dN2_scalar - delta));
 
 			// f <-> g
-			WM_F2[DELTAg1] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f1Tmp))*dN1;
+			WM_F2[DELTAg1] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f1Tmp))*dN1_scalar;
 			WM_F2[DELTAg1] += JFaR.GetMat11()*Bv1 + JFaR.GetMat12()*Bw1;
-			WM_F2[DELTAg1] -= Mat3x3(MatCross, fTmp*dN1);
+			WM_F2[DELTAg1] -= Mat3x3(MatCross, fTmp*dN1_scalar);
 		
-			WM_F2[DELTAg2] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f2Tmp))*dN2;
+			WM_F2[DELTAg2] = (JFaR.GetMat12() - JFaR.GetMat11()*Mat3x3(MatCross, f2Tmp))*dN2_scalar;
 			WM_F2[DELTAg2] += JFaR.GetMat11()*Bv2 + JFaR.GetMat12()*Bw2;
-			WM_F2[DELTAg2] -= Mat3x3(MatCross, fTmp*dN2);
+			WM_F2[DELTAg2] -= Mat3x3(MatCross, fTmp*dN2_scalar);
 		
 			// c <-> g
-			WM_M[DELTAg1] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f1Tmp))*dN1;
+			WM_M[DELTAg1] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f1Tmp))*dN1_scalar;
 			WM_M[DELTAg1] += JFaR.GetMat21()*Bv1 + JFaR.GetMat22()*Bw1;
-			WM_M[DELTAg1] -= Mat3x3(MatCross, cTmp*dN1);
-			WM_M[DELTAg1] += Mat3x3(MatCrossCross, fTmp, f1Tmp*dN1);
+			WM_M[DELTAg1] -= Mat3x3(MatCross, cTmp*dN1_scalar);
+			WM_M[DELTAg1] += Mat3x3(MatCrossCross, fTmp, f1Tmp*dN1_scalar);
 
-			WM_M[DELTAg2] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f2Tmp))*dN2;
+			WM_M[DELTAg2] += (JFaR.GetMat22() - JFaR.GetMat21()*Mat3x3(MatCross, f2Tmp))*dN2_scalar;
 			WM_M[DELTAg2] += JFaR.GetMat21()*Bv2 + JFaR.GetMat22()*Bw2;
-			WM_M[DELTAg2] -= Mat3x3(MatCross, cTmp*dN2);
-			WM_M[DELTAg2] += Mat3x3(MatCrossCross, fTmp, f2Tmp*dN2);
+			WM_M[DELTAg2] -= Mat3x3(MatCross, cTmp*dN2_scalar);
+			WM_M[DELTAg2] += Mat3x3(MatCrossCross, fTmp, f2Tmp*dN2_scalar);
 
 			for (int iCnt = 0; iCnt < 2*LASTNODE; iCnt++) {
 				WM_F[iCnt] += WM_F2[iCnt];
@@ -3308,13 +3308,13 @@ AerodynamicBeam2::AssVec(SubVectorHandler& WorkVec,
 			doublereal ds = dsm + dsdCsi*dCsi;
 			doublereal dXds = DxDcsi2N(ds, Xn[NODE1], Xn[NODE2]);
 
-			doublereal dN1 = ShapeFunc2N(ds, 1);
-			doublereal dN2 = ShapeFunc2N(ds, 2);
+			doublereal dN1_scalar = ShapeFunc2N(ds, 1);
+			doublereal dN2_scalar = ShapeFunc2N(ds, 2);
 
-			Vec3 Xr(X1Tmp*dN1 + X2Tmp*dN2);
-			Vec3 Vr(V1Tmp*dN1 + V2Tmp*dN2);
-			Vec3 Wr(Wn1*dN1 + Wn2*dN2);
-			Vec3 thetar(overline_theta*((1. + dN2 - dN1)/2.));
+			Vec3 Xr(X1Tmp*dN1_scalar + X2Tmp*dN2_scalar);
+			Vec3 Vr(V1Tmp*dN1_scalar + V2Tmp*dN2_scalar);
+			Vec3 Wr(Wn1*dN1_scalar + Wn2*dN2_scalar);
+			Vec3 thetar(overline_theta*((1. + dN2_scalar - dN1_scalar)/2.));
 
 			/* Contributo di velocita' del vento */
 			/* Airstream speed contribution */

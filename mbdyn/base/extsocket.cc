@@ -62,10 +62,10 @@
 #include "extsocket.h"
 
 
-ExtSocketHandler::ExtSocketHandler(UseSocket *pUS, mbsleep_t SleepTime,
-	int recv_flags, int send_flags)
-: ExtRemoteHandler(SleepTime, true, false),
-pUS(pUS), recv_flags(recv_flags), send_flags(send_flags)
+ExtSocketHandler::ExtSocketHandler(UseSocket *pUS_a, mbsleep_t SleepTime_a,
+	int recv_flags_a, int send_flags_a)
+: ExtRemoteHandler(SleepTime_a, true, false),
+pUS(pUS_a), recv_flags(recv_flags_a), send_flags(send_flags_a)
 {
     pedantic_cout("ExtSocketHandler in constructor" << std::endl);
 	NO_OP;
@@ -336,7 +336,7 @@ ExtSocketHandler::Recv_pre(void)
 		ssize_t rc = recvn(pUS->GetSock(), (char *)&u, sizeof(u), recv_flags);
 
 		if (rc == SOCKET_ERROR) {
-			int save_errno = WSAGetLastError();
+			save_errno = WSAGetLastError();
 
 			if (WSAGetLastError() != test_errno) {
 				silent_cerr("ExtSocketHandler: "

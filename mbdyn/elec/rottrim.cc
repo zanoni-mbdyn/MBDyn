@@ -298,12 +298,12 @@ RotorTrim::GetConnectedNodes(std::vector<const Node *>& connectedNodes) const
 
 RotorTrimGeneric::RotorTrimGeneric(unsigned int uL,
 	const DofOwner *pDO,
-	const StructNode *pStrNode,
+	const StructNode *pStrNode_a,
 	const DriveCaller *pThrust,
 	const DriveCaller *pRollMoment,
 	const DriveCaller *pPitchMoment,
-	const AirProperties *pAP,
-	doublereal dRadius,
+	const AirProperties *pAP_a,
+	doublereal dRadius_a,
 	const DriveCaller *pOmega,
 	const DriveCaller *pMu,
 	const ScalarDifferentialNode* pNode1,
@@ -323,15 +323,15 @@ RotorTrimGeneric::RotorTrimGeneric(unsigned int uL,
 : RotorTrimBase(uL, pDO, pNode1, pNode2, pNode3,
 	pDThrust, pDRollMoment, pDPitchMoment,
 	dG, dp, dT0, dT1, dK0, dK1, pTrigger, fOut),
-pStrNode(pStrNode),
+pStrNode(pStrNode_a),
 Thrust(pThrust),
 RollMoment(pRollMoment),
 PitchMoment(pPitchMoment),
-pAP(pAP),
+pAP(pAP_a),
 Omega(pOmega),
 Mu(pMu)
 {
-	this->dRadius = dRadius;
+	this->dRadius = dRadius_a;
 }
 
 RotorTrimGeneric::~RotorTrimGeneric(void)

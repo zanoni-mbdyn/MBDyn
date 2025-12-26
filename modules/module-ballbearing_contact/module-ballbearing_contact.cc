@@ -199,10 +199,10 @@ BallBearingContact::rgPrivData[iNumPrivData] = {
 };
 
 BallBearingContact::BallBearingContact(
-     unsigned uLabel, const DofOwner *pDO,
-     DataManager* pDM, MBDynParser& HP)
-     :       UserDefinedElem(uLabel, pDO),
-             pDM(pDM),
+     unsigned uLabel_a, const DofOwner *pDO,
+     DataManager* pDM_a, MBDynParser& HP)
+     :       UserDefinedElem(uLabel_a, pDO),
+             pDM(pDM_a),
              pNode1(0),
              gamma(0.),
              vs(0.),
@@ -857,7 +857,7 @@ BallBearingContact::GetConnectedNodes(std::vector<const Node *>& connectedNodes)
 }
 
 void
-BallBearingContact::SetValue(DataManager *pDM,
+BallBearingContact::SetValue(DataManager *pDM_a,
                              VectorHandler& X, VectorHandler& XP,
                              SimulationEntity::Hints *ph)
 {

@@ -155,7 +155,7 @@ public:
 	SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr);
 };
 
-MFtire::MFtire(unsigned uLabel, const DofOwner *pDO, DataManager* pDM, MBDynParser& HP) : UserDefinedElem(uLabel, pDO)
+MFtire::MFtire(unsigned uLabel_a, const DofOwner *pDO, DataManager* pDM, MBDynParser& HP) : UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {

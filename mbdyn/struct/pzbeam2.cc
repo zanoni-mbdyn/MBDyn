@@ -100,9 +100,9 @@ PiezoActuatorBeam2::AssStiffnessVec(SubVectorHandler& WorkVec,
 
 
 void
-PiezoActuatorBeam2::AddInternalForces(Vec6& AzLoc)
+PiezoActuatorBeam2::AddInternalForces(Vec6& AzLoc_a)
 {
-	AzLoc += Vec6(PiezoMat[STRAIN]*V, PiezoMat[CURVAT]*V);
+	AzLoc_a += Vec6(PiezoMat[STRAIN]*V, PiezoMat[CURVAT]*V);
 }
       
 
@@ -320,9 +320,9 @@ PiezoActuatorVEBeam2::AssStiffnessVec(SubVectorHandler& WorkVec,
 
 
 void
-PiezoActuatorVEBeam2::AddInternalForces(Vec6& AzLoc)
+PiezoActuatorVEBeam2::AddInternalForces(Vec6& AzLoc_a)
 {
-	AzLoc += Vec6(PiezoMat[STRAIN]*V, PiezoMat[CURVAT]*V);
+	AzLoc_a += Vec6(PiezoMat[STRAIN]*V, PiezoMat[CURVAT]*V);
 }
 
 
@@ -332,13 +332,13 @@ PiezoActuatorVEBeam2::PiezoActuatorVEBeam2(unsigned int uL,
 		const Vec3& F1, const Vec3& F2,
 		const Mat3x3& R1, const Mat3x3& R2,
 		const Mat3x3& r,
-		ConstitutiveLaw6D*const pD,
+		ConstitutiveLaw6D*const pD_a,
 		int iEl,
 		const ScalarDifferentialNode **pEDof,
 		const Mat3xN& Te, const Mat3xN& Tk,
 		OrientationDescription ood,
 		flag fOut)
-: ViscoElasticBeam2(uL, pN1, pN2, F1, F2, R1, R2, r, pD, ood, fOut),
+: ViscoElasticBeam2(uL, pN1, pN2, F1, F2, R1, R2, r, pD_a, ood, fOut),
 iNumElec(iEl), pvElecDofs(pEDof), V(iEl)
 {
 	ASSERT(iNumElec > 0);

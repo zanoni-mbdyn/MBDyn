@@ -371,8 +371,8 @@ namespace {
           AztecOO oIterativeLinSol;
      };
 
-     NoxStatusTest::NoxStatusTest(NoxNonlinearSolver& oNoxSolver)
-          :oNoxSolver(oNoxSolver),
+     NoxStatusTest::NoxStatusTest(NoxNonlinearSolver& oNoxSolver_a)
+          :oNoxSolver(oNoxSolver_a),
            eStatus(NOX::StatusTest::Unevaluated)
      {
      }
@@ -391,8 +391,8 @@ namespace {
           return eStatus;
      }
 
-     NoxResidualTest::NoxResidualTest(NoxNonlinearSolver& oNoxSolver)
-          :NoxStatusTest(oNoxSolver),
+     NoxResidualTest::NoxResidualTest(NoxNonlinearSolver& oNoxSolver_a)
+          :NoxStatusTest(oNoxSolver_a),
            dErrRes(-1.),
            dErrResDiff(-1.),
            dTolRes(-2.)
@@ -482,8 +482,8 @@ namespace {
           return dErrResDiff;
      }
 
-     NoxSolutionTest::NoxSolutionTest(NoxNonlinearSolver& oNoxSolver)
-          :NoxStatusTest(oNoxSolver),
+     NoxSolutionTest::NoxSolutionTest(NoxNonlinearSolver& oNoxSolver_a)
+          :NoxStatusTest(oNoxSolver_a),
            dErrSol(-1.),
            dTolSol(-2.)
      {
@@ -580,8 +580,8 @@ namespace {
           return dErrSol;
      }
 
-     NoxMatrixFreeJacOper::NoxMatrixFreeJacOper(NoxNonlinearSolver& oNoxSolver)
-          :oNoxSolver(oNoxSolver)
+     NoxMatrixFreeJacOper::NoxMatrixFreeJacOper(NoxNonlinearSolver& oNoxSolver_a)
+          :oNoxSolver(oNoxSolver_a)
 #ifdef DEBUG_JACOBIAN
           ,pA(nullptr)
 #endif
@@ -849,12 +849,12 @@ namespace {
           }
      }
 
-     bool NoxNonlinearSolver::NoxMakeSolTest(const VectorHandler& XPrev,
+     bool NoxNonlinearSolver::NoxMakeSolTest(const VectorHandler& XPrev_a,
                                              const VectorHandler& XCurr,
                                              const doublereal& dTol,
                                              doublereal& dTest)
      {
-          DeltaX.ScalarAddMul(XCurr, XPrev, -1.);
+          DeltaX.ScalarAddMul(XCurr, XPrev_a, -1.);
 
           return NonlinearSolver::MakeSolTest(pSolver, DeltaX, dTol, dTest);
      }

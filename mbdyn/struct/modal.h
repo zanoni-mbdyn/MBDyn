@@ -214,13 +214,13 @@ protected:
 
         /* from gravity.h */
         /* momento statico */
-        Vec3 GetS_int(void) const;
+        Vec3 GetS_int(void) const override;
 
         /* momento d'inerzia */
-        Mat3x3 GetJ_int(void) const;
+        Mat3x3 GetJ_int(void) const override;
 
-        Vec3 GetB_int(void) const;
-        Vec3 GetG_int(void) const;
+        Vec3 GetB_int(void) const override;
+        Vec3 GetG_int(void) const override;
 
 public:
         /* Costruttore non banale */
@@ -390,7 +390,7 @@ public:
 
         /* from gravity.h */
         /* massa totale */
-        doublereal dGetM(void) const;
+        doublereal dGetM(void) const override;
 
         /* *******PER IL SOLUTORE PARALLELO******** */
         /* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
@@ -408,7 +408,7 @@ public:
         /* ************************************************ */
 
         /* returns the dimension of the component */
-        const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+        const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* Modal - end */

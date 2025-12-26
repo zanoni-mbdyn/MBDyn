@@ -95,12 +95,12 @@ public:
 	};
 
 	/* Deformable element */
-	virtual bool bIsDeformable() const {
+	virtual bool bIsDeformable() const override {
 		return true;
 	};
          
 	/* Tipo dell'elemento (usato per debug ecc.) */
-	virtual InitialAssemblyElem::Type GetElemType(void) const { 
+	virtual InitialAssemblyElem::Type GetElemType(void) const override { 
 		return Elem::FORCE; 
 	};   
    
@@ -111,7 +111,7 @@ public:
 	AssJac(VariableSubMatrixHandler& WorkMat,
 		doublereal /* dCoef */ ,
 		const VectorHandler& /* XCurr */ , 
-		const VectorHandler& /* XPrimeCurr */ )
+		const VectorHandler& /* XPrimeCurr */ ) override
 	{
 		DEBUGCOUT("Entering Force::AssJac()" << std::endl);
 	
@@ -119,22 +119,22 @@ public:
 		return WorkMat;
 	};
 
-	virtual std::ostream& Restart(std::ostream& out) const;
+	virtual std::ostream& Restart(std::ostream& out) const override;
 
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
-	virtual unsigned int iGetInitialNumDof(void) const { 
+	virtual unsigned int iGetInitialNumDof(void) const override { 
 		return 0;
-	};
+	}
 
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler& 
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& /* XCurr */ )
+		const VectorHandler& /* XCurr */ ) override
 	{
 		WorkMat.SetNullMatrix();
 		return WorkMat;
-	};
+	}
 };
 
 /* Force - end */

@@ -33,8 +33,8 @@
 
 #include "dummypgin.h"
 
-DummyPlugIn::DummyPlugIn(MathParser& mp, void *arg)
-: MathParser::PlugIn(mp)
+DummyPlugIn::DummyPlugIn(MathParser& mp_a, void *arg)
+: MathParser::PlugIn(mp_a)
 {
 	ASSERT(arg != NULL);
 	throw MathParser::ErrGeneric(&mp, MBDYN_EXCEPT_ARGS,

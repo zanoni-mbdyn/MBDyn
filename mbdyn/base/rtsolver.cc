@@ -41,20 +41,20 @@
  
 /* RTSolverBase - begin */
 
-RTSolverBase::RTSolverBase(Solver *pS,
-	RTMode eRTMode,
-	unsigned long lRTPeriod,
-	unsigned long RTStackSize,
-	bool bRTAllowNonRoot,
-	int RTCpuMap,
-	bool bNoOutput)
-: pS(pS),
-eRTMode(eRTMode),
-lRTPeriod(lRTPeriod),
-RTStackSize(RTStackSize),
-bRTAllowNonRoot(bRTAllowNonRoot),
-RTCpuMap(RTCpuMap),
-bNoOutput(bNoOutput),
+RTSolverBase::RTSolverBase(Solver *pS_a,
+	RTMode eRTMode_a,
+	unsigned long lRTPeriod_a,
+	unsigned long RTStackSize_a,
+	bool bRTAllowNonRoot_a,
+	int RTCpuMap_a,
+	bool bNoOutput_a)
+: pS(pS_a),
+eRTMode(eRTMode_a),
+lRTPeriod(lRTPeriod_a),
+RTStackSize(RTStackSize_a),
+bRTAllowNonRoot(bRTAllowNonRoot_a),
+RTCpuMap(RTCpuMap_a),
+bNoOutput(bNoOutput_a),
 RTSteps(0)
 {
 	ASSERT(RTStackSize > 0);

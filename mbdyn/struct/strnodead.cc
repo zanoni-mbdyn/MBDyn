@@ -49,9 +49,9 @@ StructDispNodeAd::StructDispNodeAd(unsigned int uL,
                                    const RigidBodyKinematics *pRBK,
                                    doublereal dPosStiff,
                                    doublereal dVelStiff,
-                                   OrientationDescription od,
+                                   OrientationDescription od_a,
                                    flag fOut)
-:StructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut),
+:StructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut),
  XY(::Zero3)
 {
      DEBUGCERR("StructDispNodeAd(" << GetLabel() << "\n");
@@ -81,11 +81,11 @@ DynamicStructDispNodeAd::DynamicStructDispNodeAd(unsigned int uL,
                                                  const RigidBodyKinematics *pRBK,
                                                  doublereal dPosStiff,
                                                  doublereal dVelStiff,
-                                                 OrientationDescription od,
+                                                 OrientationDescription od_a,
                                                  flag fOut)
-:StructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut),
- DynamicStructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut),
- StructDispNodeAd(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut)
+:StructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut),
+ DynamicStructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut),
+ StructDispNodeAd(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut)
 {
      DEBUGCERR("DynamicStructDispNodeAd(" << GetLabel() << "\n");
      DEBUGCERR("X=" << GetXCurr() << "\n");
@@ -112,11 +112,11 @@ StaticStructDispNodeAd::StaticStructDispNodeAd(unsigned int uL,
                                                const RigidBodyKinematics *pRBK,
                                                doublereal dPosStiff,
                                                doublereal dVelStiff,
-                                               OrientationDescription od,
+                                               OrientationDescription od_a,
                                                flag fOut)
-:StructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut),
- StaticStructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut),
- StructDispNodeAd(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od, fOut)
+:StructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut),
+ StaticStructDispNode(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut),
+ StructDispNodeAd(uL, pDO, X0, V0, pRN, pRBK, dPosStiff, dVelStiff, od_a, fOut)
 {
      DEBUGCERR("StaticStructDispNodeAd(" << GetLabel() << "\n");
      DEBUGCERR("X=" << GetXCurr() << "\n");
@@ -205,7 +205,7 @@ inline void StructNodeAd::GetWCurrInitAss(sp_grad::SpColVector<sp_grad::GpGradPr
 }
 
 template <typename T>
-void StructNodeAd::UpdateRotation(const Mat3x3& RRef, const Vec3& WRef, const sp_grad::SpColVector<T, 3>& g, const sp_grad::SpColVector<T, 3>& gP, sp_grad::SpMatrix<T, 3, 3>& R, sp_grad::SpColVector<T, 3>& W, doublereal dCoef, sp_grad::SpFunctionCall func, const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) const
+void StructNodeAd::UpdateRotation(const Mat3x3& RRef_a, const Vec3& WRef_a, const sp_grad::SpColVector<T, 3>& g, const sp_grad::SpColVector<T, 3>& gP, sp_grad::SpMatrix<T, 3, 3>& R, sp_grad::SpColVector<T, 3>& W, doublereal dCoef, sp_grad::SpFunctionCall func, const sp_grad::SpGradExpDofMapHelper<T>& oDofMap) const
 {
      SP_GRAD_ASSERT(bNeedRotation);
 
@@ -215,7 +215,7 @@ void StructNodeAd::UpdateRotation(const Mat3x3& RRef, const Vec3& WRef, const sp
 
      MatRVec(g, RDelta, oDofMap);
 
-     R.MapAssign(RDelta * RRef, oDofMap);
+     R.MapAssign(RDelta * RRef_a, oDofMap);
 
      switch (func) {
      case SpFunctionCall::INITIAL_ASS_JAC:
@@ -230,7 +230,7 @@ void StructNodeAd::UpdateRotation(const Mat3x3& RRef, const Vec3& WRef, const sp
           MatGVec(g, G, oDofMap);
 
           W.MapAssign(G * gP, oDofMap); // Note that the first index of gP and g must be the same in order to work!
-          W.Add(RDelta * WRef, oDofMap);
+          W.Add(RDelta * WRef_a, oDofMap);
      }
      break;
 

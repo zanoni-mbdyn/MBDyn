@@ -2328,7 +2328,7 @@ DataManager::OutputEigenvectors(const VectorHandler *pBeta,
 
 		if (pVL) {
 			// VL
-			OutputHandler::AttrValVec attrs3(3);
+			// OutputHandler::AttrValVec attrs3(3);
 			attrs3[0] = OutputHandler::AttrVal("units", "-");
 			attrs3[1] = OutputHandler::AttrVal("type", "doublereal");
 			attrs3[2] = OutputHandler::AttrVal("description", "VL - Left eigenvectors matrix");

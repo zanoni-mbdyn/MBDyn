@@ -281,7 +281,7 @@ main(int argn, char *const argv[])
 }
 
 void *
-get_method_data(int curr_method, const char* optarg)
+get_method_data(int curr_method, const char* optarg_a)
 {
 	switch (curr_method) {
 	default:
@@ -351,11 +351,11 @@ method_multistep(const char* module, integration_data* d,
 	void* method_data, const char* user_defined)
 {
 	// prepara i dati
-	void* p_data = 0;
-	::ff->read(&p_data, user_defined);
+	void* p_data_local = 0;
+	::ff->read(&p_data_local, user_defined);
 
 	// prepara le strutture dati per il calcolo
-	int size = ::ff->size(p_data);
+	int size = ::ff->size(p_data_local);
 	MyVectorHandler v0(size);
 	MyVectorHandler v1(size);
 	MyVectorHandler v2(size);
@@ -412,8 +412,8 @@ method_multistep(const char* module, integration_data* d,
 	doublereal t = ti;
 
 	// inizializza la soluzione
-	::ff->init(p_data, *pX);
-	::ff->func(p_data, *pXP, *pX, t);
+	::ff->init(p_data_local, *pX);
+	::ff->func(p_data_local, *pXP, *pX, t);
 	for (int k = 1; k <= size; k++) {
 		doublereal x = pX->operator()(k);
 		doublereal xp = pXP->operator()(k);
@@ -423,7 +423,7 @@ method_multistep(const char* module, integration_data* d,
 
 	// output iniziale
 	std::cout << ti << " " << 0. << " ";
-	::ff->out(p_data, std::cout, *pX, *pXP) << std::endl;
+	::ff->out(p_data_local, std::cout, *pX, *pXP) << std::endl;
 
 	flip(&pX, &pXP, &pXm1, &pXPm1, &pXm2, &pXPm2);
 
@@ -445,7 +445,7 @@ method_multistep(const char* module, integration_data* d,
 		doublereal test;
 		doublereal coef = dt*b0;
 		do {
-			::ff->func(p_data, *pXP, *pX, t);
+			::ff->func(p_data_local, *pXP, *pX, t);
 			for (int k = 1; k <= size; k++) {
 				doublereal x = pX->operator()(k);
 				doublereal xP = pXP->operator()(k);
@@ -466,7 +466,7 @@ method_multistep(const char* module, integration_data* d,
 			// correct
 			sm->MatrReset();
 			J.Reset();
-			::ff->grad(p_data, J, *pX, t);
+			::ff->grad(p_data_local, J, *pX, t);
 			for (int k = 1; k <= size; k++) {
 				for (int l = 1; l <= size; l++) {
 					Jac.PutCoef(k, l, -coef*J(k, l));
@@ -484,12 +484,12 @@ method_multistep(const char* module, integration_data* d,
 
 		// output
 		std::cout << t << " " << test << " ";
-			::ff->out(p_data, std::cout, *pX, *pXP) << std::endl;
+			::ff->out(p_data_local, std::cout, *pX, *pXP) << std::endl;
 
 		flip(&pX, &pXP, &pXm1, &pXPm1, &pXm2, &pXPm2);
 	}
 
-	::ff->destroy(&p_data);
+	::ff->destroy(&p_data_local);
 
 	return 0;
 }
@@ -509,11 +509,11 @@ method_cubic(const char* module, integration_data* d,
 	void* method_data, const char* user_defined)
 {
 	// prepara i dati
-	void* p_data = 0;
-	::ff->read(&p_data, user_defined);
+	void* p_data_local = 0;
+	::ff->read(&p_data_local, user_defined);
 
 	// prepara le strutture dati per il calcolo
-	int size = ::ff->size(p_data);
+	int size = ::ff->size(p_data_local);
 	MyVectorHandler v0(size);
 	MyVectorHandler v1(size);
 	MyVectorHandler v2(size);
@@ -573,8 +573,8 @@ method_cubic(const char* module, integration_data* d,
 	doublereal t = ti;
 
 	// inizializza la soluzione
-	::ff->init(p_data, *pX);
-	::ff->func(p_data, *pXP, *pX, t);
+	::ff->init(p_data_local, *pX);
+	::ff->func(p_data_local, *pXP, *pX, t);
 	for (int k = 1; k <= size; k++) {
 		doublereal x = pX->operator()(k);
 		doublereal xp = pXP->operator()(k);
@@ -584,7 +584,7 @@ method_cubic(const char* module, integration_data* d,
 
 	// output iniziale
 	std::cout << ti << " " << 0. << " ";
-	::ff->out(p_data, std::cout, *pX, *pXP) << std::endl;
+	::ff->out(p_data_local, std::cout, *pX, *pXP) << std::endl;
 
 	flip(&pX, &pXP, &pXm1, &pXPm1, &pXm2, &pXPm2);
 
@@ -605,7 +605,7 @@ method_cubic(const char* module, integration_data* d,
 		doublereal test;
 		do {
 			pXP->Reset();
-			::ff->func(p_data, *pXP, *pX, t);
+			::ff->func(p_data_local, *pXP, *pX, t);
 			for (int k = 1; k <= size; k++) {
 				doublereal x = pX->operator()(k);
 				doublereal xP = pXP->operator()(k);
@@ -615,9 +615,9 @@ method_cubic(const char* module, integration_data* d,
 				Xz.PutCoef(k, xz);
 			}
 			XPz.Reset();
-			::ff->func(p_data, XPz, Xz, t+z*dt);
+			::ff->func(p_data_local, XPz, Xz, t+z*dt);
 			for (int k = 1; k <= size; k++) {
-				doublereal d = dt*(
+				doublereal d_local = dt*(
 					w1*pXPm1->operator()(k)
 					+ wz*XPz(k)
 					+ w0*pXP->operator()(k)
@@ -625,7 +625,7 @@ method_cubic(const char* module, integration_data* d,
 					pX->operator()(k)
 					- pXm1->operator()(k)
 				);
-				Res.PutCoef(k, d);
+				Res.PutCoef(k, d_local);
 			}
 
 			test = Res.Norm();
@@ -643,16 +643,16 @@ method_cubic(const char* module, integration_data* d,
 			sm->MatrReset();
 			Jz.Reset();
 			J0.Reset();
-			::ff->grad(p_data, Jz, Xz, t+z*dt);
-			::ff->grad(p_data, J0, *pX, t);
+			::ff->grad(p_data_local, Jz, Xz, t+z*dt);
+			::ff->grad(p_data_local, J0, *pX, t);
 			for (int k = 1; k <= size; k++) {
 				for (int l = 1; l <= size; l++) {
-					doublereal d = 0.;
+					doublereal d_local = 0.;
 					for (int m = 1; m <= size; m++) {
-						d += Jz(k, m)*J0(m, l);
+						d_local += Jz(k, m)*J0(m, l);
 					}
-					d = -dt*(wz*(Jz(k, l)+dt*n0*d)+w0*J0(k, l));
-					Jac.PutCoef(k, l, d);
+					d_local = -dt*(wz*(Jz(k, l)+dt*n0*d_local)+w0*J0(k, l));
+					Jac.PutCoef(k, l, d_local);
 				}
 				Jac.IncCoef(k, k, 1.);
 			}
@@ -667,12 +667,12 @@ method_cubic(const char* module, integration_data* d,
 
 		// output
 		std::cout << t << " " << test << " ";
-		::ff->out(p_data, std::cout, *pX, *pXP) << std::endl;
+		::ff->out(p_data_local, std::cout, *pX, *pXP) << std::endl;
 
 		flip(&pX, &pXP, &pXm1, &pXPm1, &pXm2, &pXPm2);
 	}
 
-	::ff->destroy(&p_data);
+	::ff->destroy(&p_data_local);
 
 	return 0;
 }

@@ -81,11 +81,11 @@ protected:
 #endif // USE_NETCDF
 public:
 	MuscleCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn)
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a)
 	: ElasticConstitutiveLaw<doublereal, doublereal>(pTplDC, dPreStress),
-	Li(Li), L0(L0), V0(V0), F0(F0), f1(0), f2(0), f3(0), df1dx(0), df2dv(0), df3dx(0),
-	Activation(pAct), bActivationOverflow(bActivationOverflow), bActivationOverflowWarn(bActivationOverflowWarn)
+	Li(Li_a), L0(L0_a), V0(V0_a), F0(F0_a), f1(0), f2(0), f3(0), df1dx(0), df2dv(0), df3dx(0),
+	Activation(pAct), bActivationOverflow(bActivationOverflow_a), bActivationOverflowWarn(bActivationOverflowWarn_a)
 	{
 		NO_OP;
 	};
@@ -124,9 +124,9 @@ class MuscleErfCL
 : public MuscleCL {
 public:
 	MuscleErfCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn)
-	: MuscleCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn) 
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a)
+	: MuscleCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a)
 	{
 		NO_OP;
 	};
@@ -165,9 +165,9 @@ class MuscleErfErgoCL
 : public MuscleErfCL {
 public:
 	MuscleErfErgoCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn)
-	: MuscleErfCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn)
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a)
+	: MuscleErfCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a)
 	{
 		NO_OP;
 	};
@@ -218,10 +218,10 @@ protected:
 #endif // USE_NETCDF
 public:
 	MuscleReflexiveCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn,
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a,
 		const DriveCaller *pKp, const DriveCaller *pKd, const DriveCaller *pReferenceLength)
-	: MuscleCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn),
+	: MuscleCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a),
 	Kp(pKp), Kd(pKd), ReferenceLength(pReferenceLength)
 	{
 		NO_OP;
@@ -260,10 +260,10 @@ class MuscleErfReflexiveCL
 : public MuscleReflexiveCL {
 public:
 	MuscleErfReflexiveCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn,
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a,
 		const DriveCaller *pKp, const DriveCaller *pKd, const DriveCaller *pReferenceLength)
-	: MuscleReflexiveCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn, pKp, pKd, pReferenceLength)
+	: MuscleReflexiveCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a, pKp, pKd, pReferenceLength)
 	{
 		NO_OP;
 	};
@@ -301,9 +301,9 @@ class MusclePennestriCL
 : public MuscleCL {
 public:
 	MusclePennestriCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn)
-	: MuscleCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn)
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a)
+	: MuscleCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a)
 	{
 		NO_OP;
 	};
@@ -342,9 +342,9 @@ class MusclePennestriErgoCL
 : public MusclePennestriCL {
 public:
 	MusclePennestriErgoCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn)
-	: MusclePennestriCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn)
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a)
+	: MusclePennestriCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a)
 	{
 		NO_OP;
 	};
@@ -386,10 +386,10 @@ class MusclePennestriReflexiveCL
 : public MuscleReflexiveCL {
 public:
 	MusclePennestriReflexiveCL(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn,
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a,
 		const DriveCaller *pKp, const DriveCaller *pKd, const DriveCaller *pReferenceLength)
-	: MuscleReflexiveCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn, pKp, pKd, pReferenceLength)
+	: MuscleReflexiveCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a, pKp, pKd, pReferenceLength)
 	{
 		NO_OP;
 	};
@@ -442,13 +442,13 @@ protected:
 #endif // USE_NETCDF
 public:
 	MusclePennestriReflexiveCLWithSRS(const TplDriveCaller<doublereal> *pTplDC, doublereal dPreStress,
-		doublereal Li, doublereal L0, doublereal V0, doublereal F0,
-		const DriveCaller *pAct, bool bActivationOverflow, bool bActivationOverflowWarn,
+		doublereal Li_a, doublereal L0_a, doublereal V0_a, doublereal F0_a,
+		const DriveCaller *pAct, bool bActivationOverflow_a, bool bActivationOverflowWarn_a,
 		const DriveCaller *pKp, const DriveCaller *pKd, const DriveCaller *pReferenceLength,
-		const doublereal SRSGamma, const doublereal SRSDelta, 
-		const SRSModel m_SRSModel)
-	: MuscleReflexiveCL(pTplDC, dPreStress, Li, L0, V0, F0, pAct, bActivationOverflow, bActivationOverflowWarn, pKp, pKd, pReferenceLength),
-	m_SRSModel(m_SRSModel), SRSGamma(SRSGamma), SRSDelta(SRSDelta), SRSf(0), SRSdfdx(0)
+		const doublereal SRSGamma_a, const doublereal SRSDelta_a,
+		const SRSModel m_SRSModel_a)
+	: MuscleReflexiveCL(pTplDC, dPreStress, Li_a, L0_a, V0_a, F0_a, pAct, bActivationOverflow_a, bActivationOverflowWarn_a, pKp, pKd, pReferenceLength),
+	m_SRSModel(m_SRSModel_a), SRSGamma(SRSGamma_a), SRSDelta(SRSDelta_a), SRSf(0), SRSdfdx(0)
 	{
 		NO_OP;
 	};

@@ -1294,15 +1294,15 @@ DistanceJointWithOffset::InitialAssJac(VariableSubMatrixHandler& WorkMat,
 
 	 Tmp = v/d;
 	 for (int iCnt = 1; iCnt <= 3; iCnt++) {
-	    doublereal d = Tmp.dGet(iCnt);
-	    WM.PutCoef(28, 24+iCnt, d);
-	    WM.PutCoef(32, 28+iCnt, d);
+	    doublereal dTmp = Tmp.dGet(iCnt);
+	    WM.PutCoef(28, 24+iCnt, dTmp);
+	    WM.PutCoef(32, 28+iCnt, dTmp);
 	 }
 
 	 Tmp = vP/d-v*((vP.Dot(v))/pow(d, 3));
 	 for (int iCnt = 1; iCnt <= 3; iCnt++) {
-	    doublereal d = Tmp.dGet(iCnt);
-	    WM.PutCoef(32, 24+iCnt, d);
+	    doublereal dTmp = Tmp.dGet(iCnt);
+	    WM.PutCoef(32, 24+iCnt, dTmp);
 	 }
       }
 

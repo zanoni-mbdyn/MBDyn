@@ -73,8 +73,8 @@ namespace oct {
         :pfunc(nullptr) {
     }
 
-    octave_object::octave_method::octave_method(const std::string& method, method_function* pfn, octave_object* pobject)
-        :method(method),
+    octave_object::octave_method::octave_method(const std::string& method_a, method_function* pfn, octave_object* pobject)
+        :method(method_a),
          pfunc(pfn),
          object(pobject, true) {
     }

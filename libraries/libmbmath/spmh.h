@@ -65,8 +65,8 @@ public:
 
 		SparseMatrixElement_base(void)
 			: iRow(0), iCol(0) { NO_OP; };
-		SparseMatrixElement_base(integer iRow, integer iCol)
-			: iRow(iRow), iCol(iCol) { NO_OP; };
+		SparseMatrixElement_base(integer iRow_a, integer iCol_a)
+			: iRow(iRow_a), iCol(iCol_a) { NO_OP; };
 		virtual ~SparseMatrixElement_base(void) { NO_OP; };
 		bool operator == (const SparseMatrixElement_base& op) const
 			{ return iRow == op.iRow && iCol == op.iCol; };
@@ -80,16 +80,16 @@ public:
 
 		SparseMatrixElement(void)
 			: dCoef(0.) {};
-		SparseMatrixElement(integer iRow, integer iCol, const doublereal& dCoef)
-			: SparseMatrixElement_base(iRow, iCol), dCoef(dCoef) { NO_OP; };
+		SparseMatrixElement(integer iRow_a, integer iCol_a, const doublereal& dCoef_a)
+			: SparseMatrixElement_base(iRow_a, iCol_a), dCoef(dCoef_a) { NO_OP; };
 	};
 
 	// reference
 	struct SparseMatrixElementRef : public SparseMatrixElement_base {
 		doublereal& dCoef;
 
-		SparseMatrixElementRef(integer iRow, integer iCol, doublereal& dCoef)
-			: SparseMatrixElement_base(iRow, iCol), dCoef(dCoef) { NO_OP; };
+		SparseMatrixElementRef(integer iRow_a, integer iCol_a, doublereal& dCoef_a)
+			: SparseMatrixElement_base(iRow_a, iCol_a), dCoef(dCoef_a) { NO_OP; };
 private:
 		// do not use
 		SparseMatrixElementRef(void);
@@ -101,8 +101,8 @@ private:
 
 		SparseMatrixElementConstRef(void)
 			: dCoef(::Zero1) {};
-		SparseMatrixElementConstRef(integer iRow, integer iCol, const doublereal& dCoef)
-			: SparseMatrixElement_base(iRow, iCol), dCoef(dCoef) { NO_OP; };
+		SparseMatrixElementConstRef(integer iRow_a, integer iCol_a, const doublereal& dCoef_a)
+			: SparseMatrixElement_base(iRow_a, iCol_a), dCoef(dCoef_a) { NO_OP; };
 	};
 
 public:

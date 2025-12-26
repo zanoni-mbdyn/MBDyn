@@ -460,11 +460,11 @@ struct ExpSFR: public ScalarFunctionRead {
 CubicSplineScalarFunction::CubicSplineScalarFunction(
 	const std::vector<doublereal>& y_i,
 	const std::vector<doublereal>& x_i,
-	bool doNotExtrapolate,
-	bool bailout)
+	bool doNotExtrapolate_a,
+	bool bailout_a)
 : Y_i(y_i), X_i(x_i),
-doNotExtrapolate(doNotExtrapolate),
-bailout(bailout)
+doNotExtrapolate(doNotExtrapolate_a),
+bailout(bailout_a)
 {
 	ASSERTMSGBREAK(Y_i.size() == X_i.size(),
 		"CubicSplineScalarFunction error, Y_i.size() != X_i.size()");
@@ -581,11 +581,11 @@ struct CubicSplineSFR: public ScalarFunctionRead {
 MultiLinearScalarFunction::MultiLinearScalarFunction(
 	const std::vector<doublereal>& y_i,
 	const std::vector<doublereal>& x_i,
-	bool doNotExtrapolate,
-	bool bailout)
+	bool doNotExtrapolate_a,
+	bool bailout_a)
 : Y_i(y_i), X_i(x_i),
-doNotExtrapolate(doNotExtrapolate),
-bailout(bailout)
+doNotExtrapolate(doNotExtrapolate_a),
+bailout(bailout_a)
 {
 	ASSERTMSGBREAK(X_i.size() == Y_i.size(),
 		"MultiLinearScalarFunction error, Y_i.size() != X_i.size()");

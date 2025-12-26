@@ -37,7 +37,7 @@
 #include "mbpar.h"
 #include "dataman.h"
 
-void ConstitutiveLawCommon::Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel, integer iIndex, RestartData::RestartAction eAction) {
+void ConstitutiveLawCommon::Restart(RestartData& oData, RestartData::RestartEntity eOwner, unsigned uLabel_a, integer iIndex, RestartData::RestartAction eAction) {
      silent_cerr(mbdyn_demangle(typeid(*this)) << "::Restart not implemented yet\n");
      throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
 }
@@ -288,8 +288,8 @@ namespace {
      template <typename FuncMapType>
      class CLWordSetType : public HighParser::WordSet {
      public:
-          explicit CLWordSetType(const FuncMapType& oFuncMap)
-               :oFuncMap(oFuncMap) {
+          explicit CLWordSetType(const FuncMapType& oFuncMap_a)
+               :oFuncMap(oFuncMap_a) {
           }
 
           bool IsWord(const std::string& s) const {

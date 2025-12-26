@@ -230,9 +230,9 @@ void readFGStructuresFromFile(const char *filePath, std::string currentVersionLa
 	        char digit = sizeAndOffsetRawString.at(found+2+i);
 	        std::stringstream ss;
 	        ss << digit;
-	        std::string tmp;
-	        ss >> tmp;
-	        value.append(tmp);
+	        std::string tmp_str;
+	        ss >> tmp_str;
+	        value.append(tmp_str);
 	      }
 
 	      if(value.size() == 0){/*checks if offset is missing*/

@@ -110,8 +110,8 @@ bool PastixSolver::SpMatrix::MakeCompactForm(const SparseMatrixHandler& mh)
      return bNewPattern;
 }
 
-PastixSolver::PastixSolver(SolutionManager* pSM, integer iDim, integer iNumIter, doublereal dTolRefine, integer iNumThreads, unsigned uSolverFlags, doublereal dCompressTol, doublereal dMinRatio, integer iVerbose)
-    :LinearSolver(pSM),
+PastixSolver::PastixSolver(SolutionManager* pSM_a, integer iDim, integer iNumIter, doublereal dTolRefine, integer iNumThreads, unsigned uSolverFlags, doublereal dCompressTol, doublereal dMinRatio, integer iVerbose)
+    :LinearSolver(pSM_a),
      pastix_data(nullptr),
      bDoOrdering(true)
 {
@@ -273,12 +273,12 @@ PastixSolver::SpMatrix& PastixSolver::PastixMakeCompactForm(SparseMatrixHandler&
 }
 
 template <typename MatrixHandlerType>
-PastixSolutionManager<MatrixHandlerType>::PastixSolutionManager(integer iDim, integer iNumThreads, integer iNumIter, doublereal dTolRefine, const ScaleOpt& scale, unsigned uSolverFlags, doublereal dCompressTol, doublereal dMinRatio, integer iVerbose)
+PastixSolutionManager<MatrixHandlerType>::PastixSolutionManager(integer iDim, integer iNumThreads, integer iNumIter, doublereal dTolRefine, const ScaleOpt& scale_a, unsigned uSolverFlags, doublereal dCompressTol, doublereal dMinRatio, integer iVerbose)
     :x(iDim),
      b(iDim),
      xVH(iDim, &x[0]),
      bVH(iDim, &b[0]),
-     scale(scale),
+     scale(scale_a),
      pMatScale(nullptr),
      A(iDim, iDim)
 {

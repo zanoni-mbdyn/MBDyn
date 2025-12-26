@@ -396,12 +396,12 @@ IncludeParser::Include_int()
    	SAFEDELETEARR(stmp);
    
    	if (sCurrPath == NULL) {
-      		char s[PATH_MAX];
-      		if (getcwd(s, sizeof(s)) == NULL) {
+      		char ss[PATH_MAX];
+      		if (getcwd(ss, sizeof(ss)) == NULL) {
 			silent_cerr("Error in getcwd()" << std::endl);
 	 		throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
       		}
-		SAFESTRDUP(sCurrPath, s);
+		SAFESTRDUP(sCurrPath, ss);
       		DEBUGCOUT("Current directory is \"" << sCurrPath 
 			<< "\"" << std::endl);
    	}

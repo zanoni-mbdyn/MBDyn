@@ -455,14 +455,14 @@ TheodorsenAeroData::SetAirData(const doublereal& rho, const doublereal& c)
 
 void
 TheodorsenAeroData::SetSectionData(const doublereal& abscissa,
-	const doublereal& chord,
+	const doublereal& chord_a,
 	const doublereal& forcepoint,
 	const doublereal& velocitypoint,
 	const doublereal& twist,
 	const doublereal& omega)
 {
-	AeroData::SetSectionData(abscissa, chord, forcepoint, velocitypoint, twist, omega);
-	pAeroData->SetSectionData(abscissa, chord, forcepoint, velocitypoint, twist, omega);
+	AeroData::SetSectionData(abscissa, chord_a, forcepoint, velocitypoint, twist, omega);
+	pAeroData->SetSectionData(abscissa, chord_a, forcepoint, velocitypoint, twist, omega);
 }
 
 // aerodynamic models with internal states

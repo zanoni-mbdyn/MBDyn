@@ -60,8 +60,8 @@ int fSilent = 0;
 int fPedantic = 0;
 
 #ifndef USE_GTEST
-MBDynUnitTestEntry::MBDynUnitTestEntry(const char* file, int line, const char* testsuitename, const char* testname, testFunctionType* function)
-     :file(file), line(line), testsuitename(testsuitename), testname(testname), function(function), pNext(pHead)
+MBDynUnitTestEntry::MBDynUnitTestEntry(const char* file_a, int line_a, const char* testsuitename_a, const char* testname_a, testFunctionType* function_a)
+     :file(file_a), line(line_a), testsuitename(testsuitename_a), testname(testname_a), function(function_a), pNext(pHead)
 {
      pHead = this;
      ++nSize;

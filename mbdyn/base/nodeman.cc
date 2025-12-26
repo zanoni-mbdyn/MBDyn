@@ -161,20 +161,20 @@ DataManager::NodeOutputPrepare(OutputHandler& OH)
 
 				integer iNumNodes = NodeData[nt].NodeContainer.size();
 
-				OutputHandler::AttrValVec attrs(1);
-				attrs[0] = OutputHandler::AttrVal("description", std::string(NodeData[nt].Desc) + " nodes labels");
+				OutputHandler::AttrValVec attrs_local(1);
+				attrs_local[0] = OutputHandler::AttrVal("description", std::string(NodeData[nt].Desc) + " nodes labels");
 
-				OutputHandler::NcDimVec dim(1);
-				dim[0] = OH.CreateDim(std::string(NodeData[nt].ShortDesc) + "_node_labels_dim", iNumNodes);
+				OutputHandler::NcDimVec dim_local(1);
+				dim_local[0] = OH.CreateDim(std::string(NodeData[nt].ShortDesc) + "_node_labels_dim", iNumNodes);
 
-				MBDynNcVar VarLabels = OH.CreateVar(std::string("node.") + NodeData[nt].ShortDesc, MbNcInt, attrs, dim);
+				MBDynNcVar VarLabels = OH.CreateVar(std::string("node.") + NodeData[nt].ShortDesc, MbNcInt, attrs_local, dim_local);
 
 				NodeContainerType::const_iterator p = NodeData[nt].NodeContainer.begin();
-				std::vector<size_t> ncStartPos(1,0);
+				std::vector<size_t> ncStartPos_local(1,0);
 				for (unsigned i = 0; i < unsigned(iNumNodes); i++, p++) {
-					ncStartPos[0] = i;
+					ncStartPos_local[0] = i;
 					const long l = p->second->GetLabel();
-					VarLabels.putVar(ncStartPos, &l);
+					VarLabels.putVar(ncStartPos_local, &l);
 				}
 			}
 		}

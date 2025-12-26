@@ -44,15 +44,15 @@ ViscousBody::ViscousBody(unsigned int uL,
 	const DofOwner* pDO,
 	ConstitutiveLaw6D*const pCL,
 	const StructNode* pN,
-	const Vec3& tilde_f,
-	const Mat3x3& tilde_Rh,
-	const OrientationDescription& od,
+	const Vec3& tilde_f_a,
+	const Mat3x3& tilde_Rh_a,
+	const OrientationDescription& od_a,
 	flag fOut)
 : Joint(uL, pDO, fOut),
 pNode(pN),
-tilde_f(tilde_f),
-tilde_Rh(tilde_Rh),
-od(od),
+tilde_f(tilde_f_a),
+tilde_Rh(tilde_Rh_a),
+od(od_a),
 tilde_kPrime(Zero6),
 bFirstRes(false),
 pDC(pCL)
@@ -118,20 +118,20 @@ void
 ViscousBody::Output(OutputHandler& OH) const
 {
 	if (bToBeOutput()) {
-		Mat3x3 Rh(pNode->GetRCurr()*tilde_Rh);
-		Vec3 F(pDC->GetF().GetVec1());
-		Vec3 M(pDC->GetF().GetVec2());
+		Mat3x3 Rh_local(pNode->GetRCurr()*tilde_Rh);
+		Vec3 F_local(pDC->GetF().GetVec1());
+		Vec3 M_local(pDC->GetF().GetVec2());
 
 		if (OH.UseText(OutputHandler::JOINTS)) {
 			Joint::Output(OH.Joints(), "ViscousBody", GetLabel(),
-					F, M, Rh*F, Rh*M);
+					F_local, M_local, Rh_local*F_local, Rh_local*M_local);
 
 			OH.Joints() << " " << tilde_kPrime << " " << std::endl;
 		}
 
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
-			Joint::NetCDFOutput(OH, F, M, Rh*F, Rh*M);
+			Joint::NetCDFOutput(OH, F_local, M_local, Rh_local*F_local, Rh_local*M_local);
 			OH.WriteNcVar(Var_v, tilde_kPrime.GetVec1());
 			OH.WriteNcVar(Var_omega, tilde_kPrime.GetVec2());
 		}
@@ -247,9 +247,9 @@ ViscousBody::dGetPrivData(unsigned int i) const
 	case 5:
 	case 6:
 	{
-		Vec3 f(pNode->GetRCurr()*tilde_f);
+		Vec3 f_local(pNode->GetRCurr()*tilde_f);
 		Mat3x3 RhT(pNode->GetRCurr().Transpose());
-		Vec3 tilde_dPrime(RhT*(pNode->GetVCurr() - f.Cross(pNode->GetWCurr())));
+		Vec3 tilde_dPrime(RhT*(pNode->GetVCurr() - f_local.Cross(pNode->GetWCurr())));
 
 		return tilde_dPrime(i - 3);
 	}

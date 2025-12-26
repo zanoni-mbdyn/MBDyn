@@ -165,82 +165,82 @@ class AngularVelocityJoint
    ~AngularVelocityJoint(void);
    
    /* Tipo di Joint */
-   virtual Joint::Type GetJointType(void) const 
+   virtual Joint::Type GetJointType(void) const override
      { return Joint::ANGULARVELOCITY; };
 
    /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
+   virtual std::ostream& Restart(std::ostream& out) const override;
 
    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      
-   virtual unsigned int iGetNumDof(void) const { 
+   virtual unsigned int iGetNumDof(void) const override { 
       return 1;
    };
    
-   DofOrder::Order GetDofType(unsigned int i) const
+   DofOrder::Order GetDofType(unsigned int i) const override
    {
       ASSERT(i == 0);
       return DofOrder::ALGEBRAIC; 
    };
 
-   void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const
+   void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override
      { *piNumRows = 4; *piNumCols = 4; };
    
       
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
 				    doublereal dCoef,
 				    const VectorHandler& XCurr, 
-				    const VectorHandler& XPrimeCurr);
+				    const VectorHandler& XPrimeCurr) override;
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 			    doublereal dCoef,
 			    const VectorHandler& XCurr, 
-			    const VectorHandler& XPrimeCurr);
+			    const VectorHandler& XPrimeCurr) override;
    
-   void OutputPrepare(OutputHandler &OH);
-   void Output(OutputHandler& OH) const;
+   void OutputPrepare(OutputHandler &OH) override;
+   void Output(OutputHandler& OH) const override;
  
 
    /* funzioni usate nell'assemblaggio iniziale */
    
-   virtual unsigned int iGetInitialNumDof(void) const { 
+   virtual unsigned int iGetInitialNumDof(void) const override { 
       return 1;
    };
    
    virtual void InitialWorkSpaceDim(integer* piNumRows,
-				    integer* piNumCols) const { 
+				    integer* piNumCols) const override { 
       *piNumRows = 4; 
       *piNumCols = 7; 
    };
    
    /* Contributo allo jacobiano durante l'assemblaggio iniziale */
    VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,
-					   const VectorHandler& XCurr);
+					   const VectorHandler& XCurr) override;
    
    /* Contributo al residuo durante l'assemblaggio iniziale */   
    SubVectorHandler& InitialAssRes(SubVectorHandler& WorkVec,
-				   const VectorHandler& XCurr);   
+				   const VectorHandler& XCurr) override;   
 
    /* Dati privati */
-   virtual unsigned int iGetNumPrivData(void) const;
-   virtual unsigned int iGetPrivDataIdx(const char *s) const;
-   virtual doublereal dGetPrivData(unsigned int i = 0) const;
+   virtual unsigned int iGetNumPrivData(void) const override;
+   virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+   virtual doublereal dGetPrivData(unsigned int i = 0) const override;
 
    /* *******PER IL SOLUTORE PARALLELO******** */        
    /* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
       utile per l'assemblaggio della matrice di connessione fra i dofs */
-   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
      connectedNodes.resize(1);
      connectedNodes[0] = pNode;
    };
    /* ************************************************ */ 
 
    /* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 
    /* describes the dimension of components of equation */
    virtual std::ostream& DescribeEq(std::ostream& out,
 		  const char *prefix = "",
-		  bool bInitial = false) const;
+		  bool bInitial = false) const override;
 };
 /* AngularVelocityJoint - end */
 

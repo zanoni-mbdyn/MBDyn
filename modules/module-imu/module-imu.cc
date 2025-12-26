@@ -87,9 +87,9 @@ public:
 };
 
 ModuleIMU::ModuleIMU(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_pNode(0),
 m_tilde_f(::Zero3),
 m_tilde_Rh(::Eye3),
@@ -414,9 +414,9 @@ public:
 };
 
 ModuleIMUConstraint::ModuleIMUConstraint(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO),
+: UserDefinedElem(uLabel_a, pDO),
 m_pNode(0),
 m_tilde_f(::Zero3),
 m_tilde_Rh(::Eye3),

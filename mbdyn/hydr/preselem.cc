@@ -1250,7 +1250,7 @@ Elem* ReadHydraulicElem(DataManager* pDM,
        /* Soglia di allarme */
        doublereal s_min = .1*s_max; /* valore di default 10% del massimo */
        if (HP.IsKeyWord("alarmlevel")) {
-	  doublereal s_min = HP.GetReal();
+	  s_min = HP.GetReal();
 	  if (s_min < 0.) {
 	     silent_cerr("Tank(" << uLabel << "): "
 		     "negative s_min "

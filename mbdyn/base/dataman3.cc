@@ -246,7 +246,7 @@ DataManager::ReadControl(MBDynParser& HP,
 		OUTPUTRESULTS,
 		DEFAULTOUTPUT,
 			ALL,
-			NONE,
+			NO_OUTPUT,
 			REFERENCEFRAMES,
 			ACCELERATIONS,
 			DRIVECALLERS,
@@ -1107,7 +1107,7 @@ EndOfUse:
 					}
 					break;
 
-				case NONE:
+				case NO_OUTPUT:
 					for (int iCnt = 0; iCnt < Elem::LASTELEMTYPE; iCnt++) {
 						ElemData[iCnt].DefaultOut(false);
 					}

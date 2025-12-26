@@ -87,29 +87,29 @@ public:
 	virtual ~Rod(void);
     
 	/* Deformable element */
-	virtual bool bIsDeformable() const {
+	virtual bool bIsDeformable() const override {
 		return true;
 	};
 
 	/* Tipo di Joint */
-	virtual Joint::Type GetJointType(void) const {
+	virtual Joint::Type GetJointType(void) const override {
 		return Joint::ROD;
 	};
 
 	/* Contributo al file di restart */
-        virtual std::ostream& Restart(std::ostream& out) const;
+        virtual std::ostream& Restart(std::ostream& out) const override;
 
         virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
         virtual void
-	AfterConvergence(const VectorHandler& X, const VectorHandler& XP);
+	AfterConvergence(const VectorHandler& X, const VectorHandler& XP) override;
 
-	virtual unsigned int iGetNumDof(void) const {
+	virtual unsigned int iGetNumDof(void) const override {
 		return 0;
 	};
 
 	virtual void
-	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 6;
 		*piNumCols = 6;
 	};
@@ -117,21 +117,21 @@ public:
 	virtual VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat, doublereal dCoef,
 			const VectorHandler& XCurr,
-			const VectorHandler& XPrimeCurr);
+			const VectorHandler& XPrimeCurr) override;
 
 	virtual void
 	AssMats(VariableSubMatrixHandler& WorkMatA,
  			VariableSubMatrixHandler& WorkMatB,
  			const VectorHandler& XCurr,
- 			const VectorHandler& XPrimeCurr);
+ 			const VectorHandler& XPrimeCurr) override;
 
 	virtual SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec, doublereal dCoef,
 			const VectorHandler& XCurr,
-			const VectorHandler& XPrimeCurr);
+			const VectorHandler& XPrimeCurr) override;
 
-	virtual void OutputPrepare(OutputHandler& OH);
-	virtual void Output(OutputHandler& OH) const;
+	virtual void OutputPrepare(OutputHandler& OH) override;
+	virtual void Output(OutputHandler& OH) const override;
 
 #if 0
 	/* Output di un modello NASTRAN equivalente
@@ -140,11 +140,11 @@ public:
 #endif
 
 	/* funzioni usate nell'assemblaggio iniziale */
-	virtual unsigned int iGetInitialNumDof(void) const {
+	virtual unsigned int iGetInitialNumDof(void) const override {
 		return 0;
 	};
 	virtual void
-	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const {
+	InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override {
 		*piNumRows = 6;
 		*piNumCols = 6;
 	};
@@ -152,21 +152,21 @@ public:
 	/* Contributo allo jacobiano durante l'assemblaggio iniziale */
 	virtual VariableSubMatrixHandler&
 	InitialAssJac(VariableSubMatrixHandler& WorkMat,
-     			const VectorHandler& XCurr);
+     			const VectorHandler& XCurr) override;
 
 	/* Contributo al residuo durante l'assemblaggio iniziale */
 	virtual SubVectorHandler&
-	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr);
+	InitialAssRes(SubVectorHandler& WorkVec, const VectorHandler& XCurr) override;
 
 	/* Inverse Dynamics stuff */
 
 	/* is this an Inverse Dynamics capable element? */
-	virtual bool bInverseDynamics(void) const;
+	virtual bool bInverseDynamics(void) const override;
 
 	/* Inverse Dynamics Jacobian matrix assembly */
 	VariableSubMatrixHandler&
 	AssJac(VariableSubMatrixHandler& WorkMat,
-		const VectorHandler& XCurr);
+		const VectorHandler& XCurr) override;
 
 	/* Inverse Dynamics residual assembly */
 	SubVectorHandler&
@@ -174,14 +174,14 @@ public:
 		const VectorHandler& XCurr,
 		const VectorHandler& XPrimeCurr,
 		const VectorHandler& XPrimePrimeCurr,
-		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+		InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	/* Inverse Dynamics update */
-	void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS);
+	void Update(const VectorHandler& XCurr, InverseDynamics::Order iOrder = InverseDynamics::INVERSE_DYNAMICS) override;
 
 	virtual void AfterConvergence(const VectorHandler& X,
 		const VectorHandler& XP,
-		const VectorHandler& XPP);
+		const VectorHandler& XPP) override;
 
 	/* end of Inverse Dynamics stuff */
 
@@ -189,7 +189,7 @@ public:
 	/* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
 	 * utile per l'assemblaggio della matrice di connessione fra i dofs */
 	virtual void
-	GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+	GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
 		connectedNodes.resize(2);
 		connectedNodes[0] = pNode1;
 		connectedNodes[1] = pNode2;
@@ -197,12 +197,12 @@ public:
 	/* ************************************************ */
 
 
-	virtual unsigned int iGetNumPrivData(void) const;
-	virtual unsigned int iGetPrivDataIdx(const char *s) const;
-	virtual doublereal dGetPrivData(unsigned int i) const;
+	virtual unsigned int iGetNumPrivData(void) const override;
+	virtual unsigned int iGetPrivDataIdx(const char *s) const override;
+	virtual doublereal dGetPrivData(unsigned int i) const override;
 
 	/* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 };
 
 /* Rod - end */

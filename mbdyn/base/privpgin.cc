@@ -34,8 +34,8 @@
 #include <sstream>
 #include "privpgin.h"
 
-PrivPlugIn::PrivPlugIn(MathParser& mp, DataManager *pDM)
-: MathParser::PlugIn(mp), pSE(0), iIndex(0), pDM(pDM)
+PrivPlugIn::PrivPlugIn(MathParser& mp_a, DataManager *pDM_a)
+: MathParser::PlugIn(mp_a), pSE(0), iIndex(0), pDM(pDM_a)
 {
 	ASSERT(pDM != 0);
 }
@@ -179,8 +179,8 @@ PrivPlugIn::ReadIndex(unsigned int iMaxIndex, const char *s)
 	}
 }
 
-NodePrivPlugIn::NodePrivPlugIn(MathParser& mp, DataManager *pDM)
-: PrivPlugIn(mp, pDM)
+NodePrivPlugIn::NodePrivPlugIn(MathParser& mp_a, DataManager *pDM_a)
+: PrivPlugIn(mp_a, pDM_a)
 {
 	NO_OP;
 }
@@ -240,8 +240,8 @@ NodePrivPlugIn::Err(std::ostream& out) const
 		<< "(" << pNode->GetLabel() << ")";
 }
 
-ElemPrivPlugIn::ElemPrivPlugIn(MathParser& mp, DataManager *pDM)
-: PrivPlugIn(mp, pDM)
+ElemPrivPlugIn::ElemPrivPlugIn(MathParser& mp_a, DataManager *pDM_a)
+: PrivPlugIn(mp_a, pDM_a)
 {
 	NO_OP;
 }

@@ -186,8 +186,8 @@ DestroyUDE(void)
 }
 
 // base class for user-defined elements
-UserDefinedElem::UserDefinedElem(unsigned uLabel, const DofOwner* pDO)
-: InitialAssemblyElem(uLabel, flag(0)),
+UserDefinedElem::UserDefinedElem(unsigned uLabel_a, const DofOwner* pDO)
+: InitialAssemblyElem(uLabel_a, flag(0)),
 AerodynamicElemBase(),
 DofOwnerOwner(pDO),
 needsAirProperties(false)

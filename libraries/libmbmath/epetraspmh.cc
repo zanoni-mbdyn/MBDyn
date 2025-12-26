@@ -51,12 +51,12 @@
 #include "epetravh.h"
 #include "cscmhtpl.h"
 
-EpetraSparseMatrixHandler::EpetraSparseMatrixHandler(const integer& iNumRows, const integer& iNumCols, integer iNumColsAlloc, const Epetra_Comm& oComm)
-     :SparseMatrixHandler(iNumRows, iNumCols),
-      oEPM(::Copy, Epetra_Map(NRows, 1, oComm), Epetra_Map(NCols, 1, oComm), iNumColsAlloc),
-      iNumColsAlloc(iNumColsAlloc)
+EpetraSparseMatrixHandler::EpetraSparseMatrixHandler(const integer& iNumRows_a, const integer& iNumCols_a, integer iNumColsAlloc_a, const Epetra_Comm& oComm)
+     :SparseMatrixHandler(iNumRows_a, iNumCols_a),
+      oEPM(::Copy, Epetra_Map(NRows, 1, oComm), Epetra_Map(NCols, 1, oComm), iNumColsAlloc_a),
+      iNumColsAlloc(iNumColsAlloc_a)
 {
-     if (iNumRows != iNumCols) {
+     if (iNumRows_a != iNumCols_a) {
           silent_cerr("EpetraSparseMatrixHandler: matrix must be square!\n");
           throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
      }

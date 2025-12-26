@@ -164,12 +164,12 @@ private:
                      const sp_grad::SpMatrix<doublereal, 3, 3>& R);
 
      inline void
-     UpdateModalNode(const sp_grad::SpColVector<sp_grad::SpGradient, 3>& x,
-                     const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& R) {}
+     UpdateModalNode(const sp_grad::SpColVector<sp_grad::SpGradient, 3>& x_sp,
+                     const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& R_sp) {}
 
      inline void
-     UpdateModalNode(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>& x,
-                     const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& R) {}
+     UpdateModalNode(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>& x_sp,
+                     const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& R_sp) {}
 
      inline void
      UpdateState(const sp_grad::SpColVector<doublereal, sp_grad::SpMatrixSize::DYNAMIC>& a,
@@ -195,14 +195,14 @@ private:
                       const sp_grad::SpMatrix<doublereal, 3, 3>& Inv9jkajak);
 
      inline void
-     UpdateInvariants(const sp_grad::SpColVector<sp_grad::SpGradient, 3>& Inv3jaj,
-                      const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& Inv8jaj,
-                      const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& Inv9jkajak) {}
+     UpdateInvariants(const sp_grad::SpColVector<sp_grad::SpGradient, 3>& Inv3jaj_sp,
+                      const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& Inv8jaj_sp,
+                      const sp_grad::SpMatrix<sp_grad::SpGradient, 3, 3>& Inv9jkajak_sp) {}
 
      inline void
-     UpdateInvariants(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>& Inv3jaj,
-                      const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& Inv8jaj,
-                      const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& Inv9jkajak) {}
+     UpdateInvariants(const sp_grad::SpColVector<sp_grad::GpGradProd, 3>& Inv3jaj_sp,
+                      const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& Inv8jaj_sp,
+                      const sp_grad::SpMatrix<sp_grad::GpGradProd, 3, 3>& Inv9jkajak_sp) {}
 
 private:
      const ModalNodeAd* const pModalNode;

@@ -46,11 +46,11 @@
 Pipe::Pipe(unsigned int uL, const DofOwner* pDO, HydraulicFluid* hf,
 		   const PressureNode* p1, const PressureNode* p2,
 		   doublereal Dh, doublereal A, doublereal L, flag transition, 
-		   doublereal q0, flag fOut)
+		   doublereal q0_a, flag fOut)
 : HydraulicElem(uL, pDO, hf, fOut),
 pNode1(p1), pNode2(p2),
 diameter(Dh), area(A),
-length(L), turbulent(transition), q0(q0)
+length(L), turbulent(transition), q0(q0_a)
 {
    ASSERT(pNode1 != NULL);
    ASSERT(pNode1->GetNodeType() == Node::HYDRAULIC);
@@ -499,11 +499,11 @@ Dynamic_pipe::Dynamic_pipe(unsigned int uL, const DofOwner* pDO, HydraulicFluid*
 			   const PressureNode* p1, const PressureNode* p2,
 			   doublereal Dh, 
 			   doublereal A, doublereal L, flag transition, 
-			   doublereal q0, flag fOut)
+			   doublereal q0_a, flag fOut)
 : HydraulicElem(uL, pDO, hf, fOut),
 pNode1(p1), pNode2(p2),
 diameter(Dh), area(A),
-length(L), turbulent(transition), q0(q0)
+length(L), turbulent(transition), q0(q0_a)
 {
    ASSERT(pNode1 != NULL);
    ASSERT(pNode1->GetNodeType() == Node::HYDRAULIC);
@@ -513,7 +513,7 @@ length(L), turbulent(transition), q0(q0)
    ASSERT(A > std::numeric_limits<doublereal>::epsilon());
    ASSERT(L > std::numeric_limits<doublereal>::epsilon());
    
-   doublereal viscosity = HF->dGetViscosity();
+   viscosity = HF->dGetViscosity();
    doublereal density = HF->dGetDensity((pNode1->dGetX()+pNode2->dGetX())/2.);
    
    klam = 8.*length*viscosity/(diameter*diameter);
@@ -590,7 +590,7 @@ Dynamic_pipe::AssJac(VariableSubMatrixHandler& WorkMat,
    doublereal q1 = XCurr(iFirstIndex+2);        /* portata nodo 1 */
    doublereal q2 = XCurr(iFirstIndex+3);        /* portata nodo 2 */
    
-   doublereal densityDPres = HF->dGetDensityDPres();
+   densityDPres = HF->dGetDensityDPres();
    doublereal densityS = HF->dGetDensity(p1);            /* densita' all'inizio del tubo */
    doublereal densityE = HF->dGetDensity(p2);            /* densita' alla fine del nodo */
    doublereal kappa1 = length*area*densityDPres;
@@ -1076,22 +1076,22 @@ Dynamic_pipe::DescribeEq(std::ostream& out, const char *prefix, bool bInitial) c
 DynamicPipe::DynamicPipe(unsigned int uL, 
 			 const DofOwner* pDO, 
 			 HydraulicFluid* hf,
-			 const PressureNode* p1, 
-			 const PressureNode* p2,
+			 const PressureNode* p1_a,
+			 const PressureNode* p2_a,
 			 doublereal Dh, 
 			 doublereal A, 
 			 doublereal L, 
 			 flag transition, 
-			 doublereal q0, 
+			 doublereal q0_a,
 			 flag fOut)
 : HydraulicElem(uL, pDO, hf, fOut),
-pNode1(p1), 
-pNode2(p2),
+pNode1(p1_a),
+pNode2(p2_a),
 diameter(Dh), 
 area(A),
 length(L), 
 turbulent(transition), 
-q0(q0)
+q0(q0_a)
 {
    ASSERT(pNode1 != NULL);
    ASSERT(pNode1->GetNodeType() == Node::HYDRAULIC);
@@ -1467,8 +1467,8 @@ DynamicPipe::SetValue(DataManager *pDM,
 {
    integer i = iGetFirstIndex();
    
-   doublereal p1 = pNode1->dGetX();
-   doublereal p2 = pNode2->dGetX();
+   p1 = pNode1->dGetX();
+   p2 = pNode2->dGetX();
    
    X.PutCoef(i+1, p1);
    X.PutCoef(i+2, p2);

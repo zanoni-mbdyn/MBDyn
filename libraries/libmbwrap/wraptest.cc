@@ -133,7 +133,7 @@ void SetupSystem(
 
         if (filename == 0) {
                 if (random) {
-                        int size = (*pM).iGetNumRows();
+                        size = (*pM).iGetNumRows();
                         if (spM == 0) {
                                 spM = new SpMapMatrixHandler(size);
 

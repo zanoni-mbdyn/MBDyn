@@ -83,9 +83,9 @@ public:
 };
 
 ModuleController::ModuleController(
-	unsigned uLabel, const DofOwner *pDO,
+	unsigned uLabel_a, const DofOwner *pDO,
 	DataManager* pDM, MBDynParser& HP)
-: UserDefinedElem(uLabel, pDO)
+: UserDefinedElem(uLabel_a, pDO)
 {
 	// help
 	if (HP.IsKeyWord("help")) {

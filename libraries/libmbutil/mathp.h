@@ -242,7 +242,7 @@ public:
 	 * questo provoca l'esecuzione del plugin.
 	 */
 	public:
-		PlugIn(MathParser& mp) : mp(mp) {};
+		PlugIn(MathParser& mp_a) : mp(mp_a) {};
 		virtual ~PlugIn() {};
 		virtual const char *sName(void) const = 0;
 		virtual int Read(int argc, char *argv[]) = 0;

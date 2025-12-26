@@ -551,7 +551,7 @@ CyclocopterNoInflow::AddForce(const Elem *pEl, const StructNode *pNode, const Ve
 
 Vec3
 CyclocopterNoInflow::GetInducedVelocity(Elem::Type type,
-	unsigned uLabel, unsigned uPnt, const Vec3& X) const
+	unsigned uLabel_a, unsigned uPnt, const Vec3& X) const
 {
 
 	return Zero3;
@@ -833,7 +833,7 @@ CyclocopterUniform1D::AssRes(SubVectorHandler& WorkVec,
 }
 
 void
-CyclocopterUniform1D::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3& F, const Vec3& M, const Vec3& X)
+CyclocopterUniform1D::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3& F_a, const Vec3& M, const Vec3& X)
 {
 
 	/* colcolo la posizione azimutale della prima pala */
@@ -848,17 +848,17 @@ CyclocopterUniform1D::AddForce(const Elem *pEl, const StructNode *pNode, const V
 
 	/* Sole se deve fare l'output calcola anche il momento */
 	if (bToBeOutput()) {
-		Res.AddForces(F, M, X);
-		InducedVelocity::AddForce(pEl, pNode, F, M, X);
+		Res.AddForces(F_a, M, X);
+		InducedVelocity::AddForce(pEl, pNode, F_a, M, X);
 
 	} else {
-		Res.AddForce(F);
+		Res.AddForce(F_a);
 	}
 }
 
 Vec3
 CyclocopterUniform1D::GetInducedVelocity(Elem::Type type,
-	unsigned uLabel, unsigned uPnt, const Vec3& X) const
+	unsigned uLabel_a, unsigned uPnt, const Vec3& X) const
 {
 	return RRot3*dUindMean;
 }
@@ -1196,7 +1196,7 @@ CyclocopterUniform2D::AssRes(SubVectorHandler& WorkVec,
 }
 
 void
-CyclocopterUniform2D::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3& F, const Vec3& M, const Vec3& X)
+CyclocopterUniform2D::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3& F_a, const Vec3& M, const Vec3& X)
 {
 	/* colcolo la posizione azimutale della prima pala */
 	// if (bFlagIsFirstBlade && bFlagAverage) {
@@ -1210,17 +1210,17 @@ CyclocopterUniform2D::AddForce(const Elem *pEl, const StructNode *pNode, const V
 
 	/* Sole se deve fare l'output calcola anche il momento */
 	if (bToBeOutput()) {
-		Res.AddForces(F, M, X);
-		InducedVelocity::AddForce(pEl, pNode, F, M, X);
+		Res.AddForces(F_a, M, X);
+		InducedVelocity::AddForce(pEl, pNode, F_a, M, X);
 
 	} else {
-		Res.AddForce(F);
+		Res.AddForce(F_a);
 	}
 }
 
 Vec3
 CyclocopterUniform2D::GetInducedVelocity(Elem::Type type,
-	unsigned uLabel, unsigned uPnt, const Vec3& X) const
+	unsigned uLabel_a, unsigned uPnt, const Vec3& X) const
 {
 	//printf("%f %f %f\n",dUind(1),dUind(2),dUind(3));
 	return RRotor*dUind;
@@ -1540,7 +1540,7 @@ CyclocopterPolimi::AssRes(SubVectorHandler& WorkVec,
 }
 
 void
-CyclocopterPolimi::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3& F, const Vec3& M, const Vec3& X)
+CyclocopterPolimi::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3& F_a, const Vec3& M, const Vec3& X)
 {
 	/* colcolo la posizione azimutale della prima pala */
 	if (bFlagIsFirstBlade) {
@@ -1553,17 +1553,17 @@ CyclocopterPolimi::AddForce(const Elem *pEl, const StructNode *pNode, const Vec3
 
 	/* Sole se deve fare l'output calcola anche il momento */
 	if (bToBeOutput()) {
-		Res.AddForces(F,M,X);
-		InducedVelocity::AddForce(pEl, pNode, F, M, X);
+		Res.AddForces(F_a,M,X);
+		InducedVelocity::AddForce(pEl, pNode, F_a, M, X);
 
 	} else {
-		Res.AddForce(F);
+		Res.AddForce(F_a);
 	}
 }
 
 Vec3
 CyclocopterPolimi::GetInducedVelocity(Elem::Type type,
-	unsigned uLabel, unsigned uPnt, const Vec3& X) const
+	unsigned uLabel_a, unsigned uPnt, const Vec3& X) const
 {
 	Vec3 XRel(RRotorTranspose*(X - pRotor->GetXCurr()));
 

@@ -81,8 +81,8 @@ private:
 class LugreState
 {
 public:
-     LugreState(const LugreData* pData)
-	  :pData(pData) {}
+     LugreState(const LugreData* pData_a)
+	  :pData(pData_a) {}
 
      template <typename T>
      void GetFrictionForce(doublereal dt,
@@ -232,9 +232,9 @@ private:
 
      struct ContactPair {
 	  ContactPair(const LugreData* pFrictData,
-		      std::size_t iVertex,
-		      const std::array<doublereal, TargetFace::iNumVertices>& vy)
-	       :oFrictState(pFrictData), iVertex(iVertex), vy(vy) {
+		      std::size_t iVertex_a,
+		      const std::array<doublereal, TargetFace::iNumVertices>& vy_a)
+	       :oFrictState(pFrictData), iVertex(iVertex_a), vy(vy_a) {
 	  }
 	  ContactPair(const ContactPair&)=default;
 
@@ -244,8 +244,8 @@ private:
      };
 
      struct ContactVertex {
-	  ContactVertex(const Vec3& o1, doublereal r1)
-	       :o1(o1), r1(r1) {
+	  ContactVertex(const Vec3& o1_a, doublereal r1_a)
+	       :o1(o1_a), r1(r1_a) {
 	  }
 
 	  ContactVertex(const ContactVertex&) = default;
@@ -296,8 +296,8 @@ private:
      } eFrictionModel;
 };
 
-LugreData::LugreData(const DataManager* pDM)
-     :pDM(pDM),
+LugreData::LugreData(const DataManager* pDM_a)
+     :pDM(pDM_a),
       beta(1.),
       vs(0.),
       gamma(1.)
@@ -506,23 +506,23 @@ TriangularContact::TargetFace::TargetFace(const DataManager* pDM)
 
 TriangularContact::ContactNode::ContactNode(const StructNodeAd* pNode,
 					    std::vector<ContactVertex>&& rgVert,
-					    std::unique_ptr<DriveCaller>&& dr,
+					    std::unique_ptr<DriveCaller>&& dr_a,
 					    integer iNumFaces)
      :pContNode(pNode),
       rgVertices(std::move(rgVert)),
-      dr(std::move(dr))
+      dr(std::move(dr_a))
 {
      rgContCurr.reserve(iNumFaces);
      rgContPrev.reserve(iNumFaces);
 }
 
-TriangularContact::TriangularContact(unsigned uLabel, const DofOwner *pDO,
-				     DataManager* pDM, MBDynParser& HP)
-     :UserDefinedElem(uLabel, pDO),
+TriangularContact::TriangularContact(unsigned uLabel_a, const DofOwner *pDO,
+				     DataManager* pDM_a, MBDynParser& HP)
+     :UserDefinedElem(uLabel_a, pDO),
       pTargetNode(nullptr),
       dSearchRadius(std::numeric_limits<doublereal>::max()),
       pCL(nullptr),
-      pDM(pDM),
+      pDM(pDM_a),
       eFrictionModel(FrictionModel::None)
 {
      tCurr = tPrev = pDM->dGetTime();
@@ -590,7 +590,7 @@ TriangularContact::TriangularContact(unsigned uLabel, const DofOwner *pDO,
 	  throw ErrGeneric(MBDYN_EXCEPT_ARGS);
      }
 
-     pCL = dynamic_cast<const DifferentiableScalarFunction*>(ParseScalarFunction(HP, pDM));
+     pCL = dynamic_cast<const DifferentiableScalarFunction*>(ParseScalarFunction(HP, pDM_a));
 
      if (!pCL) {
 	  silent_cerr("triangular contact(" << uLabel
@@ -803,13 +803,13 @@ TriangularContact::TriangularContact(unsigned uLabel, const DofOwner *pDO,
 	  const StructNodeAd* pContNode = pDM->ReadNode<StructNodeAd, Node::STRUCTURAL>(HP);
 	  const ReferenceFrame oRefFrame(pContNode);
 	  std::unique_ptr<DriveCaller> dr{HP.IsKeyWord("normal" "offset") ? HP.GetDriveCaller() : new NullDriveCaller};
-	  const integer iNumVertices = HP.IsKeyWord("number" "of" "contact" "vertices") ? HP.GetInt() : 1;
+	  const integer iNumVertices_local = HP.IsKeyWord("number" "of" "contact" "vertices") ? HP.GetInt() : 1;
 
 	  std::vector<ContactVertex> rgVertices;
 
-	  rgVertices.reserve(iNumVertices);
+	  rgVertices.reserve(iNumVertices_local);
 
-	  for (integer j = 1; j <= iNumVertices; ++j) {
+	  for (integer j = 1; j <= iNumVertices_local; ++j) {
 	       const Vec3 o1 = HP.IsKeyWord("offset") ? HP.GetPosRel(oRefFrame) : Zero3;
 
 	       const doublereal r1 = HP.IsKeyWord("radius") ? HP.GetReal() : 0.;
