@@ -62,7 +62,10 @@ public:
           ELEM_SOLIDS,
           ELEM_GENELS,
           ELEM_LOADABLE,
-          ELEM_INERTIA
+          ELEM_INERTIA,
+          ELEM_HYDRAULIC,
+          ELEM_ELECTRIC,
+          ELEM_THERMAL
      };
 
      enum RestartAction {
