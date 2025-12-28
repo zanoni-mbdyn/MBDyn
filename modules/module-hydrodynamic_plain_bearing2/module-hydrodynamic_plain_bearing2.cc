@@ -1142,6 +1142,8 @@ namespace {
           virtual void AfterConvergence(const VectorHandler& X,
                                         const VectorHandler& XP);
 
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction)=0;
+
           virtual bool
           bGetPrivateData(HydroRootBase::PrivateDataType eType,
                           doublereal& dPrivData) const=0;
@@ -1453,6 +1455,7 @@ namespace {
           Update(const VectorHandler& Y,
                  doublereal dCoef) override;
           virtual void SetValue(VectorHandler& XCurr, VectorHandler& XPrimeCurr) override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override;
           virtual unsigned int iGetNumDof(void) const override;
           virtual unsigned int iGetInitialNumDof(void) const override;
           virtual DofOrder::Order GetDofType(unsigned int i) const override;
@@ -1502,6 +1505,10 @@ namespace {
           virtual void
           Update(const VectorHandler& Y,
                  doublereal dCoef) override;
+
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by ThermalNode
+          }
      private:
           ThermalNodeAd* const pExtThermNode;
           sp_grad::SpFunctionCall eCurrFunc;
@@ -1534,6 +1541,10 @@ namespace {
           const ThermalCoupledNode* pGetInletNode() const {
                return &oInletNode;
           }
+
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by the ThermalNode
+          }
      private:
           ThermalCoupledNode oInletNode;
      };
@@ -1563,7 +1574,8 @@ namespace {
           virtual void
           Update(const VectorHandler& Y, doublereal dCoef) override;
           const FluidStateBoundaryCond* pGetFluidBoundCond() const { return pBoundCond; }
-
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
      private:
           const FluidStateBoundaryCond* const pBoundCond;
      };
@@ -1592,7 +1604,9 @@ namespace {
 
           virtual void
           Update(const VectorHandler& Y, doublereal dCoef) override;
-
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by the ThermoHydrNode
+          }
      private:
           ThermoHydrNode* const pMasterNode;
      };
@@ -1665,6 +1679,8 @@ namespace {
           virtual void
           Output(std::ostream& os, unsigned uOutputFlags) const override;
 
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
      private:
           static index_type iDirectionFromNodes(const std::array<const HydroNode*, iNumNodes>& rgNodes);
 
@@ -1872,7 +1888,9 @@ namespace {
           virtual void GetHydraulicVelocity(SpColVector<doublereal, 2>& U) const override;
           virtual void GetHydraulicVelocity(SpColVector<SpGradient, 2>& U) const override;
           virtual void GetHydraulicVelocity(SpColVector<GpGradProd, 2>& U) const override;
-
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by the HydroNode
+          }
      private:
           HydroNode* pMasterNode;
      };
@@ -2027,6 +2045,7 @@ namespace {
                  SpFunctionCall func) override;
           virtual void
           Update(const VectorHandler& Y, doublereal dCoef) override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override;
           virtual void SetValue(VectorHandler& XCurr, VectorHandler& XPrimeCurr) override;
           virtual void GetPressure(doublereal& p, doublereal=0.) const override;
           virtual void GetPressure(SpGradient& p, doublereal dCoef=0.) const override;
@@ -2070,6 +2089,8 @@ namespace {
           virtual void GetPressureDerTime(doublereal& dp_dt, doublereal=0.) const override;
           virtual void GetPressureDerTime(SpGradient& dp_dt, doublereal dCoef=0.) const override;
           virtual void GetPressureDerTime(GpGradProd& dp_dt, doublereal dCoef=0.) const override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
      private:
           template <typename G>
           inline void GetPressureTpl(G& p) const;
@@ -2105,6 +2126,9 @@ namespace {
                  SpFunctionCall func) override;
           virtual void
           Update(const VectorHandler& Y, doublereal dCoef) override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by the PressureNode
+          }
      private:
           const PressureNodeAd* const pExtNode;
           doublereal pextY;
@@ -2171,6 +2195,8 @@ namespace {
           virtual void
           Update(const VectorHandler& Y, doublereal dCoef) override;
 
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override;
+
           virtual void BeforePredict(VectorHandler& X,
                                      VectorHandler& XP,
                                      std::deque<VectorHandler*>& qXPrev,
@@ -2235,6 +2261,12 @@ namespace {
                HydroFluid::CavitationState eCavitationState;
                std::array<doublereal, iNumDofMax> Theta;
                std::array<doublereal, iNumDofMax> dTheta_dt;
+
+               void Restart(unsigned uLabel,
+                            size_t uNode,
+                            size_t uIndex,
+                            RestartData& oData,
+                            RestartData::RestartAction eAction);
           };
 
           State oRefState, oIncState; // Updated at the first iteration after Solve
@@ -2274,6 +2306,7 @@ namespace {
           Update(const VectorHandler& Y, doublereal dCoef) override;
 
           virtual void SetValue(VectorHandler& XCurr, VectorHandler& XPrimeCurr) override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override;
           virtual void GetPressure(doublereal& p, doublereal=0.) const override;
           virtual void GetPressure(SpGradient& p, doublereal dCoef) const override;
           virtual void GetPressure(GpGradProd& p, doublereal dCoef) const override;
@@ -2349,6 +2382,8 @@ namespace {
           virtual void GetDensityDerTime(doublereal& drho_dt, doublereal=0.) const override;
           virtual void GetDensityDerTime(SpGradient& drho_dt, doublereal dCoef) const override;
           virtual void GetDensityDerTime(GpGradProd& drho_dt, doublereal dCoef) const override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
      private:
           template <typename G>
           inline void GetPressureTpl(G& p) const;
@@ -2378,7 +2413,9 @@ namespace {
           virtual void GetDensityDerTime(doublereal& drho_dt, doublereal=0.) const override;
           virtual void GetDensityDerTime(SpGradient& drho_dt, doublereal dCoef) const override;
           virtual void GetDensityDerTime(GpGradProd& drho_dt, doublereal dCoef) const override;
-
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by the HydroMasterNode
+          }
      private:
           const HydroMasterNode* const pMasterNode;
      };
@@ -2417,6 +2454,9 @@ namespace {
                       SpFunctionCall func) override;
           virtual void
           Update(const VectorHandler& Y, doublereal dCoef) override;
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+               // Restart to be performed by the PressureNode
+          }
      private:
           template <typename G>
           struct FluidState {
@@ -3474,6 +3514,8 @@ namespace {
           virtual void AfterConvergence(const VectorHandler& X,
                                         const VectorHandler& XP);
 
+          virtual void Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction)=0;
+
           virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols, sp_grad::SpFunctionCall eFunc) const=0;
           virtual void Initialize()=0;
           HydroMesh* pGetMesh() const { return pMesh; }
@@ -3530,7 +3572,8 @@ namespace {
           virtual void SetFluxNode(int iNode, FluxNode* pFluxNode);
           virtual HydroNode* pGetNode(int iNode) const;
           virtual void Initialize();
-
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
      protected:
           static constexpr int iNumNodes = 5;
           static constexpr int iNumFluxNodes = 4;
@@ -3555,6 +3598,8 @@ namespace {
           virtual void SetNode(int iNode, HydroNode* pNode);
           virtual HydroNode* pGetNode(int iNode) const;
           virtual void Initialize();
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
 
           /*
            *              Node layout
@@ -4156,8 +4201,9 @@ namespace {
           virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
           virtual void AfterConvergence(const VectorHandler& X,
                                         const VectorHandler& XP);
+          virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
+          }
           static const index_type iNumNodes = 9;
-
      protected:
           struct GaussPointData {
                SpColVectorA<doublereal, iNumNodes> N;
@@ -5042,6 +5088,7 @@ namespace {
           virtual void Initialize() override;
 
           virtual void SetValue(VectorHandler& XCurr, VectorHandler& XPrimeCurr) override;
+          virtual void Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction) override;
           virtual unsigned int iGetNumDof(void) const override;
           virtual unsigned int iGetInitialNumDof(void) const override;
           virtual integer iGetNumColsWorkSpace(sp_grad::SpFunctionCall eFunc, index_type iNumNodes) const override;
@@ -5189,6 +5236,7 @@ namespace {
           virtual void Initialize() override;
 
           virtual void SetValue(VectorHandler& XCurr, VectorHandler& XPrimeCurr) override;
+          virtual void Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction) override;
           virtual unsigned int iGetNumDof(void) const override;
           virtual unsigned int iGetInitialNumDof(void) const override;
           virtual integer iGetNumColsWorkSpace(sp_grad::SpFunctionCall eFunc, index_type iNumNodes) const override;
@@ -5438,6 +5486,8 @@ namespace {
                                doublereal dCoef,
                                SpFunctionCall func,
                                const HydroUpdatedNode* pNode) const override;
+
+          virtual void Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction) override;
      private:
           inline void
           GetModalDeformation(index_type iMode,
@@ -5594,6 +5644,7 @@ namespace {
           virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override;
           virtual void SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
                         SimulationEntity::Hints *ph) override;
+          virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
           std::ostream& Restart(std::ostream& out) const override;
           virtual unsigned int iGetInitialNumDof(void) const override;
           virtual void
@@ -6754,6 +6805,21 @@ namespace {
           out << "# hydrodynamic plain bearing2: restart not implemented\n";
 
           return out;
+     }
+
+     void HydroRootElement::Restart(RestartData& oData, RestartData::RestartAction eAction)
+     {
+          size_t uNode = 0;
+
+          for (auto& pNode: rgNodes) {
+               pNode->Restart(GetLabel(), uNode++, oData, eAction);
+          }
+
+          size_t uElem = 0;
+
+          for (auto& pElem: rgElements) {
+               pElem->Restart(GetLabel(), uElem++, oData, eAction);
+          }
      }
 
      unsigned int
@@ -8733,6 +8799,12 @@ namespace {
           XPrimeCurr.PutCoef(iIndex, dT_dt / s);
      }
 
+     void ThermalActiveNode::Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "T", T, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "dT_dt", dT_dt, eAction);
+     }
+
      unsigned int ThermalActiveNode::iGetNumDof(void) const
      {
           return 1u;
@@ -10328,6 +10400,11 @@ namespace {
           HydroIncompressibleNode::Update(Y, dCoef);
      }
 
+     void HydroActiveNode::Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) {
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "p", p, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "dp_dt", dp_dt, eAction);
+     }
+
      void HydroActiveNode::SetValue(VectorHandler& XCurr, VectorHandler& XPrimeCurr)
      {
           HYDRO_ASSERT(eCurrFunc == SpFunctionCall::INITIAL_ASS_FLAG);
@@ -11074,6 +11151,33 @@ namespace {
           HydroCompressibleNode::Update(Y, dCoef);
      }
 
+     void HydroActiveComprNode::State::Restart(unsigned uLabel, size_t uNode, size_t uIndex, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          using namespace std::string_literals;
+          const std::string strIndex = std::to_string(uIndex);
+
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "t"s + strIndex, t, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "Theta"s + strIndex, Theta, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "dTheta_dt"s + strIndex, dTheta_dt, eAction);
+
+          int iCavitationState = eCavitationState;
+
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "state"s + strIndex, iCavitationState, eAction);
+
+          eCavitationState = static_cast<HydroFluid::CavitationState>(iCavitationState);
+     }
+     void HydroActiveComprNode::Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          size_t i;
+
+          for (i = 0; i < rgState.size(); ++i) {
+               rgState[i].Restart(uLabel, uNode, i, oData, eAction);
+          }
+
+          oRefState.Restart(uLabel, uNode, i++, oData, eAction);
+          oIncState.Restart(uLabel, uNode, i++, oData, eAction);
+     }
+
      void HydroActiveComprNode::BeforePredict(VectorHandler& X,
                                               VectorHandler& XP,
                                               std::deque<VectorHandler*>& qXPrev,
@@ -11612,6 +11716,18 @@ namespace {
                XCurr(iIndex) = Theta[i] / s[i];
                XPrimeCurr(iIndex) = dTheta_dt[i] / s[i];
           }
+     }
+
+     void HydroActiveComprNodeMCP::Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "Theta", Theta, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "dTheta_dt", dTheta_dt, eAction);
+
+          int iCavitationState = eCavitationState;
+
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uNode, "state", iCavitationState, eAction);
+
+          eCavitationState = static_cast<HydroFluid::CavitationState>(iCavitationState);
      }
 
      void HydroActiveComprNodeMCP::GetPressure(doublereal& p, doublereal) const
@@ -12626,6 +12742,12 @@ namespace {
           }
      }
 
+     void ComplianceModelNodal::Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uElem, "w", w, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uElem, "dw_dt", dw_dt, eAction);
+     }
+
      unsigned int ComplianceModelNodal::iGetNumDof() const
      {
           return rgNodes.size();
@@ -13184,6 +13306,18 @@ namespace {
                     XCurr(iDofIndex) = w[k](i) / dDefScale;
                     XPrimeCurr(iDofIndex) = dw_dt[k](i) / dDefScale;
                }
+          }
+     }
+
+     void ComplianceModelNodalDouble::Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          using namespace std::string_literals;
+
+          for (size_t i = 0; i < w.size(); ++i) {
+               std::string strIndex = std::to_string(i);
+
+               oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uElem, "w"s + strIndex, w[i], eAction);
+               oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uElem, "dw_dt"s + strIndex, dw_dt[i], eAction);
           }
      }
 
@@ -14028,7 +14162,7 @@ namespace {
      {
           if (bDoInitAss || !bInitial) {
                integer iDofIndex = iGetFirstIndex(bInitial ? SpFunctionCall::INITIAL_ASS_FLAG : SpFunctionCall::REGULAR_FLAG);
-               
+
                for (index_type i = 1; i <= iGetNumModes(); ++i, ++iDofIndex) {
                     out << prefix << iDofIndex << ": ModalAd elasticity definition for mode " << i << std::endl;
                }
@@ -14070,6 +14204,12 @@ namespace {
 
                qY(i) = Y(iDofIndex);
           }
+     }
+
+     void ComplianceModelModal::Restart(unsigned uLabel, size_t uElem, RestartData& oData, RestartData::RestartAction eAction)
+     {
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uElem, "q", q, eAction);
+          oData.Sync(RestartData::ELEM_LOADABLE, uLabel, uElem, "dq_dt", dq_dt, eAction);
      }
 
      void

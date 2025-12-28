@@ -91,7 +91,20 @@ std::ostream& Pipe::Restart(std::ostream& out) const
 {
    return out << "Pipe not implemented yet!" << std::endl;
 }
-   
+
+void Pipe::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
+     oData.Sync(RestartData::ELEM_HYDRAULIC, GetLabel(), "flow", flow, eAction);
+
+     if (eAction == RestartData::RESTART_RESTORE) {
+          q0 = flow;
+     }
+
+     oData.Sync(RestartData::ELEM_HYDRAULIC, GetLabel(), "vel", vel, eAction);
+     oData.Sync(RestartData::ELEM_HYDRAULIC, GetLabel(), "Re", Re, eAction);
+     oData.Sync(RestartData::ELEM_HYDRAULIC, GetLabel(), "turbulent", turbulent, eAction);
+}
+
 unsigned int Pipe::iGetNumDof(void) const { 
    return 1;
 }

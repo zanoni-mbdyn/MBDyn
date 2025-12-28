@@ -74,7 +74,9 @@ class Pipe : public HydraulicElem {
 
    /* Contributo al file di restart */
    virtual std::ostream& Restart(std::ostream& out) const;
-   
+
+   virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
+
    virtual unsigned int iGetNumDof(void) const;
    virtual DofOrder::Order GetDofType(unsigned int i) const;
    
