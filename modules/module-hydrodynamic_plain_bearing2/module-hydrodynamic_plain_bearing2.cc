@@ -6853,14 +6853,14 @@ namespace {
           const VectorHandler& XCurr)
      {
           if (uInitAssFlags != INIT_ASS_NONE) {
-               const VectorHandler* const pXPrimeCurr = nullptr;
+               const MyVectorHandler Dummy;
 
-               pMesh->Update(XCurr, *pXPrimeCurr, 1., SpFunctionCall::INITIAL_ASS_JAC);
+               pMesh->Update(XCurr, Dummy, 1., SpFunctionCall::INITIAL_ASS_JAC);
 
                HYDRO_ASSERT(rgElements.size() > 0);
 
                for (auto i = rgNodes.begin(); i != rgNodes.end(); ++i) {
-                    (*i)->Update(XCurr, *pXPrimeCurr, 1., SpFunctionCall::INITIAL_ASS_JAC);
+                    (*i)->Update(XCurr, Dummy, 1., SpFunctionCall::INITIAL_ASS_JAC);
                }
 
                pMesh->Reset(SpFunctionCall::INITIAL_ASS_JAC);
@@ -6890,17 +6890,17 @@ namespace {
 
           if (uInitAssFlags != INIT_ASS_NONE) {
                HYDRO_ASSERT(rgElements.size() > 0);
-
-               const VectorHandler* const pXPrimeCurr = nullptr;
-
-               pMesh->Update(XCurr, *pXPrimeCurr, 1., SpFunctionCall::INITIAL_ASS_RES);
+               
+               const MyVectorHandler Dummy;
+               
+               pMesh->Update(XCurr, Dummy, 1., SpFunctionCall::INITIAL_ASS_RES);
 
                for (auto i = rgBoundaryCond.begin(); i != rgBoundaryCond.end(); ++i) {
                     (*i)->Update();
                }
 
                for (auto i = rgNodes.begin(); i != rgNodes.end(); ++i) {
-                    (*i)->Update(XCurr, *pXPrimeCurr, 1., SpFunctionCall::INITIAL_ASS_RES);
+                    (*i)->Update(XCurr, Dummy, 1., SpFunctionCall::INITIAL_ASS_RES);
                }
 
                pMesh->Reset(SpFunctionCall::INITIAL_ASS_RES);

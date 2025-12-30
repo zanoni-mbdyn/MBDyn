@@ -59,7 +59,7 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   needs:
     - job: mkl-build-job
-      artifacts: true    
+      artifacts: true
     - job: siconos-build-job
       artifacts: true
     - job: trilinos-build-job
@@ -71,7 +71,7 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
     - job: netcdf-cxx4-build-job
       artifacts: true
     - job: nlopt-build-job
-      artifacts: true      
+      artifacts: true
     - job: gtest-build-job
       artifacts: true
     - job: tfel-build-job
@@ -83,7 +83,7 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
     - job: mbdyn-build-job
       artifacts: true
     - job: gmsh-build-job
-      artifacts: true      
+      artifacts: true
     - job: octave-pkg-build-job ## needed for gtest-octave-cli
       artifacts: true
   script:
@@ -114,6 +114,8 @@ mbdyn-tests-public-test-job:   # This job runs in the test stage.
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
       - echo "-------------- PATCHED TESTS --------------------" | tee -a "${log_file}"
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
+      - cd "${MBD_TESTS_PUBLIC_OUTPUT_DIR}"
+      - find . -name 'junit_xml_report_*.xml' -print0 | xargs -0 "${CI_PROJECT_DIR}/testsuite/junit_xml_relative_path.py" -p "${CI_PROJECT_DIR}"
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
@@ -169,6 +171,8 @@ mbdyn-tests-public-test-job-gcov:   # This job runs in the test stage.
       - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
       - echo "-------------- PATCHED TESTS --------------------" | tee "${log_file}"
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --scale-when "always" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
+      - cd "${MBD_TESTS_PUBLIC_OUTPUT_DIR}"
+      - find . -name 'junit_xml_report_*.xml' -print0 | xargs -0 "${CI_PROJECT_DIR}/testsuite/junit_xml_relative_path.py" -p "${CI_PROJECT_DIR}"
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
@@ -227,6 +231,8 @@ mbdyn-tests-public-test-job-debug:   # This job runs in the test stage.
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
       - echo "-------------- PATCHED TESTS --------------------" | tee -a "${log_file}"
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite_patched.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}"
+      - cd "${MBD_TESTS_PUBLIC_OUTPUT_DIR}"
+      - find . -name 'junit_xml_report_*.xml' -print0 | xargs -0 "${CI_PROJECT_DIR}/testsuite/junit_xml_relative_path.py" -p "${CI_PROJECT_DIR}"
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
@@ -240,7 +246,7 @@ mbdyn-tests-public-test-job-debug:   # This job runs in the test stage.
 
 mbdyn-tests-public-test-job-nodeps:   # This job runs in the test stage.
   variables:
-    MBD_TESTS_PUBLIC_LOG_FILE: "mbdyn-tests-public-test-job.log"
+    MBD_TESTS_PUBLIC_LOG_FILE: "mbdyn-tests-public-test-job-nodeps.log"
   stage: test    # It only starts when the job in the build stage completes successfully.
   needs:
     - job: mbdyn-build-job-nodeps
@@ -261,6 +267,8 @@ mbdyn-tests-public-test-job-nodeps:   # This job runs in the test stage.
       - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
       - echo "-------------- ORIGINAL TESTS --------------------" | tee -a "${log_file}"
       - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --enable-gtest no --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
+      - cd "${MBD_TESTS_PUBLIC_OUTPUT_DIR}"
+      - find . -name 'junit_xml_report_*.xml' -print0 | xargs -0 "${CI_PROJECT_DIR}/testsuite/junit_xml_relative_path.py" -p "${CI_PROJECT_DIR}"
   artifacts:
     name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
     expire_in: 24h
@@ -268,3 +276,76 @@ mbdyn-tests-public-test-job-nodeps:   # This job runs in the test stage.
       - $MBD_TESTS_PUBLIC_OUTPUT_DIR/$MBD_TESTS_PUBLIC_LOG_FILE
       - $MBD_TESTS_PUBLIC_OUTPUT_DIR/**/*.stdout
     when: always
+
+
+mbdyn-tests-public-test-job-clang:   # This job runs in the test stage.
+  variables:
+    MBD_TESTS_PUBLIC_LOG_FILE: "mbdyn-tests-public-test-job-clang.log"
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  needs:
+    - job: mkl-build-job
+      artifacts: true
+    - job: siconos-build-job
+      artifacts: true
+    - job: trilinos-build-job
+      artifacts: true
+    - job: hdf5-build-job
+      artifacts: true
+    - job: netcdf-c-build-job
+      artifacts: true
+    - job: netcdf-cxx4-build-job
+      artifacts: true
+    - job: nlopt-build-job
+      artifacts: true
+    - job: gtest-build-job
+      artifacts: true
+    - job: tfel-build-job
+      artifacts: true
+    - job: mgis-build-job
+      artifacts: true
+    - job: gallery-build-job
+      artifacts: true
+    - job: mbdyn-build-job-clang
+      artifacts: true
+    - job: gmsh-build-job
+      artifacts: true
+    - job: octave-pkg-build-job ## needed for gtest-octave-cli
+      artifacts: true
+  script:
+      - GALLERY_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GALLERY_INSTALL_PREFIX}
+      - export LD_LIBRARY_PATH=${GALLERY_INSTALL_PREFIX}/lib:${LD_LIBRARY_PATH}
+      - MBD_INSTALL_PREFIX=${CI_PROJECT_DIR}/${MBD_INSTALL_PREFIX_CLANG}
+      - export OCT_PKG_INSTALL_PREFIX=${CI_PROJECT_DIR}/${OCT_PKG_INSTALL_PREFIX}
+      - GMSH_INSTALL_PREFIX=${CI_PROJECT_DIR}/${GMSH_INSTALL_PREFIX}
+      - MBD_TESTS_PUBLIC_OUTPUT_DIR=${CI_PROJECT_DIR}/${MBD_TESTS_PUBLIC_OUTPUT_DIR_CLANG}
+      - MBD_TESTS_PUBLIC_INPUT_DIR=${CI_PROJECT_DIR}/tests/benchmarks
+      - MBD_TESTS_RESTART_INPUT_DIR=${CI_PROJECT_DIR}/tests/restart
+      - echo "mbdyn-tests-public test job"
+      - export PATH=${MBD_INSTALL_PREFIX}/bin:${GMSH_INSTALL_PREFIX}/bin:${OCT_PKG_INSTALL_PREFIX}/bin:${PATH}
+      - export AWKPATH=${MBD_INSTALL_PREFIX}/share/awk:${AWKPATH}
+      - export TESTSUITE_TIME_CMD
+      - export JUNIT_XML_KEEP_ALL_OUTPUT
+      - export MBDYN_EXEC
+      - export OCTAVE_EXEC="${GTEST_OCTAVE_EXEC}"
+      - export CI_PROJECT_DIR
+      - export MBDYN_ARGS_ADD
+      - mkdir -p ${MBD_TESTS_PUBLIC_OUTPUT_DIR} ## needed for realpath
+      - sp_gradient_test --gtest_output=xml:${MBD_TESTS_PUBLIC_OUTPUT_DIR}/junit_xml_report_sp_gradient_test.xml >& /dev/null
+      - chmod +x testsuite/simple_testsuite.sh
+      - log_file="${MBD_TESTS_PUBLIC_OUTPUT_DIR}/${MBD_TESTS_PUBLIC_LOG_FILE}"
+      - echo "-------------- RESTARTED TESTS --------------------" | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_RESTART_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
+      - echo "-------------- ORIGINAL TESTS --------------------" | tee -a "${log_file}"
+      - ${TESTSUITE_TIME_CMD} testsuite/simple_testsuite.sh --use-reference-test-status "${MBD_TESTS_PUBLIC_USE_REFERENCE_TEST_STATUS}" --exit-status-mask "${MBD_TESTS_PUBLIC_EXIT_STATUS_MASK}" --timeout "${MBD_TESTS_PUBLIC_TIMEOUT}" --prefix-output "${MBD_TESTS_PUBLIC_OUTPUT_DIR}" --prefix-input "${MBD_TESTS_PUBLIC_INPUT_DIR}" --tasks "${MBD_TESTS_PUBLIC_NUM_TASKS}" ${MBD_SIMPLE_TESTSUITE_FLAGS} 2>&1 | tee -a "${log_file}" | awk -f testsuite/simple_testsuite_output_filter.awk
+      - cd "${MBD_TESTS_PUBLIC_OUTPUT_DIR}"
+      - find . -name 'junit_xml_report_*.xml' -print0 | xargs -0 "${CI_PROJECT_DIR}/testsuite/junit_xml_relative_path.py" -p "${CI_PROJECT_DIR}"
+  artifacts:
+    name: ${CI_JOB_NAME_SLUG}-${CI_COMMIT_REF_SLUG}
+    expire_in: 24h
+    paths:
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR_CLANG/$MBD_TESTS_PUBLIC_LOG_FILE
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR_CLANG/**/*.stdout
+      - $MBD_TESTS_PUBLIC_OUTPUT_DIR_CLANG/**/junit_xml_report_*.xml
+    when: always
+    reports:
+      junit: $MBD_TESTS_PUBLIC_OUTPUT_DIR_CLANG/**/junit_xml_report_*.xml
