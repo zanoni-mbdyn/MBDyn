@@ -39,6 +39,7 @@
 
 class HydraulicDamperCL
 : public ConstitutiveLaw<doublereal, doublereal> {
+     using ConstitutiveLaw<doublereal, doublereal>::Update;
 private:
 	doublereal m_sigma;
 	doublereal m_dotz_L;

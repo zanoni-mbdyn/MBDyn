@@ -48,6 +48,7 @@
 
 class ContContactCL
 : public ElasticConstitutiveLaw<doublereal, doublereal> {
+     using ElasticConstitutiveLaw<doublereal, doublereal>::Update;
 public:
 	enum Type {
 		CC_FLORES_ET_AL,
@@ -435,6 +436,7 @@ struct ContContactCLR : public ConstitutiveLawRead<doublereal, doublereal> {
 
 class ContContact3DCL
 : public ElasticConstitutiveLaw<Vec3, Mat3x3> {
+     using ElasticConstitutiveLaw<Vec3, Mat3x3>::Update;
 public:
 	enum Type {
 		CC_FLORES_ET_AL = ContContactCL::CC_FLORES_ET_AL,

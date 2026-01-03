@@ -177,7 +177,7 @@ public:
 
 #ifdef DEBUG
 	/* Usata per il debug */
-	virtual void IsValid(void) const;
+	virtual void IsValid(void) const override;
 #endif /* DEBUG */
 
 	/* Used to access raw data by c functions */

@@ -360,7 +360,7 @@ tplStageNIntegrator<N>::Advance(Solver* pS,
       	pDM->AfterPredict();
 
 #ifdef DEBUG
-	integer iNumDofs = pDM->iGetNumDofs();
+	const integer iNumDofs = pDM->iGetNumDofs();
 	if (outputPred) {
 		std::cout << "After prediction, stage " << 1 << " of " << N << " time=" << pDM->dGetTime() << std::endl;
 		std::cout << "Dof:      |    XCurr  ";
@@ -423,7 +423,6 @@ tplStageNIntegrator<N>::Advance(Solver* pS,
      	 	pDM->AfterPredict();
 
 #ifdef DEBUG
-		integer iNumDofs = pDM->iGetNumDofs();
 		if (outputPred) {
 			std::cout << "After prediction, stage " << S << " of " << N << " time=" << pDM->dGetTime() << std::endl;
 			std::cout << "Dof:      |    XCurr  ";

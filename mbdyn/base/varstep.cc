@@ -54,7 +54,7 @@ iNumSteps(-1), iCurrStep(-1),
 bLinear(bl), bPadZeroes(pz), boWhen(bo), pd(0), pvd(0)
 {
 	ASSERT(iNumDrives > 0);
-	ASSERT(sFileName != NULL);
+	ASSERT(sFileName_a != NULL);
 
 	std::ifstream in(sFileName);
 	if (!in) {

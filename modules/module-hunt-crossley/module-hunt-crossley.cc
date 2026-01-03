@@ -42,6 +42,7 @@
 
 class HuntCrossleyCL
 : public ElasticConstitutiveLaw<doublereal, doublereal> {
+     using ElasticConstitutiveLaw<doublereal, doublereal>::Update;
 protected:
 	doublereal m_dSign;
 	doublereal m_dAlpha;

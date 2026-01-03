@@ -70,52 +70,52 @@ class Pipe : public HydraulicElem {
    ~Pipe(void);
    
    /* Tipo di elemento idraulico (usato solo per debug ecc.) */
-   virtual HydraulicElem::Type GetHydraulicType(void) const;
+   virtual HydraulicElem::Type GetHydraulicType(void) const override;
 
    /* Contributo al file di restart */
-   virtual std::ostream& Restart(std::ostream& out) const;
+   virtual std::ostream& Restart(std::ostream& out) const override;
 
    virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
 
-   virtual unsigned int iGetNumDof(void) const;
-   virtual DofOrder::Order GetDofType(unsigned int i) const;
+   virtual unsigned int iGetNumDof(void) const override;
+   virtual DofOrder::Order GetDofType(unsigned int i) const override;
    
-   virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const;
+   virtual void WorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
       
    VariableSubMatrixHandler& AssJac(VariableSubMatrixHandler& WorkMat,
 				    doublereal dCoef,
 				    const VectorHandler& XCurr, 
-				    const VectorHandler& XPrimeCurr);
+				    const VectorHandler& XPrimeCurr) override;
    
    SubVectorHandler& AssRes(SubVectorHandler& WorkVec,
 			    doublereal dCoef,
 			    const VectorHandler& XCurr, 
-			    const VectorHandler& XPrimeCurr);
+			    const VectorHandler& XPrimeCurr) override;
    
    virtual void AfterConvergence(const VectorHandler& X, 
-		   const VectorHandler& XP);
-   virtual void Output(OutputHandler& OH) const;
+		   const VectorHandler& XP) override;
+   virtual void Output(OutputHandler& OH) const override;
    
    virtual void SetValue(DataManager *pDM,
 		   VectorHandler& X, VectorHandler& XP,
-		   SimulationEntity::Hints *ph = 0);
+		   SimulationEntity::Hints *ph = 0) override;
 
    /* *******PER IL SOLUTORE PARALLELO******** */        
    /* Fornisce il tipo e la label dei nodi che sono connessi all'elemento
       utile per l'assemblaggio della matrice di connessione fra i dofs */
-   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const {
+   virtual void GetConnectedNodes(std::vector<const Node *>& connectedNodes) const override {
      connectedNodes.resize(2);
      connectedNodes[0] = pNode1;
      connectedNodes[1] = pNode2;
    };
    /* ************************************************ */
    /* returns the dimension of the component */
-	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const;
+	const virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 
   /* describes the dimension of components of equation */
     virtual std::ostream& DescribeEq(std::ostream& out,
 		   const char *prefix = "",
-		   bool bInitial = false) const;
+		   bool bInitial = false) const override;
 };
 
 /* Pipe - end */

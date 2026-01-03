@@ -12,7 +12,7 @@
 #include "md_vec.h"
 
 using namespace std;
-const double math_pi = 3.1415926535897932384626433832795;
+// const double math_pi = 3.1415926535897932384626433832795;
 const int nnbr[][MD_DIM] = MD_OFFSET_VALS;
 const RealVec gravity_vector(0, 0, -double (GRAVITY));
 
@@ -815,13 +815,13 @@ MDSand::OutputState()
     statename << ".//timesnap=" << temp << "_statesave";
     para_file_.open(statename.str().c_str(), ios::out | ios::binary);
     para_file_.write(reinterpret_cast<char *> (&temp), sizeof (float));
-    int count = 0;
+    // int count = 0;
 
     for (int i = 0; i < num_particles_; i++)
     {
         if (sand_array_[i].remove == 1)
         {
-            count++;
+            // count++;
             continue;
         }
         temp = (sand_array_[i].pos.x);

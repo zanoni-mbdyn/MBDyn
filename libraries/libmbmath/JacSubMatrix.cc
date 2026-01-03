@@ -40,8 +40,6 @@
 #include "myassert.h"
 #include "JacSubMatrix.h"
 
-#define DEBUG
-
 static ExpandableRowVector::ExpandableRowElement er_Zero;
 
 ExpandableRowVector::ExpandableRowVector(void) {}

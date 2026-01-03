@@ -203,7 +203,7 @@ public:
 /* Sparse Matrix in compact form */
 class CompactSparseMatrixHandler : public SparseMatrixHandler {
 #ifdef DEBUG
-	void IsValid(void) const {
+	void IsValid(void) const override {
 		NO_OP;
 	};
 #endif /* DEBUG */
@@ -215,7 +215,7 @@ public:
 
 	/* used by MultiThreadDataManager to duplicate the storage array
 	 * while preserving the CC indices */
-	virtual CompactSparseMatrixHandler *Copy(void) const = 0;
+	virtual CompactSparseMatrixHandler *Copy(void) const override = 0;
 
 	/* used to sum CC matrices with identical indices */
         virtual void AddUnchecked(const CompactSparseMatrixHandler& m) = 0;

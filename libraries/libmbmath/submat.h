@@ -90,7 +90,7 @@ public:
       * Routine di verifica della validita' dell'oggetto.
       * Usata per il debug.
       */
-     virtual void IsValid(void) const = 0;
+     //virtual void IsValid(void) const = 0;
 #endif /* DEBUG */
 
 
@@ -239,7 +239,7 @@ public:
       * Routine di verifica della validita' dell'oggetto.
       * Usata per il debug.
       */
-     virtual void IsValid(void) const;
+     virtual void IsValid(void) const override;
 #endif /* DEBUG */
 
      /*
@@ -831,7 +831,7 @@ public:
       * Routine di verifica della validita' dell'oggetto.
       * Usata per il debug.
       */
-     virtual void IsValid(void) const;
+     virtual void IsValid(void) const override;
 #endif /* DEBUG */
 
      /*
@@ -1164,7 +1164,7 @@ public:
      virtual MatrixHandler& SubFromT(MatrixHandler& HM) const override;
 
 #ifdef DEBUG
-     virtual void IsValid(void) const;
+     virtual void IsValid(void) const override;
 #endif
 
      bool AddItem(integer iEquationIdx, const sp_grad::SpGradient& oResidual) override;

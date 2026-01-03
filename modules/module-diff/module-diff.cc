@@ -247,7 +247,7 @@ unsigned int
 ModuleDiffDrive::iGetPrivDataIdx(const char *s) const
 {
 	std::string ss(s);
-	unsigned i = ss.find("d");
+	auto i = ss.find("d");
 	if (i != std::string::npos) {
 		if ((ss.at(i + 1)) == 'p') {
 			std::string snum = ss.substr(i + 2);

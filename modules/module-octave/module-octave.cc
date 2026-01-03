@@ -2912,7 +2912,7 @@ DataManagerInterface::DataManagerInterface(OctaveInterface* pInterface_a, const 
 {
         TRACE("constructor");
 
-        ASSERT(pInterface != 0);
+        ASSERT(pInterface_a != 0);
         ASSERT(pDM != 0);
 }
 
@@ -4165,7 +4165,7 @@ DerivativeDriveCaller::DerivativeDriveCaller(DriveCaller* pDriveCaller_a)
         :DriveCaller(0), pDriveCaller(pDriveCaller_a)
 {
         TRACE("constructor");
-        ASSERT(pDriveCaller->bIsDifferentiable());
+        ASSERT(pDriveCaller_a->bIsDifferentiable());
 }
 
 DerivativeDriveCaller::~DerivativeDriveCaller(void)

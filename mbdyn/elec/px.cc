@@ -103,8 +103,8 @@ VectorPX::VectorPX(int i, DriveCaller** pp)
 #ifdef DEBUG
    ASSERT(iNumDrives > 0);
    ASSERT(pp != NULL);
-   for (int i = iNumDrives; i-- > 0; ) {
-      ASSERT(pp[i] != NULL);
+   for (int j = iNumDrives; j-- > 0; ) {
+      ASSERT(pp[j] != NULL);
    }
 #endif // DEBUG
    

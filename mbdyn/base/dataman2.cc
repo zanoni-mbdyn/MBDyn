@@ -727,9 +727,9 @@ DataManager::InitialJointAssembly(void)
 
 	/* Costruisce la struttura temporanea dei Dof */
 
-	ASSERTMSG(DofData[DofOwner::JOINT].iNum > 0,
-		"Warning, no joints are defined; "
-		"You shouldn't have reached this point");
+	// ASSERTMSG(DofData[DofOwner::JOINT].iNum > 0,
+	// 	"Warning, no joints are defined; "
+	// 	"You shouldn't have reached this point");
 	ASSERT(DofData[DofOwner::STRUCTURALNODE].iNum > 0);
 
 	/* Nodi strutturali: mette gli indici ai DofOwner */

@@ -47,6 +47,7 @@
 
 class MuscleCL
 : public ElasticConstitutiveLaw<doublereal, doublereal> {
+     using ElasticConstitutiveLaw<doublereal, doublereal>::Update;
 protected:
 	doublereal Li;
 	doublereal L0;

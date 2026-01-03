@@ -39,7 +39,6 @@
 #include "friction2D.h"
 #include "submat.h"
 
-#define DEBUG
 //defined in friction.cc
 extern int sign(const doublereal x);
 

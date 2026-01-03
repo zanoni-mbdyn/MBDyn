@@ -1183,12 +1183,16 @@ InverseSolver::ReadData()
 		case MAXTIMESTEP:
 			MaxTimeStep.Set(HP.GetDriveCaller());
 #ifdef DEBUG
-			if (typeid(*MaxTimeStep.pGetDriveCaller()) == typeid(PostponedDriveCaller)) {
-				DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is postponed" << std::endl);
+                        {
+                             DriveCaller& oMaxTimeStepDrv = *MaxTimeStep.pGetDriveCaller();
 
-			} else {
-				DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is " << MaxTimeStep.dGet() << std::endl);
-			}
+                             if (typeid(oMaxTimeStepDrv) == typeid(PostponedDriveCaller)) {
+                                  DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is postponed" << std::endl);
+
+                             } else {
+                                  DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is " << MaxTimeStep.dGet() << std::endl);
+                             }
+                        }
 #endif // DEBUG
 
 			if (dGetInitialMaxTimeStep() == 0.) {

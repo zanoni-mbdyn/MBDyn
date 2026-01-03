@@ -377,7 +377,7 @@ chord(-1.),
 a(0.),
 A1(0.), A2(0.), b1(0.), b2(0.),
 alpha_pivot(0), dot_alpha_pivot(0), dot_alpha(0), ddot_alpha(0),
-cfx_0(0), cfy_0(0), cmz_0(0), clalpha(0),
+cfx_0(0), cfy_0(0), cfz_0(0), cmx_0(0), cmy_0(0), cmz_0(0), clalpha(0),
 prev_alpha_pivot(0), prev_dot_alpha(0),
 prev_time(pTime->dGet()),
 pAeroData(pa)
@@ -429,7 +429,6 @@ TheodorsenAeroData::~TheodorsenAeroData(void)
 	SAFEDELETEARR(cmx_0);
 	SAFEDELETEARR(cmy_0);
 	SAFEDELETEARR(cmz_0);
-	SAFEDELETEARR(alpha_pivot);
 	SAFEDELETEARR(dot_alpha_pivot);
 	SAFEDELETEARR(dot_alpha);
 	SAFEDELETEARR(ddot_alpha);

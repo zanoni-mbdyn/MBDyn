@@ -58,7 +58,7 @@ private:
     // thrust value at each time step
     doublereal Thrust;
     // induced drag value at each time step
-    doublereal DragInduced, DragProfile;
+    // doublereal DragInduced, DragProfile;
     // couple value at each time step
     doublereal CoupleInduced, CoupleProfile, Couple;
     // power at each time step
@@ -148,9 +148,9 @@ private:
 
     // shp2W
     const doublereal hp2W = 745.7; // conversion factor, horsepower to watt
-    const doublereal W2hp = 1.0/hp2W; // conversion factor, horsepower to watt
-    const doublereal deg2rad = M_PI/180.0;
-    const doublereal rad2deg = 1.0/deg2rad;
+    // const doublereal W2hp = 1.0/hp2W; // conversion factor, horsepower to watt
+    // const doublereal deg2rad = M_PI/180.0;
+    // const doublereal rad2deg = 1.0/deg2rad;
     // part of v1h depending only on the constant factors:
     // v1hPart = sqrt(Th/2A), where Th is the required rotor
     // thrust in hover to compensate for nominal rotor torque
