@@ -46,7 +46,7 @@ begin: initial value;
         time step: (5.66893e-05);
 
         max iterations: 100;
-        tolerance: 1e-6, test, norm, 1e-6, test, norm;
+        tolerance: 1e-6, test, sepnorm, epsilon1, 1e-1, epsilon2, 1e-5, scale, 1e-6, test, norm;
         method: ms4, 0.6;
 
         enforce constraint equations: constraint violations;
@@ -98,6 +98,7 @@ begin: initial value;
 end: initial value;
 
 begin: control data;
+       default scale: loadable, 1.;
        print: dof stats, to file;
        print: dof description, to file;
        print: equation description, to file;

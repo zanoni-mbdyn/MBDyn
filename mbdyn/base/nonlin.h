@@ -164,8 +164,7 @@ public:
 
 class NonlinearSolverTestSepNorm : public NonlinearSolverTest {
 public:
-	/* Indices for corresponding dimensions */
-	std::map<OutputHandler::Dimensions, std::set<integer>> MapOfDimensionIndices;
+        NonlinearSolverTestSepNorm(doublereal eps1_a, doublereal eps2_a);
 	virtual std::map<OutputHandler::Dimensions, std::set<integer>>* GetDimMap();
 
 	/* Vector of the absolute values */
@@ -183,6 +182,10 @@ public:
 	virtual doublereal MakeTest(Solver *pS, const integer& Size,
 			const VectorHandler& Vec, bool bResidual = false,
 			doublereal dScaleAlgEqu = 1., doublereal* pTestDiff=0);
+private:
+        const doublereal eps1, eps2;
+	/* Indices for corresponding dimensions */
+	std::map<OutputHandler::Dimensions, std::set<integer>> MapOfDimensionIndices;     
 };
 
 
@@ -230,6 +233,7 @@ public:
 class NonlinearSolverTestScaleSepNorm : public NonlinearSolverTestScale,
 	public NonlinearSolverTestSepNorm {
 public:
+        NonlinearSolverTestScaleSepNorm(doublereal eps1_a, doublereal eps2_a);
 	virtual void TestOne(doublereal& dRes, const VectorHandler& Vec,
 			const integer& iIndex, doublereal dCoef) const;
 	virtual void TestMerge(doublereal& dResCurr,

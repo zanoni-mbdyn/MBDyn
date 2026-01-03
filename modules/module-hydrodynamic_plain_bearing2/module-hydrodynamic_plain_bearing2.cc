@@ -30,7 +30,7 @@
 
 /*
   AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-  Copyright (C) 2013(-2023) all rights reserved.
+  Copyright (C) 2013(-2025) all rights reserved.
 
   The copyright of this code is transferred
   to Pierangelo Masarati and Paolo Mantegazza
@@ -40,10 +40,6 @@
 
 #ifndef MBDYN_ENABLE_PROFILE
 #define MBDYN_ENABLE_PROFILE 0
-#endif
-
-#ifndef HYDRO_DEBUG
-#define HYDRO_DEBUG DEBUG
 #endif
 
 #include <algorithm>
@@ -83,6 +79,10 @@
 #include <userelem.h>
 #include <modalad.h>
 #include <strnodead.h>
+
+#ifndef HYDRO_DEBUG
+#define HYDRO_DEBUG DEBUG
+#endif
 
 #include "module-hydrodynamic_plain_bearing2.h"
 
@@ -1389,6 +1389,7 @@ namespace {
           virtual unsigned int iGetInitialNumDof(void) const=0;
           virtual DofOrder::Order GetDofType(unsigned int i) const=0;
           virtual DofOrder::Order GetEqType(unsigned int i) const=0;
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const=0;
           virtual DofOrder::Equality GetEqualityType(unsigned int i) const;
           virtual SolverBase::StepIntegratorType GetStepIntegrator(unsigned int i) const;
           virtual std::ostream&
@@ -1466,7 +1467,7 @@ namespace {
 
           virtual std::ostream&
           DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
-
+          OutputHandler::Dimensions GetEquationDimension(integer index) const override;
      private:
           sp_grad::SpFunctionCall eCurrFunc;
           doublereal T, dT_dt, T_Y;
@@ -2063,7 +2064,7 @@ namespace {
 
           virtual std::ostream&
           DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
-
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
      private:
           doublereal p, dp_dt, pY;
           const doublereal s;
@@ -2237,7 +2238,7 @@ namespace {
 
           virtual std::ostream&
           DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
-
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
      private:
           inline void UpdateTheta(const VectorHandler& XCurr, const VectorHandler& XPrimeCurr);
           inline void UpdateCavitationState();
@@ -2333,7 +2334,7 @@ namespace {
 
           virtual std::ostream&
           DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
-
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
      private:
           void UpdateCavitationState();
           inline void UpdateTheta(const VectorHandler& XCurr, const VectorHandler& XPrimeCurr);
@@ -3567,11 +3568,11 @@ namespace {
 
           explicit LinFD5Elem(HydroMesh* pMesh, ElementType eType);
           virtual ~LinFD5Elem();
-          virtual int iGetNumNodes() const;
-          virtual void SetNode(int iNode, HydroNode* pNode);
+          virtual int iGetNumNodes() const override;
+          virtual void SetNode(int iNode, HydroNode* pNode) override;
           virtual void SetFluxNode(int iNode, FluxNode* pFluxNode);
-          virtual HydroNode* pGetNode(int iNode) const;
-          virtual void Initialize();
+          virtual HydroNode* pGetNode(int iNode) const override;
+          virtual void Initialize() override;
           virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
           }
      protected:
@@ -3594,10 +3595,10 @@ namespace {
      public:
           explicit LinFD4Elem(HydroMesh* pMesh, ElementType eType);
           virtual ~LinFD4Elem();
-          virtual int iGetNumNodes() const;
-          virtual void SetNode(int iNode, HydroNode* pNode);
-          virtual HydroNode* pGetNode(int iNode) const;
-          virtual void Initialize();
+          virtual int iGetNumNodes() const override;
+          virtual void SetNode(int iNode, HydroNode* pNode) override;
+          virtual HydroNode* pGetNode(int iNode) const override;
+          virtual void Initialize() override;
           virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
           }
 
@@ -4195,12 +4196,12 @@ namespace {
                                   const IntegrationRule& oIntegRule,
                                   ElementType eType);
           virtual ~QuadFeIso9Elem();
-          virtual int iGetNumNodes() const;
-          virtual void SetNode(int iNode, HydroNode* pNode);
-          virtual HydroNode* pGetNode(int iNode) const;
-          virtual void AfterPredict(VectorHandler& X, VectorHandler& XP);
+          virtual int iGetNumNodes() const override;
+          virtual void SetNode(int iNode, HydroNode* pNode) override;
+          virtual HydroNode* pGetNode(int iNode) const override;
+          virtual void AfterPredict(VectorHandler& X, VectorHandler& XP) override;
           virtual void AfterConvergence(const VectorHandler& X,
-                                        const VectorHandler& XP);
+                                        const VectorHandler& XP) override;
           virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
           }
           static const index_type iNumNodes = 9;
@@ -5094,6 +5095,7 @@ namespace {
           virtual integer iGetNumColsWorkSpace(sp_grad::SpFunctionCall eFunc, index_type iNumNodes) const override;
           virtual DofOrder::Order GetDofType(unsigned int i) const override;
           virtual DofOrder::Order GetEqType(unsigned int i) const override;
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
           virtual SolverBase::StepIntegratorType GetStepIntegrator(unsigned int i) const override;
 
           virtual std::ostream&
@@ -5249,6 +5251,8 @@ namespace {
 
           virtual std::ostream&
           DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
+
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
 
           virtual void
           Update(const VectorHandler& XCurr,
@@ -5457,6 +5461,8 @@ namespace {
           virtual std::ostream&
           DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
 
+          virtual OutputHandler::Dimensions GetEquationDimension(integer index) const override;
+
           virtual void
           Update(const VectorHandler& XCurr,
                  const VectorHandler& XPrimeCurr,
@@ -5620,6 +5626,7 @@ namespace {
           virtual DofOrder::Equality GetEqualityType(unsigned int i) const override;
           virtual std::ostream& DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const override;
           virtual std::ostream& DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
+          virtual const OutputHandler::Dimensions GetEquationDimension(integer index) const override;
           VariableSubMatrixHandler&
           AssJac(VariableSubMatrixHandler& WorkMat,
                  doublereal dCoef,
@@ -5957,15 +5964,15 @@ namespace {
 
           if (HP.IsKeyWord("bayada" "chupin")) {
                silent_cerr("hydrodynamic plain bearing2(" << GetLabel()
-                           << "): fluid model \"bayad chupin\" is obsolte at line "
+                           << "): fluid model \"bayada chupin\" is obsolete at line "
                            << HP.GetLineData() << std::endl);
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
+
+          if (drho_dp == 0.) {
+               pFluid.reset(new HydroIncompressibleFluid(pc, oThermModel));
           } else {
-               if (drho_dp == 0.) {
-                    pFluid.reset(new HydroIncompressibleFluid(pc, oThermModel));
-               } else {
-                    pFluid.reset(new LinearCompressibleFluid(etav / eta, pc, fluidType, oThermModel));
-               }
+               pFluid.reset(new LinearCompressibleFluid(etav / eta, pc, fluidType, oThermModel));
           }
 
           if ( !HP.IsKeyWord("mesh")) {
@@ -6283,7 +6290,7 @@ namespace {
                return;
           }
 
-          HYDRO_ASSERT(pDofOwner->iGetNumDof() != 0);
+          HYDRO_ASSERT(pDofOwner_a->iGetNumDof() != 0);
 
           rgDofOwner.push_back(pDofOwner_a);
      }
@@ -6314,7 +6321,7 @@ namespace {
                     const integer iLastIndex = iFirstIndex + iNumDof;
 
                     for (integer k = iFirstIndex; k < iLastIndex; ++k) {
-                         HYDRO_ASSERT(oDofOwn.find(k) == oDofOwner.end());
+                         HYDRO_ASSERT(oDofOwner.find(k) == oDofOwner.end());
                          oDofOwner.insert(std::make_pair(k, pDO));
                     }
 
@@ -6503,6 +6510,12 @@ namespace {
           return out;
      }
 
+     const OutputHandler::Dimensions HydroRootElement::GetEquationDimension(integer index) const
+     {
+          const HydroDofOwner* const pDO = pFindDofOwner(index, SpFunctionCall::REGULAR_RES);
+          HYDRO_ASSERT(index >= pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES));
+          return pDO->GetEquationDimension(index - pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES));
+     }
 
      VariableSubMatrixHandler&
      HydroRootElement::AssJac(VariableSubMatrixHandler& WorkMatVar,
@@ -6890,9 +6903,9 @@ namespace {
 
           if (uInitAssFlags != INIT_ASS_NONE) {
                HYDRO_ASSERT(rgElements.size() > 0);
-               
+
                const MyVectorHandler Dummy;
-               
+
                pMesh->Update(XCurr, Dummy, 1., SpFunctionCall::INITIAL_ASS_RES);
 
                for (auto i = rgBoundaryCond.begin(); i != rgBoundaryCond.end(); ++i) {
@@ -7070,7 +7083,7 @@ namespace {
      }
 
      inline void HydroRootElement::AddFrictionLoss(enum FrictionLossType type, doublereal Pf) {
-          HYDRO_ASSERT(type >= 0 && type < iNumFrictionLoss);
+          HYDRO_ASSERT(type >= 0 && static_cast<int>(type) < iNumFrictionLoss);
           PrivData.s.rgPf[type].dCurr += Pf;
      }
 
@@ -8862,6 +8875,11 @@ namespace {
           return out;
      }
 
+     OutputHandler::Dimensions ThermalActiveNode::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
+     }
+
      ThermalCoupledNode::ThermalCoupledNode(integer iNodeNo_a,
                                             const SpColVector<doublereal, 2>& x_a,
                                             HydroMesh* pMesh_a,
@@ -9151,7 +9169,7 @@ namespace {
      {
 #if HYDRO_DEBUG > 0
           HYDRO_ASSERT(ePressSource >= 0);
-          HYDRO_ASSERT(ePressSource < iNumPressSources);
+          HYDRO_ASSERT(static_cast<int>(ePressSource) < iNumPressSources);
           HYDRO_ASSERT(rgNodes[0]->pGetMesh() == pGetMesh());
           HYDRO_ASSERT(rgNodes[1]->pGetMesh() == pGetMesh());
 #endif
@@ -9301,7 +9319,7 @@ namespace {
      void FluxNode::RequestPressureSource(PressureSource ePressSrcReq)
      {
           HYDRO_ASSERT(ePressSrcReq >= 0);
-          HYDRO_ASSERT(ePressSrcReq < iNumPressSources);
+          HYDRO_ASSERT(static_cast<int>(ePressSrcReq) < iNumPressSources);
 
           if (ePressSrcReq > ePressSource) {
                ePressSource = ePressSrcReq;
@@ -10502,6 +10520,11 @@ namespace {
           return out;
      }
 
+     OutputHandler::Dimensions HydroActiveNode::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
+     }
+
      HydroPassiveNode::HydroPassiveNode(integer iNodeNo_a,
                                         const SpColVector<doublereal, 2>& x_a,
                                         HydroMesh* pParent_a,
@@ -10833,7 +10856,7 @@ namespace {
            rgStepInteg{eIntegPressure, eIntegDensity},
            bLineSearchControl(bLineSearchControl_a)
      {
-          std::array<HydroRootElement::ScaleType, iNumDofMax> rgScale = {
+          static constexpr std::array<HydroRootElement::ScaleType, iNumDofMax> rgScale = {
                HydroRootElement::SCALE_PRESSURE_DOF,
                HydroRootElement::SCALE_THETA_DOF
           };
@@ -11440,6 +11463,11 @@ namespace {
           return out;
      }
 
+     OutputHandler::Dimensions HydroActiveComprNode::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
+     }
+
      HydroActiveComprNodeMCP::HydroActiveComprNodeMCP(integer iNodeNo_a,
                                                       const SpColVector<doublereal, 2>& x_a,
                                                       HydroMesh* pParent,
@@ -11457,7 +11485,7 @@ namespace {
            rgStepInteg{eIntegPressure, eIntegDensity},
            eCavitationState(HydroFluid::FULL_FILM_REGION)
      {
-          std::array<HydroRootElement::ScaleType, iNumDofMax> rgScale = {
+          static constexpr std::array<HydroRootElement::ScaleType, iNumDofMax> rgScale = {
                HydroRootElement::SCALE_PRESSURE_DOF,
                HydroRootElement::SCALE_THETA_DOF
           };
@@ -11899,6 +11927,11 @@ namespace {
           }
 
           return out;
+     }
+
+     OutputHandler::Dimensions HydroActiveComprNodeMCP::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
      }
 
      HydroPassiveComprNode::HydroPassiveComprNode(integer iNodeNo_a,
@@ -12810,6 +12843,11 @@ namespace {
           return out;
      }
 
+     OutputHandler::Dimensions ComplianceModelNodal::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
+     }
+
      void ComplianceModelNodal::Update(const VectorHandler& XCurr, const VectorHandler& XPrimeCurr, doublereal dCoef, SpFunctionCall func)
      {
           if ((func & SpFunctionCall::REGULAR_FLAG) || bDoInitAss) {
@@ -13085,8 +13123,9 @@ namespace {
 
           dPressDofScale = pGetMesh()->pGetParent()->dGetScale(HydroRootElement::SCALE_PRESSURE_DOF);
 
-          const std::array<ComplianceMatrix::MeshLocation, DEHD_BODY_LAST> rgMeshLoc = {ComplianceMatrix::LOC_MESH_FIXED,
-                                                                                        ComplianceMatrix::LOC_MESH_MOVING};
+          static constexpr std::array<ComplianceMatrix::MeshLocation, DEHD_BODY_LAST> rgMeshLoc = {ComplianceMatrix::LOC_MESH_FIXED,
+               ComplianceMatrix::LOC_MESH_MOVING};
+
           for (index_type i = 0; i < DEHD_BODY_LAST; ++i) {
                ComplianceMatrix::MatrixData oMatData{rgMeshLoc[i],
                                                      rgModalJoints[i],
@@ -13390,6 +13429,11 @@ namespace {
           }
 
           return out;
+     }
+
+     OutputHandler::Dimensions ComplianceModelNodalDouble::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
      }
 
      void
@@ -14169,6 +14213,11 @@ namespace {
           }
 
           return out;
+     }
+
+     OutputHandler::Dimensions ComplianceModelModal::GetEquationDimension(integer index) const
+     {
+          return OutputHandler::Dimensions::Dimensionless;
      }
 
 
@@ -22510,7 +22559,7 @@ namespace {
            rho(0.),
            drho_dt(0.)
      {
-          HYDRO_ASSERT(eType == BC_FILLING_RATIO);
+          HYDRO_ASSERT(eType_a == BC_FILLING_RATIO);
      }
 
      FillingRatioFunction::~FillingRatioFunction()
@@ -24327,7 +24376,10 @@ namespace {
                     } else if (typeid(*pCenterNode) == typeid(HydroCoupledNode) ||
                                typeid(*pCenterNode) == typeid(HydroCoupledComprNode)) {
                          if (bThermalModel) {
-                              HYDRO_ASSERT(typeid(*pCenterNode->pGetThermalNode()) == typeid(ThermalInletNode));
+#ifdef DEBUG
+                              auto& oCenterNode = *pCenterNode->pGetThermalNode();
+                              HYDRO_ASSERT(typeid(oCenterNode) == typeid(ThermalInletNode));
+#endif
                               pElement.reset(new LinFD5ThermalCouplingElem(this, bInitAssThermal));
                          } else {
                               pElement.reset(new LinFD5CouplingElem(this));

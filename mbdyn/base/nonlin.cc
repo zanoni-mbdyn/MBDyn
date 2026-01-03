@@ -309,6 +309,14 @@ NonlinearSolverTestRelNorm::TestPost(const doublereal& dRes) const
 /* NonlinearSolverTestNorm - end */
 
 /* NonlinearSolverTestSepNorm */
+NonlinearSolverTestSepNorm::NonlinearSolverTestSepNorm(doublereal eps1_a, doublereal eps2_a)
+     :eps1(eps1_a),
+      eps2(eps2_a)
+{
+     ASSERT(eps1 > 0.);
+     ASSERT(eps2 > 0.);
+}
+
 VectorHandler*
 NonlinearSolverTestSepNorm::GetAbsRes() {
 	return &AbsRes;
@@ -334,6 +342,11 @@ NonlinearSolverTestSepNorm::MakeTest(Solver *pS, const integer &Size,
 	std::vector<doublereal> testDiffsVector;
 	std::vector<doublereal> abs_dTestVector;
 	std::vector<doublereal> dTestVector;
+
+        testsVector.reserve(MapOfDimensionIndices.size());
+        testDiffsVector.reserve(MapOfDimensionIndices.size());
+        abs_dTestVector.reserve(MapOfDimensionIndices.size());
+        dTestVector.reserve(MapOfDimensionIndices.size());
 
    	for (auto it = MapOfDimensionIndices.begin(); it != MapOfDimensionIndices.end(); ++it) {
 
@@ -377,10 +390,6 @@ NonlinearSolverTestSepNorm::MakeTest(Solver *pS, const integer &Size,
 	}
 
 	doublereal abs_dTest_max = *max_element(abs_dTestVector.begin(), abs_dTestVector.end());
-
-	doublereal eps1, eps2;
-	eps1 = 1E-1;
-	eps2 = 1E-5;
 
 	for ( std::vector<double>::size_type i = 0; i < dTestVector.size(); i++) {
 		doublereal dTest = dTestVector[i];
@@ -547,6 +556,10 @@ NonlinearSolverTestScaleRelNorm::dScaleCoef(const integer& iIndex) const
 /* NonlinearSolverTestScaleNorm - end */
 
 /* NonlinearSolverTestScaleSepNorm - begin */
+NonlinearSolverTestScaleSepNorm::NonlinearSolverTestScaleSepNorm(doublereal eps1_a, doublereal eps2_a)
+     :NonlinearSolverTestSepNorm(eps1_a, eps2_a)
+{
+}
 
 void
 NonlinearSolverTestScaleSepNorm::TestOne(doublereal& dRes,
