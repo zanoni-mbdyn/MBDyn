@@ -353,15 +353,15 @@ DerivativeSolver::Advance(Solver* pS,
                         pDM->DerivativesUpdate(); /* has to be called here because the first residual of the nonlinear solver will be incorrect otherwise */
 
 #ifdef DEBUG
-                        for (integer i = 1; i <= pXCurr->iGetSize(); ++i) {
-                            DofOrder::Order eOrder = pDM->GetDofType(i);
+                        for (integer j = 1; j <= pXCurr->iGetSize(); ++j) {
+                            DofOrder::Order eOrder = pDM->GetDofType(j);
                             
-                            if (eOrder == DofOrder::DIFFERENTIAL && pXCurr->dGetCoef(i) != pX->dGetCoef(i)) {
-                                DEBUGCOUT("warning: XCurr(" << i << ") = " << pXCurr->dGetCoef(i) << " X(i)=" << pX->dGetCoef(i) << std::endl);
+                            if (eOrder == DofOrder::DIFFERENTIAL && pXCurr->dGetCoef(j) != pX->dGetCoef(j)) {
+                                DEBUGCOUT("warning: XCurr(" << j << ") = " << pXCurr->dGetCoef(j) << " X(j)=" << pX->dGetCoef(j) << std::endl);
                             }
 
-                            if (eOrder == DofOrder::ALGEBRAIC && pXPrimeCurr->dGetCoef(i) != pXPrime->dGetCoef(i)) {
-                                DEBUGCOUT("warning: XPrimeCurr(" << i << ") = " << pXPrimeCurr->dGetCoef(i) << " XPrime(i)=" << pXPrime->dGetCoef(i) << std::endl);
+                            if (eOrder == DofOrder::ALGEBRAIC && pXPrimeCurr->dGetCoef(j) != pXPrime->dGetCoef(j)) {
+                                DEBUGCOUT("warning: XPrimeCurr(" << j << ") = " << pXPrimeCurr->dGetCoef(j) << " XPrime(j)=" << pXPrime->dGetCoef(j) << std::endl);
                             }
                         }
 #endif

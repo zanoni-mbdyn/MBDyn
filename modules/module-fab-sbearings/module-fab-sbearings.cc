@@ -81,7 +81,7 @@ public:
 		doublereal dCoef,
 		const VectorHandler& XCurr,
 		const VectorHandler& XPrimeCurr);
-	void JacNum(doublereal Xi[], doublereal JacMat[], integer n, integer m);
+	void JacNum(doublereal Xi[], doublereal JacMat[]);
 	SubVectorHandler&
 	AssRes(SubVectorHandler& WorkVec,
 		doublereal dCoef,
@@ -322,7 +322,7 @@ HydrodynamicBearing01::AssJac(VariableSubMatrixHandler& WorkMat,
     Mat3x3 R1rFhCross = Mat3x3(MatCross, R1r*HydroForce);
 
     // Calculation of the Jacobian matrix:
-    JacNum(Xi, JacMat, 12, 6);
+    JacNum(Xi, JacMat);
 
     // Calculation of the partial derivatives (force/global coordinates):
     Mat3x3 dFdXP1 = (-Mat3x3(&JacMat[0], 6)*R1rT + Mat3x3(&JacMat[3*6], 6)*R1rT*Mat3x3(MatCross, W1))*dCoef
@@ -424,8 +424,9 @@ HydrodynamicBearing01::AssJac(VariableSubMatrixHandler& WorkMat,
 }
 
 void
-HydrodynamicBearing01::JacNum(doublereal Xi[], doublereal JacMat[], integer n, integer m)
+HydrodynamicBearing01::JacNum(doublereal Xi[], doublereal JacMat[])
 {
+   constexpr integer n = 12, m = 6;
    /*
       Forward finite difference routine
 
@@ -798,6 +799,7 @@ HydrodynamicBearing01::AfterConvergence(const VectorHandler& X,
 template <class T, class Tder>
 class RollingBearingConstitutiveLaw
 : public ConstitutiveLaw<T, Tder> {
+     using ConstitutiveLaw<T, Tder>::Update;
 private:
 	doublereal DSphere;         // Sphere (or ball) diameter [m]
 	doublereal ZRollElem;       // Number of rolling elements (balls or rollers)

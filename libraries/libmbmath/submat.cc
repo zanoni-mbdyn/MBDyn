@@ -589,10 +589,10 @@ FullSubMatrixHandler::PutCross(integer iFirstRow, integer iFirstCol,
 #ifdef DEBUG
      IsValid();
 
-     ASSERT(iFirstRow >= 0);
-     ASSERT(iFirstRow <= iNumRows - 3);
-     ASSERT(iFirstCol >= 0);
-     ASSERT(iFirstCol <= iNumCols - 3);
+     ASSERT(iFirstRow >= 1);
+     ASSERT(iFirstRow <= iNumRows - 2);
+     ASSERT(iFirstCol >= 1);
+     ASSERT(iFirstCol <= iNumCols - 2);
 #endif /* DEBUG */
 
      const doublereal *pdv = v.pGetVec();

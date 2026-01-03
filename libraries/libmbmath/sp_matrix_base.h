@@ -4270,7 +4270,7 @@ namespace sp_grad {
           oExpr.template Eval<util::MatTranspEvalFlag::DIRECT, eExprEvalFlags_local>(*this, oDofMap);
 
 #ifdef SP_GRAD_DEBUG
-          if (Expr::eExprEvalFlags_local == SpGradCommon::ExprEvalUnique) {
+          if (Expr::eExprEvalFlags == SpGradCommon::ExprEvalUnique) {
                for (const auto& a: *this) {
                     SP_GRAD_ASSERT(SpGradientTraits<ValueType>::bIsUnique(a));
                }
@@ -4311,7 +4311,7 @@ namespace sp_grad {
           oExpr.template Eval<util::MatTranspEvalFlag::DIRECT, eExprEvalFlags_local>(*this, oDofMap);
 
 #ifdef SP_GRAD_DEBUG
-          if (Expr::eExprEvalFlags_local == SpGradCommon::ExprEvalUnique) {
+          if (Expr::eExprEvalFlags == SpGradCommon::ExprEvalUnique) {
                for (const auto& a: *this) {
                     SP_GRAD_ASSERT(SpGradientTraits<ValueType>::bIsUnique(a));
                }

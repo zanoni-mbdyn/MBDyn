@@ -1688,14 +1688,14 @@ ElectricalSource::AssRes(SubVectorHandler& WorkVec,
 		WorkVec.PutRowIndex(6, iFirstIndex + 1);
 
 #ifdef DEBUG
-		doublereal i_currIn = XCurr(iFirstIndex);
-		doublereal i_currOut = XCurr(iFirstIndex + 1);
-		doublereal V1in = pElecIn1->dGetX();
-		doublereal V2in = pElecIn2->dGetX();
+		doublereal i_currIn_l = XCurr(iFirstIndex);
+		doublereal i_currOut_l = XCurr(iFirstIndex + 1);
+		doublereal V1in_l = pElecIn1->dGetX();
+		doublereal V2in_l = pElecIn2->dGetX();
 
 		DEBUGCOUT("ElectricalSource::AssRes(), V1in, V2in, i_currIn, V1out, V2out, i_currOut, G1: "
-			<< V1in << ", " << V2in << ", " << i_currIn << ", " << V1out << ", " << V2out << ", "
-        		<< i_currOut  << ", " << G1 << std::endl);
+			<< V1in_l << ", " << V2in_l << ", " << i_currIn_l << ", " << V1out << ", " << V2out << ", "
+        		<< i_currOut_l  << ", " << G1 << std::endl);
 #endif // DEBUG
 
 	} else {
@@ -1704,10 +1704,10 @@ ElectricalSource::AssRes(SubVectorHandler& WorkVec,
 		WorkVec.PutRowIndex(3, iFirstIndex);
 
 #ifdef DEBUG
-		doublereal i_currOut = XCurr(iFirstIndex);
+		doublereal i_currOut_l = XCurr(iFirstIndex);
 
 		DEBUGCOUT("ElectricalSource::AssRes(), V1out, V2out, i_currOut, G1: "
-			<< V1out << ", " << V2out << ", " << i_currOut  << ", " << G1 << std::endl);
+			<< V1out << ", " << V2out << ", " << i_currOut_l  << ", " << G1 << std::endl);
 #endif // DEBUG
 	}
 

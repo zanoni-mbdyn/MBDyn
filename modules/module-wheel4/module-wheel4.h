@@ -56,21 +56,21 @@ private:
 	// wheel node
 	StructNode *pWheel;
 	Elem *pWheelB; // body
-	Elem *pWheelE; // user loadable elem
+        // Elem *pWheelE; // user loadable elem
 
 	// ring node
 	StructNode *pRing;
 	Elem *pRingB; //body
 
 	// ring node
-	StructNode *pPatch;
+	// StructNode *pPatch;
 
 
 	// wheel axle direction (wrt/ wheel node)
 	Vec3 WheelAxle;
 
 	// (flat) ground node
-	StructNode *pGround;
+	// StructNode *pGround;
 
 
 
@@ -116,7 +116,7 @@ private:
 	doublereal RDA;		// x-pos prior to which road profile is null and after which is interpolated between 0 and value at RDB
 	doublereal RDB;		// x-pos where road starts to be taken as fed by driver but using x=0 @ RDB
 	doublereal RDL;		// after x reaches RDB+RDL, the road profile will loop over RDL
-	int RDLC;			// number of times to deduct x pos from current pos for looping
+        // int RDLC;			// number of times to deduct x pos from current pos for looping
 
 	// tire data,
 	Vec3 Xpa; // elongation of the contact patch spring
@@ -176,7 +176,7 @@ private:
 	Vec3 n; // ground orientation in the absolute frame
 	Vec3 nPrev; // ground orientation in the absolute frame previous timestep
 	Vec3 fwdRingPrev; // fwd unit vector of the ring node at previous timestep
-	doublereal dRoadVel; // road velocity in the z-dir
+        // doublereal dRoadVel; // road velocity in the z-dir
 	Vec3 Xparp; // rotated relative displacement vector of the patch prior to multiplication by the stiffness
 	Vec3 Vparp; // rotated relative velocity vector of the patch prior to multiplication by the viscosity
 	doublereal Fn; // force on patch in z-direction
@@ -197,8 +197,8 @@ private:
 	doublereal dLsProjPrev; // previous projected half length of contact patch, used to predict the next position
 	doublereal dt_maxF; // maximum divison of dt per timestep
 	doublereal dt_minF; // minimum division of dt per timestep
-	doublereal dLsProjRatio; // ratio of length of dLs when projected, used for timestep size calculation
-	doublereal dtPrev; // previous timestep, used to predict the next position
+        // doublereal dLsProjRatio; // ratio of length of dLs when projected, used for timestep size calculation
+	// doublereal dtPrev; // previous timestep, used to predict the next position
 	doublereal dt_maxH; // max height of step in vertical direction wanted, drive the timestep control
 	doublereal dt_adjFactor; // // factor by which the current time step is too big for the bump to come in dt_numAhead times the previous step distance
 	doublereal dt_fNow; // factor to apply now to current timestep (ie: divide current timestep by this for the next one)

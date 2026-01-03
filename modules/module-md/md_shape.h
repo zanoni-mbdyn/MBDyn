@@ -32,6 +32,7 @@ class MDShape
     virtual void SetNodeOrientation (const rmat &) = 0;
     virtual void SetNodeMoment (const RealVec &) = 0;
     virtual void NodesInit (const RealVec &, const RealVec &, const rmat &) = 0;
+    virtual ~MDShape(){}
 };
 
 class MDShapeBase:public MDShape

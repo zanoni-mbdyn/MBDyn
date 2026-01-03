@@ -132,7 +132,7 @@ class DamperGandhiConstitutiveLaw
 : public ConstitutiveLaw<doublereal, doublereal> {
 private:
 	DamperGandhi *m_pElem;
-
+     using ConstitutiveLaw<doublereal, doublereal>::Update;
 public:
 	DamperGandhiConstitutiveLaw(DamperGandhi *pElem)
 	: m_pElem(pElem)

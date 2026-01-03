@@ -87,7 +87,7 @@ struct Data {
 		for (int i = 0; i < 3; i++) {
 			m_ori_mat[i].resize(3);
 		}
-	};
+	}
 };
 
 // examples of MD-specific handlers (they could also be member functions

@@ -57,7 +57,7 @@ class RotorLooseCoupling
 	public UniformRotor
 {
 private:
-	const DataManager* m_pDM;
+        // const DataManager* m_pDM;
 	integer m_nCols;
 
 	struct NodalForce {
@@ -130,7 +130,7 @@ RotorLooseCoupling::RotorLooseCoupling(unsigned uLabel,
 	MBDynParser& HP)
 : UserDefinedElem(uLabel, pDO),
 UniformRotor(uLabel, pDO, 0, Eye3, 0, 0, 0, -1., -1., 0, 0, 0., 0., 1., 1., flag(0)),
-m_pDM(pDM),
+// m_pDM(pDM),
 m_nCols(0),
 m_bFirstAssembly(true)
 {

@@ -40,6 +40,7 @@
 template <class T, class Tder>
 class DummyConstitutiveLaw
 : public ConstitutiveLaw<T, Tder> {
+     using ConstitutiveLaw<T, Tder>::Update;
 private:
 	doublereal dStiffness;
 

@@ -46,7 +46,7 @@ template <int off, typename idx_type = integer>
 class CColMatrixHandler : public CompactSparseMatrixHandler_tpl<off, idx_type> {
 private:
 #ifdef DEBUG
-	void IsValid(void) const {
+	void IsValid(void) const override {
 		NO_OP;
 	};
 #endif /* DEBUG */

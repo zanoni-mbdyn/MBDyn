@@ -255,8 +255,8 @@ void QrDenseSolver::UpdateQR(VectorHandler& u, VectorHandler& v)
                 for (integer j = 1; j <= n; ++j) {
                         B(i, j) = 0;
 
-                        for (integer k = 1; k <= n; ++k) {
-                                B(i, j) += pData->qt(k, i) * pData->r(k, j);
+                        for (integer l = 1; l <= n; ++l) {
+                                B(i, j) += pData->qt(l, i) * pData->r(l, j);
                         }
                 }
         }

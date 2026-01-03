@@ -62,6 +62,7 @@ int __FC_DECL__(dmpfr) (doublereal* DL,
 
 class GRAALLDamperConstitutiveLaw
 : public ConstitutiveLaw<doublereal, doublereal> {
+     using ConstitutiveLaw<doublereal, doublereal>::Update;
 private:
 	enum {
 		RLA = 1,

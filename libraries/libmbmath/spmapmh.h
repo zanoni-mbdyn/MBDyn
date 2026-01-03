@@ -102,7 +102,7 @@ private:
 				  idx_type *const AcolSt,
 				  int offset = 0) const;
 #ifdef DEBUG
-	void IsValid(void) const {
+	void IsValid(void) const override {
 		NO_OP;
 	};
 #endif /* DEBUG */
