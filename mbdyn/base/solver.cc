@@ -393,6 +393,8 @@ CurrLinearSolver(),
 ResTest(NonlinearSolverTest::NORM),
 SolTest(NonlinearSolverTest::NONE),
 bScale(false),
+sepnorm_epsilon1(1e-1),
+sepnorm_epsilon2(1e-5),
 bTrueNewtonRaphson(true),
 NonlinearSolverType(NonlinearSolver::UNKNOWN),
 /* for matrix-free solvers */
@@ -755,7 +757,7 @@ Solver::Prepare(void)
 			break;
 
 		case NonlinearSolverTest::SEPNORM:
-			SAFENEW(pResTestScale, NonlinearSolverTestScaleSepNorm);
+                        SAFENEWWITHCONSTRUCTOR(pResTestScale, NonlinearSolverTestScaleSepNorm, NonlinearSolverTestScaleSepNorm(sepnorm_epsilon1, sepnorm_epsilon2));
 			break;
 
 		default:
@@ -788,7 +790,7 @@ Solver::Prepare(void)
 			break;
 
 		case NonlinearSolverTest::SEPNORM:
-			SAFENEW(pResTest, NonlinearSolverTestSepNorm);
+                        SAFENEWWITHCONSTRUCTOR(pResTest, NonlinearSolverTestSepNorm, NonlinearSolverTestSepNorm(sepnorm_epsilon1, sepnorm_epsilon2));
 			break;
 
 		default:
@@ -3158,12 +3160,16 @@ Solver::ReadData()
 			}
 
 #ifdef DEBUG
-			if (typeid(*MaxTimeStep.pGetDriveCaller()) == typeid(PostponedDriveCaller)) {
-				DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is postponed" << std::endl);
+                        {
+                             DriveCaller& oMaxTimeStepDrv = *MaxTimeStep.pGetDriveCaller();
 
-			} else {
-				DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is " << MaxTimeStep.dGet() << std::endl);
-			}
+                             if (typeid(oMaxTimeStepDrv) == typeid(PostponedDriveCaller)) {
+                                  DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is postponed" << std::endl);
+
+                             } else {
+                                  DEBUGLCOUT(MYDEBUG_INPUT, "Max time step is " << MaxTimeStep.dGet() << std::endl);
+                             }
+                        }
 #endif // DEBUG
 
 			eTimeStepLimit = (HP.IsKeyWord("hard" "limit")
@@ -3785,6 +3791,12 @@ Solver::ReadData()
 						ResTest = NonlinearSolverTest::RELNORM;
 					} else if (HP.IsKeyWord("sepnorm")) {
 						ResTest = NonlinearSolverTest::SEPNORM;
+                                                if (HP.IsKeyWord("epsilon1")) {
+                                                     sepnorm_epsilon1 = HP.GetReal();
+                                                }
+                                                if (HP.IsKeyWord("epsilon2")) {
+                                                     sepnorm_epsilon2 = HP.GetReal();
+                                                }
 					} else if (HP.IsKeyWord("none")) {
 						ResTest = NonlinearSolverTest::NONE;
 					} else {

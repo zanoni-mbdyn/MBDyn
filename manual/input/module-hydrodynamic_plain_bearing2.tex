@@ -244,7 +244,8 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
 \paragraph{Compliance model}
 \begin{Verbatim}[commandchars=\\\{\}]
      \bnt{compliance_model} :: =
-      \{ \bnt{compliance_mod_nodal} | \bnt{compliance_mod_double_nodal} \}
+      \{ \bnt{compliance_mod_nodal} | \bnt{compliance_mod_double_nodal}
+         [ , \kw{deformation dof scale}, \bnt{deformation_dof_scale} ] \}
 
      \bnt{compliance_mod_nodal} :: =
          \kw{matrix}, 1, \bnt{compliance_matrix_data},
@@ -307,6 +308,7 @@ In most situations, all the compliance matrices should be computed by \htmladdno
 \item{Quasi static nodal compliance model (matrix type ``nodal'')}
 \item{Fully dynamic compliance model coupled to the mode shapes of a modal joint (matrix type ``modal substruct total''):} In this case the related modal joint (e.g. \bnt{elem\_id\_modal\_joint}) must be provided in the input file. In addition to that, the related structural node (e.g. \bnt{shaft\_node\_id} or \bnt{bearing\_node\_id}) should be attached to the ``modal node'' of the same modal joint. See also \ref{sec:EL:STRUCT:JOINT:MODAL}.
 \end{itemize}
-
+\paragraph{Scaling}
+Since elastic deformations of the bearing surface are expected to be small, the value of \bnt{deformation\_dof\_scale} can be set to a value which is in the same order of magnitude as the expected deformation.
 \subsubsection{Output}
 Actually, the data structure of all the output is quite complex. So, it is recommended to use \htmladdnormallink{\texttt{mboct-mbdyn-pkg}}{https://github.com/octave-user/mboct-mbdyn-pkg} in order to load and display the output. See also the documentation of ``mbdyn\_post\_ehd\_load\_output''.

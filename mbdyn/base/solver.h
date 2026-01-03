@@ -372,7 +372,9 @@ protected:
 	NonlinearSolverTest::Type ResTest;
 	NonlinearSolverTest::Type SolTest;
 	bool bScale;
-  MyVectorHandler Scale;
+	doublereal sepnorm_epsilon1;
+	doublereal sepnorm_epsilon2;
+	MyVectorHandler Scale;
 
    	/* Parametri per solutore nonlineare */
    	bool bTrueNewtonRaphson;
