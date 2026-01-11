@@ -303,12 +303,153 @@ If the deformation of the shaft and/or bearing surfaces should be considered (e.
 \paragraph{Elastic half space}
 Based on the assumption of a semi-infinite body, the compliance matrix can be computed automatically without any additional data.
 \paragraph{Compliance matrix from file}
-In most situations, all the compliance matrices should be computed by \htmladdnormallink{\texttt{mboct-fem-pkg}}{https://github.com/octave-user/mboct-fem-pkg} and stored in a file \bnt{compliance\_matrix\_file}. The related function is called ``fem\_ehd\_pre\_comp\_mat\_unstruct'' and the following options are available:
-\begin{itemize}
-\item{Quasi static nodal compliance model (matrix type ``nodal'')}
-\item{Fully dynamic compliance model coupled to the mode shapes of a modal joint (matrix type ``modal substruct total''):} In this case the related modal joint (e.g. \bnt{elem\_id\_modal\_joint}) must be provided in the input file. In addition to that, the related structural node (e.g. \bnt{shaft\_node\_id} or \bnt{bearing\_node\_id}) should be attached to the ``modal node'' of the same modal joint. See also \ref{sec:EL:STRUCT:JOINT:MODAL}.
-\end{itemize}
+In most situations, all the compliance matrices should be computed by \htmladdnormallink{\texttt{mboct-fem-pkg}}{https://github.com/octave-user/mboct-fem-pkg} and stored in a file \bnt{compliance\_matrix\_file}. The related function calls are ``fem\_ehd\_pre\_comp\_mat\_linear\_mesh'', ``fem\_ehd\_pre\_comp\_mat\_export'' and ``fem\_cms\_export''.
 \paragraph{Scaling}
 Since elastic deformations of the bearing surface are expected to be small, the value of \bnt{deformation\_dof\_scale} can be set to a value which is in the same order of magnitude as the expected deformation.
 \subsubsection{Output}
-Actually, the data structure of all the output is quite complex. So, it is recommended to use \htmladdnormallink{\texttt{mboct-mbdyn-pkg}}{https://github.com/octave-user/mboct-mbdyn-pkg} in order to load and display the output. See also the documentation of ``mbdyn\_post\_ehd\_load\_output''.
+Actually, the data structure of all the output is quite complex. So, it is recommended to use \htmladdnormallink{\bnt{mboct-mbdyn-pkg}}{https://github.com/octave-user/mboct-mbdyn-pkg} in order to load and display the output. See also the documentation of ``mbdyn\_post\_ehd\_load\_output''.
+\subsection{Pre- and postprocessing}
+\href{https://github.com/octave-user/mboct-fem-pkg}{mboct-fem-pkg} is a Finite Element Toolkit for \href{https://gnu.org/software/octave}{GNU-Octave}. It can be used to generate the input data needed for module-hydrodynamic\_plain\_bearing2. In addition to that, postprocessing of it's output is possible.
+\subsubsection{Pre-processing}
+The following GNU-Octave code gives an example on how to create hydrodynamic bearing data for MBDyn with mboct-fem-pkg.
+\begin{Verbatim}[commandchars=\\\{\}]
+\ty{## Load the package}
+pkg load mboct-fem-pkg;
+\ty{## Load the mesh from a file}
+mesh = \nt{fem_pre_mesh_import}(\kw{"conrod.msh"}, \kw{"gmsh"});
+\ty{## Reorder the mesh}
+mesh = \nt{fem_pre_mesh_reorder}(mesh);
+\ty{## Define the node number of the modal node which will be appended to mesh}
+cms_opt.nodes.modal.number = \nt{rows}(mesh.nodes) + 1;
+\ty{## Define the name of the modal node}
+cms_opt.nodes.modal.name = \kw{"node_id_modal"};
+\ty{## Define the node number of an interface node which will be appended to the mesh}
+cms_opt.nodes.interfaces.number = \nt{rows}(mesh.nodes) + 2;
+\ty{## Define the name of an interface node}
+cms_opt.nodes.interfaces.name = \kw{"node_id_interface1"};
+\ty{## Define the name of the modal element}
+cms_opt.element.name = \kw{"elem_id_modal"};
+\ty{## Locate groups of elements in the mesh}
+grp_id_clamp = \nt{find}([[mesh.groups.tria6].id] == 1);
+grp_id_p1 = \nt{find}([[mesh.groups.tria6].id] == 3);
+grp_id_p2 = \nt{find}([[mesh.groups.tria6].id] == 2);
+\ty{## Define the options for bearing surface "p1"}
+\ty{## Group index of surface elements}
+bearing_surf(1).group_idx = grp_id_p1;
+\ty{## Name of the bearing surface}
+bearing_surf(1).name = \kw{"journal-surface"};
+\ty{## Group id for the interface mesh}
+bearing_surf(1).group_id_interface = \nt{int32}(\kw{30});
+\ty{## Material id for the interface mesh}
+bearing_surf(1).material_id_interface = \nt{int32}(\kw{2});
+\ty{## Reference pressure used to scale the compliance matrix}
+bearing_surf(1).options.reference_pressure = \kw{1e9};
+\ty{## Mesh size for the bearing surface}
+bearing_surf(1).options.mesh_size = \kw{1e-3};
+\ty{## Define the bearing type (e.g. "journal" or "shell")}
+bearing_surf(1).options.bearing_type = \kw{"journal"};
+\ty{## Define type of the compliance matrix}
+bearing_surf(1).options.matrix_type = \kw{"modal substruct total"};
+\ty{## Set this option to true, in order to interpolate across holes within the bearing surface}
+bearing_surf(1).options.interpolate_interface = true;
+\ty{## Bearing radius}
+bearing_surf(1).r = \kw{10.5e-3};
+\ty{## Bearing width}
+bearing_surf(1).w = \kw{8e-3};
+\ty{## Position of bearing center}
+bearing_surf(1).X0 = [\kw{0}; \kw{0}; \kw{50e-3}];
+\ty{## Orientation of the bearing surface}
+bearing_surf(1).R = eye(\kw{3});
+\ty{## Geometric tolerance used to project the structured interface mesh}
+\ty{## to the unstructured surface mesh}
+bearing_surf(1).relative_tolerance = \kw{0};
+bearing_surf(1).absolute_tolerance = \kw{1e-5};
+\ty{## Number of modes to be considered for the bearing surface}
+bearing_surf(1).options.number_of_modes = int32(\kw{30});
+\ty{## Node number for the node in the center of the bearing surface}
+bearing_surf(1).master_node_no = cms_opt.nodes.modal.number;
+\ty{## Define the options for bearing surface "p2"}
+bearing_surf(2).group_idx = grp_id_p2;
+bearing_surf(2).name = \kw{"shell-surface"};
+bearing_surf(2).group_id_interface = int32(\kw{20});
+bearing_surf(2).material_id_interface = int32(\kw{2});
+bearing_surf(2).options.reference_pressure = \kw{1e9};
+bearing_surf(2).options.mesh_size = \kw{1e-3};
+bearing_surf(2).options.bearing_type = \kw{"shell"};
+bearing_surf(2).options.matrix_type = \kw{"modal substruct total"};
+bearing_surf(2).options.interpolate_interface = false;
+bearing_surf(2).r = \kw{10.5e-3};
+bearing_surf(2).w = \kw{5e-3};
+bearing_surf(2).X0 = [\kw{0}; \kw{0}; \kw{20e-3}];
+bearing_surf(2).R = eye(\kw{3});
+bearing_surf(2).relative_tolerance = \kw{0};
+bearing_surf(2).absolute_tolerance = \kw{1e-5};
+bearing_surf(2).options.number_of_modes = int32(\kw{30});
+bearing_surf(2).master_node_no = cms_opt.nodes.interfaces.number;
+\ty{## Create the nodes in the center of the bearing surface}
+\nt{for} i=\kw{1}:\nt{numel}(bearing_surf)
+  mesh.nodes(bearing_surf(i).master_node_no, \kw{1}:\kw{3}) = bearing_surf(i).X0.';
+\nt{endfor}
+\ty{## Connect the nodes in the middle of the bearing surface to the surface mesh via RBE3 elements}
+\nt{for} i=\kw{1}:\nt{numel}(bearing_surf)
+  mesh.elements.rbe3(i) = \nt{fem_pre_mesh_rbe3_from_surf}(mesh, ...
+                                                      bearing_surf(i).group_idx, ...
+                                                      bearing_surf(i).master_node_no);
+\nt{endfor}
+\ty{## Define the number of modes for the modal element}
+cms_opt.modes.number = \nt{int32}(\kw{30});
+\ty{## Define nodal constraints}
+load_case_dof.locked_dof = \nt{false}(\nt{rows}(mesh.nodes), \kw{6});
+load_case_dof.locked_dof(mesh.groups.tria6(grp_id_clamp).nodes, \kw{1}:\kw{3}) = true;
+\ty{## Define the material for the elements}
+mesh.materials.tet10 = \nt{ones}(\nt{rows}(mesh.elements.tet10), \kw{1}, \kw{"int32"});
+\ty{## Define the material properties for the solid body}
+mesh.material_data(1).E = \kw{210000e6};
+mesh.material_data(1).nu = \kw{0.3};
+mesh.material_data.rho = \kw{7850};
+\ty{## Define the material properties for the interface mesh}
+mesh.material_data(2).E = \kw{0.01e6}; \ty{## Should be very soft}
+mesh.material_data(2).nu = \kw{0.3};
+mesh.material_data(2).rho = \kw{0}; \ty{## Should be always zero}
+\ty{## Build the matrices}
+[mesh, ...
+ mat_ass, ...
+ dof_map, ...
+ cms_opt, ...
+ comp_mat, ...
+ load_case_p, ...
+ bearing_surf, ...
+ sol_eig] = \nt{fem_ehd_pre_comp_mat_linear_mesh}(mesh, load_case_dof, cms_opt, bearing_surf);
+\ty{## Output the modal element data}
+\nt{fem_cms_export}(\kw{"conrod_cms"}, mesh, dof_map, mat_ass, cms_opt);
+\ty{## Output the bearing data}
+\nt{for} i=\kw{1}:\nt{numel}(comp_mat)
+  \nt{fem_ehd_pre_comp_mat_export}(comp_mat(i), bearing_surf(i).options, \nt{sprintf}(\kw{"bearing_%d.dat"}, i));
+\nt{endfor}
+\end{Verbatim}
+
+\subsubsection{Post-processing}
+The following GNU-Octave code gives an example how to load the output from MBDyn's module-hydrodynamic\_plain\_bearing2 and how to plot the results. See figure~\ref{fig:hydrodynamic_bearing_pressure} as an example of the output.
+\begin{Verbatim}[commandchars=\\\{\}]
+\ty{## Load the package}
+pkg load mboct-mbdyn-pkg;
+\ty{## Define the output file name}
+options_run.output_file = \kw{"conrod_ehd_case1"};
+\ty{## Run the solver}
+info = \nt{mbdyn_solver_run}(\kw{"conrod_ehd.mbd"}, options_run);
+\ty{## Load MBDyn's log file}
+log_dat = \nt{mbdyn_post_load_log}(options_run.output_file);
+\ty{## Load the bearing data}
+bearing_data = \nt{mbdyn_post_ehd_load_output}(options_run.output_file, log_dat, struct());
+\ty{## Load the simulation time}
+t = \nt{mbdyn_post_load_output_struct}(options_run.output_file);
+\ty{## Plot the results}
+\nt{mbdyn_post_ehd_plot_nodal}(t, bearing_data, struct(), log_dat);
+\end{Verbatim}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{hydrodynamic_bearing}
+\caption{Pressure distribution in the bearing}
+\label{fig:hydrodynamic_bearing_pressure}
+\end{figure}
