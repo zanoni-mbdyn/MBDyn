@@ -2703,6 +2703,8 @@ DataManager::AfterConvergence(void) const
 		break;
 	}
 
+        case ATEND:
+                break;
 	default:
 		ASSERT(0);
 		break;
