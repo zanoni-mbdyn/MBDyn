@@ -70,7 +70,6 @@ class Pid : public UserDefinedElem
         // error
         doublereal PrevInputErr = 0.0;
         doublereal InputError;
-        doublereal dInputError;
         doublereal e1;  // derivator
         doublereal e2;  // anti windup
         // output
@@ -102,6 +101,17 @@ class Pid : public UserDefinedElem
         // integral value
         doublereal Ii;
         doublereal Id;
+
+#ifdef USE_NETCDF
+        MBDynNcVar Var_InputError;
+        MBDynNcVar Var_YOut;
+        MBDynNcVar Var_YpOut;
+        MBDynNcVar Var_YiOut;
+        MBDynNcVar Var_YdOut;
+        MBDynNcVar Var_YbOut;
+        MBDynNcVar Var_Ii;
+        MBDynNcVar Var_Id;
+#endif // USE_NETCDF
 
         ////////////////////////////////////////////////////////////////////////
 
@@ -145,6 +155,7 @@ class Pid : public UserDefinedElem
             SimulationEntity::Hints *ph);
         virtual unsigned int iGetInitialNumDof(void) const;
         // output
+        virtual void OutputPrepare(OutputHandler& OH);
         virtual void Output(OutputHandler& OH) const;
         /* Contributo allo jacobiano durante l'assemblaggio iniziale */
         VariableSubMatrixHandler& InitialAssJac(VariableSubMatrixHandler& WorkMat,

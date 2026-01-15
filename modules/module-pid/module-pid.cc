@@ -147,6 +147,10 @@ Pid::Pid(unsigned int uLabel_a, const DofOwner *pDO,
     Ii = Ii0;
     Id = Id0;
 
+    // initialize error tracking
+    InputError = SetPoint - Measure;
+    PrevInputErr = InputError;
+
     // initialize outputs
     YpOut = 0.0;
     YiOut = Ii0;
@@ -181,21 +185,77 @@ Pid::~Pid()
     NO_OP;
 }
 
+void Pid::OutputPrepare(OutputHandler& OH)
+{
+#ifdef USE_NETCDF
+    ASSERT(OH.IsOpen(OutputHandler::NETCDF));
+    if (bToBeOutput()) {
+        if (OH.UseNetCDF(OutputHandler::LOADABLE)) {
+            std::ostringstream os;
+            os << "elem.loadable." << GetLabel();
+            (void)OH.CreateVar(os.str(), "PID");
+
+            m_sOutputNameBase = os.str();
+
+            Var_InputError = OH.CreateVar<doublereal>(m_sOutputNameBase + ".error",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Input error");
+            Var_YOut = OH.CreateVar<doublereal>(m_sOutputNameBase + ".output",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Output after saturation");
+            Var_YpOut = OH.CreateVar<doublereal>(m_sOutputNameBase + ".P",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Proportional output");
+            Var_YiOut = OH.CreateVar<doublereal>(m_sOutputNameBase + ".I",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Integral output");
+            Var_YdOut = OH.CreateVar<doublereal>(m_sOutputNameBase + ".D",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Derivative output");
+            Var_YbOut = OH.CreateVar<doublereal>(m_sOutputNameBase + ".output_unsat",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Output before saturation");
+            Var_Ii = OH.CreateVar<doublereal>(m_sOutputNameBase + ".I_integral",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Integrator integral");
+            Var_Id = OH.CreateVar<doublereal>(m_sOutputNameBase + ".D_integral",
+                    OutputHandler::Dimensions::Dimensionless,
+                    "Derivative integral");
+        }
+    }
+#endif // USE_NETCDF
+}
+
 void Pid::Output(OutputHandler& OH) const
 {
     if (bToBeOutput())
     {
-        std::ostream& out = OH.Loadable();
-        out << std::setw(8) << GetLabel() // 1: label
-            << " " << InputError          // 2: error
-            << " " << YOut                // 3: output
-            << " " << YpOut               // 4: proportional output
-            << " " << YiOut               // 5: integral output
-            << " " << YdOut               // 6: derivative output
-            << " " << YbOut               // 7: output before saturation
-            << " " << Ii                  // 8: integral (integrator)
-            << " " << Id                  // 9: integral (derivator)
-            << std::endl;
+#ifdef USE_NETCDF
+        if (OH.UseNetCDF(OutputHandler::LOADABLE)) {
+            OH.WriteNcVar(Var_InputError, InputError);
+            OH.WriteNcVar(Var_YOut, YOut);
+            OH.WriteNcVar(Var_YpOut, YpOut);
+            OH.WriteNcVar(Var_YiOut, YiOut);
+            OH.WriteNcVar(Var_YdOut, YdOut);
+            OH.WriteNcVar(Var_YbOut, YbOut);
+            OH.WriteNcVar(Var_Ii, Ii);
+            OH.WriteNcVar(Var_Id, Id);
+        }
+#endif // USE_NETCDF
+
+        if (OH.UseText(OutputHandler::LOADABLE)) {
+            std::ostream& out = OH.Loadable();
+            out << std::setw(8) << GetLabel() // 1: label
+                << " " << InputError          // 2: error
+                << " " << YOut                // 3: output
+                << " " << YpOut               // 4: proportional output
+                << " " << YiOut               // 5: integral output
+                << " " << YdOut               // 6: derivative output
+                << " " << YbOut               // 7: output before saturation
+                << " " << Ii                  // 8: integral (integrator)
+                << " " << Id                  // 9: integral (derivator)
+                << std::endl;
+        }
     }
 }
 
@@ -328,13 +388,9 @@ Pid::AssRes(SubVectorHandler& WorkVec,
     dt = DoTime.dGet();
     // compute input error
     InputError = SetPoint - Measure;
-    // error derivative
-    dInputError = (InputError-PrevInputErr)/dt;
-    PrevInputErr = InputError;
 
     DEBUGCOUT( "InputError: " << InputError << std::endl);
     DEBUGCOUT( "dt: " << dt << std::endl);
-    DEBUGCOUT( "dInputError/dt: " << dInputError << std::endl);
 
     // proportional control
     YpOut = Kp*InputError;
