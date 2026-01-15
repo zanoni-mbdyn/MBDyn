@@ -33,35 +33,55 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "ac/f2c.h"
+extern char *optarg;
+extern int optind;
 
-extern int __FC_DECL__(femgen)(char outname[73], int32_t *iimd, int32_t *iimv, int32_t *idxm);
+#define BUFFER_SIZE 256 
+#define MAX_OUTNAME_LENGTH 73 
+
+/*
+@param outname: output file name (up to 72 characters long) 
+@param is_modal_displacement: initial modal displacements flag (1: enabled, 0: disabled)
+@param is_modal_velocity: initial modal velocities flag (1: enabled, 0: disabled)
+@param mass_direction: index of "mass" component to be used (-1: check consistency, 1: x, 2: y, 3: z)  
+@return: exit code 
+@brief: femgen main routine that convert the mbdyn.tab, mbdyn.mat files into a
+		ASCII finite element model file with extension .fem suitable for MBDyn	
+		modal joint.  
+*/
+extern int femgen(const char outname[MAX_OUTNAME_LENGTH], 
+					int32_t is_modal_displacement, 
+					int32_t is_modal_velocity, 
+					int32_t mass_direction);
 
 static void
 usage(FILE *outf, int rc)
 {
 	fprintf(outf,
 "usage: femgen [-hd] [-m {cxyz}] [[-o] <outfile>]\n"
-"\t-d\t\tno initial modal displacements/velocities\n"
-"\t-h\t\tthis message\n"
-"\t-m <idx>\tindex of \"mass\" component to be used\n"
-"\t\t\t('x', 'y', 'z'; 'c' to check consistency)\n"
-"\t-o <outfile>\toutput file name (up to 72 characters long)\n"
+"	-d		no initial modal displacements/velocities\n"
+"	-h		this message\n"
+"	-m <idx>	index of \"mass\" component to be used\n"
+"			('x', 'y', 'z'; 'c' to check consistency)\n"
+"	-o <outfile>	output file name (up to 72 characters long)\n"
 		);
 	exit(rc);
 
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	char outname[73] = { ' ' };
+	char outname[MAX_OUTNAME_LENGTH] = { ' ' };
+	char buf[BUFFER_SIZE];
 
-	int32_t iimd = 1, iimv = 1, idxm = 0;
-
+	int32_t is_modal_displacement = 1;
+	int32_t is_modal_velocity = 1; 
+	int32_t mass_direction = 0;
+	
 	for (;;) {
 		int opt = getopt(argc, argv, "dhm:o:");
 		if (opt == -1) {
@@ -70,8 +90,8 @@ main(int argc, char *argv[])
 
 		switch (opt) {
 		case 'd':
-			iimd = 0;
-			iimv = 0;
+			is_modal_displacement = 0;
+			is_modal_velocity = 0;
 			break;
 
 		case '?':
@@ -85,19 +105,19 @@ main(int argc, char *argv[])
 
 			switch (optarg[0]) {
 			case 'c':
-				idxm = -1;
+				mass_direction = -1;
 				break;
 
 			case 'x':
-				idxm = 1;
+				mass_direction = 1;
 				break;
 
 			case 'y':
-				idxm = 2;
+				mass_direction = 2;
 				break;
 
 			case 'z':
-				idxm = 3;
+				mass_direction = 3;
 				break;
 
 			default:
@@ -139,10 +159,36 @@ main(int argc, char *argv[])
 		}
 	}
 
+	if (outname[0] == ' ') {
+		fprintf(stdout, "Please enter the model name\n");
+		fflush(stdout);
+		if (fgets(buf, sizeof(buf), stdin) == NULL) {
+			fprintf(stderr, "femgen: no model name provided\n");
+			exit(EXIT_FAILURE);
+		}
+
+		/* trim trailing newline(s) */
+		{
+			size_t len = strlen(buf);
+			while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
+				buf[--len] = '\0';
+			}
+			if (len == 0) {
+				fprintf(stderr, "femgen: no model name provided\n");
+				exit(EXIT_FAILURE);
+			}
+			if (len >= sizeof(outname)) {
+				fprintf(stderr, "femgen: output file name '%s' too long; trim to 72 bytes or less\n", buf);
+				exit(EXIT_FAILURE);
+			}
+			strcpy(outname, buf);
+		}
+	}
+
 	if (optind < argc) {
 		fprintf(stderr, "femgen: extra args ignored\n");
 	}
 
-	return __FC_DECL__(femgen)(outname, &iimd, &iimv, &idxm);
+	return femgen(outname, is_modal_displacement, is_modal_velocity, mass_direction);
 }
 

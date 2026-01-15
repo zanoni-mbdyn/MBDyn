@@ -173,8 +173,8 @@ eu2rot_SOURCES = eu2rot.cc
 eu2phi_SOURCES = eu2phi.cc
 
 if HAVE_FORTRAN
-femgen_SOURCES = femgen.c
-libfemgen_la_SOURCES = femgen_f.f
+femgen_SOURCES = femgen_main.c
+libfemgen_la_SOURCES = femgen.f90
 endif
 
 intg_SOURCES = intg.cc intg.h
