@@ -41,42 +41,49 @@ extern char *optarg;
 extern int optind;
 
 #define BUFFER_SIZE 256 
-#define MAX_OUTNAME_LENGTH 73 
+#define MAX_NAME_LENGTH 256 
 
 /*
-@param outname: output file name (up to 72 characters long) 
+@param input_name: Nastran output basename (for .op2 and .mat files)
+@param output_name: Output .fem filename (if empty, uses input_name)
 @param is_modal_displacement: initial modal displacements flag (1: enabled, 0: disabled)
 @param is_modal_velocity: initial modal velocities flag (1: enabled, 0: disabled)
 @param mass_direction: index of "mass" component to be used (-1: check consistency, 1: x, 2: y, 3: z)  
 @return: exit code 
-@brief: femgen main routine that convert the mbdyn.tab, mbdyn.mat files into a
-		ASCII finite element model file with extension .fem suitable for MBDyn	
-		modal joint.  
+@brief: femgen main routine that converts Nastran .op2 and .mat files into an
+        ASCII finite element model file with extension .fem suitable for MBDyn
+        modal joint.  
 */
-extern int femgen(const char outname[MAX_OUTNAME_LENGTH], 
-					int32_t is_modal_displacement, 
-					int32_t is_modal_velocity, 
-					int32_t mass_direction);
+extern int femgen(const char input_name[MAX_NAME_LENGTH],
+                  const char output_name[MAX_NAME_LENGTH],
+                  int32_t is_modal_displacement, 
+                  int32_t is_modal_velocity, 
+                  int32_t mass_direction);
 
 static void
 usage(FILE *outf, int rc)
 {
 	fprintf(outf,
-"usage: femgen [-hd] [-m {cxyz}] [[-o] <outfile>]\n"
-"	-d		no initial modal displacements/velocities\n"
-"	-h		this message\n"
-"	-m <idx>	index of \"mass\" component to be used\n"
-"			('x', 'y', 'z'; 'c' to check consistency)\n"
-"	-o <outfile>	output file name (up to 72 characters long)\n"
+"usage: femgen <nastran_name> [-o <output_fem>] [-d] [-m {cxyz}] [-h]\n"
+"\n"
+"  <nastran_name>   Nastran output basename (reads <name>.op2 and <name>.mat)\n"
+"  -o <output_fem>  Output .fem filename (default: <nastran_name>.fem)\n"
+"  -d               Disable initial modal displacements/velocities\n"
+"  -m <idx>         Index of 'mass' component ('x', 'y', 'z'; 'c' to check)\n"
+"  -h               Show this help message\n"
+"\n"
+"Examples:\n"
+"  femgen blade              # reads blade.op2, blade.mat -> blade.fem\n"
+"  femgen blade -o modal     # reads blade.op2, blade.mat -> modal.fem\n"
+"  femgen blade.op2          # reads blade.op2, blade.mat -> blade.fem\n"
 		);
 	exit(rc);
-
 }
 
 int main(int argc, char *argv[])
 {
-	char outname[MAX_OUTNAME_LENGTH] = { ' ' };
-	char buf[BUFFER_SIZE];
+	char input_name[MAX_NAME_LENGTH] = { '\0' };
+	char output_name[MAX_NAME_LENGTH] = { '\0' };
 
 	int32_t is_modal_displacement = 1;
 	int32_t is_modal_velocity = 1; 
@@ -128,12 +135,11 @@ int main(int argc, char *argv[])
 
 		case 'o': {
 			size_t len = strlen(optarg);
-			if (len >= sizeof(outname)) {
-				fprintf(stderr, "femgen: output file name '%s' too long; trim to 72 bytes or less\n", optarg);
+			if (len >= sizeof(output_name)) {
+				fprintf(stderr, "femgen: output file name '%s' too long\n", optarg);
 				exit(EXIT_FAILURE);
 			}
-
-			strcpy(outname, optarg);
+			strcpy(output_name, optarg);
 			} break;
 
 		default:
@@ -142,53 +148,27 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Get the required positional argument: Nastran input name */
 	if (optind < argc) {
-		if (outname[0] != ' ') {
-			fprintf(stderr, "femgen: output file name already set using '-o' option\n");
+		size_t len = strlen(argv[optind]);
+		if (len >= sizeof(input_name)) {
+			fprintf(stderr, "femgen: input file name '%s' too long\n", argv[optind]);
 			exit(EXIT_FAILURE);
-
-		} else {
-			size_t len = strlen(argv[optind]);
-			if (len >= sizeof(outname)) {
-				fprintf(stderr, "femgen: output file name '%s' too long; trim to 72 bytes or less\n", argv[optind]);
-				exit(EXIT_FAILURE);
-			}
-
-			strcpy(outname, argv[optind]);
-			optind++;
 		}
+		strcpy(input_name, argv[optind]);
+		optind++;
 	}
 
-	if (outname[0] == ' ') {
-		fprintf(stdout, "Please enter the model name\n");
-		fflush(stdout);
-		if (fgets(buf, sizeof(buf), stdin) == NULL) {
-			fprintf(stderr, "femgen: no model name provided\n");
-			exit(EXIT_FAILURE);
-		}
-
-		/* trim trailing newline(s) */
-		{
-			size_t len = strlen(buf);
-			while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
-				buf[--len] = '\0';
-			}
-			if (len == 0) {
-				fprintf(stderr, "femgen: no model name provided\n");
-				exit(EXIT_FAILURE);
-			}
-			if (len >= sizeof(outname)) {
-				fprintf(stderr, "femgen: output file name '%s' too long; trim to 72 bytes or less\n", buf);
-				exit(EXIT_FAILURE);
-			}
-			strcpy(outname, buf);
-		}
+	/* Check if input name was provided */
+	if (input_name[0] == '\0') {
+		fprintf(stderr, "femgen: missing required argument <nastran_name>\n\n");
+		usage(stderr, EXIT_FAILURE);
 	}
 
 	if (optind < argc) {
-		fprintf(stderr, "femgen: extra args ignored\n");
+		fprintf(stderr, "femgen: extra arguments ignored\n");
 	}
 
-	return femgen(outname, is_modal_displacement, is_modal_velocity, mass_direction);
+	return femgen(input_name, output_name, is_modal_displacement, is_modal_velocity, mass_direction);
 }
 
