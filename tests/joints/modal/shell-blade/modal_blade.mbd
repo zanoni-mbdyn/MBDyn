@@ -200,7 +200,7 @@ begin: elements;
 		list, 1, 2, 3, 4, 5, 6,    
 		2548,
 		no damping,
-		"blade-modes-test.fem",
+		"blade-modes.fem",
 		11,					# N. Interface nodes 
 			674, 	BEAM + 0,  null, 
 			785, 	BEAM + 1,  null,
