@@ -1,18 +1,22 @@
 $ $Header$
-$ Simplified ALTER for MSC/NASTRAN 2024.1 SOL 106
-$ SOL 106 NONLINEAR STATIC + MODAL ANALYSIS - Simplified output using standard OP2
+$ ALTER for MSC/NASTRAN 2024.1 SOL 106
+$ SOL 106 NONLINEAR STATIC + MODAL ANALYSIS 
 $
 $ MBDyn (C) is a multibody analysis code.
 $ http://www.mbdyn.org
 $ 
 $ USAGE:
 $   In your BDF file:
-$     SOL 106
-$     INCLUDE 'MBDyn_NASTRAN_alter_SOL106.nas'
+$     INCLUDE 'MBDyn_NASTRAN_alter_SOL106_2024.nas'
 $     CEND
-$   Enable standard OP2 output in CASE CONTROL:
+$
+$   Enable standard .op2 output in CASE CONTROL:
 $     DISPLACEMENT(PLOT) = ALL
 $     VECTOR(PLOT) = ALL
+$
+$   Enable .op2 output with geometry in the BULK DATA:
+$     PARAM,OGEOM,YES
+$     PARAM,POST,-1
 $
 $ OUTPUT FILES:
 $   mbdyn_modal.mat : Modal matrices (MHH, KHH, LUMPMS) via OUTPUT4
@@ -24,9 +28,6 @@ $   femgen mymodel -o output    -> reads mymodel.op2, mbdyn_modal.mat -> output.
 $
 $ NOTE: femgen automatically finds mbdyn_modal.mat if <model>.mat doesn't exist
 $
-$ WHAT THIS DOES:
-$   - Outputs modal mass (MHH) and stiffness (KHH) from prestressed state
-$   - Outputs lumped mass diagonal (LUMPMS)
 $--------------------------------------------------------------------------
 ASSIGN OUTPUT4='mbdyn_modal.mat' STATUS=UNKNOWN UNIT=15
 SOL 106
@@ -49,5 +50,4 @@ ALTER        2700
 DIAGONAL     MGG/LUMPMS/'COLUMN'/1.  $
 OUTPUT4      LUMPMS,,,//-2/15 $
 ENDALTER
-
 

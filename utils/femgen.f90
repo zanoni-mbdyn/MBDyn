@@ -8,10 +8,10 @@
 !   suitable for MBDyn's modal joint element.
 !
 ! INPUT FILES
-!   mbdyn.mat : Nastran OUTPUT4 binary file containing matrices:
-!               - MHH    : Modal mass matrix (n_modes x n_modes)
-!               - KHH    : Modal stiffness matrix (n_modes x n_modes)
-!               - LUMPMS : Lumped mass diagonal (6*n_nodes x 1)
+!   mbdyn_modal.mat : Nastran OUTPUT4 binary file containing matrices:
+!                    - MHH    : Modal mass matrix (n_modes x n_modes)
+!                    - KHH    : Modal stiffness matrix (n_modes x n_modes)
+!                    - LUMPMS : Lumped mass diagonal (6*n_nodes x 1)
 !
 !   <name>.op2 : Standard Nastran OP2 binary file containing:
 !               - GEOM1  : Grid coordinates (requires PARAM,OGEOM,YES)

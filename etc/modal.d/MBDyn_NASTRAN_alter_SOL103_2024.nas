@@ -1,17 +1,22 @@
 $ $Header$
-$ Simplified ALTER for MSC/NASTRAN 2024.1 SOL 103
-$ SOL 103 MODAL ANALYSIS - Simplified output using standard OP2
+$ ALTER for MSC/NASTRAN 2024.1 SOL 103
+$ SOL 103 MODAL ANALYSIS - output using standard OP2
 $
 $ MBDyn (C) is a multibody analysis code.
 $ http://www.mbdyn.org
 $ 
 $ USAGE:
 $   In your BDF file:
-$     INCLUDE 'MBDyn_NASTRAN_alter_SOL103_simplified.nas'
+$     INCLUDE 'MBDyn_NASTRAN_alter_SOL103_2024.nas'
 $     CEND
-$   Enable standard OP2 output in CASE CONTROL:
+$
+$   Enable standard .op2 output in CASE CONTROL:
 $     DISPLACEMENT(PLOT) = ALL
 $     VECTOR(PLOT) = ALL
+$
+$   Enable .op2 output with geometry in the BULK DATA:
+$     PARAM,OGEOM,YES
+$     PARAM,POST,-1
 $
 $ OUTPUT FILES:
 $   mbdyn_modal.mat : Modal matrices (MHH, KHH, LUMPMS) via OUTPUT4
@@ -41,7 +46,7 @@ EQUIVX       MIX/MHH/-1 $
 $ Build KHH (diagonal eigenvalues matrix) from LAMA table
 LAMX         , ,LAMA/KHH/-1 $
 
-$ Output MHH and KHH to mbdyn.mat (continue writing, don't close)
+$ Output MHH and KHH to mbdyn_modal.mat (continue writing, don't close)
 OUTPUT4      MHH,KHH,,//-1/15 $
 ENDALTER
 
