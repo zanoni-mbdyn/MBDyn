@@ -697,6 +697,7 @@ Annotated examples are provided in directory \texttt{contrib/CodeAster/cms/}.
 
 \section{NASTRAN Procedure}
 \label{sec:APP:EL:STRUCT:JOINT:MODAL:NASTRAN}
+\emph{WARNING: This procedure has been tested with MSC NASTRAN 2024.1}
 
 The \nt{fem\_data\_file} can be generated using NASTRAN,
 by means of the \kw{ALTER} cards provided in directory \texttt{etc/modal.d/}
@@ -705,75 +706,90 @@ of the distribution.
 The steps of the procedure are as follows:
 \begin{enumerate} % procedure
 
-\item prepare a NASTRAN input card deck, made of bulk data,
-eigenanalysis properties data and/or static loads (details about 
-this phase are currently missing and will be provided in future 
-releases of the manual).
+\item Prepare a NASTRAN input card deck, made of bulk data,
+eigenanalysis properties data (SOL103) and/or non-linear static loads (SOL106). 
 
-\item complete the NASTRAN input file by putting some specific
-\kw{ALTER} cards.
-In detail:
-\begin{enumerate}
-\item the file \texttt{MBDyn\_NASTRAN\_alter\_1.nas} contains
-	\kw{ALTER} definitions for static solutions; appropriate
-	loading subcases for each solution must be provided
-	in the case control and in the bulk data sections
-	of the input file;
+\item Add the following \kw{OUTPUT} in the case control section, to request
+the output of displacements and eigenvectors for all nodes in \texttt{.op2} format: 
+	\begin{verbatim}
+		DISPLACEMENT(PLOT) = ALL 
+		VECTOR(PLOT) = ALL
+	\end{verbatim}
+\item Add the following \kw{PARAM} in the bulk data section, to request 
+	the \texttt{.op2} file format and the output of the initial geometry:
+	\begin{verbatim}
+		PARAM,POST, -1
+		PARAM,OGEOM,YES
+	\end{verbatim}
+\item Complete the NASTRAN input file by including some specific 
+	\kw{ALTER} cards at the beginning of the input file.
+	In detail:
+	\begin{enumerate}
+	\item \texttt{MBDyn\_NASTRAN\_alter\_1.nas} contains
+		\kw{ALTER} definitions for static solutions; appropriate
+		loading subcases for each solution must be provided
+		in the case control and in the bulk data sections
+		of the input file \textit{WARNING: Deprecated};
 
-	\emph{FIXME: I don't know how to use static shapes only}.
+		\emph{FIXME: I don't know how to use static shapes only}.
 
-\item the file \texttt{MBDyn\_NASTRAN\_alter\_2.nas} contains
-	\kw{ALTER} definitions for eigenanalysis solutions;
-	an appropriate eigenanalysis method, with the related
-	data card must be provided in the case control 
-	and in the bulk data sections of the input file;
+	\item \texttt{MBDyn\_NASTRAN\_alter\_2.nas} contains
+		\kw{ALTER} definitions for eigenanalysis solutions;
+		an appropriate eigenanalysis method, with the related
+		data card must be provided in the case control 
+		and in the bulk data sections of the input file 
+		\textit{WARNING: Deprecated};
 
-	\emph{FIXME: I don't know how to use this together
-		with static shapes; I only get the normal mode shapes,
-		even if the matrices are complete}.
+		\emph{FIXME: I don't know how to use this together
+			with static shapes; I only get the normal mode shapes,
+			even if the matrices are complete}.
 
-\item the file \texttt{MBDyn\_NASTRAN\_alter\_3.nas} contains
-	\kw{ALTER} definitions for eigenanalysis solutions;
-	an appropriate eigenanalysis method, with the related
-	data card must be provided in the case control 
-	and in the bulk data sections of the input file;
+	\item \texttt{MBDyn\_NASTRAN\_alter\_SOL103\_2024.nas} contains
+		\kw{ALTER} definitions for eigenanalysis solutions (SOL103);
+		an appropriate eigenanalysis method, with the related
+		data card must be provided in the case control 
+		and in the bulk data sections of the input file;
 
-	\emph{Note: this works; see} \texttt{tests/modal/beam.README}.
+		\emph{Note: this works; see} \texttt{tests/joints/modal/beam.README} and 
+		\texttt{tests/joints/modal/goland-wing}.
 
-\end{enumerate}
-Exactly one of these files must be included at the very top 
-of the NASTRAN input file;
-they already include the appropriate \kw{SOL} statement, so the
-input file must begin with
-\begin{verbatim}
-$ Replace '#' below with number that matches your needs
-INCLUDE 'MBDyn_NASTRAN_alter_#.nas'
-CEND
-$... any other executive control and bulk data card
-\end{verbatim}
-The static solution of case (a: \kw{SOL 101}) and the eigensolution
-of case (b: \kw{SOL 103}) need to be performed in sequence; 
-if only the eigensolution is to be used, the \kw{ALTER} file 
-of case (c: \kw{SOL 103}) must be used.
-The static solution of case (a) generates a binary file \texttt{mbdyn.stm};
-the eigensolutions of cases (b--c) generate two binary files, 
-\texttt{mbdyn.mat} and \texttt{mbdyn.tab}, which, in case (b), include
-the static solutions as well.
-The \kw{ALTER} currently included in the MBDyn distribution work 
-correctly only with the following \kw{PARAM} data card:
-\begin{verbatim}
-PARAM,POST,-1 
-\end{verbatim}
+	\item \texttt{MBDyn\_NASTRAN\_alter\_SOL106\_2024.nas} contains
+		\kw{ALTER} definitions for a non-linear static analysis followed by an 
+		eigenanalysis solutions (SOL106);
 
+		\emph{Note: this works; see} \texttt{tests/joints/modal/shell-blade}
 
+	\end{enumerate}
+
+	Exactly one of these files must be included at the very top 
+	of the NASTRAN input file. 
+	They already include the appropriate \kw{SOL} statement, so the
+	input file must begin with: 
+	\begin{verbatim}
+		$ Replace '#' below with number that matches your needs
+		INCLUDE 'MBDyn_NASTRAN_alter_#.nas'
+		CEND
+		$... any other executive control and bulk data card
+	\end{verbatim}
+
+	Both \kw{SOL 103} and \kw{SOL 106} produce one binary file \nt{mbdyn\_modal.mat} which
+	contains the modal mass and stiffness matrices and the lumped nodal masses.  
+	The deformed configuration and the mode shapes are written in the \texttt{.op2} file. 
 \item Run NASTRAN.
 
-
 \item Run the tool \texttt{femgen}, which transforms the above binary files
-into the \nt{fem\_data\_file}.
-The file name is currently requested as terminal input; this is the name 
-of the file that will be used in the input model for \texttt{mbdyn}.
-Conventionally, the \texttt{.fem} extension is used.
+	into the \nt{fem\_data\_file} using the syntax: 
+	\begin{verbatim}
+		femgen <{out_nastran}> [-o <{fem_data_file}>]   	
+	\end{verbatim}
+	where <\nt{out\_nastran}> is the base name of the output files (without extension) 
+	and <\nt{fem\_data\_file}> is the name of the \texttt{.fem} output file to be generated.
+	If the \texttt{-o} option is omitted, the output file name defaults to
+	<\nt{out\_nastran}.\texttt{fem}>. 
+
+\item To obtain the coordinates of the desired interface nodes, you can use the python script
+	\texttt{parse_fem.py} provided in directory \texttt{etc/modal.d/} modified as needed with the 
+	name of the \texttt{.fem} file and the array of node ids to be extracted. 
 
 \end{enumerate} % procedure
 
