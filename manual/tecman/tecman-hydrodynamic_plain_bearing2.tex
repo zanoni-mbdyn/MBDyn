@@ -65,7 +65,7 @@ The following symbols are used:
 \item[$R$] Radius of the bearing shell
 \item[$r$] Radius of the bearing journal
 \item[$B$] Width of the bearing shell or bearing journal
-\item[$h$] Radial radial gap height
+\item[$h$] Radial gap height
 \end{description}
 
 \begin{figure}[htb]
@@ -821,42 +821,25 @@ d\boldsymbol{F}_2^{\left(\boldsymbol{R}_2\right)} \label{eq:h310}
 
 \subsubsection{Forces on the bearing journal}
 \label{sec:h400}
-Since the shear stresses due to fluid friction are different on the bearing journal at $y=h$ and on the bearing shell at $y=0$, the reaction forces on both sides must be integrated. For this purpose, the shear stresses must be transformed from the mesh to the opposite side. This transformation assumes that the pressure $p$ also acts perpendicular to the surface on the opposite side and that the shear stresses $\tau_{xy}$ and $\tau_{yz}$ lie in the tangential plane of the surface of the bearing journal. However, as the bearing journal can tilt relative to the bearing shell or the coordinate system $\boldsymbol{R}_{b1}$ can be oriented differently to the coordinate system $\boldsymbol{R}_{b2}$, the modified tangential coordinate system $\bar{\boldsymbol{R}}_{t1}$ is introduced. This is defined as follows:
-\begin{IEEEeqnarray}{rCl}
-\bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_2 & = & \boldsymbol{R}_1 \, \boldsymbol{R}_{b1} \,
-\boldsymbol{R}_{t1} \, \boldsymbol{e}_2 \\
-\bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_1 & = & \left\langle\bar{\boldsymbol{R}}_{t1} \,
-\boldsymbol{e}_1 \right\rangle \, \boldsymbol{R}_2 \, \boldsymbol{R}_{b2} \, \boldsymbol{R}_{t2} \,
-\boldsymbol{e}_3 \\
-\bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_3 & = & \left\langle \bar{\boldsymbol{R}}_{t1} \,
-\boldsymbol{e}_1 \right\rangle \bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_2
-\end{IEEEeqnarray}
-The axes of the coordinate system $\bar{\boldsymbol{R}}_{t1}$ must still be scaled accordingly.
-\begin{IEEEeqnarray}{rCl}
-\left\Vert \bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_1 \right\Vert & \equiv & 1 \\
-\left\Vert \bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_2 \right\Vert & \equiv & 1 \\
-\left\Vert \bar{\boldsymbol{R}}_{t1} \, \boldsymbol{e}_3 \right\Vert & \equiv & 1
-\end{IEEEeqnarray}
-If the bearing journal is tilted relative to the bearing shell, the axes $\bar{\boldsymbol{R}}_{t1}\,\boldsymbol{e}_1$ and $\boldsymbol{R}_{t2} \, \boldsymbol{e}_1$ are no longer parallel. However, as the relative bearing clearance $\Psi$ is very small with the usual bearing dimensions, this angle will be very small.
-
-In contrast to section~\ref{sec:h300}, the integration of the reaction forces on the bearing journal takes place in the global coordinate system.
+Since the shear stresses due to fluid friction are different on the bearing journal at $y=h$ and on the bearing shell at $y=0$, the reaction forces on both sides must be integrated. The integration of the reaction forces on the bearing journal also takes place in the coordinate system of the bearing shell. In case of an axial movement between journal and shell surface, the projected distance $\lambda$ in equation~\ref{eq:h411} must be considered in the moment equilibrium. This is important, especially for piston to cylinder liner contacts.
 
 \begin{IEEEeqnarray}{rCl}
-d\boldsymbol{F}_1 & = & \bar{\boldsymbol{R}}_{t1} \,
+d\boldsymbol{F}_1^{\left(\boldsymbol{R}_2\right)} & = & \boldsymbol{R}_{b2}\,\boldsymbol{R}_{t2} \,
 \begin{pmatrix}
 \left.-\tau_{xy}\right\vert_{y=h} -\tau_{asp_{xy}} \cr
 p + p_{asp} \cr
 \left.-\tau_{yz}\right\vert_{y=h} - \tau_{asp_{yz}}
-\end{pmatrix} \, dA_1 \\
-d\boldsymbol{M}_1 & = & \left\langle \boldsymbol{R}_1 \, \boldsymbol{R}_{b1} \, \boldsymbol{v}_1
-\right\rangle \, d\boldsymbol{F}_1 \\
-\boldsymbol{F}_1 & = & \int_{A_1} d\boldsymbol{F}_1 \label{eq:h410} \\
-\boldsymbol{M}_1 & = & \left\langle \boldsymbol{R}_1 \, \boldsymbol{o}_1 \right\rangle \,
-\boldsymbol{F}_1 + \int_{A_1} d\boldsymbol{M}_1 \label{eq:h411}
+\end{pmatrix} \, dA_2 \\
+d\boldsymbol{M}_1^{\left(\boldsymbol{R}_2\right)} & = & \left\langle \boldsymbol{R}_{b2} \, \boldsymbol{v}_2
+\right\rangle \, d\boldsymbol{F}_1^{\left(\boldsymbol{R}_2\right)} \\
+\boldsymbol{F}_1 & = & \boldsymbol{R}_2 \, \int_{A_2} d\boldsymbol{F}_1^{\left(\boldsymbol{R}_2\right)} \label{eq:h410} \\
+\boldsymbol{M}_1 & = & \left\langle \boldsymbol{R}_1 \, \left(\boldsymbol{o}_1 + \boldsymbol{R}_{b1} \, \boldsymbol{e}_3 \, \lambda \right) \right\rangle \,
+\boldsymbol{F}_1 + \boldsymbol{R}_2\,\int_{A_2} d\boldsymbol{M}_1^{\left(\boldsymbol{R}_2\right)} \label{eq:h411} \\
+\lambda & = & -\frac{\boldsymbol{e}_3^T\,\boldsymbol{R}_{b2}^T\,\left[\boldsymbol{R}_2^T\,\left(\boldsymbol{X}_1 + \boldsymbol{R}_1\,\boldsymbol{o}_1 - \boldsymbol{X}_2\right) - \boldsymbol{o}_2\right]}{\boldsymbol{e}_3^T\,\boldsymbol{R}_{b2}^T\,\boldsymbol{R}_2^T\,\boldsymbol{R}_1\,\boldsymbol{R}_{b1}\,\boldsymbol{e}_3}
 \end{IEEEeqnarray}
 
 \subsection{The mesh moves with the bearing journal}
-The procedure with the mesh on the bearing journal is the same as described in section~\ref{sec:h350}.
+In this case, the same procedure is applied as described in section~\ref{sec:h350}.
 \subsubsection{Forces on the bearing journal}
 The following applies to the forces on the bearing journal:
 \begin{IEEEeqnarray}{rCl}
@@ -879,50 +862,31 @@ d\boldsymbol{M}_1^{\left(\boldsymbol{R}_1\right)} \label{eq:h421}
 \end{IEEEeqnarray}
 
 \subsubsection{Forces on the bearing shell}
-The transformation of the forces from the bearing journal to the bearing shell is analogous to
-Section~\ref{sec:h400}.
+Also the forces at the bearing shell are calculated analogous to section~\ref{sec:h400}.
 \begin{IEEEeqnarray}{rCl}
-\bar{\boldsymbol{R}}_{t2} \, \boldsymbol{e}_2 & = & \boldsymbol{R}_2 \, \boldsymbol{R}_{b2} \,
-\boldsymbol{R}_{t2} \, \boldsymbol{e}_2 \\
-\bar{\boldsymbol{R}}_{t2} \, \boldsymbol{e}_1 & = & \left\langle \bar{\boldsymbol{R}}_{t2} \,
-\boldsymbol{e}_2 \right\rangle \, \boldsymbol{R}_1 \, \boldsymbol{R}_{b1} \, \boldsymbol{R}_{t1} \,
-\boldsymbol{e}_3 \\
-\bar{\boldsymbol{R}}_{t2} \, \boldsymbol{e}_3 & = & \left\langle \bar{\boldsymbol{R}}_{t2} \,
-\boldsymbol{e}_1 \right\rangle \, \boldsymbol{R}_{t2} \, \boldsymbol{e}_2
-\end{IEEEeqnarray}
-
-\begin{IEEEeqnarray}{rCl}
-\left\Vert \bar{\boldsymbol{R}}_{t2} \, \boldsymbol{e}_1 \right\Vert & \equiv & 1 \\
-\left\Vert \bar{\boldsymbol{R}}_{t2} \, \boldsymbol{e}_2 \right\Vert & \equiv & 1 \\
-\left\Vert \bar{\boldsymbol{R}}_{t2} \, \boldsymbol{e}_3 \right\Vert & \equiv & 1
-\end{IEEEeqnarray}
-
-For the forces on the bearing shell, this results in
-\begin{IEEEeqnarray}{rCl}
-d\boldsymbol{F}_2 & = & \bar{\boldsymbol{R}}_{t2} \,
+d\boldsymbol{F}_2^{\left(\boldsymbol{R}_1\right)} & = & \boldsymbol{R}_{b1} \, \boldsymbol{R}_{t1} \,
 \begin{pmatrix}
 \left.\tau_{xy}\right\vert_{y=0} + \tau_{asp_{xy}} \cr
 -p - p_{asp} \cr
 \left.\tau_{yz}\right\vert_{y=0} + \tau_{asp_{yz}}
 \end{pmatrix}
-\, dA_2 \\
-d\boldsymbol{M}_2 & = & \left\langle \boldsymbol{R}_2 \, \boldsymbol{R}_{b2} \, \boldsymbol{v}_2
-\right\rangle \, d\boldsymbol{F}_2 \\
-\boldsymbol{F}_2 & = & \int_{A_2} d\boldsymbol{F}_2 \label{eq:h430} \\
-\boldsymbol{M}_2 & = & \left\langle \boldsymbol{R}_2 \, \boldsymbol{o}_2 \right\rangle \,
-\boldsymbol{F}_2 + \int_{A_2} d\boldsymbol{M}_2 \label{eq:h431}
+\, dA_1 \\
+d\boldsymbol{M}_2^{\left(\boldsymbol{R}_1\right)} & = & \left\langle \boldsymbol{R}_{b1} \, \boldsymbol{v}_{1} \, \right\rangle \, d\boldsymbol{F}_2^{\left(\boldsymbol{R}_1\right)} \\
+\boldsymbol{F}_2 & = & \boldsymbol{R}_1 \, \int_{A_1} d\boldsymbol{F}_2^{\left(\boldsymbol{R}_1\right)} \label{eq:h430} \\
+\boldsymbol{M}_2 & = & \left\langle \boldsymbol{R}_2 \, \left(\boldsymbol{o}_2 + \boldsymbol{R}_{b2} \, \boldsymbol{e}_3 \, \lambda \right) \right\rangle \,
+\boldsymbol{F}_2 + \boldsymbol{R}_1 \, \int_{A_1} d\boldsymbol{M}_2^{\left(\boldsymbol{R}_1\right)} \label{eq:h431} \\
+\lambda & = & \frac{\boldsymbol{e}_3^T\,\boldsymbol{R}_{b1}^T\,\left[\boldsymbol{R}_1^T\left(\boldsymbol{X}_1 - \boldsymbol{X}_2 - \boldsymbol{R}_2\,\boldsymbol{o}_2\right) + \boldsymbol{o}_1\right]}{\boldsymbol{e}_3^T\,\boldsymbol{R}_{b1}^T\,\boldsymbol{R}_1^T\,\boldsymbol{R}_2\,\boldsymbol{R}_{b2}\,\boldsymbol{e}_3}
 \end{IEEEeqnarray}
 
-\subsection{The direct determination of frictional losses}
+\subsection{Determination of frictional losses}
 Theoretically, the frictional losses could also be determined from the bearing reaction forces. However, it is not possible to separate dry friction from fluid friction and it is difficult to separate the dissipative components from the conservative components. For this reason, the friction power was determined independently of the reaction forces.
 \begin{IEEEeqnarray}{rCl}
-P_f & = & \int_A \left(-U_{1x} \, \left.\tau_{xy}\right\vert_{y=h} - U_{1z} \,
-\left.\tau_{yz}\right\vert_{y=h} + U_{2x} \, \left.\tau_{xy}\right\vert_{y=0} + U_{2z} \,
-\left.\tau_{yz}\right\vert_{y=0}\right)\,dA \\
-P_{asp} & = & \int_A \left(-U_{1x} \, \tau_{asp_{xy}} - U_{1z} \,
-\tau_{asp_{yz}} + U_{2x} \, \tau_{asp_{xy}} + U_{2z} \, \tau_{asp_{yz}}\right)\,dA
+P_f & = & -\int_A \left[\left(\Delta U_{1x} - \Delta U_{2x}\right)\, \left.\tau_{xy}\right\vert_{y=0} + \left(\Delta U_{1z} - \Delta U_{2z}\right)\,
+\left.\tau_{yz}\right\vert_{y=0} \right]\,dA \label{eq:h500} \\
+P_{asp} & = & -\int_A \left[\left(\Delta U_{1x} - \Delta U_{2x}\right)\, \tau_{asp_{xy}} + \left(\Delta U_{1z} - \Delta U_{2z}\right)\,
+\tau_{asp_{yz}}\right]\,dA \label{eq:h501}
 \end{IEEEeqnarray}
-
+The negative sign in equation~\ref{eq:h500} and equation~\ref{eq:h501} is due to the convention, that losses of kinetic energy should have a negative sign.
 \begin{description}
 \item[$P_f$] Frictional losses due to fluid friction
 \item[$P_{asp}$] Frictional losses due to dry friction
@@ -1197,7 +1161,7 @@ In equation~\ref{eq:hfe_500} the following rule was used for the evaluation of t
 \end{description}
 
 \paragraph{Numerical integration of the element matrices}
-The numerical integration of the element matrices is carried out using the Gaussian Legendre Quatradur. The integration points and the weighting factors were taken from \cite{BATHE2016}. For an undistorted element with four nodes, a single Gaussian point is sufficient to obtain accurate results, and for an undistorted element with nine nodes, four Gaussian points are sufficient.
+The numerical integration of the element matrices is carried out using the Gauss Legendre Quadrature. The integration points and the weighting factors were taken from \cite{BATHE2016}. For an undistorted element with four nodes, a single Gaussian point is sufficient to obtain accurate results, and for an undistorted element with nine nodes, four Gaussian points are sufficient.
 
 \subsection{Structure of the system of linear equations}
 The system of linear equations is formally constructed using the Boolean matrices $\boldsymbol{T}_e$. However, an index table is used internally in the program which assigns the corresponding global degrees of freedom to the individual nodes.
@@ -1430,7 +1394,7 @@ The additional terms ``$b$'' are contributions from the automatic modal element.
 \item[$\boldsymbol{M}^{\star}$] Additional moment contributions form the modal joint element. See section~\ref{sec:modal-element}.
 \end{description}
 \subsubsection{Implementation}
-It must be emphazised, that the process of generating the matrices $\boldsymbol{M}_{red}$, $\boldsymbol{D}_{red}$, $\boldsymbol{K}_{red}$, $\boldsymbol{T}_{red}$, $\boldsymbol{D}$ and $\boldsymbol{E}$ is not built into MBDyn. For that purpose it is necessary to use the toolkit \href{https://github.com/octave-user/mboct-fem-pkg}{mboct-fem-pkg}.
+It must be emphasized, that the process of generating the matrices $\boldsymbol{M}_{red}$, $\boldsymbol{D}_{red}$, $\boldsymbol{K}_{red}$, $\boldsymbol{T}_{red}$, $\boldsymbol{D}$ and $\boldsymbol{E}$ is not built into MBDyn. For that purpose it is necessary to use the toolkit \href{https://github.com/octave-user/mboct-fem-pkg}{mboct-fem-pkg}.
 The related function call to generate those matrices is ``fem\_ehd\_pre\_comp\_mat\_linear\_mesh''. Furthermore, the functions ``fem\_ehd\_pre\_comp\_mat\_export'' and ``fem\_cms\_export'' can be used to export all those matrices to a file format which can be read by MBDyn. See also MBDyn's \emph{input-manual}.
 
 \subsection{Interpolation from the bearing journal to the bearing shell and visa verse}
