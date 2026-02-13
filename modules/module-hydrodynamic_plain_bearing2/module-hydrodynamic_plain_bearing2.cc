@@ -3798,9 +3798,9 @@ namespace {
                           const SpGradientVectorHandler<T>& XCurr,
                           SpFunctionCall func);
 
-          inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const std::array<SpColVectorA<doublereal, 2, 12>, iNumNodes>& Ui, doublereal dTau_xy, doublereal dTau_yz) const;
-          inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const std::array<SpColVectorA<SpGradient, 2, 12>, iNumNodes>& Ui, const SpGradient& dTau_xy, const SpGradient& dTau_yz) const;
-          inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const std::array<SpColVectorA<GpGradProd, 2, 12>, iNumNodes>& Ui, const GpGradProd& dTau_xy, const GpGradProd& dTau_yz) const;
+          inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<doublereal, 2>& Ui, doublereal dTau_xy, doublereal dTau_yz) const;
+          inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<SpGradient, 2>& Ui, const SpGradient& dTau_xy, const SpGradient& dTau_yz) const;
+          inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<GpGradProd, 2>& Ui, const GpGradProd& dTau_xy, const GpGradProd& dTau_yz) const;
           inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, doublereal dPf) const;
           static inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpGradient& dPf);
           static inline void AddFrictionLoss(HydroRootBase::FrictionLossType type, const GpGradProd& dPf);
@@ -16631,11 +16631,10 @@ namespace {
 
           const auto& Rbt1 = pNode->GetTangentCoordSys();
 
-          const SpColVector<T, 3> P1Dot_R1(Transpose(R1) * P1Dot, oDofMap);
-          const SpColVector<T, 3> P2Dot_R1(Transpose(R1) * P2Dot, oDofMap);
+          const SpColVector<T, 3> DeltaPDot_R1(Transpose(R1) * (P2Dot - P1Dot), oDofMap);
 
-          U1.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt1)) * P1Dot_R1, oDofMap);
-          U2.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt1)) * P2Dot_R1, oDofMap);
+          U1.ResizeReset(2, 0);
+          U2.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt1)) * DeltaPDot_R1, oDofMap);
 
           U.MapAssign((U2 - U1) * 0.5, oDofMap);
 
@@ -17033,7 +17032,7 @@ namespace {
           pGetNode2()->GetXCurr(X2, dCoef, func);
           pGetNode2()->GetRCurr(R2, dCoef, func);
 
-          const T lambda = -Dot(Rb1l.GetCol(3), (Transpose(R1) * (X1 - X2 - R2 * o2) + o1))
+          const T lambda = Dot(Rb1l.GetCol(3), (Transpose(R1) * (X1 - X2 - R2 * o2) + o1))
                / Dot(Rb1l.GetCol(3), (Transpose(R1) * (R2 * Rb2l.GetCol(3))));
           const SpColVector<T, 3> F1l((R1 * oReact.F1_R1) * dInitAss, oDofMap);
           const SpColVector<T, 3> M1l((R1 * oReact.M1_R1) * dInitAss + Cross((R1 * o1), F1l), oDofMap);
@@ -17695,11 +17694,10 @@ namespace {
 
           const auto& Rbt2 = pNode->GetTangentCoordSys();
 
-          const SpColVector<T, 3> dP1_dt_R2(Transpose(R2) * dP1_dt, oDofMap);
-          const SpColVector<T, 3> dP2_dt_R2(Transpose(R2) * dP2_dt, oDofMap);
+          const SpColVector<T, 3> Delta_dP_dt_R2(Transpose(R2) * (dP1_dt - dP2_dt), oDofMap);
 
-          U1.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt2)) * dP1_dt_R2, oDofMap);
-          U2.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt2)) * dP2_dt_R2, oDofMap);
+          U1.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt2)) * Delta_dP_dt_R2, oDofMap);
+          U2.ResizeReset(2, 0);
 
           U.MapAssign((U1 - U2) * 0.5, oDofMap);
      }
@@ -19311,8 +19309,7 @@ namespace {
           }
 
           if (bUpdateFriction) {
-               AddFrictionLoss(HydroRootBase::FLUID_FRICTION, U2i, dF_0_Rt(1), dF_0_Rt(3));
-               AddFrictionLoss(HydroRootBase::FLUID_FRICTION, U1i, dF_h_Rt(1), dF_h_Rt(3));
+               AddFrictionLoss(HydroRootBase::FLUID_FRICTION, U, dF_0_Rt(1), dF_0_Rt(3));
           }
 
           if (iNumNodesContact) {
@@ -19352,27 +19349,19 @@ namespace {
                                       oDofMap);
      }
 
-     void LinFD4FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const std::array<SpColVectorA<doublereal, 2, 12>, iNumNodes>& Ui, doublereal dTau_xy, doublereal dTau_yz) const
+     void LinFD4FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<doublereal, 2>& U, doublereal dTau_xy, doublereal dTau_yz) const
      {
-          SpColVectorA<doublereal, 2> U;
-
-          for (int i = 0; i < iNumNodes; ++i) {
-               U += Ui[i];
-          }
-
-          U /= int(iNumNodes);
-
           const doublereal dPf = U(1) * dTau_xy + U(2) * dTau_yz;
 
-          AddFrictionLoss(type, dPf);
+          AddFrictionLoss(type, -dPf);
      }
 
-     void LinFD4FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const std::array<SpColVectorA<SpGradient, 2, 12>, iNumNodes>& Ui, const SpGradient& dTau_xy, const SpGradient& dTau_yz) const
+     void LinFD4FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<SpGradient, 2>& U, const SpGradient& dTau_xy, const SpGradient& dTau_yz) const
      {
           NO_OP;
      }
 
-     void LinFD4FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const std::array<SpColVectorA<GpGradProd, 2, 12>, iNumNodes>& Ui, const GpGradProd& dTau_xy, const GpGradProd& dTau_yz) const
+     void LinFD4FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<GpGradProd, 2>& U, const GpGradProd& dTau_xy, const GpGradProd& dTau_yz) const
      {
           NO_OP;
      }
@@ -21433,8 +21422,7 @@ namespace {
                                               -tau_yz_h * dA};
 
                     if (bUpdateFriction) {
-                         AddFrictionLoss(HydroRootBase::FLUID_FRICTION, U2, dF_0_Rt(1), dF_0_Rt(3));
-                         AddFrictionLoss(HydroRootBase::FLUID_FRICTION, U1, dF_h_Rt(1), dF_h_Rt(3));
+                         AddFrictionLoss(HydroRootBase::FLUID_FRICTION, dU, dF_0_Rt(1), dF_0_Rt(3));
                     }
 
                     if (bContact) {
@@ -21478,7 +21466,7 @@ namespace {
      {
           const doublereal dPf = U(1) * dTau_xy + U(2) * dTau_yz;
 
-          AddFrictionLoss(type, dPf);
+          AddFrictionLoss(type, -dPf);
      }
 
      void QuadFeIso9FrictionElem::AddFrictionLoss(HydroRootBase::FrictionLossType type, const SpColVector<SpGradient, 2>& U, const SpGradient& dTau_xy, const SpGradient& dTau_yz)
