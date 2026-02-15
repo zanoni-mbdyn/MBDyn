@@ -5624,6 +5624,7 @@ namespace {
           virtual DofOrder::Order GetDofType(unsigned int i) const override;
           virtual DofOrder::Order GetEqType(unsigned int i) const override;
           virtual DofOrder::Equality GetEqualityType(unsigned int i) const override;
+          virtual SolverBase::StepIntegratorType GetStepIntegrator(unsigned int i) const override;
           virtual std::ostream& DescribeDof(std::ostream& out, const char *prefix, bool bInitial) const override;
           virtual std::ostream& DescribeEq(std::ostream& out, const char *prefix, bool bInitial) const override;
           virtual const OutputHandler::Dimensions GetEquationDimension(integer index) const override;
@@ -5699,7 +5700,11 @@ namespace {
           }
           unsigned uGetOutputFlags() const { return uOutputFlags; }
           doublereal dGetStepIntegratorCoef(unsigned int iDof) const {
-               return pDM->dGetStepIntegratorCoef(iDof);
+               const doublereal dCoef = pDM->dGetStepIntegratorCoef(iDof);
+
+               DEBUGCERR("dGetStepIntegratorCoef(" << iDof << ") returned " << dCoef << "\n");
+
+               return dCoef;
           }
 
 #if HYDRO_TRACE_LEVEL > 0
@@ -6460,6 +6465,14 @@ namespace {
           const HydroDofOwner* const pDO = pFindDofOwner(i, SpFunctionCall::REGULAR_RES);
           HYDRO_ASSERT(i >= unsigned(pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES)));
           return pDO->GetEqualityType(i - pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES));
+     }
+
+     SolverBase::StepIntegratorType HydroRootElement::GetStepIntegrator(unsigned int i) const
+     {
+          ++i; // we are using one based indices
+          const HydroDofOwner* const pDO = pFindDofOwner(i, SpFunctionCall::REGULAR_RES);
+          HYDRO_ASSERT(i >= unsigned(pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES)));
+          return pDO->GetStepIntegrator(i - pDO->iGetOffsetIndex(SpFunctionCall::REGULAR_RES));
      }
 
      const HydroDofOwner* HydroRootElement::pFindDofOwner(unsigned int i, sp_grad::SpFunctionCall eFunc) const
