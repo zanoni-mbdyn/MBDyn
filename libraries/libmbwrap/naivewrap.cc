@@ -128,7 +128,7 @@ NaiveSolver::Factor(void)
                 case NAIVE_ENULCOL:
                         silent_cerr("NaiveSolver: ENULCOL(" << idx << ")"
                                 << std::endl);
-                        throw LinearSolver::ErrNullColumn(idx, MBDYN_EXCEPT_ARGS);
+                        throw LinearSolver::ErrNullColumn(idx + 1, MBDYN_EXCEPT_ARGS);
 
                 case NAIVE_ENOPIV:
                         silent_cerr("NaiveSolver: ENOPIV(" << idx << ")"
