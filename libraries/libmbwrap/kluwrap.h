@@ -73,9 +73,15 @@
 #include <vector>
 #include <omp.h>
 
+
+#ifdef HAVE_SUITESPARSE_EXTERN_C
+#include <klu.h>
+#else
 extern "C" {
 #include <klu.h>
 }
+
+#endif
 
 #include "myassert.h"
 #include "mynewmem.h"

@@ -73,9 +73,17 @@
 #include <vector>
 #include <omp.h>
 
+#ifdef HAVE_CONFIG_H
+#include "mbconfig.h"
+#endif
+
+#ifdef HAVE_SUITESPARSE_EXTERN_C
+#include <umfpack.h>
+#else
 extern "C" {
 #include <umfpack.h>
 }
+#endif
 
 #include "myassert.h"
 #include "mynewmem.h"
