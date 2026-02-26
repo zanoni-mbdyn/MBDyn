@@ -2188,6 +2188,26 @@ if test "$ol_with_umfpack" != "no" ; then
                 ])
 
                 if test "$have_umfpack_version" = "yes" ; then
+                        dnl Check SuiteSparse version for extern C handling
+                        AC_MSG_CHECKING([for SuiteSparse version >= 7.4.0])
+                        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <SuiteSparse_config.h>
+                        ]], [[
+#if !defined(SUITESPARSE_MAIN_VERSION) || !defined(SUITESPARSE_SUB_VERSION)
+#error "SUITESPARSE version macros not defined"
+#endif
+#if (SUITESPARSE_MAIN_VERSION > 7) || (SUITESPARSE_MAIN_VERSION == 7 && SUITESPARSE_SUB_VERSION >= 4)
+/* version >= 7.4.0 */
+#else
+#error "SuiteSparse version < 7.4.0"
+#endif
+                        ]])],[
+                                AC_DEFINE(HAVE_SUITESPARSE_EXTERN_C,1,[define if SuiteSparse >= 7.4.0 has extern C in umfpack.h])
+                                AC_MSG_RESULT([yes])
+                        ],[
+                                AC_MSG_RESULT([no])
+                        ])
+
                         umfpack_use_long="no"
                         AC_MSG_CHECKING([if umfpack library needs long])
                         AC_LANG([C++])
