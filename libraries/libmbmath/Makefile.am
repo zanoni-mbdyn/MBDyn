@@ -65,8 +65,8 @@ vh.cc \
 vh.h \
 epetravh.h \
 epetravh.cc \
-epetraspmh.h \
-epetraspmh.cc \
+tpetraspmh.h \
+tpetraspmh.cc \
 sp_exp_dof_map.h \
 sp_gradient_base.h \
 sp_gradient_expr.h \
