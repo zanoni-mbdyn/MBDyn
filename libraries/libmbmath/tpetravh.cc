@@ -59,7 +59,7 @@ void TpetraVectorHandler::RebuildVector(integer iNewSize, bool bZeroOut)
      const TpetraGO indexBase = 0;
 
      pMap = Teuchos::rcp(new TpetraMap(numGlobal, indexBase, pComm));
-     pVec = Teuchos::rcp(new TpetraVector(pMap, bZeroOut));
+     pVec = Teuchos::rcp(new TpetraMV(pMap, bZeroOut));
 
      /* Sync to host and obtain a raw pointer for O(1) access. */
      //pVec->sync_host();

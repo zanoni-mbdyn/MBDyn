@@ -256,6 +256,7 @@ public:
      const_iterator begin() const;
      const_iterator end() const;
 
+     Teuchos::RCP<const TpetraCrs> pGetTpetraCrsMatrixConst() const { return pMat; }
      Teuchos::RCP<const TpetraCrs> pGetTpetraCrsMatrix() const { return pMat; }
      Teuchos::RCP<TpetraCrs>       pGetTpetraCrsMatrix()       { return pMat; }
 
