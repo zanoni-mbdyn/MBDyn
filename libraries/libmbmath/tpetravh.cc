@@ -62,7 +62,7 @@ void TpetraVectorHandler::RebuildVector(integer iNewSize, bool bZeroOut)
      pVec = Teuchos::rcp(new TpetraVector(pMap, bZeroOut));
 
      /* Sync to host and obtain a raw pointer for O(1) access. */
-     pVec->sync_host();
+     //pVec->sync_host();
      oHostView = pVec->getLocalViewHost(Tpetra::Access::ReadWrite);
      pData     = oHostView.data();
 }
@@ -104,7 +104,7 @@ doublereal* TpetraVectorHandler::pdGetVec() const
      IsValid();
 #endif
      /* Ensure host view is up-to-date before exposing raw pointer. */
-     pVec->sync_host();
+     //pVec->sync_host();
      return pData;
 }
 
@@ -123,7 +123,7 @@ void TpetraVectorHandler::Reset()
 #endif
      pVec->putScalar(0.);
      /* Keep host view in sync. */
-     pVec->sync_host();
+     //pVec->sync_host();
 }
 
 void TpetraVectorHandler::Resize(integer iNewSize)
@@ -136,7 +136,7 @@ void TpetraVectorHandler::Resize(integer iNewSize)
 
      /* Snapshot of existing data */
      std::vector<doublereal> oOld(iSizeCopy);
-     pVec->sync_host();
+     //pVec->sync_host();
      for (integer i = 0; i < iSizeCopy; ++i) {
           oOld[i] = pData[i];
      }
@@ -147,8 +147,8 @@ void TpetraVectorHandler::Resize(integer iNewSize)
           pData[i] = oOld[i];
      }
      /* Push host changes back to device. */
-     pVec->modify_host();
-     pVec->sync_device();
+     //pVec->modify_host();
+     //pVec->sync_device();
 }
 
 void TpetraVectorHandler::ResizeReset(integer iNewSize)
@@ -171,7 +171,7 @@ void TpetraVectorHandler::PutCoef(integer iRow, const doublereal& dCoef)
      ASSERT(iRow <= iGetSize());
 
      pData[iRow - 1] = dCoef;
-     pVec->modify_host();
+     //pVec->modify_host();
 }
 
 void TpetraVectorHandler::IncCoef(integer iRow, const doublereal& dCoef)
@@ -183,7 +183,7 @@ void TpetraVectorHandler::IncCoef(integer iRow, const doublereal& dCoef)
      ASSERT(iRow <= iGetSize());
 
      pData[iRow - 1] += dCoef;
-     pVec->modify_host();
+     //pVec->modify_host();
 }
 
 void TpetraVectorHandler::DecCoef(integer iRow, const doublereal& dCoef)
@@ -195,7 +195,7 @@ void TpetraVectorHandler::DecCoef(integer iRow, const doublereal& dCoef)
      ASSERT(iRow <= iGetSize());
 
      pData[iRow - 1] -= dCoef;
-     pVec->modify_host();
+     //pVec->modify_host();
 }
 
 const doublereal& TpetraVectorHandler::dGetCoef(integer iRow) const
@@ -228,7 +228,7 @@ doublereal& TpetraVectorHandler::operator()(integer iRow)
      ASSERT(iRow >= 1);
      ASSERT(iRow <= iGetSize());
 
-     pVec->modify_host();
+     //pVec->modify_host();
      return pData[iRow - 1];
 }
 
@@ -243,7 +243,7 @@ void TpetraVectorHandler::Add(integer iRow, const Vec3& v)
      ASSERT(iRow >= 1);
      ASSERT(iRow + 2 <= iGetSize());
 
-     pVec->modify_host();
+     //pVec->modify_host();
      for (integer i = 1; i <= 3; ++i) {
           pData[iRow + i - 2] += v(i);
      }
@@ -257,7 +257,7 @@ void TpetraVectorHandler::Sub(integer iRow, const Vec3& v)
      ASSERT(iRow >= 1);
      ASSERT(iRow + 2 <= iGetSize());
 
-     pVec->modify_host();
+     //pVec->modify_host();
      for (integer i = 1; i <= 3; ++i) {
           pData[iRow + i - 2] -= v(i);
      }
@@ -271,7 +271,7 @@ void TpetraVectorHandler::Put(integer iRow, const Vec3& v)
      ASSERT(iRow >= 1);
      ASSERT(iRow + 2 <= iGetSize());
 
-     pVec->modify_host();
+     //pVec->modify_host();
      for (integer i = 1; i <= 3; ++i) {
           pData[iRow + i - 2] = v(i);
      }
@@ -288,7 +288,7 @@ TpetraVectorHandler::ScalarAddMul(const VectorHandler& VH, const doublereal& d)
      VH.IsValid();
      ASSERT(iGetSize() == VH.iGetSize());
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] += d * VH(i);
@@ -308,7 +308,7 @@ TpetraVectorHandler::ScalarAddMul(const VectorHandler& VH,
      ASSERT(iGetSize() == VH.iGetSize());
      ASSERT(iGetSize() == VH1.iGetSize());
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] = VH(i) + d * VH1(i);
@@ -324,7 +324,7 @@ TpetraVectorHandler::ScalarMul(const VectorHandler& VH, const doublereal& d)
      VH.IsValid();
      ASSERT(iGetSize() == VH.iGetSize());
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] = d * VH(i);
@@ -339,7 +339,7 @@ VectorHandler& TpetraVectorHandler::operator+=(const VectorHandler& VH)
      VH.IsValid();
      ASSERT(iGetSize() == VH.iGetSize());
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] += VH(i);
@@ -353,7 +353,7 @@ VectorHandler& TpetraVectorHandler::operator+=(const SubVectorHandler& SubVH)
      IsValid();
      SubVH.IsValid();
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      SubVH.AddTo(*this);
      return *this;
 }
@@ -365,7 +365,7 @@ VectorHandler& TpetraVectorHandler::operator-=(const VectorHandler& VH)
      VH.IsValid();
      ASSERT(iGetSize() == VH.iGetSize());
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] -= VH(i);
@@ -378,7 +378,7 @@ VectorHandler& TpetraVectorHandler::operator*=(const doublereal& d)
 #ifdef DEBUG
      IsValid();
 #endif
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] *= d;
@@ -394,7 +394,7 @@ VectorHandler& TpetraVectorHandler::operator=(const VectorHandler& VH)
 #endif
      ResizeReset(VH.iGetSize());
 
-     pVec->modify_host();
+     //pVec->modify_host();
      const integer iSize = iGetSize();
      for (integer i = 1; i <= iSize; ++i) {
           pData[i - 1] = VH(i);

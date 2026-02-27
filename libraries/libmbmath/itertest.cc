@@ -46,11 +46,11 @@
 #include "cscmhtpl.h"
 #ifdef USE_TRILINOS
 #undef HAVE_BLAS
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcpp"
-#include "epetraspmh.h"
-#include "Epetra_SerialComm.h"
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wcpp"
+#include "tpetraspmh.h"
+//#include "Teuchos_Comm.hpp"
+//#pragma GCC diagnostic pop
 #endif
 
 static constexpr doublereal mat[5][5] = {
@@ -80,8 +80,8 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
 
         SpGradientSparseMatrixHandler spgmh(5, 5);
 #ifdef USE_TRILINOS
-        Epetra_SerialComm comm;
-        EpetraSparseMatrixHandler epmh(5, 5, 5, comm);
+        Teuchos::RCP<const TpetraComm> comm = tpetraSerialComm();
+        TpetraSparseMatrixHandler epmh(5, 5, 5, comm);
 #endif
 
         for (int r = 0; r < 5; r++) {
@@ -118,7 +118,7 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
 #ifdef USE_TRILINOS
         epmh.PacMat();
 
-        std::cout << "matrix in Epetra sparse form:\n"
+        std::cout << "matrix in Tpetra sparse form:\n"
                   << epmh << std::endl;
 #endif
 
@@ -367,9 +367,9 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
         }
 #ifdef USE_TRILINOS
         std::cout << "***************************" << std::endl
-                  << "Epetra sparse matrix handler:" << std::endl;
+                  << "Tpetra sparse matrix handler:" << std::endl;
 
-        const EpetraSparseMatrixHandler& cepmh(epmh);
+        const TpetraSparseMatrixHandler& cepmh(epmh);
         
         for (const auto& i: epmh)
         {
@@ -381,7 +381,7 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
         }
 
         std::cout << "***************************" << std::endl
-                  << "Epetra csc0 matrix handler:" << std::endl;
+                  << "Tpetra csc0 matrix handler:" << std::endl;
         for (const auto& i: epc0)
         {
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
@@ -392,7 +392,7 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
         }
 
         std::cout << "***************************" << std::endl
-                  << "Epetra csc1 matrix handler:" << std::endl;
+                  << "Tpetra csc1 matrix handler:" << std::endl;
         for (const auto& i: epc1)
         {
                 std::cout << "(" << i.iRow << ", " << i.iCol << ", " << i.dCoef << ")" << std::endl;
@@ -403,7 +403,7 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
         }
 
         std::cout << "***************************" << std::endl
-                  << "Epetra csc0^T matrix handler:" << std::endl;
+                  << "Tpetra csc0^T matrix handler:" << std::endl;
         for (const auto& i: epc0T)
         {
                 std::cout << "(" << i.iCol << ", " << i.iRow << ", " << i.dCoef << ")" << std::endl;
@@ -415,7 +415,7 @@ MBDYN_TESTSUITE_TEST(itertest, itertest1)
 
 
         std::cout << "***************************" << std::endl
-                  << "Epetra csc1^T matrix handler:" << std::endl;
+                  << "Tpetra csc1^T matrix handler:" << std::endl;
         for (const auto& i: epc1T)
         {
                 std::cout << "(" << i.iCol << ", " << i.iRow << ", " << i.dCoef << ")" << std::endl;

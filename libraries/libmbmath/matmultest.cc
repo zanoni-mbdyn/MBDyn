@@ -50,7 +50,7 @@
 #pragma GCC diagnostic ignored "-Wcpp"
 #include "tpetraspmh.h"
 //#include "epetravh.h"
-#include <Teuchos_Comm.hpp>
+//#include <Teuchos_Comm.hpp>
 #pragma GCC diagnostic pop
 #endif
 
@@ -177,7 +177,7 @@ MBDYN_TESTSUITE_TEST(matmultest, matmultest1)
 #ifdef USE_TRILINOS
         epmh.PacMat(); // Call before using operator()
         
-        std::cout << "matrix in Epetra sparse form: " << std::endl
+        std::cout << "matrix in Tpetra sparse form: " << std::endl
                   << epmh << std::endl;
 #endif
 
