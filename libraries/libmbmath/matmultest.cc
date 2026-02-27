@@ -48,9 +48,9 @@
 #undef HAVE_BLAS
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcpp"
-#include "epetraspmh.h"
-#include "epetravh.h"
-#include <Epetra_SerialComm.h>
+#include "tpetraspmh.h"
+//#include "epetravh.h"
+#include <Teuchos_Comm.h>
 #pragma GCC diagnostic pop
 #endif
 

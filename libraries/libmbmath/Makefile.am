@@ -63,10 +63,11 @@ submat.h \
 tpls.h \
 vh.cc \
 vh.h \
-epetravh.h \
-epetravh.cc \
+tpetravh.h \
+tpetravh.cc \
 tpetraspmh.h \
 tpetraspmh.cc \
+tpetratypes.h \
 sp_exp_dof_map.h \
 sp_gradient_base.h \
 sp_gradient_expr.h \
