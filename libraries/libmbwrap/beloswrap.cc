@@ -45,6 +45,16 @@
 
 #include "mbconfig.h"
 
+// include manually umfpack.h otherwisr Amesos2 is going to
+// include it within extern "C"
+#ifdef HAVE_SUITESPARSE_EXTERN_C
+#include <umfpack.h>
+#else
+extern "C" {
+#include <umfpack.h>
+}
+#endif
+
 #ifdef USE_TRILINOS
 #include "ls.h"
 #include "linsol.h"
@@ -140,7 +150,7 @@ public:
      {
           DEBUGCERR("Amesos2Wrapper::Solve()\n");
 
-          int ierr = 0;
+          // int ierr = 0;
           do {
                if (bRebuildSymbolic) {
                     DEBUGCERR("Amesos2Wrapper::symbolicFactorization()\n");
