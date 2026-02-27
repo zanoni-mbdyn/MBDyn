@@ -104,7 +104,7 @@ using OP   = TpetraOp;
 using BelosProblem = Belos::LinearProblem<TpetraSC, MV, OP>;
 using BelosSolver  = Belos::SolverManager<TpetraSC, MV, OP>;
 using Ifpack2Prec  = Ifpack2::Preconditioner<TpetraSC, TpetraLO, TpetraGO, TpetraNode>;
-using Amesos2Solver= Amesos2::Solver<TpetraCrs, TpetraVector>;
+using Amesos2Solver= Amesos2::Solver<TpetraCrs, MV>;
 
 /* =========================================================================
  * Helper: Amesos2 solver name from flags
@@ -130,10 +130,10 @@ static const char* GetAmesos2SolverName(unsigned uFlags)
 class Amesos2Wrapper {
 public:
      Amesos2Wrapper(const Teuchos::RCP<TpetraCrs>& pA,
-                    const Teuchos::RCP<TpetraVector>& pX,
-                    const Teuchos::RCP<TpetraVector>& pB,
+                    const Teuchos::RCP<TpetraMV>& pX,
+                    const Teuchos::RCP<TpetraMV>& pB,
                     unsigned uFlags)
-          :pSolver(Amesos2::create<TpetraCrs, TpetraVector>(
+          :pSolver(Amesos2::create<TpetraCrs, TpetraMV>(
                         GetAmesos2SolverName(uFlags), pA, pX, pB)),
            bRebuildSymbolic(true),
            bRebuildNumeric(true)
@@ -406,7 +406,7 @@ void BelosSolutionManager::BuildSolver()
 
           Ifpack2::Factory precFactory;
           Teuchos::RCP<Ifpack2Prec> pPrec =
-               precFactory.create(sPrecType, A.pGetTpetraCrsMatrix());
+               precFactory.create(sPrecType, A.pGetTpetraCrsMatrixConst());
 
           Teuchos::RCP<Teuchos::ParameterList> pPrecParams =
                Teuchos::rcp(new Teuchos::ParameterList());

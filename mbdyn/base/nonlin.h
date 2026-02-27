@@ -525,16 +525,16 @@ public:
 		return pSolTest;
 	}
 
-        enum NonlinearSolverHintReal {
-                LINESEARCH_LAMBDA_MAX,
-                LINESEARCH_LAMBDA_CURR,
-                NONLINEAR_SOLVER_LAST_HINT_REAL
-        };
+	enum NonlinearSolverHintReal {
+			LINESEARCH_LAMBDA_MAX,
+			LINESEARCH_LAMBDA_CURR,
+			NONLINEAR_SOLVER_LAST_HINT_REAL
+	};
 
-        enum NonlinearSolverHintInteger {
-                LINESEARCH_ITERATION_CURR,
-                NONLINEAR_SOLVER_LAST_HINT_INTEGER
-        };
+	enum NonlinearSolverHintInteger {
+			LINESEARCH_ITERATION_CURR,
+			NONLINEAR_SOLVER_LAST_HINT_INTEGER
+	};
 
 
     void SetNonlinearSolverHint(NonlinearSolverHintReal eType, doublereal dHint) {

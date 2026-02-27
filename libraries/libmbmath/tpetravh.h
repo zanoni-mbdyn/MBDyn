@@ -110,8 +110,8 @@ public:
 
      virtual doublereal InnerProd(const VectorHandler& VH) const;
 
-     Teuchos::RCP<const TpetraVector> pGetTpetraVector() const { return pVec; }
-     Teuchos::RCP<TpetraVector>       pGetTpetraVector()       { return pVec; }
+     Teuchos::RCP<const TpetraMV> pGetTpetraVector() const { return pVec; }
+     Teuchos::RCP<TpetraMV>       pGetTpetraVector()       { return pVec; }
 
 private:
      /* Rebuild the map and vector with a new size, preserving the communicator. */
@@ -127,10 +127,10 @@ private:
 
      Teuchos::RCP<const TpetraComm>   pComm;
      Teuchos::RCP<const TpetraMap>    pMap;
-     Teuchos::RCP<TpetraVector>       pVec;
+     Teuchos::RCP<TpetraMV>       pVec;
 
      /* Kokkos host view – kept alive so the pointer stays valid. */
-     mutable TpetraVector::dual_view_type::t_host oHostView;
+     mutable TpetraMV::dual_view_type::t_host oHostView;
 };
 
 #endif  /* USE_TRILINOS */

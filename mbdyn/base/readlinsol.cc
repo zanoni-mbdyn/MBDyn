@@ -57,7 +57,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
                 ::solver[LinSol::SPQR_SOLVER].s_name,
 		::solver[LinSol::STRUMPACK_SOLVER].s_name,
 		::solver[LinSol::WATSON_SOLVER].s_name,
-                ::solver[LinSol::AZTECOO_SOLVER].s_name,
+                ::solver[LinSol::BELOS_SOLVER].s_name,
                 ::solver[LinSol::AMESOS_SOLVER].s_name,
                 ::solver[LinSol::SICONOS_SPARSE_SOLVER].s_name,
                 ::solver[LinSol::SICONOS_DENSE_SOLVER].s_name,
@@ -82,7 +82,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
                 SPQR,
 		STRUMPACK,
 		WATSON,
-		AZTECOO,
+		BELOS,
                 AMESOS,
                 SICONOS_SPARSE,
                 SICONOS_DENSE,
@@ -251,9 +251,9 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 	     bGotIt = true;
 #endif
 	     break;
-        case AZTECOO:
-             cs.SetSolver(LinSol::AZTECOO_SOLVER);
-             DEBUGLCOUT(MYDEBUG_INPUT, "Using AztecOO solver\n");
+        case BELOS:
+             cs.SetSolver(LinSol::BELOS_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
 #ifdef USE_TRILINOS
              bGotIt = true;
 #endif
