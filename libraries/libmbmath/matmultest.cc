@@ -50,7 +50,7 @@
 #pragma GCC diagnostic ignored "-Wcpp"
 #include "tpetraspmh.h"
 //#include "epetravh.h"
-#include <Teuchos_Comm.h>
+#include <Teuchos_Comm.hpp>
 #pragma GCC diagnostic pop
 #endif
 
