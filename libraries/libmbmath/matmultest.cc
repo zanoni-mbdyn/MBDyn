@@ -139,8 +139,8 @@ MBDYN_TESTSUITE_TEST(matmultest, matmultest1)
 
         SpGradientSparseMatrixHandler spgmh(5, 5);
 #ifdef USE_TRILINOS
-        Epetra_SerialComm comm;
-        EpetraSparseMatrixHandler epmh(5, 5, 5, comm);
+        Teuchos::RCP<const TpetraComm> comm = tpetraSerialComm();
+        TpetraSparseMatrixHandler epmh(5, 5, 5, comm);
 #endif
         for (int r = 0; r < 5; r++) {
                 for (int c = 0; c < 5; c++) {
