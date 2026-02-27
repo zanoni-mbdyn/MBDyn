@@ -55,7 +55,7 @@
 #include "strumpackwrap.h"
 #include "wsmpwrap.h"
 #ifdef USE_TRILINOS
-#include "aztecoowrap.h"
+#include "beloswrap.h"
 #endif
 #ifdef USE_SICONOS
 #include "siconoswrap.h"
@@ -207,7 +207,7 @@ const LinSol::solver_t solver[] = {
 	  LinSol::SOLVER_FLAGS_ALLOWS_MAP,
 	  -1., -1. },
         {"AztecOO", NULL,
-         LinSol::AZTECOO_SOLVER,
+         LinSol::BELOS_SOLVER,
          LinSol::SOLVER_FLAGS_PRECOND_MASK,
          LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_UMFPACK,
          -1, -1},
@@ -358,7 +358,7 @@ LinSol::SetSolver(LinSol::SolverType t, unsigned f)
 	     return true;
 #endif
 #ifdef USE_TRILINOS
-        case LinSol::AZTECOO_SOLVER:
+        case LinSol::BELOS_SOLVER:
              currSolver = t;
              return true;
              
@@ -599,7 +599,7 @@ LinSol::SetMaxIterations(integer iMaxIterations)
         case LinSol::PASTIX_SOLVER:
 	case LinSol::STRUMPACK_SOLVER:
 	case LinSol::WATSON_SOLVER:
-        case LinSol::AZTECOO_SOLVER:
+        case LinSol::BELOS_SOLVER:
 		iMaxIter = iMaxIterations;
 		break;
 
@@ -613,7 +613,7 @@ LinSol::SetMaxIterations(integer iMaxIterations)
 bool LinSol::SetTolerance(doublereal dToleranceRes)
 {
         switch (currSolver) {
-        case LinSol::AZTECOO_SOLVER:
+        case LinSol::BELOS_SOLVER:
         case LinSol::PASTIX_SOLVER:
                 dTolRes = dToleranceRes;
                 break;
@@ -632,7 +632,7 @@ bool LinSol::SetVerbose(integer iVerb)
      case LinSol::PARDISO_64_SOLVER:
      case LinSol::PASTIX_SOLVER:
      case LinSol::STRUMPACK_SOLVER:
-     case LinSol::AZTECOO_SOLVER:
+     case LinSol::BELOS_SOLVER:
      case LinSol::AMESOS_SOLVER:
 	  iVerbose = iVerb;
 	  break;
@@ -1018,8 +1018,8 @@ LinSol::GetSolutionManager(integer iNLD,
 	     break;
 #endif
 #ifdef USE_TRILINOS
-        case LinSol::AZTECOO_SOLVER:
-             pCurrSM = pAllocateAztecOOSolutionManager(
+        case LinSol::BELOS_SOLVER:
+             pCurrSM = pAllocateBelosSolutionManager(
 #ifdef USE_MPI
                   oComm,
 #endif
@@ -1030,7 +1030,7 @@ LinSol::GetSolutionManager(integer iNLD,
                   solverFlags);
              break;
         case LinSol::AMESOS_SOLVER:
-             pCurrSM = pAllocateAmesosSolutionManager(
+             pCurrSM = pAllocateAmesos2SolutionManager(
 #ifdef USE_MPI
                   oComm,
 #endif

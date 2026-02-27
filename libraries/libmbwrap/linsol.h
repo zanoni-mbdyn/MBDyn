@@ -59,7 +59,7 @@ public:
                 SPQR_SOLVER,
 		STRUMPACK_SOLVER,
 		WATSON_SOLVER,
-                AZTECOO_SOLVER,
+                BELOS_SOLVER,
                 AMESOS_SOLVER,
                 SICONOS_SPARSE_SOLVER,
                 SICONOS_DENSE_SOLVER,
