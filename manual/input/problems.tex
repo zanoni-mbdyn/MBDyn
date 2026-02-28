@@ -772,11 +772,19 @@ Indeed \verb;NOX; is a huge library with many parameters and options. Within thi
 \subparagraph{Linear solver and inner iterations}
 If the option \kw{direction} is set to \kw{newton}, an inexact Newton method is applied. This method uses iterative linear solvers to compute the Newton direction. The following linear solvers provided by \href{https://trilinos.github.io/belos.html}{Belos} are supported:
 \begin{description}
-\item[\kw{gmres}] Restarted generalized minimal residual
-\item[\kw{cg}] Conjugate gradient (not applicable if the Jacobian is unsymmetrical which is the usual case)
-\item[\kw{cgs}] Conjugate gradient squared
-\item[\kw{tfqmr}] Transpose-free quasi-minimal residual
-\item[\kw{bicgstab}] Bi-conjugate gradient with stabilization
+\item[\kw{Block GMRES}] Block restarted generalized minimal residual
+\item[\kw{Pseudo Block GMRES}] 
+\item[\kw{Pseudo Block Stochastic CG}]
+\item[\kw{GCRODR}] 
+\item[\kw{RCG}] 
+\item[\kw{MINRES}] 
+\item[\kw{TFQMR}] 
+\item[\kw{BiCGStab}] 
+\item[\kw{Fixed Point}] 
+\item[\kw{TPETRA GMRES}] 
+\item[\kw{TPETRA GMRES PIPELINE}] 
+\item[\kw{TPETRA GMRES SINGLE REDUCE}] 
+\item[\kw{TPETRA GMRES S-STEP}] 
 \end{description}
 The \kw{gmres} solver is accepting also the parameter \bnt{krylov\_subspace} which defines the number of inner iterations before a restart.
 \subparagraph{Preconditioner}

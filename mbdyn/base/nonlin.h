@@ -304,7 +304,7 @@ struct CommonNonlinearSolverParam
           PRINT_CONVERGENCE_INFO = 0x2
      };
      
-     CommonNonlinearSolverParam(unsigned uFlags_a = 0u,
+     CommonNonlinearSolverParam(long unsigned uFlags_a = 0u,
                                 integer iIterBeforeAss = 0,
                                 bool bKeepJac = false)
           :uFlags(uFlags_a),
@@ -312,7 +312,7 @@ struct CommonNonlinearSolverParam
            bKeepJacAcrossSteps(bKeepJac) {
      }
 
-     unsigned uFlags;
+     long unsigned uFlags;
      integer iIterationsBeforeAssembly;
      bool bKeepJacAcrossSteps;     
 };

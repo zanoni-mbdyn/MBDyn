@@ -113,12 +113,12 @@
  * NoxSolverParameters (unchanged)
  * ------------------------------------------------------------------------- */
 NoxSolverParameters::NoxSolverParameters()
-     :CommonNonlinearSolverParam(SOLVER_LINESEARCH_BASED |
-                                 JACOBIAN_NEWTON          |
-                                 DIRECTION_NEWTON         |
-                                 FORCING_TERM_CONSTANT    |
-                                 LINESEARCH_BACKTRACK     |
-                                 LINEAR_SOLVER_GMRES      |
+     :CommonNonlinearSolverParam(SOLVER_LINESEARCH_BASED   |
+                                 JACOBIAN_NEWTON           |
+                                 DIRECTION_NEWTON          |
+                                 FORCING_TERM_CONSTANT     |
+                                 LINESEARCH_BACKTRACK      |
+                                 LINEAR_SOLVER_BLOCK_GMRES |
                                  RECOVERY_STEP_TYPE_CONST,
                                  0,
                                  false),
@@ -672,11 +672,21 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
           Teuchos::rcp(new Teuchos::ParameterList());
 
      pLSParams->set("Linear Solver Type", "Belos");
-     std::string sBelosSolverType = "GMRES";
-     if      (uFlags & LINEAR_SOLVER_CG)        sBelosSolverType = "CG";
-     else if (uFlags & LINEAR_SOLVER_CGS)       sBelosSolverType = "CGS";
-     else if (uFlags & LINEAR_SOLVER_TFQMR)     sBelosSolverType = "TFQMR";
-     else if (uFlags & LINEAR_SOLVER_BICGSTAB)  sBelosSolverType = "BiCGStab";
+     std::string sBelosSolverType = "Block GMRES";
+     if      (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)        sBelosSolverType = "Pseudo Block GMRES";
+     else if (uFlags & LINEAR_SOLVER_BLOCK_CG)                  sBelosSolverType = "Block CG";
+     else if (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_CG)           sBelosSolverType = "Pseudo Block CG";
+     else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)       sBelosSolverType = "Block Stochastic CG";
+     else if (uFlags & LINEAR_SOLVER_GCRODR)                    sBelosSolverType = "GCRODR";
+     else if (uFlags & LINEAR_SOLVER_RCG)                       sBelosSolverType = "RCG";
+     else if (uFlags & LINEAR_SOLVER_MINRES)                    sBelosSolverType = "MINRES";
+     else if (uFlags & LINEAR_SOLVER_TFQMR)                     sBelosSolverType = "TFQMR";
+     else if (uFlags & LINEAR_SOLVER_BICGSTAB)                  sBelosSolverType = "BiCGStab";
+     else if (uFlags & LINEAR_SOLVER_FIXED_POINT)               sBelosSolverType = "Fixed Point";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES)              sBelosSolverType = "TPETRA GMRES";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_PIPELINE)     sBelosSolverType = "TPETRA GMRES PIPELINE";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE)sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SSTEP)        sBelosSolverType = "TPETRA GMRES S-STEP";
 
      const integer iKrylovRestart = std::min(Size,
           std::min(iMaxIterLinSol, iKrylovSubSpaceSize));

@@ -4842,18 +4842,36 @@ Solver::ReadData()
                                         } else if (HP.IsKeyWord("linear" "solver")) {
                                                 oNoxSolverParam.uFlags &= ~NoxSolverParameters::LINEAR_SOLVER_MASK;
 
-                                                if (HP.IsKeyWord("gmres")) {
-                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_GMRES;
-                                                } else if (HP.IsKeyWord("cg")) {
-                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_CG;
-                                                } else if (HP.IsKeyWord("cgs")) {
-                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_CGS;
-                                                } else if (HP.IsKeyWord("tfqmr")) {
-                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TFQMR;
-                                                } else if (HP.IsKeyWord("bicgstab")) {
+                                                if (HP.IsKeyWord("Block" "GMRES")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_GMRES;
+                                                } else if (HP.IsKeyWord("Pseudo" "Block" "GMRES")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_GMRES;
+                                                } else if (HP.IsKeyWord("Block" "CG")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_CG;
+                                                } else if (HP.IsKeyWord("Pseudo" "Block" "CG")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_CG;
+                                                } else if (HP.IsKeyWord("Block" "Stochastic" "CG")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_STOCHASTIC_CG;
+                                                } else if (HP.IsKeyWord("GCRODR")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_GCRODR;
+                                                } else if (HP.IsKeyWord("RCG")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_RCG;
+                                                } else if (HP.IsKeyWord("MINRES")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_MINRES;
+                                                } else if (HP.IsKeyWord("BiCGStab")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BICGSTAB;
+                                                } else if (HP.IsKeyWord("Fixed" "Point")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_FIXED_POINT;
+                                                } else if (HP.IsKeyWord("TPETRA" "GMRES")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES;
+                                                } else if (HP.IsKeyWord("TPETRA" "GMRES" "PIPELINE")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_PIPELINE;
+                                                } else if (HP.IsKeyWord("TPETRA" "GMRES" "SINGLE" "REDUCE")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE;
+                                                } else if (HP.IsKeyWord("TPETRA" "GMRES S-STEP")) {
+                                                        oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_SSTEP;
                                                 } else {
-                                                        silent_cerr("keywords \"gmres\", \"cg\", \"cgs\", \"tfqmr\" or \"bicgstab\" expected "
+                                                        silent_cerr("keywords \"Block GMRES\", \"Pseudo Block GMRES\", \"Block CG\", \"Pseudo Block CG\", \"Block Stochastic CG\", \"GCRODR\", \"RCG\", \"MINRES\", \"TFQMR\", \"BiCGStab\", \"Fixed Point\", \"TPETRA GMRES\", \"TPETRA GMRES PIPELINE\", \"TPETRA GMRES SINGLE REDUCE\" or \"TPETRA GMRES S-STEP\"	expected "
                                                                     << HP.GetLineData()
                                                                     << std::endl);
                                                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
