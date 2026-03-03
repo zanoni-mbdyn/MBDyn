@@ -45,22 +45,27 @@
 
 #include "mbconfig.h"
 
+
+#ifdef USE_TRILINOS
+
 // include manually umfpack.h otherwisr Amesos2 is going to
 // include it within extern "C"
+#ifdef HAVE_UMFPACK_H
 #ifdef HAVE_SUITESPARSE_EXTERN_C
 #include <umfpack.h>
-#else
+#else // HAVE_SUITESPARSE_EXTERN_C
 extern "C" {
 #include <umfpack.h>
 }
-#endif
+#endif // HAVE_SUITESPARSE_EXTERN_C
+#endif // HAVE_UMFPACK_H
 
-#ifdef USE_TRILINOS
 #include "ls.h"
 #include "linsol.h"
+
 #ifdef USE_MPI
 #include "mbcomm.h"
-#endif
+#endif // USE_MPI
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcpp"
