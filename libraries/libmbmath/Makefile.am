@@ -67,7 +67,7 @@ tpetravh.h \
 tpetravh.cc \
 tpetraspmh.h \
 tpetraspmh.cc \
-tpetratypes.h \
+tpetra_types.h \
 sp_exp_dof_map.h \
 sp_gradient_base.h \
 sp_gradient_expr.h \
