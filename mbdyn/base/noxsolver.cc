@@ -17,7 +17,6 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation (version 2 of the License).
  *
- *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -55,6 +54,7 @@
 #include "solver.h"
 #include "noxsolver.h"
 #include "output.h"
+#include "tpetraspmh.h"
 #ifdef USE_MPI
 #include "mbcomm.h"
 #endif
@@ -74,6 +74,7 @@
 #include <Thyra_VectorBase.hpp>
 #include <Thyra_VectorSpaceBase.hpp>
 #include <Thyra_LinearOpWithSolveFactoryBase.hpp>
+#include <Thyra_DefaultPreconditioner.hpp>
 
 /* ---------- Stratimikos (Belos via Thyra) ------------------------------- */
 #include <Stratimikos_DefaultLinearSolverBuilder.hpp>
@@ -88,13 +89,15 @@
 #include <NOX_Solver_Generic.H>
 #include <NOX_Solver_LineSearchBased.H>
 
-/* ---------- Thyra model evaluator (thin abstract base) ------------------ */
+/* ---------- Thyra model evaluator --------------------------------------- */
 #include <Thyra_ModelEvaluator.hpp>
 #include <Thyra_StateFuncModelEvaluatorBase.hpp>
 
 /* ---------- Teuchos ----------------------------------------------------- */
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
+
+#include <BelosOutputManager.hpp>
 
 #undef HAVE_BLAS
 #undef HAVE_BOOL
@@ -110,7 +113,7 @@
 #endif
 
 /* -------------------------------------------------------------------------
- * NoxSolverParameters (unchanged)
+ * NoxSolverParameters
  * ------------------------------------------------------------------------- */
 NoxSolverParameters::NoxSolverParameters()
      :CommonNonlinearSolverParam(SOLVER_LINESEARCH_BASED   |
@@ -145,10 +148,10 @@ class NoxNonlinearSolver;
 /* =========================================================================
  * Status tests
  * ========================================================================= */
-class NoxStatusTest: public NOX::StatusTest::Generic {
+class NoxStatusTest : public NOX::StatusTest::Generic {
 public:
      explicit NoxStatusTest(NoxNonlinearSolver& s)
-          :oNoxSolver(s), eStatus(NOX::StatusTest::Unevaluated) {}
+          : oNoxSolver(s), eStatus(NOX::StatusTest::Unevaluated) {}
      virtual ~NoxStatusTest() {}
      NOX::StatusTest::StatusType getStatus() const override { return eStatus; }
      void Reset() { eStatus = NOX::StatusTest::Unevaluated; }
@@ -157,44 +160,122 @@ protected:
      NOX::StatusTest::StatusType eStatus;
 };
 
-class NoxResidualTest: public NoxStatusTest {
+class NoxResidualTest : public NoxStatusTest {
 public:
      explicit NoxResidualTest(NoxNonlinearSolver& s)
-          :NoxStatusTest(s), dErrRes(-1.), dErrResDiff(-1.), dTolRes(-2.) {}
+          : NoxStatusTest(s), dErrRes(-1.), dErrResDiff(-1.), dTolRes(-2.) {}
      ~NoxResidualTest() {}
      NOX::StatusTest::StatusType
      checkStatus(const NOX::Solver::Generic& problem,
                  NOX::StatusTest::CheckType checkType) override;
      std::ostream& print(std::ostream& stream, int indent) const override;
      void Reset() { NoxStatusTest::Reset(); dErrRes = dErrResDiff = -1.; }
-     void SetTolerance(doublereal dTol) { ASSERT(dTol>=0.); dTolRes = dTol; }
+     void SetTolerance(doublereal dTol) { ASSERT(dTol >= 0.); dTolRes = dTol; }
      doublereal dGetTest()     const { return dErrRes;     }
      doublereal dGetTestDiff() const { return dErrResDiff; }
 private:
      doublereal dErrRes, dErrResDiff, dTolRes;
 };
 
-class NoxSolutionTest: public NoxStatusTest {
+class NoxSolutionTest : public NoxStatusTest {
 public:
      explicit NoxSolutionTest(NoxNonlinearSolver& s)
-          :NoxStatusTest(s), dErrSol(-1.), dTolSol(-2.) {}
+          : NoxStatusTest(s), dErrSol(-1.), dTolSol(-2.) {}
      ~NoxSolutionTest() {}
      NOX::StatusTest::StatusType
      checkStatus(const NOX::Solver::Generic& problem,
                  NOX::StatusTest::CheckType checkType) override;
      std::ostream& print(std::ostream& stream, int indent) const override;
      void Reset() { NoxStatusTest::Reset(); dErrSol = -1.; }
-     void SetTolerance(doublereal dTol) { ASSERT(dTol>=0.); dTolSol = dTol; }
-     doublereal dGetTolerance() const { ASSERT(dTolSol>=0.); return dTolSol; }
+     void SetTolerance(doublereal dTol) { ASSERT(dTol >= 0.); dTolSol = dTol; }
+     doublereal dGetTolerance() const { ASSERT(dTolSol >= 0.); return dTolSol; }
      doublereal dGetTest()      const { return dErrSol; }
 private:
      doublereal dErrSol, dTolSol;
 };
 
 /* =========================================================================
+ * TpetraMatFreeJacOper
+ *
+ * Matrix-free Jacobian operator for the JACOBIAN_NEWTON_KRYLOV path.
+ * Replaces NoxMatrixFreeJacOper (Epetra_Operator) from the original.
+ * Implements Thyra::LinearOpBase<SC> so it is handed directly to the
+ * NOX::Thyra::Group as the Jacobian and applies J*x on the fly via
+ * pNonlinearProblem->Jacobian(&Y, &X).
+ * ========================================================================= */
+class TpetraMatFreeJacOper : public Thyra::LinearOpBase<TpetraSC>
+{
+public:
+     using SC = TpetraSC;
+
+     TpetraMatFreeJacOper(
+          NoxNonlinearSolver& solver,
+          const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
+          : oNoxSolver(solver), pSpace(pSpace_a)
+#ifdef DEBUG_JACOBIAN
+          , pA(nullptr)
+#endif
+     {}
+
+     ~TpetraMatFreeJacOper()
+     {
+#ifdef DEBUG_JACOBIAN
+          if (pA) { SAFEDELETE(pA); }
+#endif
+     }
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     range()  const override { return pSpace; }
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     domain() const override { return pSpace; }
+
+     bool opSupportedImpl(Thyra::EOpTransp M_trans) const override
+     {
+          return (M_trans == Thyra::NOTRANS);
+     }
+
+protected:
+     void applyImpl(
+          const Thyra::EOpTransp                          M_trans,
+          const Thyra::MultiVectorBase<SC>&               X_in,
+          const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+          const SC                                        alpha,
+          const SC                                        beta) const override;
+
+private:
+     NoxNonlinearSolver& oNoxSolver;
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
+#ifdef DEBUG_JACOBIAN
+     mutable SpGradientSparseMatrixHandler* pA;
+     mutable MyVectorHandler AX;
+#endif
+};
+
+/* =========================================================================
  * ModelEvaluatorWrapper
  *
- * Bridges MBDyn residual/Jacobian to NOX through Thyra::ModelEvaluator.
+ * Bridges MBDyn residual / Jacobian to NOX::Thyra via Thyra::ModelEvaluator.
+ *
+ * Key design points vs. the Epetra version:
+ *
+ *  1. create_W_op() returns a Thyra::TpetraLinearOp that shares the same
+ *     underlying Tpetra::CrsMatrix that pSolutionManager->pMatHdl() writes
+ *     into — assembly in evalModelImpl requires zero data copies.
+ *
+ *  2. For JACOBIAN_NEWTON_KRYLOV, create_W_op() returns a
+ *     TpetraMatFreeJacOper instead.
+ *
+ *  3. evalModelImpl fully mirrors computeF + computeJacobian from the
+ *     original, including:
+ *       - residual branch         <- computeF
+ *       - W_op branch             <- computeJacobian / Jacobian()
+ *       - MBDyn convention that Residual() must precede Jacobian()
+ *       - line-search lambda and iteration-counter bookkeeping
+ *       - NOX sign convention (residual negated)
+ *
+ *  4. When MatrInitialize() reallocates the CrsMatrix the cached
+ *     pJacobianOp is nulled so create_W_op() re-wraps the new pointer.
  * ========================================================================= */
 class ModelEvaluatorWrapper
      : public Thyra::StateFuncModelEvaluatorBase<TpetraSC>
@@ -204,7 +285,7 @@ public:
 
      ModelEvaluatorWrapper(NoxNonlinearSolver& solver,
                            integer iSize,
-                           const Teuchos::RCP<const TpetraComm>& pComm);
+                           const Teuchos::RCP<const TpetraComm>& pComm_a);
 
      Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
      get_x_space() const override { return pSpace; }
@@ -215,8 +296,10 @@ public:
      Thyra::ModelEvaluatorBase::InArgs<SC>
      getNominalValues() const override { return oNominalValues; }
 
-     Thyra::ModelEvaluatorBase::InArgs<SC>  createInArgs()     const override;
-     Thyra::ModelEvaluatorBase::OutArgs<SC> createOutArgsImpl() const override;
+     Thyra::ModelEvaluatorBase::InArgs<SC>  createInArgs()      const override;
+     Thyra::ModelEvaluatorBase::OutArgs<SC> createOutArgsImpl()  const override;
+
+     Teuchos::RCP<Thyra::LinearOpBase<SC>> create_W_op() const override;
 
      void evalModelImpl(
           const Thyra::ModelEvaluatorBase::InArgs<SC>&  inArgs,
@@ -224,15 +307,21 @@ public:
 
      void Rebuild(integer iSize);
 
-     const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& GetSpace() const
-     { return pSpace; }
+     const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>&
+     GetSpace() const { return pSpace; }
 
 private:
+     friend class NoxNonlinearSolver; // needs to null pJacobianOp on rebuild
+
      NoxNonlinearSolver& oNoxSolver;
-     Teuchos::RCP<const TpetraComm> pComm;
-     Teuchos::RCP<const TpetraMap>  pMap;
+     Teuchos::RCP<const TpetraComm>                 pComm;
+     Teuchos::RCP<const TpetraMap>                  pMap;
      Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
-     Thyra::ModelEvaluatorBase::InArgs<SC> oNominalValues;
+     Thyra::ModelEvaluatorBase::InArgs<SC>          oNominalValues;
+
+     // Lazily initialised; mutable because create_W_op() is const.
+     // Nulled by Rebuild() and by Jacobian() after ErrRebuildMatrix.
+     mutable Teuchos::RCP<Thyra::LinearOpBase<SC>>  pJacobianOp;
 };
 
 /* =========================================================================
@@ -244,6 +333,7 @@ class NoxNonlinearSolver : public NonlinearSolver,
 {
 public:
      friend class ModelEvaluatorWrapper;
+     friend class TpetraMatFreeJacOper;
      friend class NoxResidualTest;
      friend class NoxSolutionTest;
 
@@ -273,7 +363,7 @@ public:
 private:
      struct CPUTimeGuard {
           explicit CPUTimeGuard(const NoxNonlinearSolver& s, CPUTimeType t)
-               :oWatch(s, t) { oWatch.Tic(); }
+               : oWatch(s, t) { oWatch.Tic(); }
           ~CPUTimeGuard() { oWatch.Toc(); }
           CPUStopWatch oWatch;
      };
@@ -284,13 +374,13 @@ private:
      void BuildSolver(integer iMaxIter);
      void OutputIteration(integer iIterCnt, bool bJacobian) const;
 
-     void runPreIterate(const NOX::Solver::Generic&)  override {}
-     void runPostIterate(const NOX::Solver::Generic&) override {}
-     void runPreSolve(const NOX::Solver::Generic&)    override {}
-     void runPostSolve(const NOX::Solver::Generic&)   override {}
+     void runPreIterate(const NOX::Solver::Generic&)            override {}
+     void runPostIterate(const NOX::Solver::Generic&)           override {}
+     void runPreSolve(const NOX::Solver::Generic&)              override {}
+     void runPostSolve(const NOX::Solver::Generic&)             override {}
      void runPreSolutionUpdate(const NOX::Abstract::Vector&,
-                               const NOX::Solver::Generic&) override {}
-     void runPreLineSearch(const NOX::Solver::Generic& solver) override;
+                               const NOX::Solver::Generic&)     override {}
+     void runPreLineSearch(const NOX::Solver::Generic& solver)  override;
      void runPostLineSearch(const NOX::Solver::Generic& solver) override;
 
      void ResetPrecondReuse() const {
@@ -312,13 +402,14 @@ private:
      SolutionManager*        pSolutionManager;
 
      mutable MyVectorHandler DeltaX, XPrev, TmpRes;
-     NoxResidualTest  oResTest;
-     NoxSolutionTest  oSolTest;
+
+     NoxResidualTest oResTest;
+     NoxSolutionTest oSolTest;
 
      mutable bool bUseTranspose;
-     bool bUpdateJacobian;
-     bool bInDerivativeSolver;
-     bool bInLineSearch;
+     bool         bUpdateJacobian;
+     bool         bInDerivativeSolver;
+     bool         bInLineSearch;
 
      mutable integer iPrecInnerIterCnt;
      mutable integer iPrecInnerIterCntTot;
@@ -326,25 +417,96 @@ private:
 };
 
 /* =========================================================================
+ * TpetraMatFreeJacOper::applyImpl
+ * ========================================================================= */
+void TpetraMatFreeJacOper::applyImpl(
+     const Thyra::EOpTransp                          M_trans,
+     const Thyra::MultiVectorBase<SC>&               X_in,
+     const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+     const SC                                        alpha,
+     const SC                                        beta) const
+{
+     if (M_trans != Thyra::NOTRANS) {
+          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+     }
+     // NOX always calls with alpha=1, beta=0
+     ASSERT(alpha == SC(1.) && beta == SC(0.));
+
+     NoxNonlinearSolver::CPUTimeGuard oCPUTimeJac(
+          oNoxSolver, NoxNonlinearSolver::CPU_JACOBIAN);
+
+     ASSERT(oNoxSolver.Size > 0);
+
+     auto xTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getConstTpetraMultiVector(Teuchos::rcpFromRef(X_in));
+     auto yTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getTpetraMultiVector(Teuchos::rcpFromRef(*Y_out));
+
+     ASSERT(static_cast<integer>(xTpetra->getLocalLength()) == oNoxSolver.Size);
+     ASSERT(static_cast<integer>(yTpetra->getLocalLength()) == oNoxSolver.Size);
+
+     const MyVectorHandler X(
+          oNoxSolver.Size,
+          const_cast<doublereal*>(
+               xTpetra->getLocalViewHost(Tpetra::Access::ReadOnly).data()));
+     MyVectorHandler Y(
+          oNoxSolver.Size,
+          yTpetra->getLocalViewHost(Tpetra::Access::ReadWrite).data());
+
+     // Matrix-free product: Y = J * X
+     oNoxSolver.pNonlinearProblem->Jacobian(&Y, &X);
+
+#ifdef DEBUG_JACOBIAN
+     if (!pA) {
+          SAFENEWWITHCONSTRUCTOR(pA,
+                                  SpGradientSparseMatrixHandler,
+                                  SpGradientSparseMatrixHandler(
+                                       oNoxSolver.Size, oNoxSolver.Size));
+          oNoxSolver.pNonlinearProblem->Jacobian(pA);
+          pA->PacMat();
+          AX.Resize(oNoxSolver.Size);
+     }
+     pA->MatVecMul(AX, X);
+     const doublereal dTolRel = sqrt(std::numeric_limits<doublereal>::epsilon());
+     const doublereal dTolAbs = sqrt(std::numeric_limits<doublereal>::epsilon());
+     const doublereal dNormAX = AX.Norm();
+     for (integer i = 1; i <= X.iGetSize(); ++i) {
+          if (std::fabs(AX(i) - Y(i)) > dTolRel + dTolAbs * dNormAX) {
+               DEBUGCERR("MatFree Jacobian check failed: AX("
+                         << i << ")=" << AX(i)
+                         << " Y(" << i << ")=" << Y(i) << "\n");
+               ASSERT(0);
+          }
+     }
+#endif
+}
+
+/* =========================================================================
  * ModelEvaluatorWrapper  implementation
  * ========================================================================= */
-ModelEvaluatorWrapper::ModelEvaluatorWrapper(NoxNonlinearSolver& solver,
-                                             integer iSize,
-                                             const Teuchos::RCP<const TpetraComm>& pComm_a)
-     :oNoxSolver(solver), pComm(pComm_a)
+ModelEvaluatorWrapper::ModelEvaluatorWrapper(
+     NoxNonlinearSolver& solver,
+     integer iSize,
+     const Teuchos::RCP<const TpetraComm>& pComm_a)
+     : oNoxSolver(solver), pComm(pComm_a)
 {
      Rebuild(iSize);
 }
 
 void ModelEvaluatorWrapper::Rebuild(integer iSize)
 {
-     pMap  = Teuchos::rcp(new TpetraMap(
+     pMap = Teuchos::rcp(new TpetraMap(
           static_cast<TpetraGO>(iSize), TpetraGO(0), pComm));
-     pSpace = Thyra::createVectorSpace<TpetraSC, TpetraLO, TpetraGO, TpetraNode>(pMap);
+     pSpace =
+          Thyra::createVectorSpace<TpetraSC, TpetraLO, TpetraGO, TpetraNode>(pMap);
+
+     pJacobianOp = Teuchos::null; // invalidate on resize
 
      oNominalValues = this->createInArgs();
      auto x0 = Thyra::createMember(pSpace);
-     Thyra::assign(x0.ptr(), SC(0.));
+     Thyra::assign(x0.ptr(), TpetraSC(0.));
      oNominalValues.set_x(x0);
 }
 
@@ -367,30 +529,56 @@ ModelEvaluatorWrapper::createOutArgsImpl() const
      return outArgs;
 }
 
+Teuchos::RCP<Thyra::LinearOpBase<TpetraSC>>
+ModelEvaluatorWrapper::create_W_op() const
+{
+     // Lazily construct and cache.
+     // pSolutionManager must already be valid (Attach() precedes BuildSolver()).
+     if (pJacobianOp.is_null()) {
+          if (oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV) {
+               // Matrix-free: recomputes J*v on every apply call.
+               pJacobianOp = Teuchos::rcp(
+                    new TpetraMatFreeJacOper(oNoxSolver, pSpace));
+          } else {
+               // Explicit matrix: wrap the Tpetra::CrsMatrix that the solution
+               // manager owns — shared pointer means zero-copy assembly.
+               ASSERT(oNoxSolver.pSolutionManager != nullptr);
+               MatrixHandler* pMH = oNoxSolver.pSolutionManager->pMatHdl();
+               auto* pTpetraMH = dynamic_cast<TpetraSparseMatrixHandler*>(pMH);
+               ASSERT(pTpetraMH != nullptr);
+               pJacobianOp =
+                    Thyra::tpetraLinearOp<TpetraSC, TpetraLO, TpetraGO, TpetraNode>(
+                         pSpace, pSpace,
+                         pTpetraMH->pGetTpetraCrsMatrix()); // adapt to actual API
+          }
+     }
+     return pJacobianOp;
+}
+
 void ModelEvaluatorWrapper::evalModelImpl(
      const Thyra::ModelEvaluatorBase::InArgs<SC>&  inArgs,
      const Thyra::ModelEvaluatorBase::OutArgs<SC>& outArgs) const
 {
-     /* --- extract x ----------------------------------------------------- */
+     /* --- Unpack x (zero-copy) ------------------------------------------ */
      auto xThyra = inArgs.get_x();
      ASSERT(!xThyra.is_null());
 
      auto xTpetra =
           Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
                ::getConstTpetraVector(xThyra);
-     // xTpetra->sync_host();
+
      const MyVectorHandler oSol(
           oNoxSolver.Size,
           const_cast<doublereal*>(
                xTpetra->getLocalViewHost(Tpetra::Access::ReadOnly).data()));
 
-     /* --- residual f ----------------------------------------------------- */
+     /* --- Residual branch  (mirrors computeF) --------------------------- */
      if (!outArgs.get_f().is_null()) {
           auto fThyra  = outArgs.get_f();
           auto fTpetra =
                Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
                     ::getTpetraVector(fThyra);
-          // fTpetra->sync_host();
+
           MyVectorHandler oRes(
                oNoxSolver.Size,
                fTpetra->getLocalViewHost(Tpetra::Access::ReadWrite).data());
@@ -401,11 +589,30 @@ void ModelEvaluatorWrapper::evalModelImpl(
                const auto& oLS =
                     dynamic_cast<const NOX::Solver::LineSearchBased&>(
                          *oNoxSolver.pNonlinearSolver);
-               oNoxSolver.SetNonlinearSolverHint(NonlinearSolver::LINESEARCH_LAMBDA_CURR,
-                                                  oLS.getStepSize());
+               oNoxSolver.SetNonlinearSolverHint(
+                    NonlinearSolver::LINESEARCH_LAMBDA_CURR,
+                    oLS.getStepSize());
+               DEBUGCERR("line search iteration "
+                    << oNoxSolver.GetNonlinearSolverHint(
+                         NonlinearSolver::LINESEARCH_ITERATION_CURR)
+                    << ": lambda=" << oLS.getStepSize() << "\n");
           }
 
           oNoxSolver.Residual(&oSol, &oRes);
+          // std::cerr << "chiamato Residual" << std::endl;
+          //           std::cerr << "==============" << std::endl;
+          //           oNoxSolver.pSolver->PrintSolution(
+          //                oNoxSolver.DeltaX,
+          //                oNoxSolver.pNonlinearSolver->getNumIterations());
+          //           std::cerr << "--------------" << std::endl;
+          //           std::cerr << oSol << std::endl;
+          //           std::cerr << ";;;;;;;;;;;;;;" << std::endl;
+          //           oNoxSolver.pSolver->PrintResidual(
+          //                oRes,
+          //                oNoxSolver.pNonlinearSolver->getNumIterations());
+          //           std::cerr << "**************" << std::endl;
+          //           std::cerr << oRes << std::endl;
+          //           std::cerr << "++++++++++++++" << std::endl;
 
           if (oNoxSolver.pSolver && oNoxSolver.pNonlinearSolver) {
                if (oNoxSolver.outputSol()) {
@@ -420,29 +627,48 @@ void ModelEvaluatorWrapper::evalModelImpl(
                }
           }
 
-          oRes *= -1.;   /* NOX convention */
-          // fTpetra->modify_host();
+          oRes *= -1.; // NOX sign convention
+
+          if (oNoxSolver.bInLineSearch) {
+               const integer iIterCurr =
+                    oNoxSolver.GetNonlinearSolverHint(
+                         NonlinearSolver::LINESEARCH_ITERATION_CURR);
+               oNoxSolver.SetNonlinearSolverHint(
+                    NonlinearSolver::LINESEARCH_ITERATION_CURR,
+                    iIterCurr + 1);
+          }
      }
 
-     /* --- Jacobian W_op -------------------------------------------------- */
+     /* --- Jacobian branch  (mirrors computeJacobian) -------------------- */
+     // outArgs.get_W_op() returns the same Thyra::TpetraLinearOp that
+     // create_W_op() gave the NOX::Thyra::Group.  Because it wraps the
+     // solution manager's CrsMatrix by shared_ptr, assembling below into
+     // pSolutionManager->pMatHdl() automatically updates the operator NOX
+     // uses for the linear solve — no copy required.
+     // For the matrix-free path no matrix assembly is performed at all.
      if (!outArgs.get_W_op().is_null()) {
           if (oNoxSolver.bUpdateJacobian) {
-               oNoxSolver.Residual(&oSol, &oNoxSolver.TmpRes);
+               // MBDyn convention: Residual() must precede Jacobian().
+               // If the residual branch above already ran, the solution is
+               // current; otherwise call explicitly (preconditioner refresh).
+               if (outArgs.get_f().is_null()) {
+                    oNoxSolver.Residual(&oSol, &oNoxSolver.TmpRes);
+               }
                if (oNoxSolver.pSolutionManager) {
                     oNoxSolver.pSolutionManager->MatrReset();
                }
-               oNoxSolver.Jacobian();
+               oNoxSolver.Jacobian(); // writes into pSolutionManager->pMatHdl()
                oNoxSolver.bUpdateJacobian = false;
           }
      }
 }
 
 /* =========================================================================
- * NoxResidualTest / NoxSolutionTest  implementation
+ * NoxResidualTest  implementation
  * ========================================================================= */
 NOX::StatusTest::StatusType
 NoxResidualTest::checkStatus(const NOX::Solver::Generic& problem,
-                              NOX::StatusTest::CheckType checkType)
+                              NOX::StatusTest::CheckType  checkType)
 {
      if (checkType == NOX::StatusTest::None) {
           eStatus = NOX::StatusTest::Unevaluated;
@@ -454,11 +680,13 @@ NoxResidualTest::checkStatus(const NOX::Solver::Generic& problem,
           return eStatus;
      }
 
-     const auto& FT = dynamic_cast<const NOX::Thyra::Vector&>(grp.getF());
+     const auto& FT =
+          dynamic_cast<const NOX::Thyra::Vector&>(grp.getF());
      auto fTpetra =
           Thyra::TpetraOperatorVectorExtraction<TpetraSC, TpetraLO, TpetraGO, TpetraNode>
-               ::getConstTpetraVector(Teuchos::rcpFromRef(FT.getThyraVector()));
-     // fTpetra->sync_host();
+               ::getConstTpetraVector(
+                    Teuchos::rcpFromRef(FT.getThyraVector()));
+
      const MyVectorHandler oResVec(
           static_cast<integer>(fTpetra->getLocalLength()),
           const_cast<doublereal*>(
@@ -471,22 +699,24 @@ NoxResidualTest::checkStatus(const NOX::Solver::Generic& problem,
           oResVec, dFirstResFact * dTolRes, dErrRes, dErrResDiff)
           ? NOX::StatusTest::Converged
           : NOX::StatusTest::Unconverged;
-
      return eStatus;
 }
 
 std::ostream& NoxResidualTest::print(std::ostream& stream, int indent) const
 {
      for (int j = 0; j < indent; ++j) stream << ' ';
-     stream << eStatus;
-     stream << "F-Norm = " << NOX::Utils::sciformat(dErrRes, 3)
-            << " < " << NOX::Utils::sciformat(dTolRes, 3) << "\n";
+     stream << eStatus
+            << "F-Norm = " << NOX::Utils::sciformat(dErrRes, 3)
+            << " < "       << NOX::Utils::sciformat(dTolRes, 3) << "\n";
      return stream;
 }
 
+/* =========================================================================
+ * NoxSolutionTest  implementation
+ * ========================================================================= */
 NOX::StatusTest::StatusType
 NoxSolutionTest::checkStatus(const NOX::Solver::Generic& problem,
-                              NOX::StatusTest::CheckType checkType)
+                              NOX::StatusTest::CheckType  checkType)
 {
      if (checkType == NOX::StatusTest::None) {
           eStatus = NOX::StatusTest::Unevaluated;
@@ -501,55 +731,58 @@ NoxSolutionTest::checkStatus(const NOX::Solver::Generic& problem,
           return eStatus;
      }
 
-     auto extractRaw = [](const NOX::Abstract::Vector& VA, integer n) {
+     const integer n = oNoxSolver.Size;
+     auto extractRaw = [n](const NOX::Abstract::Vector& VA) {
           const auto& VT = dynamic_cast<const NOX::Thyra::Vector&>(VA);
-          auto tp = Thyra::TpetraOperatorVectorExtraction<
-               TpetraSC, TpetraLO, TpetraGO, TpetraNode>
-                    ::getConstTpetraVector(Teuchos::rcpFromRef(VT.getThyraVector()));
-          // tp->sync_host();
-          return MyVectorHandler(n, const_cast<doublereal*>(
-               tp->getLocalViewHost(Tpetra::Access::ReadOnly).data()));
+          auto tp =
+               Thyra::TpetraOperatorVectorExtraction<
+                    TpetraSC, TpetraLO, TpetraGO, TpetraNode>
+                         ::getConstTpetraVector(
+                              Teuchos::rcpFromRef(VT.getThyraVector()));
+          return MyVectorHandler(
+               n,
+               const_cast<doublereal*>(
+                    tp->getLocalViewHost(Tpetra::Access::ReadOnly).data()));
      };
 
-     const integer n = oNoxSolver.Size;
-     MyVectorHandler XPrev = extractRaw(
-          problem.getPreviousSolutionGroup().getX(), n);
-     MyVectorHandler XCurr = extractRaw(
-          problem.getSolutionGroup().getX(), n);
+     MyVectorHandler XPrevVec =
+          extractRaw(problem.getPreviousSolutionGroup().getX());
+     MyVectorHandler XCurrVec =
+          extractRaw(problem.getSolutionGroup().getX());
 
-     eStatus = oNoxSolver.NoxMakeSolTest(XPrev, XCurr, dTolSol, dErrSol)
+     eStatus = oNoxSolver.NoxMakeSolTest(XPrevVec, XCurrVec, dTolSol, dErrSol)
           ? NOX::StatusTest::Converged
           : NOX::StatusTest::Unconverged;
-
      return eStatus;
 }
 
 std::ostream& NoxSolutionTest::print(std::ostream& stream, int indent) const
 {
      for (int j = 0; j < indent; ++j) stream << ' ';
-     stream << eStatus;
-     stream << "X-Norm = " << NOX::Utils::sciformat(dErrSol, 3)
-            << " < " << NOX::Utils::sciformat(dTolSol, 3) << "\n";
+     stream << eStatus
+            << "X-Norm = " << NOX::Utils::sciformat(dErrSol, 3)
+            << " < "       << NOX::Utils::sciformat(dTolSol, 3) << "\n";
      return stream;
 }
 
 /* =========================================================================
  * NoxNonlinearSolver  implementation
  * ========================================================================= */
-NoxNonlinearSolver::NoxNonlinearSolver(const NonlinearSolverTestOptions& oSolverOpt,
-                                       const NoxSolverParameters& oParam)
-     :NonlinearSolver(oSolverOpt),
-      NoxSolverParameters(oParam),
-      pNonlinearProblem(nullptr),
-      pSolver(nullptr),
-      pSolutionManager(nullptr),
-      oResTest(*this),
-      oSolTest(*this),
-      bUseTranspose(false),
-      bUpdateJacobian(true),
-      bInDerivativeSolver(true),
-      bInLineSearch(false),
-      iInnerIterCntTot(0)
+NoxNonlinearSolver::NoxNonlinearSolver(
+     const NonlinearSolverTestOptions& oSolverOpt,
+     const NoxSolverParameters& oParam)
+     : NonlinearSolver(oSolverOpt),
+       NoxSolverParameters(oParam),
+       pNonlinearProblem(nullptr),
+       pSolver(nullptr),
+       pSolutionManager(nullptr),
+       oResTest(*this),
+       oSolTest(*this),
+       bUseTranspose(false),
+       bUpdateJacobian(true),
+       bInDerivativeSolver(true),
+       bInLineSearch(false),
+       iInnerIterCntTot(0)
 {
 #ifdef USE_MPI
      pComm = tpetraMpiComm(MBDynComm);
@@ -575,6 +808,7 @@ NoxNonlinearSolver::Solve(const NonlinearProblem* pNLP,
                            doublereal& dSolErr)
 {
      DEBUGCERR("Solve()\n");
+
      bInLineSearch = false;
      SetNonlinearSolverHint(LINESEARCH_ITERATION_CURR, 0);
      SetNonlinearSolverHint(LINESEARCH_LAMBDA_CURR, 1.);
@@ -653,7 +887,8 @@ bool NoxNonlinearSolver::NoxMakeResTest(const VectorHandler& oResVec,
 
 void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
 {
-     /* ---- (Re)build the model evaluator -------------------------------- */
+     // Attach() must have been called first so pSolutionManager is valid
+     // when create_W_op() resolves the Tpetra::CrsMatrix pointer.
      if (!pModelEval) {
           pModelEval = Teuchos::rcp(
                new ModelEvaluatorWrapper(*this, Size, pComm));
@@ -661,117 +896,136 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
           pModelEval->Rebuild(Size);
      }
 
-     /* ---- Initial guess vector ----------------------------------------- */
      auto x0 = Thyra::createMember(pModelEval->GetSpace());
      Thyra::assign(x0.ptr(), TpetraSC(0.));
      pSolutionView = Teuchos::rcp(new NOX::Thyra::Vector(x0));
 
-     /* ---- Stratimikos linear solver factory ----------------------------- */
+     /* ---- Stratimikos / Belos ------------------------------------------ */
      Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
      Teuchos::RCP<Teuchos::ParameterList> pLSParams =
           Teuchos::rcp(new Teuchos::ParameterList());
 
      pLSParams->set("Linear Solver Type", "Belos");
+
      std::string sBelosSolverType = "Block GMRES";
-     if      (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)        sBelosSolverType = "Pseudo Block GMRES";
-     else if (uFlags & LINEAR_SOLVER_BLOCK_CG)                  sBelosSolverType = "Block CG";
-     else if (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_CG)           sBelosSolverType = "Pseudo Block CG";
-     else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)       sBelosSolverType = "Block Stochastic CG";
-     else if (uFlags & LINEAR_SOLVER_GCRODR)                    sBelosSolverType = "GCRODR";
-     else if (uFlags & LINEAR_SOLVER_RCG)                       sBelosSolverType = "RCG";
-     else if (uFlags & LINEAR_SOLVER_MINRES)                    sBelosSolverType = "MINRES";
-     else if (uFlags & LINEAR_SOLVER_TFQMR)                     sBelosSolverType = "TFQMR";
-     else if (uFlags & LINEAR_SOLVER_BICGSTAB)                  sBelosSolverType = "BiCGStab";
-     else if (uFlags & LINEAR_SOLVER_FIXED_POINT)               sBelosSolverType = "Fixed Point";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES)              sBelosSolverType = "TPETRA GMRES";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_PIPELINE)     sBelosSolverType = "TPETRA GMRES PIPELINE";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE)sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SSTEP)        sBelosSolverType = "TPETRA GMRES S-STEP";
+     if      (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)         sBelosSolverType = "Pseudo Block GMRES";
+     else if (uFlags & LINEAR_SOLVER_BLOCK_CG)                   sBelosSolverType = "Block CG";
+     else if (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_CG)            sBelosSolverType = "Pseudo Block CG";
+     else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)        sBelosSolverType = "Block Stochastic CG";
+     else if (uFlags & LINEAR_SOLVER_GCRODR)                     sBelosSolverType = "GCRODR";
+     else if (uFlags & LINEAR_SOLVER_RCG)                        sBelosSolverType = "RCG";
+     else if (uFlags & LINEAR_SOLVER_MINRES)                     sBelosSolverType = "MINRES";
+     else if (uFlags & LINEAR_SOLVER_TFQMR)                      sBelosSolverType = "TFQMR";
+     else if (uFlags & LINEAR_SOLVER_BICGSTAB)                   sBelosSolverType = "BiCGStab";
+     else if (uFlags & LINEAR_SOLVER_FIXED_POINT)                sBelosSolverType = "Fixed Point";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES)               sBelosSolverType = "TPETRA GMRES";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_PIPELINE)      sBelosSolverType = "TPETRA GMRES PIPELINE";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE) sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
+     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SSTEP)         sBelosSolverType = "TPETRA GMRES S-STEP";
 
-     const integer iKrylovRestart = std::min(Size,
-          std::min(iMaxIterLinSol, iKrylovSubSpaceSize));
+     const integer iKrylovRestart =
+          std::min(Size, std::min(iMaxIterLinSol, iKrylovSubSpaceSize));
 
-     auto& belosParams = pLSParams->sublist("Linear Solver Types")
-                                   .sublist("Belos");
+     auto& belosParams =
+          pLSParams->sublist("Linear Solver Types").sublist("Belos");
      belosParams.set("Solver Type", sBelosSolverType);
-     auto& bSolverParams = belosParams.sublist("Solver Types")
-                                       .sublist(sBelosSolverType);
+     auto& bSolverParams =
+          belosParams.sublist("Solver Types").sublist(sBelosSolverType);
      bSolverParams.set("Maximum Iterations",    iMaxIterLinSol);
      bSolverParams.set("Convergence Tolerance", dTolLinSol);
      bSolverParams.set("Num Blocks",            iKrylovRestart);
      bSolverParams.set("Output Frequency",
                        (uFlags & PRINT_CONVERGENCE_INFO) ? 1 : 0);
+     bSolverParams.set("Output Style", 1);
+     bSolverParams.set("Verbosity",
+                       (uFlags & PRINT_CONVERGENCE_INFO)
+                            ? (Belos::Errors | Belos::Warnings |
+                               Belos::IterationDetails |
+                               Belos::StatusTestDetails)
+                            : Belos::Errors);
 
-     pLSParams->set("Preconditioner Type", "Ifpack2");
-     pLSParams->sublist("Preconditioner Types").sublist("Ifpack2")
-               .set("Prec Type", "RILUK")
-               .sublist("Ifpack2 Settings")
-               .set("fact: iluk level-of-fill", 1);
+     if (!(uFlags & JACOBIAN_NEWTON_KRYLOV)) {
+          pLSParams->set("Preconditioner Type", "Ifpack2");
+          pLSParams->sublist("Preconditioner Types")
+                    .sublist("Ifpack2")
+                    .set("Prec Type", "RILUK")
+                    .sublist("Ifpack2 Settings")
+                    .set("fact: iluk level-of-fill", 1);
+     } else {
+          pLSParams->set("Preconditioner Type", "None");
+     }
 
      linearSolverBuilder.setParameterList(pLSParams);
      auto pLOWSFactory = linearSolverBuilder.createLinearSolveStrategy("");
 
-     /* ---- NOX print parameters ----------------------------------------- */
-     auto& oPrintParam = oSolverParam.sublist("Printing");
-     int iSolverOutput = 0;
-     if (outputIters()) {
-          if (uFlags & VERBOSE_MODE)            iSolverOutput |= NOX::Utils::Warning;
-          if (uFlags & PRINT_CONVERGENCE_INFO)  iSolverOutput |=
-               NOX::Utils::OuterIteration | NOX::Utils::InnerIteration |
-               NOX::Utils::LinearSolverDetails | NOX::Utils::Parameters |
-               NOX::Utils::Details | NOX::Utils::OuterIterationStatusTest |
-               NOX::Utils::TestDetails;
-     }
-     oPrintParam.set("Output Information", iSolverOutput);
-
-     /* ---- Direction / solver type -------------------------------------- */
-     static constexpr char szNLSolver[] = "Nonlinear Solver";
+     /* ---- NOX parameters ----------------------------------------------- */
+     auto& oPrintParam    = oSolverParam.sublist("Printing");
      auto& oDirectionParam = oSolverParam.sublist("Direction");
      auto& oNewtonParam    = oDirectionParam.sublist("Newton");
+
      oNewtonParam.set("Forcing Term Minimum Tolerance", dForcingTermMinTol);
      oNewtonParam.set("Forcing Term Maximum Tolerance", dForcingTermMaxTol);
      oNewtonParam.set("Forcing Term Alpha",              dForcingTermAlpha);
      oNewtonParam.set("Forcing Term Gamma",              dForcingTermGamma);
 
+     int iSolverOutput = 0;
+     if (outputIters()) {
+          if (uFlags & VERBOSE_MODE)           iSolverOutput |= NOX::Utils::Warning;
+          if (uFlags & PRINT_CONVERGENCE_INFO) iSolverOutput |=
+               NOX::Utils::OuterIteration | NOX::Utils::InnerIteration |
+               NOX::Utils::LinearSolverDetails | NOX::Utils::StepperIteration |
+               NOX::Utils::StepperDetails | NOX::Utils::Parameters |
+               NOX::Utils::Details | NOX::Utils::OuterIterationStatusTest |
+               NOX::Utils::TestDetails;
+     }
+     oPrintParam.set("Output Information", iSolverOutput);
+
      NOX::Abstract::PrePostOperator& oPrePost = *this;
      oSolverParam.sublist("Solver Options")
           .set("User Defined Pre/Post Operator", Teuchos::rcpFromRef(oPrePost));
-
      if (bInDerivativeSolver) {
           oSolverParam.sublist("Solver Options")
                .set("Status Test Check Type", "Complete");
      }
 
+     static constexpr char szNLSolver[] = "Nonlinear Solver";
+
      if (uFlags & SOLVER_LINESEARCH_BASED) {
           oSolverParam.set(szNLSolver, "Line Search Based");
-          auto& oLineSearchParam = oSolverParam.sublist("Line Search");
+          auto& oLSP = oSolverParam.sublist("Line Search");
           std::string strLSMethod;
           if      (uFlags & LINESEARCH_BACKTRACK)    strLSMethod = "Backtrack";
           else if (uFlags & LINESEARCH_POLYNOMIAL)   strLSMethod = "Polynomial";
           else if (uFlags & LINESEARCH_MORE_THUENTE) strLSMethod = "More'-Thuente";
           else                                       strLSMethod = "Full Step";
-          oLineSearchParam.set("Method", strLSMethod);
-          auto& oLSM = oLineSearchParam.sublist(strLSMethod);
-          oLSM.set("Max Iters", iMaxIterLineSearch);
-          oLSM.set("Minimum Step", dMinStep);
+          oLSP.set("Method", strLSMethod);
+          if      (uFlags & SUFFICIENT_DEC_COND_ARMIJO_GOLDSTEIN)
+               oLSP.sublist(strLSMethod).set("Sufficient Decrease Condition","Armijo-Goldstein");
+          else if (uFlags & SUFFICIENT_DEC_COND_ARED_PRED)
+               oLSP.sublist(strLSMethod).set("Sufficient Decrease Condition","Ared/Pred");
+          auto& oLSM = oLSP.sublist(strLSMethod);
+          oLSM.set("Max Iters",     iMaxIterLineSearch);
+          oLSM.set("Minimum Step",  dMinStep);
           oLSM.set("Recovery Step", dRecoveryStep);
-          if      (uFlags & RECOVERY_STEP_TYPE_CONST)     oLSM.set("Recovery Step Type", "Constant");
-          else if (uFlags & RECOVERY_STEP_TYPE_LAST_STEP) oLSM.set("Recovery Step Type", "Last Computed Step");
+          if      (uFlags & RECOVERY_STEP_TYPE_CONST)
+               oLSM.set("Recovery Step Type","Constant");
+          else if (uFlags & RECOVERY_STEP_TYPE_LAST_STEP)
+               oLSM.set("Recovery Step Type","Last Computed Step");
      } else if (uFlags & SOLVER_TRUST_REGION_BASED) {
           oSolverParam.set(szNLSolver, "Trust Region Based");
      } else if (uFlags & SOLVER_INEXACT_TRUST_REGION_BASED) {
           oSolverParam.set(szNLSolver, "Inexact Trust Region Based");
      } else if (uFlags & SOLVER_TENSOR_BASED) {
           oSolverParam.set(szNLSolver, "Tensor Based");
-          oSolverParam.sublist("Line Search").set("Method", "Curvilinear")
+          oSolverParam.sublist("Line Search").set("Method","Curvilinear")
                .sublist("Curvilinear").set("Minimum Step", dMinStep);
      }
 
-     if      (uFlags & DIRECTION_NEWTON) {
+     if (uFlags & DIRECTION_NEWTON) {
           oDirectionParam.set("Method", "Newton");
-          if      (uFlags & FORCING_TERM_CONSTANT) oNewtonParam.set("Forcing Term Method", "Constant");
-          else if (uFlags & FORCING_TERM_TYPE1)    oNewtonParam.set("Forcing Term Method", "Type 1");
-          else if (uFlags & FORCING_TERM_TYPE2)    oNewtonParam.set("Forcing Term Method", "Type 2");
+          if      (uFlags & FORCING_TERM_CONSTANT) oNewtonParam.set("Forcing Term Method","Constant");
+          else if (uFlags & FORCING_TERM_TYPE1)    oNewtonParam.set("Forcing Term Method","Type 1");
+          else if (uFlags & FORCING_TERM_TYPE2)    oNewtonParam.set("Forcing Term Method","Type 2");
      } else if (uFlags & DIRECTION_STEEPEST_DESCENT) {
           oDirectionParam.set("Method", "Steepest Descent");
      } else if (uFlags & DIRECTION_NONLINEAR_CG) {
@@ -780,31 +1034,22 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
           oDirectionParam.set("Method", "Broyden");
           auto& oBroyden = oDirectionParam.sublist("Broyden");
           oBroyden.set("Restart Frequency", iIterationsBeforeAssembly);
-          if      (uFlags & FORCING_TERM_CONSTANT) oBroyden.set("Forcing Term Method", "Constant");
-          else if (uFlags & FORCING_TERM_TYPE1)    oBroyden.set("Forcing Term Method", "Type 1");
-          else if (uFlags & FORCING_TERM_TYPE2)    oBroyden.set("Forcing Term Method", "Type 2");
+          if      (uFlags & FORCING_TERM_CONSTANT) oBroyden.set("Forcing Term Method","Constant");
+          else if (uFlags & FORCING_TERM_TYPE1)    oBroyden.set("Forcing Term Method","Type 1");
+          else if (uFlags & FORCING_TERM_TYPE2)    oBroyden.set("Forcing Term Method","Type 2");
      }
 
-     /* ---- Build the NOX::Thyra::Group ---------------------------------- */
-     // auto grpPtr = Teuchos::rcp(new NOX::Thyra::Group(
-     //      *pSolutionView, pModelEval,
-     //      pModelEval->getNominalValues().get_x(),
-     //      pLOWSFactory,
-     //      Teuchos::null, Teuchos::null, Teuchos::null));
+     /* ---- NOX::Thyra::Group -------------------------------------------- */
      Teuchos::RCP<const Thyra::ModelEvaluator<TpetraSC>> pModelEvalConst = pModelEval;
-     Teuchos::RCP<Thyra::LinearOpBase<TpetraSC>> pJacobian = pModelEval->create_W_op();
-     Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<TpetraSC>> pLOWSFactoryConst = pLOWSFactory;
-     Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>> pNullPrecOp;
+     Teuchos::RCP<Thyra::LinearOpBase<TpetraSC>>         pJacobian = pModelEval->create_W_op();
+     Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<TpetraSC>>
+          pLOWSFactoryConst = pLOWSFactory;
+     Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>>        pNullPrecOp;
      Teuchos::RCP<Thyra::PreconditionerFactoryBase<TpetraSC>> pNullPrecFactory;
 
      auto grpPtr = Teuchos::rcp(new NOX::Thyra::Group(
-          *pSolutionView,
-          pModelEvalConst,
-          pJacobian,
-          pLOWSFactoryConst,
-          pNullPrecOp,
-          pNullPrecFactory));
-
+          *pSolutionView, pModelEvalConst, pJacobian,
+          pLOWSFactoryConst, pNullPrecOp, pNullPrecFactory));
 
      /* ---- Status tests -------------------------------------------------- */
      auto converged =
@@ -815,21 +1060,19 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
      }
      if (dWrmsRelTol > 0. && dWrmsAbsTol > 0. && !bInDerivativeSolver) {
           converged->addStatusTest(
-               Teuchos::rcp(new NOX::StatusTest::NormWRMS(dWrmsRelTol,
-                                                           dWrmsAbsTol)));
+               Teuchos::rcp(new NOX::StatusTest::NormWRMS(dWrmsRelTol, dWrmsAbsTol)));
      }
+
      auto pCombCriteria =
           Teuchos::rcp(new NOX::StatusTest::Combo(NOX::StatusTest::Combo::OR));
-     pCombCriteria->addStatusTest(
-          Teuchos::rcp(new NOX::StatusTest::FiniteValue));
+     pCombCriteria->addStatusTest(Teuchos::rcp(new NOX::StatusTest::FiniteValue));
      pCombCriteria->addStatusTest(converged);
      pCombCriteria->addStatusTest(
           Teuchos::rcp(new NOX::StatusTest::MaxIters(iMaxIter_a)));
 
      ForcePrecondRebuild();
      pNonlinearSolver = NOX::Solver::buildSolver(
-          grpPtr, pCombCriteria,
-          Teuchos::rcpFromRef(oSolverParam));
+          grpPtr, pCombCriteria, Teuchos::rcpFromRef(oSolverParam));
 }
 
 void NoxNonlinearSolver::OutputIteration(integer iIterCnt, bool bJacobian) const
@@ -853,23 +1096,18 @@ void NoxNonlinearSolver::OutputIteration(integer iIterCnt, bool bJacobian) const
                                          << " " << dGetCondMax()
                                          << " " << dGetCondAvg());
                          }
-                    } else {
-                         silent_cout("NA");
-                    }
+                    } else { silent_cout("NA"); }
                }
           }
           if (outputCPUTime()) {
-               typedef std::chrono::duration<float, std::ratio<1,1>> FloatSec;
-               auto flags = std::cout.flags();
-               auto prec  = std::cout.precision();
-               std::cout.setf(std::ios::scientific);
-               std::cout.precision(2);
+               typedef std::chrono::duration<float,std::ratio<1,1>> FloatSec;
+               auto flags = std::cout.flags(); auto prec = std::cout.precision();
+               std::cout.setf(std::ios::scientific); std::cout.precision(2);
                silent_cout(" CPU:"
-                    << FloatSec(dGetTimeCPU(CPU_RESIDUAL)).count()
-                    << '+' << FloatSec(dGetTimeCPU(CPU_JACOBIAN)).count()
-                    << '+' << FloatSec(dGetTimeCPU(CPU_LINEAR_SOLVER)).count());
-               std::cout.flags(flags);
-               std::cout.precision(prec);
+                    << FloatSec(dGetTimeCPU(CPU_RESIDUAL)).count()   << '+'
+                    << FloatSec(dGetTimeCPU(CPU_JACOBIAN)).count()   << '+'
+                    << FloatSec(dGetTimeCPU(CPU_LINEAR_SOLVER)).count());
+               std::cout.flags(flags); std::cout.precision(prec);
           }
           if (oSolTest.getStatus() != NOX::StatusTest::Unevaluated) {
                silent_cout("\n\t\tSolErr " << oSolTest.dGetTest());
@@ -882,22 +1120,15 @@ void NoxNonlinearSolver::Attach(Solver* pS, const NonlinearProblem* pNLP)
 {
      pSolver = pS;
      pSolutionManager = pSolver->pGetSolutionManager();
-
      if (pNLP != pNonlinearProblem) {
           DEBUGCERR("Resetting nonlinear solver\n");
           pNonlinearSolver.reset();
           bUpdateJacobian = true;
           ResetCond();
-          if (pNonlinearProblem) {
-               bInDerivativeSolver = false;
-          }
+          if (pNonlinearProblem) bInDerivativeSolver = false;
      }
-     if (!bKeepJacAcrossSteps) {
-          bUpdateJacobian = true;
-     }
-
+     if (!bKeepJacAcrossSteps) bUpdateJacobian = true;
      pNonlinearProblem = pNLP;
-
      VectorHandler* const pSol = pSolutionManager->pSolHdl();
      Size = pSol->iGetSize();
      pSol->Reset();
@@ -906,20 +1137,17 @@ void NoxNonlinearSolver::Attach(Solver* pS, const NonlinearProblem* pNLP)
      TmpRes.ResizeReset(Size);
 }
 
-void NoxNonlinearSolver::Residual(const VectorHandler* pSol,
-                                   VectorHandler* pRes)
+void NoxNonlinearSolver::Residual(const VectorHandler* const pSol,
+                                   VectorHandler* const pRes)
 {
      CPUTimeGuard oCPUTimeRes(*this, CPU_RESIDUAL);
-
+     // std::cerr << "DENTRO RESIDUAL" << std::endl;
      DeltaX.ScalarAddMul(*pSol, XPrev, -1.);
      XPrev = *pSol;
-
      pNonlinearProblem->Update(&DeltaX);
      pRes->Reset();
-
      VectorHandler* const pAbsRes = pGetResTest()->GetAbsRes();
      if (pAbsRes) pAbsRes->Reset();
-
      try {
           pNonlinearProblem->Residual(pRes, pAbsRes);
      } catch (const SolutionDataManager::ChangedEquationStructure&) {
@@ -934,10 +1162,8 @@ void NoxNonlinearSolver::Residual(const VectorHandler* pSol,
 void NoxNonlinearSolver::Jacobian()
 {
      CPUTimeGuard oCPUTimeJac(*this, CPU_JACOBIAN);
-
      bool bDone = false;
      MatrixHandler* pJac = nullptr;
-
      do {
           try {
                pJac = pSolutionManager->pMatHdl();
@@ -947,23 +1173,20 @@ void NoxNonlinearSolver::Jacobian()
           } catch (const MatrixHandler::ErrRebuildMatrix&) {
                silent_cout("NoxNonlinearSolver: rebuilding matrix...\n");
                pSolutionManager->MatrInitialize();
+               // CrsMatrix pointer may have changed; re-wrap on next create_W_op()
+               if (pModelEval) pModelEval->pJacobianOp = Teuchos::null;
           }
      } while (!bDone);
-
      ASSERT(pJac != nullptr);
-
 #ifdef USE_MPI
      if (!bParallel || MBDynComm.Get_rank() == 0)
 #endif
      {
           if (outputJac()) {
                silent_cout("Jacobian:\n");
-               if (silent_out) {
-                    pJac->Print(std::cout, MatrixHandler::MAT_PRINT_TRIPLET);
-               }
+               if (silent_out) pJac->Print(std::cout, MatrixHandler::MAT_PRINT_TRIPLET);
           }
      }
-
      ++TotJac;
 }
 
@@ -983,7 +1206,7 @@ void NoxNonlinearSolver::runPostLineSearch(const NOX::Solver::Generic&)
      SetNonlinearSolverHint(LINESEARCH_ITERATION_CURR, 0);
 }
 
-}  // anonymous namespace
+} // anonymous namespace
 
 /* =========================================================================
  * Public factory
@@ -993,10 +1216,9 @@ pAllocateNoxNonlinearSolver(const NonlinearSolverTestOptions& oSolverOpt,
                             const NoxSolverParameters& oParam)
 {
      NoxNonlinearSolver* pNLS = nullptr;
-     SAFENEWWITHCONSTRUCTOR(pNLS,
-                            NoxNonlinearSolver,
+     SAFENEWWITHCONSTRUCTOR(pNLS, NoxNonlinearSolver,
                             NoxNonlinearSolver(oSolverOpt, oParam));
      return pNLS;
 }
 
-#endif  /* USE_TRILINOS */
+#endif /* USE_TRILINOS */
