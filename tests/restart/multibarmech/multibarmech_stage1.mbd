@@ -42,7 +42,7 @@ threads: disable;
 end: initial value;
 
 begin: control data;
-        make restart file: times, 1, 0.5 * T1, format, binary;
+        make restart file: times, 1, 0.5 * T1, at end, format, binary;
         include: "multibarmech.con";
 end: control data;
 

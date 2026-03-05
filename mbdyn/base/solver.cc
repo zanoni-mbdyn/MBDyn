@@ -2225,11 +2225,11 @@ Solver::Advance(void)
 			<< "total Jacobian matrices: " << pNLS->TotalAssembledJacobian() << std::endl
 			<< "total error: " << dTotErr << std::endl);
 
-		if (pRTSolver) {
-			pRTSolver->Log();
-		}
+                if (pRTSolver) {
+                        pRTSolver->Log();
+                }
 
-		return false;
+                return false;
 
 	} else if (pRTSolver && pRTSolver->IsStopCommanded()) {
 		silent_cout(outputCounterPrefix
@@ -2558,28 +2558,25 @@ Solver::~Solver(void)
 
 /*scrive il contributo al file di restart*/
 std::ostream &
-Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
+Solver::Restart(std::ostream& out, unsigned type) const
 {
 
 	out << "begin: initial value;" << std::endl;
-	switch(type) {
-	case DataManager::ATEND:
+	if (type == DataManager::RESTART_AT_END) {
 		out << "  #  initial time: " << pDM->dGetTime() << ";"
 			<< std::endl
 			<< "  #  final time: " << dFinalTime << ";"
 			<< std::endl
 			<< "  #  time step: " << dInitialTimeStep << ";"
 			<< std::endl;
-		break;
-	case DataManager::ITERATIONS:
-	case DataManager::TIME:
-	case DataManager::TIMES:
+	} else if (type & (DataManager::RESTART_ITERATIONS |
+                           DataManager::RESTART_TIME |
+                           DataManager::RESTART_TIMES)) {
 		out << "  initial time: " << pDM->dGetTime()<< ";" << std::endl
 			<< "  final time: " << dFinalTime << ";" << std::endl
 			<< "  time step: " << dInitialTimeStep << ";"
 			<< std::endl;
-		break;
-	default:
+        } else {
 		ASSERT(0);
 	}
 
@@ -2687,6 +2684,12 @@ Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
 	case NonlinearSolverTest::MINMAX:
 		out << ", test, minmax" ;
 		break;
+        case NonlinearSolverTest::SEPNORM:
+                out << ", test, sepnorm";
+                break;
+        case NonlinearSolverTest::RELNORM:
+                out << ", test, relnorm";
+                break;
 	case NonlinearSolverTest::NONE:
 		NO_OP;
 	default:
@@ -2721,7 +2724,7 @@ Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
 			<< "  derivatives coefficient: " << dDerivativesCoef << ";" << std::endl;
 	}
 
-	if (iDummyStepsNumber) {
+	if (iDummyStepsNumber && pDummySteps) {
 		out
 			<< "  dummy steps max iterations: " << pDummySteps->GetIntegratorMaxIters() << ";" << std::endl
 			<< "  dummy steps tolerance: " << pDummySteps->GetIntegratorDTol() << ";" << std::endl;

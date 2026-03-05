@@ -466,7 +466,7 @@ public:
    	/* esegue la simulazione */
    	void Run(void);
 
-	std::ostream & Restart(std::ostream& out, DataManager::eRestartWhen type) const;
+	std::ostream & Restart(std::ostream& out, unsigned type) const;
 
         void Restart(RestartData& oData, RestartData::RestartAction eAction);
      

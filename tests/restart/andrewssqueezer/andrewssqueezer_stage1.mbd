@@ -37,7 +37,7 @@ threads: disable;
 end: initial value;
 
 begin: control data;
-        make restart file: times, 1, 0.025, format, binary;
+        make restart file: at end, times, 1, 0.025, format, binary;
 	skip initial joint assembly;
         include: "andrewssqueezer.con";
 end: control data;

@@ -40,7 +40,7 @@ threads: disable;
 end: initial value;
 
 begin: control data;
-        make restart file: times, 1, 5., format, binary;
+        make restart file: at end, times, 1, 5., format, binary;
         include: "6barmech.con";
 end: control data;
 

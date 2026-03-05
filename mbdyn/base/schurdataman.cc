@@ -1810,27 +1810,27 @@ SchurDataManager::AfterConvergence(void) const
 				*(VectorHandler*)pXPrimeCurr);
 	}
 
-	/* Restart condizionato */
-	switch (RestartEvery) {
-	case ITERATIONS:
-		if (++iCurrRestartIter == iRestartIterations) {
-			iCurrRestartIter = 0;
-			((SchurDataManager*)this)->MakeRestart();
-		}
-		break;
+        bool bDoRestart = false;
 
-	case TIME: {
-		doublereal dT = dGetTime();
-		if (dT - dLastRestartTime >= dRestartTime) {
-			dLastRestartTime = dT;
-			const_cast<SchurDataManager *>(this)->MakeRestart();
-		}
-		break;
-	}
+        /* Restart condizionato */
+        if (RestartEvery & RESTART_ITERATIONS) {
+                if (++iCurrRestartIter == iRestartIterations) {
+                        iCurrRestartIter = 0;
+                        bDoRestart = true;
+                }
+        }
 
-	default:
-		break;
-	}
+        if (RestartEvery & RESTART_TIME) {
+                doublereal dT = dGetTime();
+                if (dT - dLastRestartTime >= dRestartTime) {
+                        dLastRestartTime = dT;
+                        bDoRestart = true;
+                }
+        }
+
+        if (bDoRestart) {
+                const_cast<SchurDataManager *>(this)->MakeRestart();
+        }
 }
 /* End of AfterConvergence */
 

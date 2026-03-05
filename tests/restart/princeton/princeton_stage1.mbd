@@ -39,7 +39,7 @@ end: initial value;
 include: "princeton.set";
 
 begin: control data;
-        make restart file: times, 1, 0.4, format, binary;
+        make restart file: times, 1, 0.4, at end, format, binary;
         include: "princeton.con";
 end: control data;
 
