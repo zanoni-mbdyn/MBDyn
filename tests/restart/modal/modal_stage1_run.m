@@ -111,7 +111,7 @@ try
       fputs(fd, "begin: control data;\n");
       switch (istage)
         case 1
-          fputs(fd, "     make restart file: times, 1, 0.5 * (final_time - initial_time) + initial_time, format, binary;\n");
+          fputs(fd, "     make restart file: times, 1, 0.5 * (final_time - initial_time) + initial_time, at end, format, binary;\n");
         case 2
           fprintf(fd, "    load restart file: \"%s.0.rst\";\n", output_filename);
           fputs(fd, "     skip initial joint assembly;\n");
@@ -351,7 +351,7 @@ try
       fputs(fd, "begin: control data;\n");
       switch (istage)
         case 1
-          fputs(fd, "     make restart file: times, 1, 0.5 * (final_time - initial_time) + initial_time, format, binary;\n");
+          fputs(fd, "     make restart file: times, 1, 0.5 * (final_time - initial_time) + initial_time, at end, format, binary;\n");
         case 2
           fprintf(fd, "    load restart file: \"%s.0.rst\";\n", output_filename);
           fputs(fd, "     skip initial joint assembly;\n");
@@ -900,7 +900,7 @@ try
       fputs(fd, "begin: control data;\n");
       switch (istage)
         case 1
-          fputs(fd, "     make restart file: times, 1, 0.5 * (final_time - initial_time) + initial_time, format, binary;\n");
+          fputs(fd, "     make restart file: times, 1, 0.5 * (final_time - initial_time) + initial_time, at end, format, binary;\n");
         case 2
           fprintf(fd, "    load restart file: \"%s.0.rst\";\n", output_filename);
           fputs(fd, "     skip initial joint assembly;\n");

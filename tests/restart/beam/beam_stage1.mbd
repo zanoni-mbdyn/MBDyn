@@ -12,7 +12,7 @@ end: initial value;
 
 begin: control data;
   print: element connection;
-  make restart file: times, 1, 0.5, format, binary;
+  make restart file: at end, times, 1, 0.5, format, binary;
   skip initial joint assembly;
   include: "beam_control.cod";
 end: control data;

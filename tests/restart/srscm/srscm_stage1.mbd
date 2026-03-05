@@ -44,7 +44,7 @@ threads: disable;
 end: initial value;
 
 begin: control data;
-        make restart file: times, 1, 2.5, format, binary;
+        make restart file: times, 1, 2.5, at end, format, binary;
         include: "srscm.con";
 end: control data;
 

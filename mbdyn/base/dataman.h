@@ -160,11 +160,18 @@ protected:
 	char* sSimulationTitle;
 
 public:
-	enum eRestartWhen { NEVER, ATEND, ITERATIONS, TIME, TIMES };
+        enum eRestartWhen: unsigned {
+             RESTART_NEVER = 0x0U,
+             RESTART_AT_END = 0x1U,
+             RESTART_ITERATIONS = 0x2U,
+             RESTART_TIME = 0x4U,
+             RESTART_TIMES = 0x8U
+        };
+
         enum eRestartFormat { RESTART_CLASSIC, RESTART_BINARY };
 protected:
 	/* soft-restart stuff */
-	eRestartWhen RestartEvery;
+	unsigned RestartEvery;
         eRestartFormat RestartType;
 	integer iRestartIterations;
 	doublereal dRestartTime;
