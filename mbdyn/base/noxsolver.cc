@@ -54,7 +54,10 @@
 #include "solver.h"
 #include "noxsolver.h"
 #include "output.h"
-#include "tpetraspmh.h"
+// Note: tpetraspmh.h is NOT included here intentionally.
+// ModelEvaluatorWrapper::create_W_op() uses MBDynJacobianOp which delegates
+// to the abstract MatrixHandler interface, so no TpetraSparseMatrixHandler
+// is needed in the non-matrix-free path.
 #ifdef USE_MPI
 #include "mbcomm.h"
 #endif
@@ -70,10 +73,11 @@
 /* ---------- Tpetra / Thyra core ---------------------------------------- */
 #include "tpetra_types.h"
 #include <Thyra_TpetraThyraWrappers.hpp>
-#include <Thyra_TpetraLinearOp.hpp>
 #include <Thyra_VectorBase.hpp>
 #include <Thyra_VectorSpaceBase.hpp>
 #include <Thyra_LinearOpWithSolveFactoryBase.hpp>
+#include <Thyra_LinearOpWithSolveBase.hpp>
+#include <Thyra_LinearOpSourceBase.hpp>
 #include <Thyra_DefaultPreconditioner.hpp>
 
 /* ---------- Stratimikos (Belos via Thyra) ------------------------------- */
@@ -253,15 +257,216 @@ private:
 };
 
 /* =========================================================================
+ * MBDynJacobianOp
+ *
+ * A Thyra::LinearOpBase<SC> that applies the Jacobian stored in MBDyn's
+ * MatrixHandler (via MatVecMul / MatTVecMul).  Works with *any* matrix
+ * type that MBDyn's SolutionManager may wrap — no assumption of Tpetra.
+ *
+ * This replaces the Tpetra-specific Thyra::TpetraLinearOp path that
+ * required dynamic_cast<TpetraSparseMatrixHandler*>.
+ * ========================================================================= */
+class MBDynJacobianOp : public Thyra::LinearOpBase<TpetraSC>
+{
+public:
+     using SC = TpetraSC;
+
+     MBDynJacobianOp(NoxNonlinearSolver& solver,
+                     const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
+          : oNoxSolver(solver), pSpace(pSpace_a) {}
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     range()  const override { return pSpace; }
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     domain() const override { return pSpace; }
+
+     bool opSupportedImpl(Thyra::EOpTransp M_trans) const override
+     {
+          return (M_trans == Thyra::NOTRANS || M_trans == Thyra::TRANS);
+     }
+
+protected:
+     void applyImpl(
+          const Thyra::EOpTransp                          M_trans,
+          const Thyra::MultiVectorBase<SC>&               X_in,
+          const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+          const SC                                        alpha,
+          const SC                                        beta) const override;
+
+private:
+     NoxNonlinearSolver& oNoxSolver;
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
+};
+
+/* =========================================================================
+ * MBDynLinearOpWithSolve
+ *
+ * A Thyra::LinearOpWithSolveBase<SC> that:
+ *   - applies  J   via MBDynJacobianOp::applyImpl  (MatVecMul)
+ *   - solves   J x = b via pSolutionManager->Solve()
+ *
+ * This is the Tpetra-port equivalent of the Epetra ApplyInverse path.
+ * It works with *any* SolutionManager / linear solver that MBDyn supports.
+ * ========================================================================= */
+class MBDynLinearOpWithSolve : public Thyra::LinearOpWithSolveBase<TpetraSC>
+{
+public:
+     using SC = TpetraSC;
+
+     MBDynLinearOpWithSolve(NoxNonlinearSolver& solver,
+                            const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
+          : oNoxSolver(solver), pSpace(pSpace_a), pJacOp(Teuchos::null) {}
+
+     /* ---- LinearOpBase interface ---------------------------------------- */
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     range()  const override { return pSpace; }
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     domain() const override { return pSpace; }
+
+     bool opSupportedImpl(Thyra::EOpTransp M_trans) const override
+     {
+          return (M_trans == Thyra::NOTRANS || M_trans == Thyra::TRANS);
+     }
+
+     /* ---- LinearOpWithSolveBase interface -------------------------------- */
+     bool solveSupportsImpl(Thyra::EOpTransp M_trans) const override
+     {
+          return (M_trans == Thyra::NOTRANS);
+     }
+
+     bool solveSupportsSolveMeasureTypeImpl(
+          Thyra::EOpTransp                      /* M_trans */,
+          const Thyra::SolveMeasureType& /* solveMeasureType */) const override
+     {
+          return true;
+     }
+
+protected:
+     /* ---- apply: delegate to MBDyn MatrixHandler (MatVecMul) ------------ */
+     void applyImpl(
+          const Thyra::EOpTransp                          M_trans,
+          const Thyra::MultiVectorBase<SC>&               X_in,
+          const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+          const SC                                        alpha,
+          const SC                                        beta) const override;
+
+     /* ---- solveImpl: delegate to MBDyn SolutionManager->Solve() --------- */
+     Thyra::SolveStatus<SC> solveImpl(
+          const Thyra::EOpTransp                          M_trans,
+          const Thyra::MultiVectorBase<SC>&               B,
+          const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& X,
+          Teuchos::Ptr<const Thyra::SolveCriteria<SC>>    solveCriteria)
+          const override;
+
+private:
+     NoxNonlinearSolver& oNoxSolver;
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
+     mutable Teuchos::RCP<Thyra::LinearOpBase<SC>>  pJacOp; // unused; kept for symmetry
+};
+
+/* =========================================================================
+ * MBDynLOWSFactory
+ *
+ * A Thyra::LinearOpWithSolveFactoryBase<SC> that creates
+ * MBDynLinearOpWithSolve objects.  NOX::Thyra::Group calls
+ * createOp() / initializeOp() to get the object it will use for
+ * linear solves; by returning an MBDynLinearOpWithSolve we bypass
+ * Stratimikos/Belos/Ifpack2 entirely for the non-matrix-free path,
+ * and instead delegate directly to pSolutionManager->Solve() — exactly
+ * what the Epetra ApplyInverse path did.
+ * ========================================================================= */
+class MBDynLOWSFactory
+     : public Thyra::LinearOpWithSolveFactoryBase<TpetraSC>
+{
+public:
+     using SC = TpetraSC;
+
+     MBDynLOWSFactory(NoxNonlinearSolver& solver,
+                      const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
+          : oNoxSolver(solver), pSpace(pSpace_a) {}
+
+     bool isCompatible(const Thyra::LinearOpSourceBase<SC>& /* fwdOpSrc */) const override
+     { return true; }
+
+     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC>> createOp() const override
+     {
+          return Teuchos::rcp(new MBDynLinearOpWithSolve(oNoxSolver, pSpace));
+     }
+
+     void initializeOp(
+          const Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>& /* fwdOpSrc */,
+          Thyra::LinearOpWithSolveBase<SC>*                          Op,
+          const Thyra::ESupportSolveUse                            /* supportSolveUse */)
+          const override
+     {
+          // Nothing to do: MBDynLinearOpWithSolve always reads the current
+          // pSolutionManager state at solve time.
+          (void)Op;
+     }
+
+     void uninitializeOp(
+          Thyra::LinearOpWithSolveBase<SC>*                          /* Op */,
+          Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>*         /* fwdOpSrc */,
+          Teuchos::RCP<const Thyra::PreconditionerBase<SC>>*         /* prec */,
+          Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>*         /* approxFwdOpSrc */,
+          Thyra::ESupportSolveUse*                                   /* supportSolveUse */)
+          const override
+     {}
+
+     bool supportsPreconditionerInputType(
+          const Thyra::EPreconditionerInputType /* precOpType */) const override
+     { return false; }
+
+     void initializePreconditionedOp(
+          const Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>&    /* fwdOpSrc */,
+          const Teuchos::RCP<const Thyra::PreconditionerBase<SC>>&    /* prec */,
+          Thyra::LinearOpWithSolveBase<SC>*                            /* Op */,
+          const Thyra::ESupportSolveUse                               /* supportSolveUse */)
+          const override
+     {
+          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+     }
+
+     void initializeApproxPreconditionedOp(
+          const Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>&    /* fwdOpSrc */,
+          const Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>&    /* approxFwdOpSrc */,
+          Thyra::LinearOpWithSolveBase<SC>*                            /* Op */,
+          const Thyra::ESupportSolveUse                               /* supportSolveUse */)
+          const override
+     {
+          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+     }
+
+     std::string description() const override { return "MBDynLOWSFactory"; }
+
+     /* Teuchos::ParameterListAcceptor stubs (required interface) */
+     void setParameterList(const Teuchos::RCP<Teuchos::ParameterList>&) override {}
+     Teuchos::RCP<Teuchos::ParameterList> getNonconstParameterList() override
+     { return Teuchos::null; }
+     Teuchos::RCP<Teuchos::ParameterList>       unsetParameterList() override
+     { return Teuchos::null; }
+     Teuchos::RCP<const Teuchos::ParameterList> getParameterList() const override
+     { return Teuchos::null; }
+     Teuchos::RCP<const Teuchos::ParameterList> getValidParameters() const override
+     { return Teuchos::null; }
+
+private:
+     NoxNonlinearSolver& oNoxSolver;
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
+};
+
+/* =========================================================================
  * ModelEvaluatorWrapper
  *
  * Bridges MBDyn residual / Jacobian to NOX::Thyra via Thyra::ModelEvaluator.
  *
  * Key design points vs. the Epetra version:
  *
- *  1. create_W_op() returns a Thyra::TpetraLinearOp that shares the same
- *     underlying Tpetra::CrsMatrix that pSolutionManager->pMatHdl() writes
- *     into — assembly in evalModelImpl requires zero data copies.
+ *  1. create_W_op() returns a MBDynJacobianOp that delegates
+ *     matrix-vector products to pSolutionManager->pMatHdl() via the
+ *     abstract MatrixHandler interface — no assumption of TpetraSparseMatrix.
  *
  *  2. For JACOBIAN_NEWTON_KRYLOV, create_W_op() returns a
  *     TpetraMatFreeJacOper instead.
@@ -274,8 +479,9 @@ private:
  *       - line-search lambda and iteration-counter bookkeeping
  *       - NOX sign convention (residual negated)
  *
- *  4. When MatrInitialize() reallocates the CrsMatrix the cached
- *     pJacobianOp is nulled so create_W_op() re-wraps the new pointer.
+ *  4. The linear solve is performed by MBDynLinearOpWithSolve, which
+ *     delegates to pSolutionManager->Solve() — exactly as ApplyInverse
+ *     did in the Epetra version, and works with any SolutionManager.
  * ========================================================================= */
 class ModelEvaluatorWrapper
      : public Thyra::StateFuncModelEvaluatorBase<TpetraSC>
@@ -310,18 +516,22 @@ public:
      const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>&
      GetSpace() const { return pSpace; }
 
+     // Returns the LOWS factory for NOX::Thyra::Group.
+     // For the non-matrix-free path this is MBDynLOWSFactory.
+     // For the matrix-free path a Stratimikos factory is still used.
+     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC>>
+     GetLOWSFactory() const { return pLOWSFactory; }
+
 private:
-     friend class NoxNonlinearSolver; // needs to null pJacobianOp on rebuild
+     friend class NoxNonlinearSolver;
 
      NoxNonlinearSolver& oNoxSolver;
-     Teuchos::RCP<const TpetraComm>                 pComm;
-     Teuchos::RCP<const TpetraMap>                  pMap;
-     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
-     Thyra::ModelEvaluatorBase::InArgs<SC>          oNominalValues;
-
-     // Lazily initialised; mutable because create_W_op() is const.
-     // Nulled by Rebuild() and by Jacobian() after ErrRebuildMatrix.
-     mutable Teuchos::RCP<Thyra::LinearOpBase<SC>>  pJacobianOp;
+     Teuchos::RCP<const TpetraComm>                             pComm;
+     Teuchos::RCP<const TpetraMap>                              pMap;
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>             pSpace;
+     Thyra::ModelEvaluatorBase::InArgs<SC>                      oNominalValues;
+     mutable Teuchos::RCP<Thyra::LinearOpBase<SC>>              pJacobianOp;
+     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC>>      pLOWSFactory;
 };
 
 /* =========================================================================
@@ -334,6 +544,8 @@ class NoxNonlinearSolver : public NonlinearSolver,
 public:
      friend class ModelEvaluatorWrapper;
      friend class TpetraMatFreeJacOper;
+     friend class MBDynJacobianOp;
+     friend class MBDynLinearOpWithSolve;
      friend class NoxResidualTest;
      friend class NoxSolutionTest;
 
@@ -484,6 +696,135 @@ void TpetraMatFreeJacOper::applyImpl(
 }
 
 /* =========================================================================
+ * MBDynJacobianOp  out-of-line implementation
+ * (must follow full definition of NoxNonlinearSolver)
+ * ========================================================================= */
+void MBDynJacobianOp::applyImpl(
+     const Thyra::EOpTransp                          M_trans,
+     const Thyra::MultiVectorBase<SC>&               X_in,
+     const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+     const SC                                        alpha,
+     const SC                                        beta) const
+{
+     ASSERT(alpha == SC(1.) && beta == SC(0.));
+     ASSERT(oNoxSolver.pSolutionManager != nullptr);
+
+     const MatrixHandler* const pJacMat =
+          oNoxSolver.pSolutionManager->pMatHdl();
+     ASSERT(pJacMat != nullptr);
+
+     auto xTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getConstTpetraMultiVector(Teuchos::rcpFromRef(X_in));
+     auto yTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getTpetraMultiVector(Teuchos::rcpFromRef(*Y_out));
+
+     const integer n = oNoxSolver.Size;
+     const MyVectorHandler XVec(
+          n,
+          const_cast<SC*>(
+               xTpetra->getLocalViewHost(Tpetra::Access::ReadOnly).data()));
+     MyVectorHandler YVec(
+          n,
+          yTpetra->getLocalViewHost(Tpetra::Access::ReadWrite).data());
+
+     if (M_trans == Thyra::TRANS) {
+          pJacMat->MatTVecMul(YVec, XVec);
+     } else {
+          pJacMat->MatVecMul(YVec, XVec);
+     }
+}
+
+/* =========================================================================
+ * MBDynLinearOpWithSolve  out-of-line implementation
+ * (must follow full definition of NoxNonlinearSolver)
+ * ========================================================================= */
+void MBDynLinearOpWithSolve::applyImpl(
+     const Thyra::EOpTransp                          M_trans,
+     const Thyra::MultiVectorBase<SC>&               X_in,
+     const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+     const SC                                        alpha,
+     const SC                                        beta) const
+{
+     ASSERT(alpha == SC(1.) && beta == SC(0.));
+     ASSERT(oNoxSolver.pSolutionManager != nullptr);
+
+     const MatrixHandler* const pJacMat =
+          oNoxSolver.pSolutionManager->pMatHdl();
+     ASSERT(pJacMat != nullptr);
+
+     auto xTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getConstTpetraMultiVector(Teuchos::rcpFromRef(X_in));
+     auto yTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getTpetraMultiVector(Teuchos::rcpFromRef(*Y_out));
+
+     const integer n = oNoxSolver.Size;
+     const MyVectorHandler XVec(
+          n,
+          const_cast<SC*>(
+               xTpetra->getLocalViewHost(Tpetra::Access::ReadOnly).data()));
+     MyVectorHandler YVec(
+          n,
+          yTpetra->getLocalViewHost(Tpetra::Access::ReadWrite).data());
+
+     if (M_trans == Thyra::TRANS) {
+          pJacMat->MatTVecMul(YVec, XVec);
+     } else {
+          pJacMat->MatVecMul(YVec, XVec);
+     }
+}
+
+Thyra::SolveStatus<TpetraSC> MBDynLinearOpWithSolve::solveImpl(
+     const Thyra::EOpTransp                          M_trans,
+     const Thyra::MultiVectorBase<SC>&               B,
+     const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& X,
+     Teuchos::Ptr<const Thyra::SolveCriteria<SC>>    /* solveCriteria */) const
+{
+     ASSERT(M_trans == Thyra::NOTRANS);
+     ASSERT(oNoxSolver.pSolutionManager != nullptr);
+
+     ++oNoxSolver.iPrecInnerIterCnt;
+     ++oNoxSolver.iInnerIterCntTot;
+
+     NoxNonlinearSolver::CPUTimeGuard oCPULinearSolver(
+          oNoxSolver, NoxNonlinearSolver::CPU_LINEAR_SOLVER);
+
+     VectorHandler* const pResVec = oNoxSolver.pSolutionManager->pResHdl();
+     const VectorHandler* const pSolVec = oNoxSolver.pSolutionManager->pSolHdl();
+     const integer n = oNoxSolver.Size;
+
+     ASSERT(n == pResVec->iGetSize());
+     ASSERT(n == pSolVec->iGetSize());
+
+     auto bTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getConstTpetraMultiVector(Teuchos::rcpFromRef(B));
+     auto xTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getTpetraMultiVector(Teuchos::rcpFromRef(*X));
+
+     const SC* bData =
+          bTpetra->getLocalViewHost(Tpetra::Access::ReadOnly).data();
+     SC* xData =
+          xTpetra->getLocalViewHost(Tpetra::Access::ReadWrite).data();
+
+     // Copy RHS into MBDyn's residual vector (mirrors old ApplyInverse)
+     std::copy(bData, bData + n, pResVec->pdGetVec());
+
+     oNoxSolver.pSolutionManager->Solve();
+
+     // Copy MBDyn's solution back into the Thyra output vector
+     std::copy(pSolVec->pdGetVec(), pSolVec->pdGetVec() + n, xData);
+
+     Thyra::SolveStatus<SC> solveStatus;
+     solveStatus.solveStatus = Thyra::SOLVE_STATUS_CONVERGED;
+     return solveStatus;
+}
+
+/* =========================================================================
  * ModelEvaluatorWrapper  implementation
  * ========================================================================= */
 ModelEvaluatorWrapper::ModelEvaluatorWrapper(
@@ -503,6 +844,15 @@ void ModelEvaluatorWrapper::Rebuild(integer iSize)
           Thyra::createVectorSpace<TpetraSC, TpetraLO, TpetraGO, TpetraNode>(pMap);
 
      pJacobianOp = Teuchos::null; // invalidate on resize
+
+     // For the explicit-matrix path use MBDynLOWSFactory so the linear solve
+     // is routed through pSolutionManager->Solve() regardless of which
+     // concrete MatrixHandler / SolutionManager MBDyn is using.
+     // For the matrix-free path pLOWSFactory is set by BuildSolver() via
+     // Stratimikos after this call returns.
+     if (!(oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV)) {
+          pLOWSFactory = Teuchos::rcp(new MBDynLOWSFactory(oNoxSolver, pSpace));
+     }
 
      oNominalValues = this->createInArgs();
      auto x0 = Thyra::createMember(pSpace);
@@ -540,16 +890,14 @@ ModelEvaluatorWrapper::create_W_op() const
                pJacobianOp = Teuchos::rcp(
                     new TpetraMatFreeJacOper(oNoxSolver, pSpace));
           } else {
-               // Explicit matrix: wrap the Tpetra::CrsMatrix that the solution
-               // manager owns — shared pointer means zero-copy assembly.
+               // Explicit matrix: wrap MBDyn's MatrixHandler generically.
+               // MBDynJacobianOp calls pMatHdl()->MatVecMul() which works with
+               // *any* matrix type that MBDyn's SolutionManager exposes.
+               // This replaces the old TpetraLinearOp / dynamic_cast path that
+               // assumed pMatHdl() returns a TpetraSparseMatrixHandler.
                ASSERT(oNoxSolver.pSolutionManager != nullptr);
-               MatrixHandler* pMH = oNoxSolver.pSolutionManager->pMatHdl();
-               auto* pTpetraMH = dynamic_cast<TpetraSparseMatrixHandler*>(pMH);
-               ASSERT(pTpetraMH != nullptr);
-               pJacobianOp =
-                    Thyra::tpetraLinearOp<TpetraSC, TpetraLO, TpetraGO, TpetraNode>(
-                         pSpace, pSpace,
-                         pTpetraMH->pGetTpetraCrsMatrix()); // adapt to actual API
+               pJacobianOp = Teuchos::rcp(
+                    new MBDynJacobianOp(oNoxSolver, pSpace));
           }
      }
      return pJacobianOp;
@@ -888,7 +1236,7 @@ bool NoxNonlinearSolver::NoxMakeResTest(const VectorHandler& oResVec,
 void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
 {
      // Attach() must have been called first so pSolutionManager is valid
-     // when create_W_op() resolves the Tpetra::CrsMatrix pointer.
+     // when create_W_op() resolves the operator.
      if (!pModelEval) {
           pModelEval = Teuchos::rcp(
                new ModelEvaluatorWrapper(*this, Size, pComm));
@@ -900,63 +1248,72 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
      Thyra::assign(x0.ptr(), TpetraSC(0.));
      pSolutionView = Teuchos::rcp(new NOX::Thyra::Vector(x0));
 
-     /* ---- Stratimikos / Belos ------------------------------------------ */
-     Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
-     Teuchos::RCP<Teuchos::ParameterList> pLSParams =
-          Teuchos::rcp(new Teuchos::ParameterList());
+     /* ---- Linear solve factory ----------------------------------------- */
+     // For the explicit-matrix path (any SolutionManager):
+     //   MBDynLOWSFactory was already created in ModelEvaluatorWrapper::Rebuild()
+     //   and delegates to pSolutionManager->Solve() — works with any linear solver
+     //   that MBDyn wraps (Umfpack, SuperLU, PARDISO, KLU, Tpetra-based, etc.).
+     //
+     // For the matrix-free path:
+     //   Stratimikos/Belos provides the Krylov solver; no preconditioner is set
+     //   (same as original Epetra path with USE_PRECOND_AS_SOLVER not set).
+     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<TpetraSC>> pLOWSFactory;
 
-     pLSParams->set("Linear Solver Type", "Belos");
+     if (uFlags & JACOBIAN_NEWTON_KRYLOV) {
+          /* ---- Stratimikos / Belos (matrix-free Krylov) ------------------ */
+          Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
+          Teuchos::RCP<Teuchos::ParameterList> pLSParams =
+               Teuchos::rcp(new Teuchos::ParameterList());
 
-     std::string sBelosSolverType = "Block GMRES";
-     if      (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)         sBelosSolverType = "Pseudo Block GMRES";
-     else if (uFlags & LINEAR_SOLVER_BLOCK_CG)                   sBelosSolverType = "Block CG";
-     else if (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_CG)            sBelosSolverType = "Pseudo Block CG";
-     else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)        sBelosSolverType = "Block Stochastic CG";
-     else if (uFlags & LINEAR_SOLVER_GCRODR)                     sBelosSolverType = "GCRODR";
-     else if (uFlags & LINEAR_SOLVER_RCG)                        sBelosSolverType = "RCG";
-     else if (uFlags & LINEAR_SOLVER_MINRES)                     sBelosSolverType = "MINRES";
-     else if (uFlags & LINEAR_SOLVER_TFQMR)                      sBelosSolverType = "TFQMR";
-     else if (uFlags & LINEAR_SOLVER_BICGSTAB)                   sBelosSolverType = "BiCGStab";
-     else if (uFlags & LINEAR_SOLVER_FIXED_POINT)                sBelosSolverType = "Fixed Point";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES)               sBelosSolverType = "TPETRA GMRES";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_PIPELINE)      sBelosSolverType = "TPETRA GMRES PIPELINE";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE) sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
-     else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SSTEP)         sBelosSolverType = "TPETRA GMRES S-STEP";
-
-     const integer iKrylovRestart =
-          std::min(Size, std::min(iMaxIterLinSol, iKrylovSubSpaceSize));
-
-     auto& belosParams =
-          pLSParams->sublist("Linear Solver Types").sublist("Belos");
-     belosParams.set("Solver Type", sBelosSolverType);
-     auto& bSolverParams =
-          belosParams.sublist("Solver Types").sublist(sBelosSolverType);
-     bSolverParams.set("Maximum Iterations",    iMaxIterLinSol);
-     bSolverParams.set("Convergence Tolerance", dTolLinSol);
-     bSolverParams.set("Num Blocks",            iKrylovRestart);
-     bSolverParams.set("Output Frequency",
-                       (uFlags & PRINT_CONVERGENCE_INFO) ? 1 : 0);
-     bSolverParams.set("Output Style", 1);
-     bSolverParams.set("Verbosity",
-                       (uFlags & PRINT_CONVERGENCE_INFO)
-                            ? (Belos::Errors | Belos::Warnings |
-                               Belos::IterationDetails |
-                               Belos::StatusTestDetails)
-                            : Belos::Errors);
-
-     if (!(uFlags & JACOBIAN_NEWTON_KRYLOV)) {
-          pLSParams->set("Preconditioner Type", "Ifpack2");
-          pLSParams->sublist("Preconditioner Types")
-                    .sublist("Ifpack2")
-                    .set("Prec Type", "RILUK")
-                    .sublist("Ifpack2 Settings")
-                    .set("fact: iluk level-of-fill", 1);
-     } else {
+          pLSParams->set("Linear Solver Type", "Belos");
           pLSParams->set("Preconditioner Type", "None");
-     }
 
-     linearSolverBuilder.setParameterList(pLSParams);
-     auto pLOWSFactory = linearSolverBuilder.createLinearSolveStrategy("");
+          std::string sBelosSolverType = "Block GMRES";
+          if      (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)         sBelosSolverType = "Pseudo Block GMRES";
+          else if (uFlags & LINEAR_SOLVER_BLOCK_CG)                   sBelosSolverType = "Block CG";
+          else if (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_CG)            sBelosSolverType = "Pseudo Block CG";
+          else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)        sBelosSolverType = "Block Stochastic CG";
+          else if (uFlags & LINEAR_SOLVER_GCRODR)                     sBelosSolverType = "GCRODR";
+          else if (uFlags & LINEAR_SOLVER_RCG)                        sBelosSolverType = "RCG";
+          else if (uFlags & LINEAR_SOLVER_MINRES)                     sBelosSolverType = "MINRES";
+          else if (uFlags & LINEAR_SOLVER_TFQMR)                      sBelosSolverType = "TFQMR";
+          else if (uFlags & LINEAR_SOLVER_BICGSTAB)                   sBelosSolverType = "BiCGStab";
+          else if (uFlags & LINEAR_SOLVER_FIXED_POINT)                sBelosSolverType = "Fixed Point";
+          else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES)               sBelosSolverType = "TPETRA GMRES";
+          else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_PIPELINE)      sBelosSolverType = "TPETRA GMRES PIPELINE";
+          else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE) sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
+          else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SSTEP)         sBelosSolverType = "TPETRA GMRES S-STEP";
+
+          const integer iKrylovRestart =
+               std::min(Size, std::min(iMaxIterLinSol, iKrylovSubSpaceSize));
+
+          auto& belosParams =
+               pLSParams->sublist("Linear Solver Types").sublist("Belos");
+          belosParams.set("Solver Type", sBelosSolverType);
+          auto& bSolverParams =
+               belosParams.sublist("Solver Types").sublist(sBelosSolverType);
+          bSolverParams.set("Maximum Iterations",    iMaxIterLinSol);
+          bSolverParams.set("Convergence Tolerance", dTolLinSol);
+          bSolverParams.set("Num Blocks",            iKrylovRestart);
+          bSolverParams.set("Output Frequency",
+                            (uFlags & PRINT_CONVERGENCE_INFO) ? 1 : 0);
+          bSolverParams.set("Output Style", 1);
+          bSolverParams.set("Verbosity",
+                            (uFlags & PRINT_CONVERGENCE_INFO)
+                                 ? (Belos::Errors | Belos::Warnings |
+                                    Belos::IterationDetails |
+                                    Belos::StatusTestDetails)
+                                 : Belos::Errors);
+
+          linearSolverBuilder.setParameterList(pLSParams);
+          pLOWSFactory = linearSolverBuilder.createLinearSolveStrategy("");
+          // Store in pModelEval so NOX::Thyra::Group can retrieve it
+          pModelEval->pLOWSFactory = pLOWSFactory;
+     } else {
+          // Explicit-matrix path: use the MBDynLOWSFactory already set in Rebuild()
+          pLOWSFactory = pModelEval->GetLOWSFactory();
+          ASSERT(!pLOWSFactory.is_null());
+     }
 
      /* ---- NOX parameters ----------------------------------------------- */
      auto& oPrintParam    = oSolverParam.sublist("Printing");
@@ -1173,8 +1530,9 @@ void NoxNonlinearSolver::Jacobian()
           } catch (const MatrixHandler::ErrRebuildMatrix&) {
                silent_cout("NoxNonlinearSolver: rebuilding matrix...\n");
                pSolutionManager->MatrInitialize();
-               // CrsMatrix pointer may have changed; re-wrap on next create_W_op()
-               if (pModelEval) pModelEval->pJacobianOp = Teuchos::null;
+               // MBDynJacobianOp reads pMatHdl() at every apply() call, so
+               // no pointer invalidation of the cached Jacobian op is needed
+               // (unlike the old TpetraLinearOp path that cached a raw pointer).
           }
      } while (!bDone);
      ASSERT(pJac != nullptr);
