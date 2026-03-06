@@ -512,6 +512,8 @@ public:
              return os;
         }
 
+        bool bReduceTimeStep();
+
         MBDYN_DEFINE_OPERATOR_NEW_DELETE
 };
 
