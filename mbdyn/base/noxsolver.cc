@@ -50,6 +50,7 @@
 #include "mbconfig.h"
 
 #ifdef USE_TRILINOS
+#include <set>
 #include "solman.h"
 #include "solver.h"
 #include "noxsolver.h"
@@ -102,6 +103,7 @@
 #include <Teuchos_RCP.hpp>
 
 #include <BelosOutputManager.hpp>
+#include <BelosSolverFactory.hpp>
 
 #undef HAVE_BLAS
 #undef HAVE_BOOL
@@ -143,6 +145,72 @@ NoxSolverParameters::NoxSolverParameters()
       iMaxIterLineSearch(200),
       iInnerIterBeforeAssembly(std::numeric_limits<integer>::max())
 {
+}
+
+/* -------------------------------------------------------------------------
+ * eGetBelosParamType – query the type of a Belos solver parameter.
+ *
+ * Creates a solver instance with null parameters the first time each
+ * solver-type name is requested, caches its getValidParameters() list, and
+ * returns a BelosParamType enum value that the input parser can use to
+ * dispatch to the correct HighParser::Get*() method.
+ *
+ * Thread-safety note: the cache is a function-local static protected by the
+ * C++11 guarantee of initialisation on first use; subsequent accesses are
+ * read-only and require no locking.
+ * ------------------------------------------------------------------------- */
+BelosParamType
+eGetBelosParamType(const std::string& sSolverType, const std::string& sParamName)
+{
+     // Cache: solver-type name → its full valid-parameter list.
+     // Built lazily; each entry is created exactly once.
+     using ValidParamCache =
+          std::map<std::string,
+                   Teuchos::RCP<const Teuchos::ParameterList>>;
+     static ValidParamCache oCache;
+
+     auto it = oCache.find(sSolverType);
+     if (it == oCache.end()) {
+          // Create a throw-away solver just to interrogate its valid params.
+          //
+          // In some Trilinos builds Belos::SolverFactory<SC,MV,OP> is a
+          // typedef alias for Belos::Impl::SolverFactoryParent<SC,MV,OP>,
+          // whose default constructor is protected.  We work around this by
+          // deriving a minimal local subclass: a derived-class constructor is
+          // permitted to call the protected base-class constructor.
+          struct TBelosFactory
+               : public Belos::SolverFactory<TpetraSC, TpetraMV, TpetraOp> {
+               TBelosFactory() = default;
+          };
+          TBelosFactory factory;
+          Teuchos::RCP<Belos::SolverManager<TpetraSC, TpetraMV, TpetraOp>> pSolver;
+          try {
+               pSolver = factory.create(sSolverType,
+                                        Teuchos::null /* use defaults */);
+          } catch (...) {
+               // Unknown solver type – cannot proceed.
+               return BelosParamType::UNKNOWN;
+          }
+          it = oCache.emplace(sSolverType, pSolver->getValidParameters()).first;
+     }
+
+     const Teuchos::ParameterList& oValid = *it->second;
+
+     if (!oValid.isParameter(sParamName)) {
+          return BelosParamType::UNKNOWN;
+     }
+
+     const Teuchos::ParameterEntry& oEntry = oValid.getEntry(sParamName);
+
+     // Dispatch on the four scalar types that Belos actually uses for
+     // user-settable parameters.  Anything else (RCP<ostream>, Array<…>,
+     // etc.) is flagged as UNSETTABLE so the parser can emit a clear error.
+     if (oEntry.isType<bool>())        return BelosParamType::BOOL;
+     if (oEntry.isType<int>())         return BelosParamType::INT;
+     if (oEntry.isType<double>())      return BelosParamType::DOUBLE;
+     if (oEntry.isType<std::string>()) return BelosParamType::STRING;
+
+     return BelosParamType::UNSETTABLE;
 }
 
 namespace {
@@ -1284,17 +1352,36 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
           else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE) sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
           else if (uFlags & LINEAR_SOLVER_TPETRA_GMRES_SSTEP)         sBelosSolverType = "TPETRA GMRES S-STEP";
 
-          const integer iKrylovRestart =
-               std::min(Size, std::min(iMaxIterLinSol, iKrylovSubSpaceSize));
-
           auto& belosParams =
                pLSParams->sublist("Linear Solver Types").sublist("Belos");
           belosParams.set("Solver Type", sBelosSolverType);
           auto& bSolverParams =
                belosParams.sublist("Solver Types").sublist(sBelosSolverType);
+
+          // ---- Obtain the authoritative valid-parameter list ---------------
+          // eGetBelosParamType() already creates a throw-away solver for
+          // this solver-type name on first call and caches its
+          // getValidParameters() list; reuse that cache here rather than
+          // duplicating the factory construction (which would also require
+          // MV/OP/BelosSolver aliases that are not in scope in this TU).
+          // UNKNOWN means "parameter absent from this solver's valid list".
+
+          // ---- Named MBDyn parameters (always present in every solver) -----
+          // "Maximum Iterations" and "Convergence Tolerance" appear in every
+          // Belos solver's valid-parameter list.
           bSolverParams.set("Maximum Iterations",    iMaxIterLinSol);
           bSolverParams.set("Convergence Tolerance", dTolLinSol);
-          bSolverParams.set("Num Blocks",            iKrylovRestart);
+
+          // "Num Blocks" (Krylov restart depth) is only valid for GMRES-family
+          // and the two recycling solvers.  Query the valid list so that the
+          // code remains correct if Belos ever adds or removes the parameter
+          // for a given solver, instead of relying on a hand-maintained mask.
+          if (eGetBelosParamType(sBelosSolverType, "Num Blocks") != BelosParamType::UNKNOWN) {
+               const integer iKrylovRestart =
+                    std::min(Size, std::min(iMaxIterLinSol, iKrylovSubSpaceSize));
+               bSolverParams.set("Num Blocks", iKrylovRestart);
+          }
+
           bSolverParams.set("Output Frequency",
                             (uFlags & PRINT_CONVERGENCE_INFO) ? 1 : 0);
           bSolverParams.set("Output Style", 1);
@@ -1304,6 +1391,45 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
                                     Belos::IterationDetails |
                                     Belos::StatusTestDetails)
                                  : Belos::Errors);
+
+          // ---- Generic Belos parameter overrides from the input file -------
+          // The "belos parameters" keyword block in the .mbd file is parsed
+          // into oBelosParams as typed variants.  We apply each entry here
+          // after confirming it is in the valid list.  Parameters set above
+          // (Maximum Iterations, Convergence Tolerance, Num Blocks, Verbosity,
+          // Output Frequency, Output Style) are intentionally overwritten only
+          // by the named MBDyn keywords and are excluded from this loop via the
+          // MBDYN_RESERVED_BELOS_PARAMS guard so that the solver's behaviour
+          // remains consistent with what the MBDyn input says.
+          static const std::set<std::string> MBDYN_RESERVED_BELOS_PARAMS = {
+               "Maximum Iterations",
+               "Convergence Tolerance",
+               "Num Blocks",
+               "Output Frequency",
+               "Output Style",
+               "Verbosity",
+          };
+
+          for (const auto& [sName, oValue] : oBelosParams) {
+               if (MBDYN_RESERVED_BELOS_PARAMS.count(sName)) {
+                    silent_cerr("Belos parameter \"" << sName
+                                << "\" is controlled by a named MBDyn keyword "
+                                << "and cannot be overridden in the "
+                                << "\"belos parameters\" block; ignoring.\n");
+                    continue;
+               }
+               if (eGetBelosParamType(sBelosSolverType, sName) == BelosParamType::UNKNOWN) {
+                    silent_cerr("Belos parameter \"" << sName
+                                << "\" is not valid for solver \""
+                                << sBelosSolverType
+                                << "\"; ignoring.\n");
+                    continue;
+               }
+               // Type-safe dispatch using std::visit over the variant.
+               std::visit([&bSolverParams, &sName](const auto& v) {
+                    bSolverParams.set(sName, v);
+               }, oValue);
+          }
 
           linearSolverBuilder.setParameterList(pLSParams);
           pLOWSFactory = linearSolverBuilder.createLinearSolveStrategy("");
