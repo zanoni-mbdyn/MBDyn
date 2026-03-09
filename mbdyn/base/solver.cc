@@ -54,6 +54,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <set>
 #include <ac/unistd.h>
 #include <cerrno>
 #include <csignal>
@@ -4930,15 +4931,15 @@ Solver::ReadData()
                                         } else if (HP.IsKeyWord("linear" "solver")) {
                                                 oNoxSolverParam.uFlags &= ~NoxSolverParameters::LINEAR_SOLVER_MASK;
 
-                                                if (HP.IsKeyWord("Block" "GMRES")) {
+                                                if (HP.IsKeyWord("Block" "GMRES") || HP.IsKeyWord("gmres")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_GMRES;
                                                 } else if (HP.IsKeyWord("Pseudo" "Block" "GMRES")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_GMRES;
-                                                } else if (HP.IsKeyWord("Block" "CG")) {
+                                                } else if (HP.IsKeyWord("Block" "CG") || HP.IsKeyWord("CG")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_CG;
-                                                } else if (HP.IsKeyWord("Pseudo" "Block" "CG")) {
+                                                } else if (HP.IsKeyWord("Pseudo" "Block" "cg")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_CG;
-                                                } else if (HP.IsKeyWord("Block" "Stochastic" "CG")) {
+                                                } else if (HP.IsKeyWord("Block" "Stochastic" "CG") || HP.IsKeyWord("cgs")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_STOCHASTIC_CG;
                                                 } else if (HP.IsKeyWord("GCRODR")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_GCRODR;
@@ -4959,7 +4960,7 @@ Solver::ReadData()
                                                 } else if (HP.IsKeyWord("TPETRA" "GMRES S-STEP")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_SSTEP;
                                                 } else {
-                                                        silent_cerr("keywords \"Block GMRES\", \"Pseudo Block GMRES\", \"Block CG\", \"Pseudo Block CG\", \"Block Stochastic CG\", \"GCRODR\", \"RCG\", \"MINRES\", \"TFQMR\", \"BiCGStab\", \"Fixed Point\", \"TPETRA GMRES\", \"TPETRA GMRES PIPELINE\", \"TPETRA GMRES SINGLE REDUCE\" or \"TPETRA GMRES S-STEP\"	expected "
+                                                        silent_cerr("keywords \"GMRES\", \"Block GMRES\", \"Pseudo Block GMRES\", \"Block CG\", \"cg\", \"Pseudo Block CG\", \"Block Stochastic CG\", \"cgs\", \"GCRODR\", \"RCG\", \"MINRES\", \"TFQMR\", \"BiCGStab\", \"Fixed Point\", \"TPETRA GMRES\", \"TPETRA GMRES PIPELINE\", \"TPETRA GMRES SINGLE REDUCE\" or \"TPETRA GMRES S-STEP\"	expected "
                                                                     << HP.GetLineData()
                                                                     << std::endl);
                                                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
@@ -4976,11 +4977,148 @@ Solver::ReadData()
                                                                     << HP.GetLineData() << std::endl);
                                                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
                                                 }
+                                                // Note: "krylov subspace size" sets the Belos "Num Blocks"
+                                                // restart parameter.  It is silently ignored for solver
+                                                // types that do not accept "Num Blocks" (e.g. Block CG,
+                                                // MINRES, BiCGStab).  The check is deferred to build time
+                                                // where getValidParameters() is available.
                                         } else if (HP.IsKeyWord("use" "preconditioner" "as" "solver")) {
                                                 if (HP.GetYesNoOrBool()) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::USE_PRECOND_AS_SOLVER;
                                                 } else {
                                                         oNoxSolverParam.uFlags &= ~NoxSolverParameters::USE_PRECOND_AS_SOLVER;
+                                                }
+                                        } else if (HP.IsKeyWord("belos" "parameters")) {
+                                                // Generic Belos solver-parameter override block.
+                                                //
+                                                // Syntax (inside the nox nonlinear solver options):
+                                                //
+                                                //   belos parameters,
+                                                //       "Flexible Gmres",         yes,
+                                                //       "Num Recycled Blocks",     10,
+                                                //       "Orthogonalization",       "ICGS",
+                                                //       "Assert Positive Definiteness", no;
+                                                //
+                                                // Each entry is a quoted Belos parameter name followed by
+                                                // its value.  The type (bool / int / double / string) is
+                                                // resolved at parse time by querying
+                                                // Belos::SolverFactory::getValidParameters() for the solver
+                                                // type selected by the preceding "linear solver" keyword.
+                                                // An error is emitted for unknown or unsettable parameters.
+                                                //
+                                                // The following parameters are controlled by dedicated
+                                                // MBDyn keywords and are rejected here:
+                                                //   "Maximum Iterations"   <- linear solver max iterations
+                                                //   "Convergence Tolerance"<- linear solver tolerance
+                                                //   "Num Blocks"           <- krylov subspace size
+                                                //   "Output Frequency", "Output Style", "Verbosity"
+                                                //                          <- print convergence info
+                                                {
+                                                        // Derive the Belos solver-type string from the
+                                                        // flags already set — mirrors the logic in
+                                                        // noxsolver.cc::BuildSolver().
+                                                        std::string sBelosSolverType = "Block GMRES";
+                                                        if      (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)
+                                                                sBelosSolverType = "Pseudo Block GMRES";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_BLOCK_CG)
+                                                                sBelosSolverType = "Block CG";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_CG)
+                                                                sBelosSolverType = "Pseudo Block CG";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)
+                                                                sBelosSolverType = "Block Stochastic CG";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_GCRODR)
+                                                                sBelosSolverType = "GCRODR";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_RCG)
+                                                                sBelosSolverType = "RCG";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_MINRES)
+                                                                sBelosSolverType = "MINRES";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_TFQMR)
+                                                                sBelosSolverType = "TFQMR";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_BICGSTAB)
+                                                                sBelosSolverType = "BiCGStab";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_FIXED_POINT)
+                                                                sBelosSolverType = "Fixed Point";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES)
+                                                                sBelosSolverType = "TPETRA GMRES";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_PIPELINE)
+                                                                sBelosSolverType = "TPETRA GMRES PIPELINE";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_SINGLE_REDUCE)
+                                                                sBelosSolverType = "TPETRA GMRES SINGLE REDUCE";
+                                                        else if (oNoxSolverParam.uFlags & NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_SSTEP)
+                                                                sBelosSolverType = "TPETRA GMRES S-STEP";
+
+                                                        static const std::set<std::string> RESERVED = {
+                                                                "Maximum Iterations",
+                                                                "Convergence Tolerance",
+                                                                "Num Blocks",
+                                                                "Output Frequency",
+                                                                "Output Style",
+                                                                "Verbosity",
+                                                        };
+
+                                                        while (HP.IsArg()) {
+                                                                // Parameter name — must be a quoted string.
+                                                                const std::string sName =
+                                                                        HP.GetStringWithDelims();
+
+                                                                if (RESERVED.count(sName)) {
+                                                                        silent_cerr("Belos parameter \""
+                                                                                    << sName
+                                                                                    << "\" is controlled by a dedicated "
+                                                                                       "MBDyn keyword; use "
+                                                                                       "\"linear solver max iterations\", "
+                                                                                       "\"linear solver tolerance\", "
+                                                                                       "\"krylov subspace size\" or "
+                                                                                       "\"print convergence info\" instead at line "
+                                                                                    << HP.GetLineData()
+                                                                                    << std::endl);
+                                                                        throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                                                                }
+
+                                                                // Resolve the type from Belos's own
+                                                                // valid-parameter list (cached after the
+                                                                // first call per solver type).
+                                                                const BelosParamType eType =
+                                                                        eGetBelosParamType(sBelosSolverType, sName);
+
+                                                                NoxSolverParameters::BelosParamValue oValue;
+                                                                switch (eType) {
+                                                                case BelosParamType::BOOL:
+                                                                        oValue = HP.GetYesNoOrBool();
+                                                                        break;
+                                                                case BelosParamType::INT:
+                                                                        oValue = HP.GetInt();
+                                                                        break;
+                                                                case BelosParamType::DOUBLE:
+                                                                        oValue = HP.GetReal();
+                                                                        break;
+                                                                case BelosParamType::STRING:
+                                                                        oValue = std::string(HP.GetStringWithDelims());
+                                                                        break;
+                                                                case BelosParamType::UNSETTABLE:
+                                                                        silent_cerr("Belos parameter \""
+                                                                                    << sName
+                                                                                    << "\" has an internal type "
+                                                                                       "(RCP<ostream> or similar) "
+                                                                                       "that cannot be set from the "
+                                                                                       "input file at line "
+                                                                                    << HP.GetLineData()
+                                                                                    << std::endl);
+                                                                        throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                                                                case BelosParamType::UNKNOWN:
+                                                                        silent_cerr("\"" << sName
+                                                                                    << "\" is not a valid parameter "
+                                                                                       "for Belos solver \""
+                                                                                    << sBelosSolverType
+                                                                                    << "\" at line "
+                                                                                    << HP.GetLineData()
+                                                                                    << std::endl);
+                                                                        throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                                                                }
+
+                                                                oNoxSolverParam.oBelosParams[sName] =
+                                                                        std::move(oValue);
+                                                        }
                                                 }
                                         } else if (HP.IsKeyWord("jacobian" "operator")) {
                                                 oNoxSolverParam.uFlags &= ~NoxSolverParameters::JACOBIAN_OPERATOR_MASK;
@@ -5152,6 +5290,7 @@ Solver::ReadData()
                                                             "\"linear solver tolerance\", "
                                                             "\"linear solver max iterations\", "
                                                             "\"krylov subspace size\", "
+                                                            "\"belos parameters\", "
                                                             "\"forcing term\", "
                                                             "\"line search method\", "
                                                             "\"line search max iterations\", "

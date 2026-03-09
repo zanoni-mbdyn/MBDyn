@@ -113,7 +113,7 @@ begin: initial value;
              direction, newton,
              weighted rms absolute tolerance, 0.,
              weighted rms relative tolerance, 0.,
-             linear solver, block gmres,
+             linear solver, gmres,
              linear solver max iterations, 12,
              krylov subspace size, 12;
 threads: disable;
