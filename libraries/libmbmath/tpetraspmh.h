@@ -312,11 +312,15 @@ private:
 
      const integer iNumColsAlloc;
      mutable bool bFilled;
+     mutable bool bHostCacheDirty;
 
      /*
       * Host-side CRS arrays populated once after fillComplete().
       * These back the const_iterator and the MakeCompressed*Form methods
       * without further device round-trips.
+      * After fillComplete() the CRS structure is fixed; only values change.
+      * bHostCacheDirty is set when sumIntoGlobalValues modifies the Tpetra
+      * matrix, so that the next EnsureFilled() call re-extracts values.
       */
      mutable std::vector<integer>    oRowPtr;   /* length NRows+1 */
      mutable std::vector<integer>    oColInd;   /* length Nz      */
