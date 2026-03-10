@@ -4851,7 +4851,7 @@ Solver::ReadData()
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_CG;
                                                 } else if (HP.IsKeyWord("Pseudo" "Block" "cg")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_PSEUDO_BLOCK_CG;
-                                                } else if (HP.IsKeyWord("Block" "Stochastic" "CG") || HP.IsKeyWord("cgs")) {
+                                                } else if (HP.IsKeyWord("Pseudo" "Block" "Stochastic" "CG") || HP.IsKeyWord("cgs")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_BLOCK_STOCHASTIC_CG;
                                                 } else if (HP.IsKeyWord("GCRODR")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_GCRODR;
@@ -4872,7 +4872,7 @@ Solver::ReadData()
                                                 } else if (HP.IsKeyWord("TPETRA" "GMRES S-STEP")) {
                                                         oNoxSolverParam.uFlags |= NoxSolverParameters::LINEAR_SOLVER_TPETRA_GMRES_SSTEP;
                                                 } else {
-                                                        silent_cerr("keywords \"GMRES\", \"Block GMRES\", \"Pseudo Block GMRES\", \"Block CG\", \"cg\", \"Pseudo Block CG\", \"Block Stochastic CG\", \"cgs\", \"GCRODR\", \"RCG\", \"MINRES\", \"TFQMR\", \"BiCGStab\", \"Fixed Point\", \"TPETRA GMRES\", \"TPETRA GMRES PIPELINE\", \"TPETRA GMRES SINGLE REDUCE\" or \"TPETRA GMRES S-STEP\"	expected "
+                                                        silent_cerr("keywords \"GMRES\", \"Block GMRES\", \"Pseudo Block GMRES\", \"Block CG\", \"cg\", \"Pseudo Block CG\", \"Pseudo Block Stochastic CG\", \"cgs\", \"GCRODR\", \"RCG\", \"MINRES\", \"TFQMR\", \"BiCGStab\", \"Fixed Point\", \"TPETRA GMRES\", \"TPETRA GMRES PIPELINE\", \"TPETRA GMRES SINGLE REDUCE\" or \"TPETRA GMRES S-STEP\"	expected "
                                                                     << HP.GetLineData()
                                                                     << std::endl);
                                                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);

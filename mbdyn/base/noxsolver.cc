@@ -1487,7 +1487,7 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
           if      (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_GMRES)         sBelosSolverType = "Pseudo Block GMRES";
           else if (uFlags & LINEAR_SOLVER_BLOCK_CG)                   sBelosSolverType = "Block CG";
           else if (uFlags & LINEAR_SOLVER_PSEUDO_BLOCK_CG)            sBelosSolverType = "Pseudo Block CG";
-          else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)        sBelosSolverType = "Block Stochastic CG";
+          else if (uFlags & LINEAR_SOLVER_BLOCK_STOCHASTIC_CG)        sBelosSolverType = "Pseudo Block Stochastic CG";
           else if (uFlags & LINEAR_SOLVER_GCRODR)                     sBelosSolverType = "GCRODR";
           else if (uFlags & LINEAR_SOLVER_RCG)                        sBelosSolverType = "RCG";
           else if (uFlags & LINEAR_SOLVER_MINRES)                     sBelosSolverType = "MINRES";
