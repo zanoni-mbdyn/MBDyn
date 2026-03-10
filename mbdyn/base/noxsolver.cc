@@ -526,6 +526,52 @@ private:
 };
 
 /* =========================================================================
+ * MBDynPrecOp
+ *
+ * Preconditioner operator for the JFNK path.  Its apply() computes
+ * y = J^{-1} * x  by delegating to pSolutionManager->Solve(), exactly as
+ * NoxNonlinearSolver::ApplyInverse did in the Epetra version.
+ *
+ * Belos calls apply() on the preconditioner at every GMRES iteration.
+ * With the assembled Jacobian as an exact (or near-exact) preconditioner,
+ * GMRES converges in very few iterations.
+ * ========================================================================= */
+class MBDynPrecOp : public Thyra::LinearOpBase<TpetraSC>
+{
+public:
+     using SC = TpetraSC;
+
+     MBDynPrecOp(NoxNonlinearSolver& solver,
+                 const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
+          : oNoxSolver(solver), pSpace(pSpace_a) {}
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     range()  const override { return pSpace; }
+
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
+     domain() const override { return pSpace; }
+
+protected:
+     bool opSupportedImpl(Thyra::EOpTransp M_trans) const override
+     {
+          return (M_trans == Thyra::NOTRANS);
+     }
+
+     void applyImpl(
+          const Thyra::EOpTransp                          M_trans,
+          const Thyra::MultiVectorBase<SC>&               X_in,
+          const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+          const SC                                        alpha,
+          const SC                                        beta) const override;
+
+private:
+     friend class NoxNonlinearSolver;
+
+     NoxNonlinearSolver& oNoxSolver;
+     Teuchos::RCP<const Thyra::VectorSpaceBase<SC>> pSpace;
+};
+
+/* =========================================================================
  * ModelEvaluatorWrapper
  *
  * Bridges MBDyn residual / Jacobian to NOX::Thyra via Thyra::ModelEvaluator.
@@ -543,6 +589,7 @@ private:
  *     original, including:
  *       - residual branch         <- computeF
  *       - W_op branch             <- computeJacobian / Jacobian()
+ *       - W_prec branch           <- computePreconditioner / Jacobian()
  *       - MBDyn convention that Residual() must precede Jacobian()
  *       - line-search lambda and iteration-counter bookkeeping
  *       - NOX sign convention (residual negated)
@@ -550,6 +597,11 @@ private:
  *  4. The linear solve is performed by MBDynLinearOpWithSolve, which
  *     delegates to pSolutionManager->Solve() — exactly as ApplyInverse
  *     did in the Epetra version, and works with any SolutionManager.
+ *
+ *  5. For JACOBIAN_NEWTON_KRYLOV, create_W_prec() returns a
+ *     Thyra::DefaultPreconditioner wrapping MBDynPrecOp, and
+ *     evalModelImpl assembles the Jacobian matrix when W_prec is
+ *     requested — mirroring the Epetra computePreconditioner callback.
  * ========================================================================= */
 class ModelEvaluatorWrapper
      : public Thyra::StateFuncModelEvaluatorBase<TpetraSC>
@@ -574,6 +626,7 @@ public:
      Thyra::ModelEvaluatorBase::OutArgs<SC> createOutArgsImpl()  const override;
 
      Teuchos::RCP<Thyra::LinearOpBase<SC>> create_W_op() const override;
+     Teuchos::RCP<Thyra::PreconditionerBase<SC>> create_W_prec() const override;
 
      void evalModelImpl(
           const Thyra::ModelEvaluatorBase::InArgs<SC>&  inArgs,
@@ -599,6 +652,7 @@ private:
      Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>             pSpace;
      Thyra::ModelEvaluatorBase::InArgs<SC>                      oNominalValues;
      mutable Teuchos::RCP<Thyra::LinearOpBase<SC>>              pJacobianOp;
+     mutable Teuchos::RCP<Thyra::PreconditionerBase<SC>>        pPreconditioner;
      Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC>>      pLOWSFactory;
 };
 
@@ -614,6 +668,7 @@ public:
      friend class TpetraMatFreeJacOper;
      friend class MBDynJacobianOp;
      friend class MBDynLinearOpWithSolve;
+     friend class MBDynPrecOp;
      friend class NoxResidualTest;
      friend class NoxSolutionTest;
 
@@ -761,6 +816,55 @@ void TpetraMatFreeJacOper::applyImpl(
           }
      }
 #endif
+}
+
+/* =========================================================================
+ * MBDynPrecOp::applyImpl  out-of-line implementation
+ *
+ * Applies the preconditioner M^{-1} * x via pSolutionManager->Solve().
+ * This mirrors NoxNonlinearSolver::ApplyInverse from the Epetra version.
+ * ========================================================================= */
+void MBDynPrecOp::applyImpl(
+     const Thyra::EOpTransp                          M_trans,
+     const Thyra::MultiVectorBase<SC>&               X_in,
+     const Teuchos::Ptr<Thyra::MultiVectorBase<SC>>& Y_out,
+     const SC                                        alpha,
+     const SC                                        beta) const
+{
+     ASSERT(M_trans == Thyra::NOTRANS);
+     ASSERT(alpha == SC(1.) && beta == SC(0.));
+     ASSERT(oNoxSolver.pSolutionManager != nullptr);
+
+     ++oNoxSolver.iPrecInnerIterCnt;
+     ++oNoxSolver.iInnerIterCntTot;
+
+     NoxNonlinearSolver::CPUTimeGuard oCPULinearSolver(
+          oNoxSolver, NoxNonlinearSolver::CPU_LINEAR_SOLVER);
+
+     VectorHandler* const pResVec = oNoxSolver.pSolutionManager->pResHdl();
+     const VectorHandler* const pSolVec = oNoxSolver.pSolutionManager->pSolHdl();
+     const integer n = oNoxSolver.Size;
+
+     ASSERT(n == pResVec->iGetSize());
+     ASSERT(n == pSolVec->iGetSize());
+
+     auto bTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getConstTpetraMultiVector(Teuchos::rcpFromRef(X_in));
+     auto xTpetra =
+          Thyra::TpetraOperatorVectorExtraction<SC, TpetraLO, TpetraGO, TpetraNode>
+               ::getTpetraMultiVector(Teuchos::rcpFromRef(*Y_out));
+
+     const SC* bData =
+          bTpetra->getLocalViewHost(Tpetra::Access::ReadOnly).data();
+     SC* xData =
+          xTpetra->getLocalViewHost(Tpetra::Access::ReadWrite).data();
+
+     std::copy(bData, bData + n, pResVec->pdGetVec());
+
+     oNoxSolver.pSolutionManager->Solve();
+
+     std::copy(pSolVec->pdGetVec(), pSolVec->pdGetVec() + n, xData);
 }
 
 /* =========================================================================
@@ -912,6 +1016,7 @@ void ModelEvaluatorWrapper::Rebuild(integer iSize)
           Thyra::createVectorSpace<TpetraSC, TpetraLO, TpetraGO, TpetraNode>(pMap);
 
      pJacobianOp = Teuchos::null; // invalidate on resize
+     pPreconditioner = Teuchos::null;
 
      // For the explicit-matrix path use MBDynLOWSFactory so the linear solve
      // is routed through pSolutionManager->Solve() regardless of which
@@ -944,6 +1049,9 @@ ModelEvaluatorWrapper::createOutArgsImpl() const
      outArgs.setModelEvalDescription(this->description());
      outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_f);
      outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_W_op);
+     if (oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV) {
+          outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_W_prec, true);
+     }
      return outArgs;
 }
 
@@ -969,6 +1077,23 @@ ModelEvaluatorWrapper::create_W_op() const
           }
      }
      return pJacobianOp;
+}
+
+Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>>
+ModelEvaluatorWrapper::create_W_prec() const
+{
+     if (pPreconditioner.is_null()) {
+          if (oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV) {
+               ASSERT(oNoxSolver.pSolutionManager != nullptr);
+               auto pPrecOp = Teuchos::rcp(
+                    new MBDynPrecOp(oNoxSolver, pSpace));
+               Teuchos::RCP<Thyra::LinearOpBase<SC>> pPrecOpBase = pPrecOp;
+               // Wrap as "unspecified" (Belos will use it as right prec).
+               pPreconditioner = Teuchos::rcp(
+                    new Thyra::DefaultPreconditioner<SC>(pPrecOpBase));
+          }
+     }
+     return pPreconditioner;
 }
 
 void ModelEvaluatorWrapper::evalModelImpl(
@@ -1056,26 +1181,48 @@ void ModelEvaluatorWrapper::evalModelImpl(
      }
 
      /* --- Jacobian branch  (mirrors computeJacobian) -------------------- */
-     // outArgs.get_W_op() returns the same Thyra::TpetraLinearOp that
-     // create_W_op() gave the NOX::Thyra::Group.  Because it wraps the
-     // solution manager's CrsMatrix by shared_ptr, assembling below into
+     // For the explicit-matrix path, assembling below into
      // pSolutionManager->pMatHdl() automatically updates the operator NOX
      // uses for the linear solve — no copy required.
-     // For the matrix-free path no matrix assembly is performed at all.
+     // For the matrix-free (JFNK) path, only the MBDyn state needs to be
+     // current; no explicit matrix assembly is performed (the matrix-free
+     // operator recomputes J*v on every apply).
      if (!outArgs.get_W_op().is_null()) {
           if (oNoxSolver.bUpdateJacobian) {
                // MBDyn convention: Residual() must precede Jacobian().
                // If the residual branch above already ran, the solution is
-               // current; otherwise call explicitly (preconditioner refresh).
+               // current; otherwise call explicitly.
                if (outArgs.get_f().is_null()) {
                     oNoxSolver.Residual(&oSol, &oNoxSolver.TmpRes);
                }
-               if (oNoxSolver.pSolutionManager) {
-                    oNoxSolver.pSolutionManager->MatrReset();
+               if (!(oNoxSolver.uFlags
+                     & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV)) {
+                    // Explicit-matrix path: assemble the Jacobian matrix.
+                    if (oNoxSolver.pSolutionManager) {
+                         oNoxSolver.pSolutionManager->MatrReset();
+                    }
+                    oNoxSolver.Jacobian();
                }
-               oNoxSolver.Jacobian(); // writes into pSolutionManager->pMatHdl()
                oNoxSolver.bUpdateJacobian = false;
           }
+     }
+
+     /* --- Preconditioner branch  (mirrors computePreconditioner) --------- */
+     // For JFNK, assemble the explicit Jacobian matrix for use as
+     // preconditioner.  The MBDynPrecOp operator reads from
+     // pSolutionManager->pMatHdl() and applies J^{-1} via Solve().
+     // This mirrors the Epetra version's computePreconditioner callback.
+     if (!outArgs.get_W_prec().is_null()) {
+          // Ensure the residual/state is current.
+          if (outArgs.get_f().is_null() && !oNoxSolver.bUpdateJacobian) {
+               // W_op branch above already called Residual if bUpdateJacobian
+               // was true; otherwise we need to update state here.
+               oNoxSolver.Residual(&oSol, &oNoxSolver.TmpRes);
+          }
+          if (oNoxSolver.pSolutionManager) {
+               oNoxSolver.pSolutionManager->MatrReset();
+          }
+          oNoxSolver.Jacobian();
      }
 }
 
@@ -1527,12 +1674,19 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
      Teuchos::RCP<Thyra::LinearOpBase<TpetraSC>>         pJacobian = pModelEval->create_W_op();
      Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<TpetraSC>>
           pLOWSFactoryConst = pLOWSFactory;
-     Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>>        pNullPrecOp;
+
+     // For JFNK, provide the assembled-Jacobian-based preconditioner so that
+     // Belos GMRES converges in very few iterations.  NOX::Thyra::Group will
+     // call evalModelImpl with W_prec to update the preconditioner matrix.
+     // For the explicit-matrix path, the preconditioner is not needed (the
+     // LOWS factory does a direct solve).
+     Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>> pPrecOp =
+          pModelEval->create_W_prec();
      Teuchos::RCP<Thyra::PreconditionerFactoryBase<TpetraSC>> pNullPrecFactory;
 
      auto grpPtr = Teuchos::rcp(new NOX::Thyra::Group(
           *pSolutionView, pModelEvalConst, pJacobian,
-          pLOWSFactoryConst, pNullPrecOp, pNullPrecFactory));
+          pLOWSFactoryConst, pPrecOp, pNullPrecFactory));
 
      /* ---- Status tests -------------------------------------------------- */
      auto converged =

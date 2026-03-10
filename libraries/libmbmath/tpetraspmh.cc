@@ -64,7 +64,8 @@ TpetraSparseMatrixHandler::TpetraSparseMatrixHandler(
      :SparseMatrixHandler(iNumRows_a, iNumCols_a),
       pComm(pComm_a),
       iNumColsAlloc(iNumColsAlloc_a),
-      bFilled(false)
+      bFilled(false),
+      bHostCacheDirty(false)
 {
      if (iNumRows_a != iNumCols_a) {
           silent_cerr("TpetraSparseMatrixHandler: matrix must be square!\n");
@@ -117,12 +118,14 @@ void TpetraSparseMatrixHandler::IsValid() const
  */
 void TpetraSparseMatrixHandler::EnsureFilled() const
 {
-     if (bFilled) {
+     if (bFilled && !bHostCacheDirty) {
           return;
      }
 
-     pMat->fillComplete(pColMap, pRowMap);
-     bFilled = true;
+     if (!bFilled) {
+          pMat->fillComplete(pColMap, pRowMap);
+          bFilled = true;
+     }
 
      /* Extract into host std::vectors for cheap random access later. */
      const auto& rowPtrView = pMat->getLocalRowPtrsHost();
@@ -147,6 +150,8 @@ void TpetraSparseMatrixHandler::EnsureFilled() const
      /* Build the transposed CSC for MatVecMul/MatTVecMul and operator(). */
      oCscT = CSCMatrixHandlerTpl<doublereal, integer, 0>(
           oValues.data(), oColInd.data(), oRowPtr.data(), nRows, nNz);
+
+     bHostCacheDirty = false;
 }
 
 void TpetraSparseMatrixHandler::InsertOrSumValues(TpetraGO globalRow,
@@ -169,6 +174,12 @@ void TpetraSparseMatrixHandler::InsertOrSumValues(TpetraGO globalRow,
                ASSERT(0);
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
           }
+          if (err != nEntries) {
+               /* Some entries were not in the sparsity pattern;
+                * the matrix structure must be rebuilt from scratch. */
+               throw MatrixHandler::ErrRebuildMatrix(MBDYN_EXCEPT_ARGS);
+          }
+          bHostCacheDirty = true;
      } else {
           /* Before fillComplete: insertGlobalValues */
           pMat->insertGlobalValues(globalRow, colView, valView);
@@ -216,6 +227,7 @@ void TpetraSparseMatrixHandler::Reset()
           std::fill(oValues.begin(), oValues.end(), 0.);
 
           /* oCscT shares the same values buffer; it stays valid. */
+          bHostCacheDirty = false;
      } else {
           /* Haven't filled yet – rebuild from scratch */
           pMat = Teuchos::rcp(new TpetraCrs(pRowMap, pColMap,
@@ -223,6 +235,7 @@ void TpetraSparseMatrixHandler::Reset()
           oRowPtr.clear();
           oColInd.clear();
           oValues.clear();
+          bHostCacheDirty = false;
      }
 
 #ifdef DEBUG
