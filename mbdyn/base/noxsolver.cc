@@ -1202,8 +1202,13 @@ void ModelEvaluatorWrapper::evalModelImpl(
                          oNoxSolver.pSolutionManager->MatrReset();
                     }
                     oNoxSolver.Jacobian();
+                    // Clear the flag: the assembled matrix is now current.
+                    oNoxSolver.bUpdateJacobian = false;
                }
-               oNoxSolver.bUpdateJacobian = false;
+               // For JFNK: do NOT clear bUpdateJacobian here.
+               // The flag is consumed by the W_prec branch (separate
+               // evalModel call) which needs to know it should assemble
+               // the preconditioner matrix.
           }
      }
 
@@ -1211,18 +1216,44 @@ void ModelEvaluatorWrapper::evalModelImpl(
      // For JFNK, assemble the explicit Jacobian matrix for use as
      // preconditioner.  The MBDynPrecOp operator reads from
      // pSolutionManager->pMatHdl() and applies J^{-1} via Solve().
-     // This mirrors the Epetra version's computePreconditioner callback.
+     //
+     // In the Epetra version, the NOX::Epetra::LinearSystem called
+     // getPreconditionerPolicy() before each linear solve to decide
+     // whether to recompute the preconditioner.  The policy checked:
+     //   iPrecInnerIterCnt >= iInnerIterBeforeAssembly  (GMRES iters in prev step)
+     //   iPrecInnerIterCntTot >= iIterationsBeforeAssembly (total across Newton steps)
+     // If either was true → RECOMPUTE, else → REUSE.
+     // Then recomputePreconditioner → computeJacobian (guarded by bUpdateJacobian).
+     //
+     // In the Thyra port, NOX::Thyra::Group calls evalModel(W_prec)
+     // every Newton iteration (from updateLOWS).  We replicate the
+     // Epetra reuse policy here: only assemble when ForcePrecondRebuild
+     // was called or the inner-iteration count exceeds the threshold.
      if (!outArgs.get_W_prec().is_null()) {
-          // Ensure the residual/state is current.
-          if (outArgs.get_f().is_null() && !oNoxSolver.bUpdateJacobian) {
-               // W_op branch above already called Residual if bUpdateJacobian
-               // was true; otherwise we need to update state here.
-               oNoxSolver.Residual(&oSol, &oNoxSolver.TmpRes);
+          const bool bPrecRecompute =
+               oNoxSolver.iPrecInnerIterCnt >= oNoxSolver.iInnerIterBeforeAssembly
+               || oNoxSolver.iPrecInnerIterCntTot >= oNoxSolver.iIterationsBeforeAssembly;
+
+          if (bPrecRecompute && oNoxSolver.bUpdateJacobian) {
+               // MBDyn convention: Residual() must precede Jacobian().
+               if (outArgs.get_f().is_null()) {
+                    oNoxSolver.Residual(&oSol, &oNoxSolver.TmpRes);
+               }
+               if (oNoxSolver.pSolutionManager) {
+                    oNoxSolver.pSolutionManager->MatrReset();
+               }
+               oNoxSolver.Jacobian();
+               oNoxSolver.bUpdateJacobian = false;
+               oNoxSolver.ResetPrecondReuse();
+          } else if (!bPrecRecompute) {
+               ++oNoxSolver.iPrecInnerIterCntTot;
           }
-          if (oNoxSolver.pSolutionManager) {
-               oNoxSolver.pSolutionManager->MatrReset();
-          }
-          oNoxSolver.Jacobian();
+          // Reset per-Newton-step GMRES counter so it only counts the
+          // next linear solve's preconditioner applications.  Mirrors
+          // iPrecInnerIterCnt = 0 at the start of applyJacobianInverse
+          // in the Epetra version.  (ResetPrecondReuse already cleared
+          // it in the recompute path, so this only matters for reuse.)
+          oNoxSolver.iPrecInnerIterCnt = 0;
      }
 }
 
