@@ -4723,8 +4723,11 @@ MBDYN_TESTSUITE_TEST(sp_gradient_test, test_binary_io) {
      oRestartData1.Sync(RestartData::NODES_STRUCT, 2u, "a", a1, RestartData::RESTART_SAVE);
      oRestartData1.Sync(RestartData::NODES_STRUCT, 3u, "R", R1, RestartData::RESTART_SAVE);
      
-     char szFileName[TMP_MAX];
-     const std::string strFileName = tmpnam(szFileName);
+     char szFileName[] = "/tmp/mbdyn_test_XXXXXX";
+     int fd = mkstemp(szFileName);
+     MBDYN_TESTSUITE_ASSERT(fd != -1);
+     close(fd);
+     const std::string strFileName = szFileName;
 
      oRestartData1.WriteFile(strFileName);
 
