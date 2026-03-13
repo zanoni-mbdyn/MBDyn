@@ -47,3 +47,5 @@ via La Masa, 34 - 20156 Milano, Italy
 	Those libraries are neither required to run mbdyn nor the utilities
 	(unless you force the shared build).
 	A bare-bone man page will be installed in "$PREFIX/share/man/man1".
+  - For macOS user follow the [wiki](https://public.gitlab.polimi.it/DAER/mbdyn/-/wikis/macOS-build) 
+  
