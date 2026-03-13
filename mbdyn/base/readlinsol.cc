@@ -258,6 +258,10 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
                    "using \"Belos\" instead" << std::endl);
              cs.SetSolver(LinSol::BELOS_SOLVER);
              DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
+#ifdef USE_TRILINOS
+             bGotIt = true;
+#endif
+             break;
 	case BELOS:
              cs.SetSolver(LinSol::BELOS_SOLVER);
              DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
