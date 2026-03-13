@@ -7483,7 +7483,7 @@ Solver::AllocateNonlinearSolver()
                 case LinSol::SPQR_SOLVER:
                 case LinSol::STRUMPACK_SOLVER:
                 case LinSol::BELOS_SOLVER:
-                case LinSol::AMESOS_SOLVER:
+                case LinSol::AMESOS2_SOLVER:
                 case LinSol::SICONOS_SPARSE_SOLVER:
                         // All linear solvers which do not destroy the Jacobian during factorization should be added here.
                         break;

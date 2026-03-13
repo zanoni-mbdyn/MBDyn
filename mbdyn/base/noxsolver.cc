@@ -485,7 +485,7 @@ public:
 
      bool supportsPreconditionerInputType(
           const Thyra::EPreconditionerInputType /* precOpType */) const override
-     { return false; }
+     { return true; }
 
      void initializePreconditionedOp(
           const Teuchos::RCP<const Thyra::LinearOpSourceBase<SC>>&    /* fwdOpSrc */,
@@ -494,7 +494,9 @@ public:
           const Thyra::ESupportSolveUse                               /* supportSolveUse */)
           const override
      {
-          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+          // Nothing to do: MBDynLinearOpWithSolve always reads the current
+          // pSolutionManager state at solve time, and the preconditioner
+          // (MBDynPrecOp) similarly delegates to pSolutionManager->Solve().
      }
 
      void initializeApproxPreconditionedOp(
@@ -504,7 +506,7 @@ public:
           const Thyra::ESupportSolveUse                               /* supportSolveUse */)
           const override
      {
-          throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
+          // Same as above.
      }
 
      std::string description() const override { return "MBDynLOWSFactory"; }
@@ -654,6 +656,63 @@ private:
      mutable Teuchos::RCP<Thyra::LinearOpBase<SC>>              pJacobianOp;
      mutable Teuchos::RCP<Thyra::PreconditionerBase<SC>>        pPreconditioner;
      Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC>>      pLOWSFactory;
+};
+
+/* =========================================================================
+ * MBDynThyraGroup — work around NOX::Thyra::Group shared-Jacobian
+ *                   ownership bug in operator= and clone(DeepCopy)
+ *
+ * NOX::Thyra::Group::operator= checks  this->isJacobian()  which
+ * requires shared_jacobian_->isOwner(this) — but ownership has not
+ * been transferred yet at that point.  The Epetra equivalent
+ * (NOX::Epetra::Group) correctly checks is_valid_jacobian_ directly.
+ * This causes Trust Region (and any solver that copies a group and
+ * then calls applyJacobian on the copy) to throw.
+ *
+ * Fix: after the base-class operator= / copy-ctor, transfer ownership
+ * based on is_valid_jacobian_ (a protected member) alone.
+ * ========================================================================= */
+class MBDynThyraGroup : public NOX::Thyra::Group
+{
+public:
+     // Forward the "power user" constructor used by BuildSolver().
+     MBDynThyraGroup(
+          const NOX::Thyra::Vector& initial_guess,
+          const Teuchos::RCP<const Thyra::ModelEvaluator<double>>& model,
+          const Teuchos::RCP<Thyra::LinearOpBase<double>>& linear_op,
+          const Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<double>>& lows_factory,
+          const Teuchos::RCP<Thyra::PreconditionerBase<double>>& prec_op,
+          const Teuchos::RCP<Thyra::PreconditionerFactoryBase<double>>& prec_factory)
+          : NOX::Thyra::Group(initial_guess, model, linear_op,
+                              lows_factory, prec_op, prec_factory)
+     {}
+
+     // Copy constructor (used by clone).
+     MBDynThyraGroup(const MBDynThyraGroup& source, NOX::CopyType type)
+          : NOX::Thyra::Group(source, type)
+     {
+          if (type == NOX::DeepCopy
+              && Teuchos::nonnull(shared_jacobian_)
+              && is_valid_jacobian_)
+          {
+               shared_jacobian_->getObject(this);
+          }
+     }
+
+     NOX::Abstract::Group&
+     operator=(const NOX::Abstract::Group& source) override
+     {
+          NOX::Thyra::Group::operator=(source);
+          if (Teuchos::nonnull(shared_jacobian_) && is_valid_jacobian_)
+               shared_jacobian_->getObject(this);
+          return *this;
+     }
+
+     Teuchos::RCP<NOX::Abstract::Group>
+     clone(NOX::CopyType type) const override
+     {
+          return Teuchos::rcp(new MBDynThyraGroup(*this, type));
+     }
 };
 
 /* =========================================================================
@@ -1049,9 +1108,7 @@ ModelEvaluatorWrapper::createOutArgsImpl() const
      outArgs.setModelEvalDescription(this->description());
      outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_f);
      outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_W_op);
-     if (oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV) {
-          outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_W_prec, true);
-     }
+     outArgs.setSupports(Thyra::ModelEvaluatorBase::OUT_ARG_W_prec, true);
      return outArgs;
 }
 
@@ -1083,15 +1140,13 @@ Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>>
 ModelEvaluatorWrapper::create_W_prec() const
 {
      if (pPreconditioner.is_null()) {
-          if (oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV) {
-               ASSERT(oNoxSolver.pSolutionManager != nullptr);
-               auto pPrecOp = Teuchos::rcp(
-                    new MBDynPrecOp(oNoxSolver, pSpace));
-               Teuchos::RCP<Thyra::LinearOpBase<SC>> pPrecOpBase = pPrecOp;
-               // Wrap as "unspecified" (Belos will use it as right prec).
-               pPreconditioner = Teuchos::rcp(
-                    new Thyra::DefaultPreconditioner<SC>(pPrecOpBase));
-          }
+          ASSERT(oNoxSolver.pSolutionManager != nullptr);
+          auto pPrecOp = Teuchos::rcp(
+               new MBDynPrecOp(oNoxSolver, pSpace));
+          Teuchos::RCP<Thyra::LinearOpBase<SC>> pPrecOpBase = pPrecOp;
+          // Wrap as "unspecified" (Belos will use it as right prec).
+          pPreconditioner = Teuchos::rcp(
+               new Thyra::DefaultPreconditioner<SC>(pPrecOpBase));
      }
      return pPreconditioner;
 }
@@ -1706,16 +1761,15 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
      Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<TpetraSC>>
           pLOWSFactoryConst = pLOWSFactory;
 
-     // For JFNK, provide the assembled-Jacobian-based preconditioner so that
-     // Belos GMRES converges in very few iterations.  NOX::Thyra::Group will
-     // call evalModelImpl with W_prec to update the preconditioner matrix.
-     // For the explicit-matrix path, the preconditioner is not needed (the
-     // LOWS factory does a direct solve).
+     // Provide the assembled-Jacobian-based preconditioner.  For JFNK
+     // this is essential (Belos GMRES needs it); for explicit-matrix +
+     // iterative solver (Trust Region + GMRES), NOX may call
+     // applyRightPreconditioning which also needs a preconditioner.
      Teuchos::RCP<Thyra::PreconditionerBase<TpetraSC>> pPrecOp =
           pModelEval->create_W_prec();
      Teuchos::RCP<Thyra::PreconditionerFactoryBase<TpetraSC>> pNullPrecFactory;
 
-     auto grpPtr = Teuchos::rcp(new NOX::Thyra::Group(
+     auto grpPtr = Teuchos::rcp(new MBDynThyraGroup(
           *pSolutionView, pModelEvalConst, pJacobian,
           pLOWSFactoryConst, pPrecOp, pNullPrecFactory));
 
