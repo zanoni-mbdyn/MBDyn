@@ -60,7 +60,7 @@ public:
 		STRUMPACK_SOLVER,
 		WATSON_SOLVER,
                 BELOS_SOLVER,
-                AMESOS_SOLVER,
+                AMESOS2_SOLVER,
                 SICONOS_SPARSE_SOLVER,
                 SICONOS_DENSE_SOLVER,
 		LAST_SOLVER

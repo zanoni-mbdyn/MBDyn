@@ -59,7 +59,8 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 		::solver[LinSol::WATSON_SOLVER].s_name,
                 ::solver[LinSol::BELOS_SOLVER].s_name,
                 ::solver[LinSol::BELOS_SOLVER].s_alias,
-                ::solver[LinSol::AMESOS_SOLVER].s_name,
+                ::solver[LinSol::AMESOS2_SOLVER].s_name,
+                ::solver[LinSol::AMESOS2_SOLVER].s_alias,
                 ::solver[LinSol::SICONOS_SPARSE_SOLVER].s_name,
                 ::solver[LinSol::SICONOS_DENSE_SOLVER].s_name,
 		NULL
@@ -85,6 +86,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 		WATSON,
 		BELOS,
 		BELOS_AZTECOO,
+                AMESOS2,
                 AMESOS,
                 SICONOS_SPARSE,
                 SICONOS_DENSE,
@@ -270,8 +272,17 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 #endif
              break;
         case AMESOS:
-             cs.SetSolver(LinSol::AMESOS_SOLVER);
-             DEBUGLCOUT(MYDEBUG_INPUT, "Using Amesos solver\n");
+             silent_cerr("\"Amesos\" is no longer supported; "
+                   "using \"Amesos2\" instead" << std::endl);
+             cs.SetSolver(LinSol::AMESOS2_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Amesos2 solver\n");
+#ifdef USE_TRILINOS
+             bGotIt = true;
+#endif
+             break;
+        case AMESOS2:
+             cs.SetSolver(LinSol::AMESOS2_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Amesos2 solver\n");
 #ifdef USE_TRILINOS
              bGotIt = true;
 #endif

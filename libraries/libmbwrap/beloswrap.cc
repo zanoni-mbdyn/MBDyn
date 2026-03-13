@@ -134,28 +134,38 @@ static const char* GetAmesos2SolverName(unsigned uFlags)
  * ========================================================================= */
 class Amesos2Wrapper {
 public:
-     Amesos2Wrapper(const Teuchos::RCP<TpetraCrs>& pA,
-                    const Teuchos::RCP<TpetraMV>& pX,
-                    const Teuchos::RCP<TpetraMV>& pB,
-                    unsigned uFlags)
-          :pSolver(Amesos2::create<TpetraCrs, TpetraMV>(
-                        GetAmesos2SolverName(uFlags), pA, pX, pB)),
+     Amesos2Wrapper(TpetraSparseMatrixHandler& A_,
+                    TpetraVectorHandler& X_,
+                    TpetraVectorHandler& B_,
+                    unsigned uFlags_)
+          :rA(A_), rX(X_), rB(B_),
+           uFlags(uFlags_),
            bRebuildSymbolic(true),
            bRebuildNumeric(true)
      {
-          if (!pSolver.get()) {
-               silent_cerr("Trilinos/Amesos2: solver "
-                           << GetAmesos2SolverName(uFlags)
-                           << " is not available in this build.\n");
-               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-          }
      }
 
      int Solve()
      {
           DEBUGCERR("Amesos2Wrapper::Solve()\n");
 
-          // int ierr = 0;
+          if (pSolver.is_null()) {
+               // Deferred construction: the CrsMatrix is only available
+               // after the first PacMat()/EnsureFilled() cycle.
+               pSolver = Amesos2::create<TpetraCrs, TpetraMV>(
+                    GetAmesos2SolverName(uFlags),
+                    rA.pGetTpetraCrsMatrix(),
+                    rX.pGetTpetraVector(),
+                    rB.pGetTpetraVector());
+
+               if (pSolver.is_null()) {
+                    silent_cerr("Trilinos/Amesos2: solver "
+                                << GetAmesos2SolverName(uFlags)
+                                << " is not available in this build.\n");
+                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+               }
+          }
+
           do {
                if (bRebuildSymbolic) {
                     DEBUGCERR("Amesos2Wrapper::symbolicFactorization()\n");
@@ -186,8 +196,12 @@ public:
      }
 
      void MatrReset()   { bRebuildNumeric  = true; }
-     void MatrInitialize() { bRebuildSymbolic = bRebuildNumeric = true; }
+     void MatrInitialize() { bRebuildSymbolic = bRebuildNumeric = true; pSolver.reset(); }
 
+     TpetraSparseMatrixHandler& rA;
+     TpetraVectorHandler& rX;
+     TpetraVectorHandler& rB;
+     unsigned uFlags;
      Teuchos::RCP<Amesos2Solver> pSolver;
      bool bRebuildSymbolic;
      bool bRebuildNumeric;
@@ -299,10 +313,7 @@ Amesos2SolutionManager::Amesos2SolutionManager(
           oComm,
 #endif
           Dim),
-      oSolver(A.pGetTpetraCrsMatrix(),
-              x.pGetTpetraVector(),
-              b.pGetTpetraVector(),
-              uFlags)
+      oSolver(A, x, b, uFlags)
 {
 }
 
