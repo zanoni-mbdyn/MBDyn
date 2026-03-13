@@ -58,6 +58,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 		::solver[LinSol::STRUMPACK_SOLVER].s_name,
 		::solver[LinSol::WATSON_SOLVER].s_name,
                 ::solver[LinSol::BELOS_SOLVER].s_name,
+                ::solver[LinSol::BELOS_SOLVER].s_alias,
                 ::solver[LinSol::AMESOS_SOLVER].s_name,
                 ::solver[LinSol::SICONOS_SPARSE_SOLVER].s_name,
                 ::solver[LinSol::SICONOS_DENSE_SOLVER].s_name,
@@ -83,6 +84,7 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 		STRUMPACK,
 		WATSON,
 		BELOS,
+		BELOS_AZTECOO,
                 AMESOS,
                 SICONOS_SPARSE,
                 SICONOS_DENSE,
@@ -251,7 +253,12 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 	     bGotIt = true;
 #endif
 	     break;
-        case BELOS:
+	case BELOS_AZTECOO:
+             silent_cerr("\"AztecOO\" is no longer supported; "
+                   "using \"Belos\" instead" << std::endl);
+             cs.SetSolver(LinSol::BELOS_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
+	case BELOS:
              cs.SetSolver(LinSol::BELOS_SOLVER);
              DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
 #ifdef USE_TRILINOS

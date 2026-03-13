@@ -206,7 +206,7 @@ const LinSol::solver_t solver[] = {
 	  LinSol::SOLVER_FLAGS_ALLOWS_MT_ASS,
 	  LinSol::SOLVER_FLAGS_ALLOWS_MAP,
 	  -1., -1. },
-        {"Belos", NULL,
+        {"Belos", "AztecOO",
          LinSol::BELOS_SOLVER,
          LinSol::SOLVER_FLAGS_PRECOND_MASK,
          LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_UMFPACK,
