@@ -371,8 +371,8 @@ BelosSolutionManager::BelosSolutionManager(
           oComm,
 #endif
           Dim),
-      iMaxIter(iMaxIter_a),
-      dTol(dTol_a),
+      iMaxIter(iMaxIter_a > 0 ? iMaxIter_a : 100),
+      dTol(dTol_a > 0. ? dTol_a : 1e-10),
       uPrecondFlag(uPrecondFlag_a),
       bSolverBuilt(false)
 {
@@ -431,7 +431,7 @@ void BelosSolutionManager::BuildSolver()
      pSolverParams->set("Maximum Iterations",    iMaxIter);
      pSolverParams->set("Convergence Tolerance", dTol);
      pSolverParams->set("Num Blocks",
-                        std::min(iMaxIter, 300)); /* Krylov restart depth */
+                        std::max(1, std::min(iMaxIter, 300))); /* Krylov restart depth */
 
      Belos::SolverFactory<TpetraSC, MV, OP> factory;
      pSolver = factory.create("GMRES", pSolverParams);

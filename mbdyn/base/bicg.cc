@@ -240,7 +240,7 @@ BiCGStab::Solve(const NonlinearProblem* pNLP,
 rebuild_matrix:;
 			try {
       				pNLP->Jacobian(pSM->pMatHdl());
-
+      				pSM->pMatHdl()->PacMat(); // Required for Trilinos sparse matrix handlers
 			} catch (MatrixHandler::ErrRebuildMatrix& e) {
 				silent_cout("NewtonRaphsonSolver: "
 						"rebuilding matrix..."
