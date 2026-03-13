@@ -327,6 +327,15 @@ private:
      mutable std::vector<doublereal> oValues;   /* length Nz      */
 
      mutable CSCMatrixHandlerTpl<doublereal, integer, 0> oCscT;
+
+     /*
+      * Pre-fillComplete entry buffer.  Tpetra::CrsMatrix allocates a
+      * fixed number of entries per row at construction (iNumColsAlloc)
+      * and insertGlobalValues cannot grow beyond that.  We accumulate
+      * entries in this map and flush them into the CrsMatrix at
+      * fillComplete time in EnsureFilled().
+      */
+     std::vector<std::map<TpetraGO, TpetraSC>> oEntryBuffer;
 };
 
 #endif  /* USE_TRILINOS */

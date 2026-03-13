@@ -1601,6 +1601,7 @@ void LineSearchMCP::ComputeH(const VectorHandler& z,
      while (true) {
           try {
                pNLP->Jacobian(pSM->pMatHdl());
+               pSM->pMatHdl()->PacMat(); // Required for Trilinos sparse matrix handlers
 
                OutputJacobian(*pSM->pMatHdl());
 

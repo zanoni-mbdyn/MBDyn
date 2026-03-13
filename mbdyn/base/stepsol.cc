@@ -803,6 +803,7 @@ InverseDynamicsStepSolver::Advance(InverseSolver* pS,
 	if (bJacobian()) {
 		pSM->MatrReset();
 		Jacobian(pMat);
+		pMat->PacMat(); // Required for Trilinos sparse matrix handlers
 
 		if (pS->outputJac()) {
 			silent_cout("Jacobian(velocity):" << std::endl << *pMat);
@@ -840,6 +841,7 @@ InverseDynamicsStepSolver::Advance(InverseSolver* pS,
 	if (bJacobian()) {
 		pSM->MatrReset();
 		Jacobian(pMat);
+		pMat->PacMat(); // Required for Trilinos sparse matrix handlers
 
 		if (pS->outputJac()) {
 			silent_cout("Jacobian(acceleration):" << std::endl << *pMat);
@@ -872,6 +874,7 @@ InverseDynamicsStepSolver::Advance(InverseSolver* pS,
 	if (bJacobian()) {
 		pSM->MatrReset();
 		Jacobian(pMat);
+		pMat->PacMat(); // Required for Trilinos sparse matrix handlers
 
 		if (pS->outputJac()) {
 			silent_cout("Jacobian(inverseDynamics):" << std::endl << *pMat);

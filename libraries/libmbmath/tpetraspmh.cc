@@ -65,7 +65,8 @@ TpetraSparseMatrixHandler::TpetraSparseMatrixHandler(
       pComm(pComm_a),
       iNumColsAlloc(iNumColsAlloc_a),
       bFilled(false),
-      bHostCacheDirty(false)
+      bHostCacheDirty(false),
+      oEntryBuffer(iNumRows_a)
 {
      if (iNumRows_a != iNumCols_a) {
           silent_cerr("TpetraSparseMatrixHandler: matrix must be square!\n");
@@ -78,8 +79,8 @@ TpetraSparseMatrixHandler::TpetraSparseMatrixHandler(
      pRowMap = Teuchos::rcp(new TpetraMap(nGlobal, indexBase, pComm));
      pColMap = pRowMap;             /* square matrix – same map for rows and cols */
 
-     pMat = Teuchos::rcp(new TpetraCrs(pRowMap, pColMap,
-                                       static_cast<size_t>(iNumColsAlloc_a)));
+     /* CrsMatrix is NOT created here; it is built from the entry buffer
+      * in EnsureFilled() once the full sparsity pattern is known. */
 
 #ifdef DEBUG
      IsValid();
@@ -99,8 +100,8 @@ TpetraSparseMatrixHandler::~TpetraSparseMatrixHandler()
 #ifdef DEBUG
 void TpetraSparseMatrixHandler::IsValid() const
 {
-     ASSERT(pMat.get() != nullptr);
      if (bFilled) {
+          ASSERT(pMat.get() != nullptr);
           ASSERT(static_cast<integer>(pMat->getGlobalNumRows()) == NRows);
           ASSERT(static_cast<integer>(pMat->getGlobalNumCols()) == NCols);
      }
@@ -123,8 +124,68 @@ void TpetraSparseMatrixHandler::EnsureFilled() const
      }
 
      if (!bFilled) {
+          /* Build the CrsMatrix from the entry buffer.
+           * First build a CrsGraph with the exact sparsity pattern, then
+           * create the CrsMatrix from it so that isStaticGraph()==true.
+           * This ensures sumIntoGlobalValues works after fillComplete. */
+          using TpetraGraph = Tpetra::CrsGraph<TpetraLO, TpetraGO, TpetraNode>;
+
+          const integer nRows = NRows;
+          Teuchos::Array<size_t> numEntriesPerRow(nRows);
+          for (integer i = 0; i < nRows; ++i) {
+               numEntriesPerRow[i] = oEntryBuffer[i].size();
+          }
+
+          auto pGraph = Teuchos::rcp(new TpetraGraph(
+               pRowMap, pColMap, numEntriesPerRow()));
+
+          /* Insert column indices row by row. */
+          for (integer i = 0; i < nRows; ++i) {
+               const auto& rowEntries = oEntryBuffer[i];
+               if (rowEntries.empty()) {
+                    continue;
+               }
+               std::vector<TpetraGO> cols;
+               cols.reserve(rowEntries.size());
+               for (const auto& entry : rowEntries) {
+                    cols.push_back(entry.first);
+               }
+               Teuchos::ArrayView<const TpetraGO> colView(cols.data(), cols.size());
+               pGraph->insertGlobalIndices(static_cast<TpetraGO>(i), colView);
+          }
+
+          pGraph->fillComplete(pColMap, pRowMap);
+
+          /* Create the matrix from the static graph and fill values. */
+          pMat = Teuchos::rcp(new TpetraCrs(pGraph));
+
+          for (integer i = 0; i < nRows; ++i) {
+               const auto& rowEntries = oEntryBuffer[i];
+               if (rowEntries.empty()) {
+                    continue;
+               }
+               std::vector<TpetraGO> cols;
+               std::vector<TpetraSC> vals;
+               cols.reserve(rowEntries.size());
+               vals.reserve(rowEntries.size());
+               for (const auto& entry : rowEntries) {
+                    cols.push_back(entry.first);
+                    vals.push_back(entry.second);
+               }
+               Teuchos::ArrayView<const TpetraGO> colView(cols.data(), cols.size());
+               Teuchos::ArrayView<const TpetraSC> valView(vals.data(), vals.size());
+               pMat->replaceGlobalValues(static_cast<TpetraGO>(i), colView, valView);
+          }
+
           pMat->fillComplete(pColMap, pRowMap);
           bFilled = true;
+     }
+
+     /* Ensure the matrix is fill-complete before extracting host arrays.
+      * Reset() calls resumeFill() to allow value modification;
+      * we must re-finalize here. */
+     if (pMat->isFillActive()) {
+          pMat->fillComplete(pColMap, pRowMap);
      }
 
      /* Extract into host std::vectors for cheap random access later. */
@@ -163,11 +224,11 @@ void TpetraSparseMatrixHandler::InsertOrSumValues(TpetraGO globalRow,
           return;
      }
 
-     Teuchos::ArrayView<const TpetraGO> colView(cols,  nEntries);
-     Teuchos::ArrayView<const TpetraSC> valView(vals,  nEntries);
-
      if (bFilled) {
           /* After fillComplete: use sumIntoGlobalValues */
+          Teuchos::ArrayView<const TpetraGO> colView(cols,  nEntries);
+          Teuchos::ArrayView<const TpetraSC> valView(vals,  nEntries);
+
           const TpetraLO err =
                pMat->sumIntoGlobalValues(globalRow, colView, valView);
           if (err < 0) {
@@ -181,8 +242,13 @@ void TpetraSparseMatrixHandler::InsertOrSumValues(TpetraGO globalRow,
           }
           bHostCacheDirty = true;
      } else {
-          /* Before fillComplete: insertGlobalValues */
-          pMat->insertGlobalValues(globalRow, colView, valView);
+          /* Before fillComplete: accumulate in entry buffer.
+           * Duplicate column indices are summed (matching IncCoef semantics). */
+          ASSERT(globalRow >= 0 && globalRow < static_cast<TpetraGO>(NRows));
+          auto& rowMap = oEntryBuffer[globalRow];
+          for (integer k = 0; k < nEntries; ++k) {
+               rowMap[cols[k]] += vals[k];
+          }
      }
 }
 
@@ -219,19 +285,25 @@ void TpetraSparseMatrixHandler::Reset()
      if (bFilled) {
           /*
            * The matrix structure is fixed after fillComplete; only values
-           * need to be zeroed. We do it through the host view and then
-           * mark the host as modified so Tpetra can sync to device.
+           * need to be zeroed.  We must resumeFill() first because
+           * sumIntoGlobalValues (used later in IncCoef) requires
+           * isFillActive()==true.  fillComplete() will be called in
+           * PacMat()/EnsureFilled() before the matrix is used by a solver.
            */
-          auto valHost = pMat->getLocalValuesHost(Tpetra::Access::ReadWrite);
-          std::fill(valHost.data(), valHost.data() + valHost.size(), 0.);
+          if (!pMat->isFillActive()) {
+               pMat->resumeFill();
+          }
+          pMat->setAllToScalar(0.);
           std::fill(oValues.begin(), oValues.end(), 0.);
 
           /* oCscT shares the same values buffer; it stays valid. */
           bHostCacheDirty = false;
      } else {
-          /* Haven't filled yet – rebuild from scratch */
-          pMat = Teuchos::rcp(new TpetraCrs(pRowMap, pColMap,
-                                            static_cast<size_t>(iNumColsAlloc)));
+          /* Haven't filled yet – clear the entry buffer for fresh assembly. */
+          for (auto& rowMap : oEntryBuffer) {
+               rowMap.clear();
+          }
+          pMat = Teuchos::null;
           oRowPtr.clear();
           oColInd.clear();
           oValues.clear();
