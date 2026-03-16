@@ -713,6 +713,41 @@ public:
      {
           return Teuchos::rcp(new MBDynThyraGroup(*this, type));
      }
+
+     // NOX::Thyra::Group does not implement computeGradient() (it
+     // always throws).  The Epetra version computes grad = J^T * F.
+     // Implement the same here so that line search methods like
+     // More-Thuente that need the gradient work correctly.
+     NOX::Abstract::Group::ReturnType
+     computeGradient() override
+     {
+          if (isGradient())
+               return NOX::Abstract::Group::Ok;
+
+          if (!isF()) {
+               silent_cerr("MBDynThyraGroup::computeGradient() - "
+                           "residual (F) is not valid" << std::endl);
+               return NOX::Abstract::Group::BadDependency;
+          }
+
+          if (!isJacobian()) {
+               silent_cerr("MBDynThyraGroup::computeGradient() - "
+                           "Jacobian is not valid" << std::endl);
+               return NOX::Abstract::Group::BadDependency;
+          }
+
+          // gradient = J^T * F
+          const auto& jac = shared_jacobian_->getObject(this);
+          const auto& f_thyra = dynamic_cast<const NOX::Thyra::Vector&>(
+               getF()).getThyraRCPVector();
+          auto g_thyra = dynamic_cast<NOX::Thyra::Vector&>(
+               *gradient_vec_).getThyraRCPVector();
+
+          ::Thyra::apply(*jac, ::Thyra::TRANS, *f_thyra, g_thyra.ptr());
+
+          is_valid_gradient_dir_ = true;
+          return NOX::Abstract::Group::Ok;
+     }
 };
 
 /* =========================================================================
