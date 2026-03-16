@@ -1444,6 +1444,16 @@ NoxNonlinearSolver::NoxNonlinearSolver(
 NoxNonlinearSolver::~NoxNonlinearSolver()
 {
      silent_cerr("total inner iterations: " << iInnerIterCntTot << "\n");
+
+     // Release Trilinos objects in dependency order BEFORE the
+     // SolutionManager (owned by Solver) is destroyed.  The NOX
+     // solver, model evaluator and solution view hold RCPs to
+     // Tpetra operators/vectors that reference the SolutionManager's
+     // CrsMatrix and MultiVectors via raw pointers.
+     pNonlinearSolver.reset();
+     pSolutionView.reset();
+     pModelEval.reset();
+     pComm.reset();
 }
 
 void
