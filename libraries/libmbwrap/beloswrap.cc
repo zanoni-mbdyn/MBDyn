@@ -212,6 +212,69 @@ public:
 };
 
 /* =========================================================================
+ * Amesos2PrecOp — wraps an Amesos2 direct solver as a Tpetra::Operator
+ * so it can serve as a right preconditioner for Belos.
+ *
+ * Replaces the old AztecOO + KLU/UMFPACK direct-solve-as-preconditioner
+ * path: Belos sees  y = A^{-1} * x  as an operator application.
+ * ========================================================================= */
+class Amesos2PrecOp : public TpetraOp {
+public:
+     Amesos2PrecOp(const Teuchos::RCP<const TpetraMap>& pMap_,
+                   const Teuchos::RCP<TpetraCrs>&       pMat_,
+                   const char* solverName)
+          : pMap(pMap_), pA(pMat_),
+            bRebuildSymbolic(true), bRebuildNumeric(true)
+     {
+          pRhsMV = Teuchos::rcp(new TpetraMV(pMap, 1));
+          pLhsMV = Teuchos::rcp(new TpetraMV(pMap, 1));
+          pSolver = Amesos2::create<TpetraCrs, TpetraMV>(
+               solverName, pA, pLhsMV, pRhsMV);
+     }
+
+     void apply(const TpetraMV& X, TpetraMV& Y,
+                Teuchos::ETransp mode = Teuchos::NO_TRANS,
+                TpetraSC alpha = Teuchos::ScalarTraits<TpetraSC>::one(),
+                TpetraSC beta  = Teuchos::ScalarTraits<TpetraSC>::zero()
+                ) const override
+     {
+          (void)mode; // always NOTRANS for preconditioning
+
+          // Copy input into internal RHS vector
+          Tpetra::deep_copy(*pRhsMV, X);
+
+          if (bRebuildSymbolic) {
+               pSolver->symbolicFactorization();
+               bRebuildSymbolic = false;
+               bRebuildNumeric = true;
+          }
+          if (bRebuildNumeric) {
+               pSolver->numericFactorization();
+               bRebuildNumeric = false;
+          }
+
+          pSolver->solve();
+
+          // Y = alpha * lhs + beta * Y
+          Y.update(alpha, *pLhsMV, beta);
+     }
+
+     Teuchos::RCP<const TpetraMap> getDomainMap() const override { return pMap; }
+     Teuchos::RCP<const TpetraMap> getRangeMap()  const override { return pMap; }
+
+     void invalidateNumeric()  { bRebuildNumeric  = true; }
+     void invalidateAll()      { bRebuildSymbolic = bRebuildNumeric = true; }
+
+private:
+     Teuchos::RCP<const TpetraMap> pMap;
+     Teuchos::RCP<TpetraCrs>       pA;
+     Teuchos::RCP<TpetraMV>        pRhsMV, pLhsMV;
+     Teuchos::RCP<Amesos2Solver>   pSolver;
+     mutable bool bRebuildSymbolic;
+     mutable bool bRebuildNumeric;
+};
+
+/* =========================================================================
  * TpetraLinearSystem – base for both solution managers.
  *
  * Owns the communicator, the matrix handler, and both vector handlers.
@@ -367,6 +430,7 @@ protected:
      /* Belos objects – rebuilt lazily when the matrix changes. */
      Teuchos::RCP<BelosProblem> pProblem;
      Teuchos::RCP<BelosSolver>  pSolver;
+     Teuchos::RCP<Amesos2PrecOp> pAmesos2Prec;
 
      void BuildSolver();
      bool bSolverBuilt;
@@ -405,10 +469,9 @@ void BelosSolutionManager::BuildSolver()
           x.pGetTpetraVector(),
           b.pGetTpetraVector()));
 
-     /* Ifpack2 preconditioner when requested */
+     /* Ifpack2 / Amesos2 preconditioner when requested */
      if (uPrecondFlag != LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_ILUT) {
-          /* Map MBDyn flag to Ifpack2 type string */
-          std::string sPrecType;
+          bool bDirectSolverPrec = false;
           switch (uPrecondFlag) {
           case LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_UMFPACK:
           case LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_KLU:
@@ -416,26 +479,35 @@ void BelosSolutionManager::BuildSolver()
           case LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_SUPERLU:
           case LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_MUMPS:
           case LinSol::SOLVER_FLAGS_ALLOWS_PRECOND_PARDISO:
-               /* For direct-solver-based preconditioners we fall back to ILU(0) */
-               sPrecType = "RILUK";
+               bDirectSolverPrec = true;
                break;
           default:
-               sPrecType = "RILUK";
                break;
           }
 
-          Ifpack2::Factory precFactory;
-          Teuchos::RCP<Ifpack2Prec> pPrec =
-               precFactory.create(sPrecType, A.pGetTpetraCrsMatrixConst());
+          if (bDirectSolverPrec) {
+               // Use Amesos2 direct solver as preconditioner — this
+               // replicates the old AztecOO + KLU/UMFPACK path where the
+               // direct solver served as a preconditioner.
+               pAmesos2Prec = Teuchos::rcp(new Amesos2PrecOp(
+                    A.pGetTpetraCrsMatrix()->getRowMap(),
+                    A.pGetTpetraCrsMatrix(),
+                    GetAmesos2SolverName(uPrecondFlag)));
+               pProblem->setRightPrec(pAmesos2Prec);
+          } else {
+               Ifpack2::Factory precFactory;
+               Teuchos::RCP<Ifpack2Prec> pPrec =
+                    precFactory.create("RILUK", A.pGetTpetraCrsMatrixConst());
 
-          Teuchos::RCP<Teuchos::ParameterList> pPrecParams =
-               Teuchos::rcp(new Teuchos::ParameterList());
-          pPrecParams->set("fact: iluk level-of-fill", 1);
-          pPrec->setParameters(*pPrecParams);
-          pPrec->initialize();
-          pPrec->compute();
+               Teuchos::RCP<Teuchos::ParameterList> pPrecParams =
+                    Teuchos::rcp(new Teuchos::ParameterList());
+               pPrecParams->set("fact: iluk level-of-fill", 1);
+               pPrec->setParameters(*pPrecParams);
+               pPrec->initialize();
+               pPrec->compute();
 
-          pProblem->setRightPrec(pPrec);
+               pProblem->setRightPrec(pPrec);
+          }
      }
 
      pProblem->setProblem();

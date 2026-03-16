@@ -1606,6 +1606,15 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
      Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<TpetraSC>> pLOWSFactory;
 
      if (uFlags & JACOBIAN_NEWTON_KRYLOV) {
+          if (uFlags & USE_PRECOND_AS_SOLVER) {
+               // When "use preconditioner as solver" is enabled, bypass
+               // the Krylov iteration entirely and route the linear solve
+               // through pSolutionManager->Solve() (the direct solver /
+               // preconditioner).  This mirrors the Epetra code path that
+               // called ApplyInverse() directly in applyJacobianInverse().
+               pLOWSFactory = pModelEval->GetLOWSFactory();
+               ASSERT(!pLOWSFactory.is_null());
+          } else {
           /* ---- Stratimikos / Belos (matrix-free Krylov) ------------------ */
           Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
           Teuchos::RCP<Teuchos::ParameterList> pLSParams =
@@ -1713,6 +1722,7 @@ void NoxNonlinearSolver::BuildSolver(const integer iMaxIter_a)
           pLOWSFactory = linearSolverBuilder.createLinearSolveStrategy("");
           // Store in pModelEval so NOX::Thyra::Group can retrieve it
           pModelEval->pLOWSFactory = pLOWSFactory;
+          } // !USE_PRECOND_AS_SOLVER
      } else {
           // Explicit-matrix path: use the MBDynLOWSFactory already set in Rebuild()
           pLOWSFactory = pModelEval->GetLOWSFactory();
