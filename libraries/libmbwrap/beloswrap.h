@@ -77,5 +77,12 @@ pAllocateAmesos2SolutionManager(
      integer iVerbose,
      unsigned uSolverFlags);
 
+/*
+ * Finalize Tpetra/Kokkos runtime.  Call after all Trilinos objects
+ * have been destroyed so that Kokkos finalize hooks run while static
+ * objects (Belos MultiVecPool) are still alive.
+ */
+void mbdyn_trilinos_finalize();
+
 #endif  /* USE_TRILINOS */
 #endif  /* ___BELOS_SOLUTION_MANAGER_H__INCLUDED__ */

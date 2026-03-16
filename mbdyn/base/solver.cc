@@ -2451,12 +2451,17 @@ Solver::~Solver(void)
 		SAFEDELETE(pRegularSteps);
 	}
 
-	if (pSM) {
-		SAFEDELETE(pSM);
-	}
-
+	// Destroy the nonlinear solver before the solution manager:
+	// the NOX solver holds Trilinos (Teuchos::RCP) references to
+	// Tpetra objects owned by the solution manager (CrsMatrix,
+	// MultiVectors).  Destroying pSM first would free those Kokkos
+	// allocations while NOX still holds dangling references.
 	if (pNLS) {
 		SAFEDELETE(pNLS);
+	}
+
+	if (pSM) {
+		SAFEDELETE(pSM);
 	}
 
 	if (pTSC) {

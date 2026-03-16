@@ -91,6 +91,10 @@ extern "C" {
 #include <Amesos2.hpp>
 #include <Amesos2_Factory.hpp>
 
+/* ---- Tpetra lifecycle ------------------------------------------------- */
+#include <Tpetra_Core.hpp>
+#include <Kokkos_Core.hpp>
+
 #undef HAVE_BLAS
 #undef HAVE_BOOL
 #define HAVE_BLAS HAVE_BLAS_SAVE
@@ -545,6 +549,22 @@ pAllocateAmesos2SolutionManager(
                                                    uSolverFlag));
 #endif
      return pCurrSM;
+}
+
+void
+mbdyn_trilinos_finalize()
+{
+     // Explicitly finalize Tpetra (and Kokkos) so that Kokkos finalize
+     // hooks — in particular Belos' static MultiVecPool cleanup —
+     // run while all static objects are still alive.  Without this,
+     // the atexit-registered Kokkos::finalize() may run after some
+     // Kokkos allocation records have already been freed during C++
+     // static destruction, causing SharedAllocationRecord failures.
+     if (Tpetra::isInitialized()) {
+          Tpetra::finalize();
+     } else if (Kokkos::is_initialized()) {
+          Kokkos::finalize();
+     }
 }
 
 #endif  /* USE_TRILINOS */
