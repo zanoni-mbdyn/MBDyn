@@ -1316,6 +1316,9 @@ main(int argc, char* argv[])
 			silent_cerr("An error occurred during the execution of MBDyn;"
 				" aborting... " << std::endl);
 			rc = EXIT_FAILURE;
+#ifdef USE_TRILINOS
+			mbdyn_trilinos_finalize();
+#endif
 			MB_EXIT(exit, rc);
 		}
  	}
