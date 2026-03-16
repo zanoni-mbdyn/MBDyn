@@ -1117,7 +1117,11 @@ void ModelEvaluatorWrapper::Rebuild(integer iSize)
      // concrete MatrixHandler / SolutionManager MBDyn is using.
      // For the matrix-free path pLOWSFactory is set by BuildSolver() via
      // Stratimikos after this call returns.
-     if (!(oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV)) {
+     if (!(oNoxSolver.uFlags & NoxSolverParameters::JACOBIAN_NEWTON_KRYLOV)
+         || (oNoxSolver.uFlags & NoxSolverParameters::USE_PRECOND_AS_SOLVER)) {
+          // For the explicit-matrix path, or JFNK with "use preconditioner
+          // as solver", the linear solve is routed through
+          // pSolutionManager->Solve().
           pLOWSFactory = Teuchos::rcp(new MBDynLOWSFactory(oNoxSolver, pSpace));
      }
 
