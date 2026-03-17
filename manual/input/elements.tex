@@ -4455,7 +4455,7 @@ If \kw{friction} is specified then
 \begin{itemize}
 \item the \nt{average\_radius} $r$ is used to compute the friction-induced moment about the joint's axis as $M = frF_f$, where $f$ is the friction coefficient, computed from the 1-D \nt{friction\_model} and \nt{shape\_function}, and $F_f$ is a force, defined in the following;
 \item \nt{preload} is a preload force used to account for initial interference of the joint; even if there is no preload
-in the real joint, one should set it to a small number $\neq 0$ \textcolor{red}{[FIXME: should preload be $ > 0$ ? In that case, should we check for negative (or null) values? Should it be a drive caller?]} in order to deal with ill-conditioning of the friction computation occurring whenever the real joint reaction force is almost null;
+in the real joint, one should set it to a small number $> 0$  in order to deal with ill-conditioning of the friction computation occurring whenever the real joint reaction force is almost null;
 \item $F_f=\max(||\T{F}_r||,\ \nt{preload})$, where $\T{F}_r$ is some portion of the joint reaction force, % without friction,
 specified by \kw{reaction components}
 \item \kw{reaction force components} specifies which components of the reaction force should be used to compute $\T{F}_r$; more specifically
@@ -4854,7 +4854,7 @@ the relative orientation is not constrained.
         \bnt{node_2_label}
             [ , \kw{position} , (\hty{Vec3}) \bnt{relative_offset_2} ]
             [ , \kw{orientation} , (\hty{OrientationMatrix}) \bnt{relative_orientation_matrix_2} ]
-	[ , \kw{friction} ,
+	[ , \kw{friction} , \bnt{average radius} ,
             \bnt{friction_model_2D} ,
             \bnt{shape_function_2D} ]
 \end{Verbatim}
@@ -4869,6 +4869,16 @@ The joint is shown in Figure~\ref{fig:el:joint:SPHERE} where the axes shown are 
 Note: the orientation matrix, set by means of the \kw{orientation} keyword,
 is used for output purposes only. 
 A default identity matrix is assumed.
+
+\subsubsection{Friction}
+If \kw{friction} is specified then
+\begin{itemize}
+\item the \nt{average\_radius} $r$ is used to compute the friction-induced moment about the joint's axis as $M = frF_f$, where $f$ is the friction coefficient, computed from the 2-D \nt{friction\_model\_2D} and \nt{shape\_function\_2D}, and $F_f$ is a force, defined in the following;
+\item \nt{preload} is a preload force used to account for initial interference of the joint; even if there is no preload
+in the real joint, one should set it to a small number $> 0$  in order to deal with ill-conditioning of the friction computation occurring whenever the real joint reaction force is almost null;
+\item $F_f=\max(||\T{F}_n||,\ \nt{preload})$, where $\T{F}_n$ is the normal component of the joint reaction force. 
+%If $||\T{F}_n|| < \nt{preload}$ only the friction-induced moment is accounted for, without considering any friction-induced force.
+\end{itemize}
 
 \subsubsection{Hints}
 When wrapped by a \kw{driven} element, the following hints are honored:

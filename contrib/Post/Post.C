@@ -63,19 +63,19 @@ bool out_flag;
 #include "Post.hh"
 
 void skipws(std::istream * file) {
+	std::streambuf * buf = file->rdbuf();
 	typedef std::streambuf::traits_type traits_type;
 	const int eof = traits_type::eof();
-	int c;
-	bool testdelim;// = (c == ' ' || c == '\t');
-	c = file->get();
+	int c = buf->sgetc();
+	bool testdelim;
 	while (traits_type::eq_int_type(c, ' ') 
 		|| traits_type::eq_int_type(c, '\t') ) {
-		c = file->get();
+		c = buf->sbumpc();
 	}
 	testdelim = ( traits_type::eq_int_type(c, ' ') 
 		|| traits_type::eq_int_type(c, '\t') );
 	while (!testdelim) {
-		c = file->get();
+		c = buf->sbumpc();
 		testdelim = ( traits_type::eq_int_type(c, ' ' )
 			|| traits_type::eq_int_type(c, '\t' )
 			|| traits_type::eq_int_type(c, '\n' )
@@ -83,10 +83,35 @@ void skipws(std::istream * file) {
 		);
 	}
 	if (c == '\n') {
-		file->unget();
-		//buf->sputback((char)c);
+		buf->sungetc();
 	}
+}
 
+// void skipws(std::istream * file) {
+// 	typedef std::streambuf::traits_type traits_type;
+// 	const int eof = traits_type::eof();
+// 	int c;
+// 	bool testdelim;// = (c == ' ' || c == '\t');
+// 	c = file->get();
+// 	while (traits_type::eq_int_type(c, ' ') 
+// 		|| traits_type::eq_int_type(c, '\t') ) {
+// 		c = file->get();
+// 	}
+// 	testdelim = ( traits_type::eq_int_type(c, ' ') 
+// 		|| traits_type::eq_int_type(c, '\t') );
+// 	while (!testdelim) {
+// 		c = file->get();
+// 		testdelim = ( traits_type::eq_int_type(c, ' ' )
+// 			|| traits_type::eq_int_type(c, '\t' )
+// 			|| traits_type::eq_int_type(c, '\n' )
+// 			|| traits_type::eq_int_type(c, eof ) 
+// 		);
+// 	}
+// 	if (c == '\n') {
+// 		file->unget();
+// 		//buf->sputback((char)c);
+// 	}
+// }
 
 // 	std::streambuf * buf = file->rdbuf();
 // 	typedef std::streambuf::traits_type traits_type;
@@ -117,7 +142,7 @@ void skipws(std::istream * file) {
 // // 	}
 // // 	//buf->sputback(c);
 // // 	buf->sungetc();
-}
+// }
 
 void skipline(std::istream * file) {
 	std::streambuf * buf = file->rdbuf();
