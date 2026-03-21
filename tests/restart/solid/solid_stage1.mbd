@@ -40,7 +40,7 @@ end: initial value;
 
 begin: control data;
        include: "solid.con";
-       make restart file: times, 1, t1, format, binary;
+       make restart file: times, 1, t1, at end, format, binary;
 end: control data;
 
 include: "solid.ref";

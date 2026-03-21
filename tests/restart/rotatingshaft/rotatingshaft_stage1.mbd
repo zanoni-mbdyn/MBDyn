@@ -38,7 +38,7 @@ threads: disable;
 end: initial value;
 
 begin: control data;
-make restart file: times, 1, T3, format, binary;
+make restart file: times, 1, T3, at end, format, binary;
 include: "rotatingshaft.con";
 end: control data;
 

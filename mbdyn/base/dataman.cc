@@ -133,7 +133,7 @@ moduleInitialized(false),
 #endif // USE_RUNTIME_LOADING
 uPrintFlags(PRINT_NONE),		/* Morandini, 2003-11-17 */
 sSimulationTitle(0),
-RestartEvery(NEVER),
+RestartEvery(RESTART_NEVER),
 RestartType(RESTART_CLASSIC),
 iRestartIterations(0),
 dRestartTime(0.),
@@ -642,7 +642,7 @@ DataManager::~DataManager(void)
 	 * crea il file e forza gli oggetti a scrivere il loro contributo nel modo
 	 * opportuno
 	 */
-	if (RestartEvery == ATEND) {
+	if (RestartEvery & RESTART_AT_END) {
 		MakeRestart();
 	}
 

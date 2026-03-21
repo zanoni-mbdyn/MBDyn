@@ -886,22 +886,24 @@ EndOfUse:
 		/* Crea il file di restart */
 		case MAKERESTARTFILE:
 			DEBUGLCOUT(MYDEBUG_INPUT, "Restart file will be generated " << std::endl);
-                        RestartEvery = ATEND;
+                        RestartEvery = RESTART_NEVER;
 			while (HP.IsArg()) {
-				if (HP.IsKeyWord("iterations")) {
-					RestartEvery = ITERATIONS;
+                                if (HP.IsKeyWord("at" "end")) {
+                                        RestartEvery |= RESTART_AT_END;
+                                } else if (HP.IsKeyWord("iterations")) {
+					RestartEvery |= RESTART_ITERATIONS;
 					iRestartIterations = HP.GetInt(0, HighParser::range_ge<integer>(0));
 					DEBUGLCOUT(MYDEBUG_INPUT,
 						"every " << iRestartIterations
 						<< " iterations" << std::endl);
 				} else if (HP.IsKeyWord("time")) {
-					RestartEvery = TIME;
+					RestartEvery |= RESTART_TIME;
 					dRestartTime = HP.GetReal();
 					DEBUGLCOUT(MYDEBUG_INPUT,
 						"every " << dRestartTime
 						<< " time units" << std::endl);
 				} else if (HP.IsKeyWord("times")) {
-					RestartEvery = TIMES;
+					RestartEvery |= RESTART_TIMES;
 					iNumRestartTimes = HP.GetInt(0, HighParser::range_ge<integer>(0));
 					if (iNumRestartTimes < 1) {
 						silent_cerr("illegal number of restart times "
@@ -933,6 +935,11 @@ EndOfUse:
 					throw DataManager::ErrGeneric(MBDYN_EXCEPT_ARGS);
 				}
 			}
+
+                        if (RestartEvery == RESTART_NEVER) {
+                             // The default option according to the input manual
+                             RestartEvery = RESTART_AT_END;
+                        }
 
 			if (HP.IsKeyWord("with" "solution" "array")) {
 				saveXSol = true;

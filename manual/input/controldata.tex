@@ -265,10 +265,11 @@ to run multi-stage simulations using the keyword \kw{load restart file}.
 %\begin{verbatim}
 \begin{Verbatim}[commandchars=\\\{\}]
     \bnt{card} ::= \kw{make restart file}
-        [ : \{ \kw{iterations} , \bnt{iterations_between_restarts}
-            | \kw{time}, (\hty{real}) \bnt{time_between_restarts} 
-            | \kw{times}, (\hty{integer}) \bnt{number_of_restarts}, (\hty{real}) \bnt{restart_1}, ..., \bnt{restart_N}
-            | \kw{format}, \{ \kw{classic} | \kw{binary} \} \}] ;        
+        [ : [   \kw{iterations} , \bnt{iterations_between_restarts} ]
+            [ , \kw{time}, (\hty{real}) \bnt{time_between_restarts} ]
+            [ , \kw{times}, (\hty{integer}) \bnt{number_of_restarts}, (\hty{real}) \bnt{restart_1}, ..., \bnt{restart_N} ]
+            [ , \kw{at end} ]
+            [ , \kw{format}, \{ \kw{classic} | \kw{binary} \} ] ];
 \end{Verbatim}
 %\end{verbatim}
 The default (no arguments) is to make the \kw{classic} restart file only at the end of

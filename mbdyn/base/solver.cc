@@ -1589,20 +1589,8 @@ IfFirstStepIsToBeRepeated:
 				iStIter, dTest, dSolTest);
 	}
 	catch (NonlinearSolver::NoConvergence& e) {
-		if (dCurrTimeStep > dMinTimeStep) {
-			/* Riduce il passo */
-			CurrStep = StepIntegrator::REPEATSTEP;
-			doublereal dOldCurrTimeStep = dCurrTimeStep;
-			dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-			if (dCurrTimeStep < dOldCurrTimeStep) {
-				DEBUGCOUT("Changing time step"
-					" from " << dOldCurrTimeStep
-					<< " to " << dCurrTimeStep
-					<< " during first step after "
-					<< iStIter << " iterations"
-					<< std::endl);
-				goto IfFirstStepIsToBeRepeated;
-			}
+                if (bReduceTimeStep()) {
+                        goto IfFirstStepIsToBeRepeated;
 		}
 
 		silent_cerr("Max iterations number "
@@ -1617,18 +1605,17 @@ IfFirstStepIsToBeRepeated:
 		throw Solver::ErrMaxIterations(MBDYN_EXCEPT_ARGS);
 	}
 	catch (NonlinearSolver::ErrSimulationDiverged& e) {
-		/*
-		 * Mettere qui eventuali azioni speciali
-		 * da intraprendere in caso di errore ...
-		 */
+                if (bReduceTimeStep()) {
+                        goto IfFirstStepIsToBeRepeated;
+		}
 
 		throw SimulationDiverged(MBDYN_EXCEPT_ARGS);
 	}
 	catch (LinearSolver::ErrFactor& err) {
-		/*
-		 * Mettere qui eventuali azioni speciali
-		 * da intraprendere in caso di errore ...
-		 */
+                if (bReduceTimeStep()) {
+                        goto IfFirstStepIsToBeRepeated;
+		}
+
 		silent_cerr("First step failed because no pivot element "
 			"could be found for column " << err.iCol
 			<< " (" << pDM->GetDofDescription(err.iCol) << "); "
@@ -1783,21 +1770,8 @@ IfFirstStepIsToBeRepeated:
 					dTest, dSolTest);
 		}
 		catch (NonlinearSolver::NoConvergence& e) {
-			if (dCurrTimeStep > dMinTimeStep) {
-				/* Riduce il passo */
-				CurrStep = StepIntegrator::REPEATSTEP;
-				doublereal dOldCurrTimeStep = dCurrTimeStep;
-				dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-				if (dCurrTimeStep < dOldCurrTimeStep) {
-					DEBUGCOUT("Changing time step"
-						" from " << dOldCurrTimeStep
-						<< " to " << dCurrTimeStep
-						<< " during step "
-						<< lStep << " after "
-						<< iStIter << " iterations"
-						<< std::endl);
-					goto IfSecondStepIsToBeRepeated;
-				}
+                        if (bReduceTimeStep()) {
+                                goto IfSecondStepIsToBeRepeated;
 			}
 
 			silent_cerr(outputCounterPrefix
@@ -1812,21 +1786,8 @@ IfFirstStepIsToBeRepeated:
 			throw ErrMaxIterations(MBDYN_EXCEPT_ARGS);
 		}
 		catch (NonlinearSolver::ErrSimulationDiverged& e) {
-			if (dCurrTimeStep > dMinTimeStep) {
-				/* Riduce il passo */
-				CurrStep = StepIntegrator::REPEATSTEP;
-				doublereal dOldCurrTimeStep = dCurrTimeStep;
-				dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-				if (dCurrTimeStep < dOldCurrTimeStep) {
-					DEBUGCOUT("Changing time step"
-						" from " << dOldCurrTimeStep
-						<< " to " << dCurrTimeStep
-						<< " during step "
-						<< lStep << " after "
-						<< iStIter << " iterations"
-						<< std::endl);
-					goto IfSecondStepIsToBeRepeated;
-				}
+                        if (bReduceTimeStep()) {
+                                goto IfSecondStepIsToBeRepeated;
 			}
 
 			silent_cerr(outputCounterPrefix
@@ -1842,10 +1803,10 @@ IfFirstStepIsToBeRepeated:
 			throw SimulationDiverged(MBDYN_EXCEPT_ARGS);
 		}
 		catch (LinearSolver::ErrFactor& err) {
-		/*
-		 * Mettere qui eventuali azioni speciali
-		 * da intraprendere in caso di errore ...
-		 */
+                        if (bReduceTimeStep()) {
+                                goto IfSecondStepIsToBeRepeated;
+			}
+
 			silent_cerr(outputCounterPrefix
 				<< "Simulation failed because no pivot element "
 				"could be found for column " << err.iCol
@@ -2024,21 +1985,8 @@ IfFirstStepIsToBeRepeated:
 					dTest, dSolTest);
 		}
 		catch (NonlinearSolver::NoConvergence& e) {
-			if (dCurrTimeStep > dMinTimeStep) {
-				/* Riduce il passo */
-				CurrStep = StepIntegrator::REPEATSTEP;
-				doublereal dOldCurrTimeStep = dCurrTimeStep;
-				dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-				if (dCurrTimeStep < dOldCurrTimeStep) {
-					DEBUGCOUT("Changing time step"
-						" from " << dOldCurrTimeStep
-						<< " to " << dCurrTimeStep
-						<< " during step "
-						<< lStep << " after "
-						<< iStIter << " iterations"
-						<< std::endl);
-					goto IfThirdStepIsToBeRepeated;
-				}
+			if (bReduceTimeStep()) {
+                                goto IfThirdStepIsToBeRepeated;
 			}
 
 			silent_cerr(outputCounterPrefix
@@ -2053,21 +2001,8 @@ IfFirstStepIsToBeRepeated:
 			throw ErrMaxIterations(MBDYN_EXCEPT_ARGS);
 		}
 		catch (NonlinearSolver::ErrSimulationDiverged& e) {
-			if (dCurrTimeStep > dMinTimeStep) {
-				/* Riduce il passo */
-				CurrStep = StepIntegrator::REPEATSTEP;
-				doublereal dOldCurrTimeStep = dCurrTimeStep;
-				dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-				if (dCurrTimeStep < dOldCurrTimeStep) {
-					DEBUGCOUT("Changing time step"
-						" from " << dOldCurrTimeStep
-						<< " to " << dCurrTimeStep
-						<< " during step "
-						<< lStep << " after "
-						<< iStIter << " iterations"
-						<< std::endl);
-					goto IfThirdStepIsToBeRepeated;
-				}
+			if (bReduceTimeStep()) {
+                                goto IfThirdStepIsToBeRepeated;
 			}
 
 			silent_cerr(outputCounterPrefix
@@ -2083,10 +2018,10 @@ IfFirstStepIsToBeRepeated:
 			throw SimulationDiverged(MBDYN_EXCEPT_ARGS);
 		}
 		catch (LinearSolver::ErrFactor& err) {
-		/*
-		 * Mettere qui eventuali azioni speciali
-		 * da intraprendere in caso di errore ...
-		 */
+                        if (bReduceTimeStep()) {
+                                goto IfThirdStepIsToBeRepeated;
+			}
+
 			silent_cerr(outputCounterPrefix
 				<< "Simulation failed because no pivot element "
 				"could be found for column " << err.iCol
@@ -2226,11 +2161,11 @@ Solver::Advance(void)
 			<< "total Jacobian matrices: " << pNLS->TotalAssembledJacobian() << std::endl
 			<< "total error: " << dTotErr << std::endl);
 
-		if (pRTSolver) {
-			pRTSolver->Log();
-		}
+                if (pRTSolver) {
+                        pRTSolver->Log();
+                }
 
-		return false;
+                return false;
 
 	} else if (pRTSolver && pRTSolver->IsStopCommanded()) {
 		silent_cout(outputCounterPrefix
@@ -2296,21 +2231,8 @@ IfStepIsToBeRepeated:
 				dTest, dSolTest);
 	}
 	catch (NonlinearSolver::NoConvergence& e) {
-		if (dCurrTimeStep > dMinTimeStep) {
-			/* Riduce il passo */
-			CurrStep = StepIntegrator::REPEATSTEP;
-			doublereal dOldCurrTimeStep = dCurrTimeStep;
-			dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-			if (dCurrTimeStep < dOldCurrTimeStep) {
-				DEBUGCOUT("Changing time step"
-					" from " << dOldCurrTimeStep
-					<< " to " << dCurrTimeStep
-					<< " during step "
-					<< lStep << " after "
-					<< iStIter << " iterations"
-					<< std::endl);
-				goto IfStepIsToBeRepeated;
-			}
+                if (bReduceTimeStep()) {
+                        goto IfStepIsToBeRepeated;
 		}
 
 		silent_cerr(outputCounterPrefix
@@ -2325,21 +2247,8 @@ IfStepIsToBeRepeated:
 		throw ErrMaxIterations(MBDYN_EXCEPT_ARGS);
 	}
 	catch (NonlinearSolver::ErrSimulationDiverged& e) {
-		if (dCurrTimeStep > dMinTimeStep) {
-			/* Riduce il passo */
-			CurrStep = StepIntegrator::REPEATSTEP;
-			doublereal dOldCurrTimeStep = dCurrTimeStep;
-			dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
-			if (dCurrTimeStep < dOldCurrTimeStep) {
-				DEBUGCOUT("Changing time step"
-					" from " << dOldCurrTimeStep
-					<< " to " << dCurrTimeStep
-					<< " during step "
-					<< lStep << " after "
-					<< iStIter << " iterations"
-					<< std::endl);
-				goto IfStepIsToBeRepeated;
-			}
+                if (bReduceTimeStep()) {
+                        goto IfStepIsToBeRepeated;
 		}
 
 		silent_cerr(outputCounterPrefix
@@ -2355,10 +2264,10 @@ IfStepIsToBeRepeated:
 		throw SimulationDiverged(MBDYN_EXCEPT_ARGS);
 	}
 	catch (LinearSolver::ErrFactor& err) {
-		/*
-		 * Mettere qui eventuali azioni speciali
-		 * da intraprendere in caso di errore ...
-		 */
+                if (bReduceTimeStep()) {
+                        goto IfStepIsToBeRepeated;
+		}
+
 		silent_cerr(outputCounterPrefix
 			<< "Simulation failed because no pivot element "
 			"could be found for column " << err.iCol
@@ -2564,28 +2473,25 @@ Solver::~Solver(void)
 
 /*scrive il contributo al file di restart*/
 std::ostream &
-Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
+Solver::Restart(std::ostream& out, unsigned type) const
 {
 
 	out << "begin: initial value;" << std::endl;
-	switch(type) {
-	case DataManager::ATEND:
+	if (type == DataManager::RESTART_AT_END) {
 		out << "  #  initial time: " << pDM->dGetTime() << ";"
 			<< std::endl
 			<< "  #  final time: " << dFinalTime << ";"
 			<< std::endl
 			<< "  #  time step: " << dInitialTimeStep << ";"
 			<< std::endl;
-		break;
-	case DataManager::ITERATIONS:
-	case DataManager::TIME:
-	case DataManager::TIMES:
+	} else if (type & (DataManager::RESTART_ITERATIONS |
+                           DataManager::RESTART_TIME |
+                           DataManager::RESTART_TIMES)) {
 		out << "  initial time: " << pDM->dGetTime()<< ";" << std::endl
 			<< "  final time: " << dFinalTime << ";" << std::endl
 			<< "  time step: " << dInitialTimeStep << ";"
 			<< std::endl;
-		break;
-	default:
+        } else {
 		ASSERT(0);
 	}
 
@@ -2693,6 +2599,12 @@ Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
 	case NonlinearSolverTest::MINMAX:
 		out << ", test, minmax" ;
 		break;
+        case NonlinearSolverTest::SEPNORM:
+                out << ", test, sepnorm";
+                break;
+        case NonlinearSolverTest::RELNORM:
+                out << ", test, relnorm";
+                break;
 	case NonlinearSolverTest::NONE:
 		NO_OP;
 	default:
@@ -2727,7 +2639,7 @@ Solver::Restart(std::ostream& out,DataManager::eRestartWhen type) const
 			<< "  derivatives coefficient: " << dDerivativesCoef << ";" << std::endl;
 	}
 
-	if (iDummyStepsNumber) {
+	if (iDummyStepsNumber && pDummySteps) {
 		out
 			<< "  dummy steps max iterations: " << pDummySteps->GetIntegratorMaxIters() << ";" << std::endl
 			<< "  dummy steps tolerance: " << pDummySteps->GetIntegratorDTol() << ";" << std::endl;
@@ -7777,4 +7689,24 @@ void Solver::CheckTimeStepLimit(doublereal dErr, doublereal dErrDiff) const /*th
 		ASSERT(0);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
+}
+
+bool Solver::bReduceTimeStep()
+{
+     if (dCurrTimeStep > dMinTimeStep) {
+          CurrStep = StepIntegrator::REPEATSTEP;
+          doublereal dOldCurrTimeStep = dCurrTimeStep;
+          dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter);
+          if (dCurrTimeStep < dOldCurrTimeStep) {
+               DEBUGCOUT("Changing time step"
+                         " from " << dOldCurrTimeStep
+                         << " to " << dCurrTimeStep
+                         << " after "
+                         << iStIter << " iterations"
+                         << std::endl);
+               return true;
+          }
+     }
+
+     return false;
 }

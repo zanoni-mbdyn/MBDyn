@@ -629,19 +629,8 @@ IfStepIsToBeRepeated:
 	}
 
 	catch (NonlinearSolver::NoConvergence& e) {
-		if (dCurrTimeStep > dMinTimeStep) {
-			/* Riduce il passo */
-			CurrStep = StepIntegrator::REPEATSTEP;
-			doublereal dOldCurrTimeStep = dCurrTimeStep;
-			dCurrTimeStep = pTSC->dGetNewStepTime(CurrStep, iStIter); 
-			if (dCurrTimeStep < dOldCurrTimeStep) {
-				DEBUGCOUT("Changing time step"
-					" during step "
-					<< lStep << " after "
-					<< iStIter << " iterations"
-					<< std::endl);
+                if (bReduceTimeStep()) {
 				goto IfStepIsToBeRepeated;
-			}
 		}
 
 		silent_cerr(outputCounterPrefix
@@ -659,10 +648,10 @@ IfStepIsToBeRepeated:
 	}
 
 	catch (NonlinearSolver::ErrSimulationDiverged& e) {
-		/*
-		 * Mettere qui eventuali azioni speciali
-		 * da intraprendere in caso di errore ...
-		 */
+                if (bReduceTimeStep()) {
+                        goto IfStepIsToBeRepeated;
+		}                
+
 		silent_cerr(outputCounterPrefix
 			<< "Simulation diverged after "
 			<< iStIter << " iterations, before "

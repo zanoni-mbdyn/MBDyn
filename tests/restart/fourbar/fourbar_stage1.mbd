@@ -40,7 +40,7 @@ end: initial value;
 
 begin: control data;
        skip initial joint assembly;
-       make restart file: time, pi, format, binary;
+       make restart file: time, pi, at end, format, binary;
        include: "fourbar.con";
 end: control data;
 

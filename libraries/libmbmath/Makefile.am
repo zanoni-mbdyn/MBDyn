@@ -224,8 +224,8 @@ libmbmath.la \
 @METIS_LIBS@ \
 @BLAS_LIBS@ \
 @FCLIBS@ \
-@LIBS@ \
 @TRILINOS_LIBS@ \
+@LIBS@ \
 @RT_LIBS@ \
 @GTEST_LIBS@
 

@@ -2666,49 +2666,38 @@ DataManager::AfterConvergence(void) const
         DEBUGCERR("Solution XPrimeCurr after AfterConvergence:\n");
         PrintSolution(*pXPrimeCurr, -1);        
 #endif
-	/* Restart condizionato */
-	switch (RestartEvery) {
-	case NEVER:
-		break;
+        bool bDoRestart = false;
 
-	case ITERATIONS:
-		if (++iCurrRestartIter == iRestartIterations) {
-			iCurrRestartIter = 0;
-			const_cast<DataManager *>(this)->MakeRestart();
-		}
-		break;
+        /* Restart condizionato */
+        if (RestartEvery & RESTART_ITERATIONS) {
+                if (++iCurrRestartIter == iRestartIterations) {
+                        iCurrRestartIter = 0;
+                        bDoRestart = true;
+                }
+        }
 
-	case TIME: {
-		doublereal dT = DrvHdl.dGetTime();
-		if (dT - dLastRestartTime >= dRestartTime) {
-			dLastRestartTime = dT;
-			const_cast<DataManager *>(this)->MakeRestart();
-		}
-		break;
-	}
+        if (RestartEvery & RESTART_TIME) {
+                doublereal dT = DrvHdl.dGetTime();
+                if (dT - dLastRestartTime >= dRestartTime) {
+                        dLastRestartTime = dT;
+                        bDoRestart = true;
+                }
+        }
 
-	case TIMES: {
-		doublereal dT = DrvHdl.dGetTime()
-			+ pSolver->dGetInitialTimeStep()/100.;
-		if (iCurrRestartTime == iNumRestartTimes) {
-			break;
-		}
+        if (RestartEvery & RESTART_TIMES) {
+                doublereal dT = DrvHdl.dGetTime()
+                        + pSolver->dGetInitialTimeStep()/100.;
+                if (iCurrRestartTime < iNumRestartTimes) {
+                     if (dT >= pdRestartTimes[iCurrRestartTime]) {
+                          iCurrRestartTime++;
+                          bDoRestart = true;
+                     }
+                }
+        }
 
-		ASSERT(iCurrRestartTime < iNumRestartTimes);
-
-		if (dT >= pdRestartTimes[iCurrRestartTime]) {
-			iCurrRestartTime++;
-			const_cast<DataManager *>(this)->MakeRestart();
-		}
-		break;
-	}
-
-        case ATEND:
-                break;
-	default:
-		ASSERT(0);
-		break;
-	}
+        if (bDoRestart) {
+                const_cast<DataManager *>(this)->MakeRestart();
+        }
 }
 
 
