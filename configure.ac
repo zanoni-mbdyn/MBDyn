@@ -2914,7 +2914,7 @@ if test $ol_with_trilinos != no ; then
                                 Teuchos::RCP<TpetraMap> Map = Teuchos::rcp(new TpetraMap(N, 0, Comm));
                                 Teuchos::RCP<TpetraCrs> crsMatrix = Teuchos::rcp(new TpetraCrs(Map, Map, 100));
                                 //crsMatrix->normOne();
-                                crsMatrix->getNormInf();
+                                //crsMatrix->getNormInf();
                                 crsMatrix->fillComplete();
                                 //Teuchos::RCP<NonlinearProblem> noxProblem(new NonlinearProblem);
                                 //Teuchos::RCP<NOX::Tpetra::Interface::Required> noxInterface{noxProblem};
