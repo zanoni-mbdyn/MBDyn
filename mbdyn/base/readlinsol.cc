@@ -57,8 +57,10 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
                 ::solver[LinSol::SPQR_SOLVER].s_name,
 		::solver[LinSol::STRUMPACK_SOLVER].s_name,
 		::solver[LinSol::WATSON_SOLVER].s_name,
-                ::solver[LinSol::AZTECOO_SOLVER].s_name,
-                ::solver[LinSol::AMESOS_SOLVER].s_name,
+                ::solver[LinSol::BELOS_SOLVER].s_name,
+                ::solver[LinSol::BELOS_SOLVER].s_alias,
+                ::solver[LinSol::AMESOS2_SOLVER].s_name,
+                ::solver[LinSol::AMESOS2_SOLVER].s_alias,
                 ::solver[LinSol::SICONOS_SPARSE_SOLVER].s_name,
                 ::solver[LinSol::SICONOS_DENSE_SOLVER].s_name,
 		NULL
@@ -82,7 +84,9 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
                 SPQR,
 		STRUMPACK,
 		WATSON,
-		AZTECOO,
+		BELOS,
+		BELOS_AZTECOO,
+                AMESOS2,
                 AMESOS,
                 SICONOS_SPARSE,
                 SICONOS_DENSE,
@@ -251,16 +255,34 @@ ReadLinSol(LinSol& cs, HighParser &HP, bool bAllowEmpty)
 	     bGotIt = true;
 #endif
 	     break;
-        case AZTECOO:
-             cs.SetSolver(LinSol::AZTECOO_SOLVER);
-             DEBUGLCOUT(MYDEBUG_INPUT, "Using AztecOO solver\n");
+	case BELOS_AZTECOO:
+             silent_cerr("\"AztecOO\" is no longer supported; "
+                   "using \"Belos\" instead" << std::endl);
+             cs.SetSolver(LinSol::BELOS_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
+#ifdef USE_TRILINOS
+             bGotIt = true;
+#endif
+             break;
+	case BELOS:
+             cs.SetSolver(LinSol::BELOS_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Belos solver\n");
 #ifdef USE_TRILINOS
              bGotIt = true;
 #endif
              break;
         case AMESOS:
-             cs.SetSolver(LinSol::AMESOS_SOLVER);
-             DEBUGLCOUT(MYDEBUG_INPUT, "Using Amesos solver\n");
+             silent_cerr("\"Amesos\" is no longer supported; "
+                   "using \"Amesos2\" instead" << std::endl);
+             cs.SetSolver(LinSol::AMESOS2_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Amesos2 solver\n");
+#ifdef USE_TRILINOS
+             bGotIt = true;
+#endif
+             break;
+        case AMESOS2:
+             cs.SetSolver(LinSol::AMESOS2_SOLVER);
+             DEBUGLCOUT(MYDEBUG_INPUT, "Using Amesos2 solver\n");
 #ifdef USE_TRILINOS
              bGotIt = true;
 #endif

@@ -84,12 +84,12 @@
 
 
 #undef HAVE_BLAS
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcpp"
-#include "epetravh.h"
-#include "epetraspmh.h"
-#include <Epetra_SerialComm.h>
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wcpp"
+#include "tpetravh.h"
+#include "tpetraspmh.h"
+//#include <Epetra_SerialComm.h>
+//#pragma GCC diagnostic pop
 #endif
 
 #include "sp_gradient_test_func.h"
@@ -3499,9 +3499,9 @@ namespace sp_grad_test {
           FullMatrixHandler oFullMatHd(iNumRows, iNumCols);
           MyVectorHandler X(iNumCols), Y(iNumRows), Z1(iNumRows), W1(iNumCols), Z2(iNumRows), W2(iNumCols);
 #ifdef USE_TRILINOS
-          Epetra_SerialComm Comm;
-          EpetraVectorHandler Xep(iNumCols, Comm), Yep(iNumRows, Comm), Zep(iNumRows, Comm), Wep(iNumCols, Comm);
-          EpetraSparseMatrixHandler oEpMatHd(iNumRows, iNumCols, 5 * inumnz, Comm);
+          Teuchos::RCP<const TpetraComm> Comm = tpetraSerialComm();
+          TpetraVectorHandler Xep(iNumCols, Comm), Yep(iNumRows, Comm), Zep(iNumRows, Comm), Wep(iNumCols, Comm);
+          TpetraSparseMatrixHandler oEpMatHd(iNumRows, iNumCols, 5 * inumnz, Comm);
 #endif
 
           for (index_type iloop = 0; iloop < inumloops; ++iloop) {

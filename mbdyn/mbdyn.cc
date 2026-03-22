@@ -126,6 +126,10 @@ const char sDefaultOutputFileName[] = "MBDyn";
 #include "except.h"
 
 #include "solver.h"
+
+#ifdef USE_TRILINOS
+#include "beloswrap.h"
+#endif
 #include "invsolver.h"
 #include "modules.h"
 #include "legalese.h"
@@ -1312,6 +1316,9 @@ main(int argc, char* argv[])
 			silent_cerr("An error occurred during the execution of MBDyn;"
 				" aborting... " << std::endl);
 			rc = EXIT_FAILURE;
+#ifdef USE_TRILINOS
+			mbdyn_trilinos_finalize();
+#endif
 			MB_EXIT(exit, rc);
 		}
  	}
@@ -1342,6 +1349,10 @@ main(int argc, char* argv[])
 #endif /* USE_SOCKET */
 
 	mbdyn_cleanup();
+
+#ifdef USE_TRILINOS
+	mbdyn_trilinos_finalize();
+#endif
 
     	MB_EXIT(return, rc);
 } // main() end

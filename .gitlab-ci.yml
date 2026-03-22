@@ -484,7 +484,7 @@ variables:
     description: "Repository of the Trilinos library (https://github.com/trilinos/Trilinos.git) to be cloned"
 
   TRILINOS_BRANCH:
-    value: "trilinos-release-16-1-0"
+    value: "master"
     options:
       - "master"
       - "trilinos-release-14-4-0"
@@ -493,6 +493,7 @@ variables:
       - "trilinos-release-15-1-1"
       - "trilinos-release-16-0-0"
       - "trilinos-release-16-1-0"
+      - "trilinos-release-17-0-0"
     description: "Branch of the Trilinos library (https://github.com/trilinos/Trilinos.git) to be pulled"
 
   NLOPT_REPOSITORY:

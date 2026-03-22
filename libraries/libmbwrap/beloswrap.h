@@ -36,18 +36,25 @@
   to Pierangelo Masarati and Paolo Mantegazza
   for use in the software MBDyn as described
   in the GNU Public License version 2.1
+
+  Tpetra port: AztecOO → Belos, Amesos → Amesos2.
+  This header replaces aztecoowrap.h.
 */
 
-#ifndef ___AZTEC_OO_SOLUTION_MANAGER_H__INCLUDED__
-#define ___AZTEC_OO_SOLUTION_MANAGER_H__INCLUDED__
+#ifndef ___BELOS_SOLUTION_MANAGER_H__INCLUDED__
+#define ___BELOS_SOLUTION_MANAGER_H__INCLUDED__
 
 #ifdef USE_TRILINOS
 
 #include "solman.h"
 #include "mbcomm.h"
 
+/*
+ * Allocate a Belos-based iterative solution manager (replaces AztecOO).
+ *   uSolverFlags – preconditioner selection via LinSol::SOLVER_FLAGS_*
+ */
 SolutionManager*
-pAllocateAztecOOSolutionManager(
+pAllocateBelosSolutionManager(
 #ifdef USE_MPI
      MPI::Intracomm& oComm,
 #endif
@@ -57,13 +64,25 @@ pAllocateAztecOOSolutionManager(
      integer iVerbose,
      unsigned uSolverFlags);
 
+/*
+ * Allocate an Amesos2-based direct solution manager (replaces Amesos).
+ *   uSolverFlags – direct solver selection via LinSol::SOLVER_FLAGS_*
+ */
 SolutionManager*
-pAllocateAmesosSolutionManager(
+pAllocateAmesos2SolutionManager(
 #ifdef USE_MPI
      MPI::Intracomm& oComm,
 #endif
      integer iNLD,
      integer iVerbose,
      unsigned uSolverFlags);
-#endif
-#endif
+
+/*
+ * Finalize Tpetra/Kokkos runtime.  Call after all Trilinos objects
+ * have been destroyed so that Kokkos finalize hooks run while static
+ * objects (Belos MultiVecPool) are still alive.
+ */
+void mbdyn_trilinos_finalize();
+
+#endif  /* USE_TRILINOS */
+#endif  /* ___BELOS_SOLUTION_MANAGER_H__INCLUDED__ */

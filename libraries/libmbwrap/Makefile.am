@@ -42,8 +42,8 @@ qrwrap.h \
 qrwrap.cc \
 strumpackwrap.h \
 strumpackwrap.cc \
-aztecoowrap.h \
-aztecoowrap.cc \
+beloswrap.h \
+beloswrap.cc \
 siconoswrap.h \
 siconoswrap.cc
 

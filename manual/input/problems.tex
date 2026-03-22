@@ -770,13 +770,21 @@ Indeed \verb;NOX; is a huge library with many parameters and options. Within thi
         [ , \kw{print convergence info}, \{ \kw{yes} | \kw{no} \} ] ;
 \end{Verbatim}
 \subparagraph{Linear solver and inner iterations}
-If the option \kw{direction} is set to \kw{newton}, an inexact Newton method is applied. This method uses iterative linear solvers to compute the Newton direction. The following linear solvers provided by \href{https://trilinos.github.io/aztecoo.html}{AztecOO} are supported:
+If the option \kw{direction} is set to \kw{newton}, an inexact Newton method is applied. This method uses iterative linear solvers to compute the Newton direction. The following linear solvers provided by \href{https://trilinos.github.io/belos.html}{Belos} are supported:
 \begin{description}
-\item[\kw{gmres}] Restarted generalized minimal residual
-\item[\kw{cg}] Conjugate gradient (not applicable if the Jacobian is unsymmetrical which is the usual case)
-\item[\kw{cgs}] Conjugate gradient squared
-\item[\kw{tfqmr}] Transpose-free quasi-minimal residual
-\item[\kw{bicgstab}] Bi-conjugate gradient with stabilization
+\item[\kw{Block GMRES}] Block restarted generalized minimal residual
+\item[\kw{Pseudo Block GMRES}] 
+\item[\kw{Pseudo Block Stochastic CG}]
+\item[\kw{GCRODR}] 
+\item[\kw{RCG}] 
+\item[\kw{MINRES}] 
+\item[\kw{TFQMR}] 
+\item[\kw{BiCGStab}] 
+\item[\kw{Fixed Point}] 
+\item[\kw{TPETRA GMRES}] 
+\item[\kw{TPETRA GMRES PIPELINE}] 
+\item[\kw{TPETRA GMRES SINGLE REDUCE}] 
+\item[\kw{TPETRA GMRES S-STEP}] 
 \end{description}
 The \kw{gmres} solver is accepting also the parameter \bnt{krylov\_subspace} which defines the number of inner iterations before a restart.
 \subparagraph{Preconditioner}
@@ -1205,7 +1213,7 @@ usually output.
     \bnt{card} ::= \kw{linear solver} :
             \{ \kw{naive} | \kw{umfpack} | \kw{klu} | \kw{y12} | \kw{lapack} | \kw{superlu} | \kw{taucs} 
             | \kw{pardiso} | \kw{pardiso\_64} | \kw{watson} | \kw{pastix} | \kw{qr} | \kw{spqr}
-            | \kw{aztecoo} | \kw{amesos} | \kw{siconos dense} | \kw{siconos sparse} \}
+            | \kw{belos} | \kw{amesos} | \kw{siconos dense} | \kw{siconos sparse} \}
         [ , \{ \kw{map} | \kw{cc} | \kw{dir} | \kw{grad} \} ]
         [ , \{ \kw{colamd} | \kw{mmdata} | \kw{amd} | \kw{given} | \kw{metis} \} ]
         [ , \{ \kw{mt} | \kw{multithread} \} , \bnt{threads} ]
@@ -1363,8 +1371,8 @@ Once an BFGS update is applied to the $Q\,R$ factors, a dense upper triangular s
 from Lapack is used until the Jacobian is rebuild. However, usually the most expensive
 part is the $Q\,R$ decomposition of the sparse Jacobian.
 
-\paragraph{Aztecoo}
-In contrast to most other solvers, \kw{aztecoo} is an iterative linear solver based on
+\paragraph{Belos}
+In contrast to most other solvers, \kw{belos} is an iterative linear solver based on
 Sandia's Trilinos library \cite{TRILINOS-WEBSITE}. Different preconditioners are supported.
 However the incomplete LU~factorization option \kw{ilut} cannot be used if there are any
 joints in the model. This solver accepts a tolerance defined by $\bnt{refine\_tolerance}$ and
@@ -1514,7 +1522,7 @@ summarizes how each linear solver deals with pivoting policies.
 	Pastix		& $\surd$ & $\surd$ & $\surd$ & $\surd$   & $\surd$   &         &         &	    \\ 
 	QR		&         &         &         &           &           &         &         &	    \\ 
 	SpQR		& $\surd$ &         &         & $\surd$   &           &         &         &	    \\ 
-%        AztecOO         &         &         &         &           &           &         &         &         \\ 
+%        Belos         &         &         &         &           &           &         &         &         \\ 
 %        Amesos          &         &         &         &           &           &         &         &         \\ 
 %        Siconos dense   &         &         &         &           &           &         &         &         \\ 
         Siconos sparse  &         &         &         &           &           & $\surd$ &         &         \\ 

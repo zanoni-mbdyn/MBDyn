@@ -36,38 +36,35 @@
   to Pierangelo Masarati and Paolo Mantegazza
   for use in the software MBDyn as described
   in the GNU Public License version 2.1
+
+  Tpetra port: converted from Epetra by the MBDyn project.
 */
 
-#ifndef ___EPETRA_VECTOR_HANDLER__INCLUDED___
-#define ___EPETRA_VECTOR_HANDLER__INCLUDED___
+#ifndef ___TPETRA_VECTOR_HANDLER__INCLUDED___
+#define ___TPETRA_VECTOR_HANDLER__INCLUDED___
 
 #ifdef USE_TRILINOS
 #include "vh.h"
+#include "tpetra_types.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcpp"
-#include <Epetra_Comm.h>
-#include <Epetra_Map.h>
-#include <Epetra_Vector.h>
-#pragma GCC diagnostic pop
-
-class EpetraVectorHandler: public VectorHandler {
+class TpetraVectorHandler: public VectorHandler {
 public:
-     EpetraVectorHandler(integer iSize, const Epetra_Comm& oComm);
-     virtual ~EpetraVectorHandler(void);
+     TpetraVectorHandler(integer iSize,
+                         const Teuchos::RCP<const TpetraComm>& pComm);
+     virtual ~TpetraVectorHandler();
 
 #ifdef DEBUG
-     virtual void IsValid(void) const;
+     virtual void IsValid() const;
 #endif
-     virtual doublereal* pdGetVec(void) const;
+     virtual doublereal* pdGetVec() const;
 
-     virtual integer iGetSize(void) const;
+     virtual integer iGetSize() const;
 
-     virtual void Reset(void);
+     virtual void Reset();
 
      virtual void Resize(integer iNewSize);
 
-     virtual void ResizeReset(integer);
+     virtual void ResizeReset(integer iNewSize);
 
      virtual void PutCoef(integer iRow, const doublereal& dCoef);
 
@@ -77,9 +74,9 @@ public:
 
      virtual const doublereal& dGetCoef(integer iRow) const;
 
-     virtual const doublereal& operator () (integer iRow) const;
+     virtual const doublereal& operator()(integer iRow) const;
 
-     virtual doublereal& operator () (integer iRow);
+     virtual doublereal& operator()(integer iRow);
 
      virtual void Add(integer iRow, const Vec3& v);
 
@@ -97,27 +94,44 @@ public:
      virtual VectorHandler&
      ScalarMul(const VectorHandler& VH, const doublereal& d);
 
-     virtual VectorHandler& operator += (const VectorHandler& VH);
+     virtual VectorHandler& operator+=(const VectorHandler& VH);
 
-     virtual VectorHandler& operator += (const SubVectorHandler& SubVH);
+     virtual VectorHandler& operator+=(const SubVectorHandler& SubVH);
 
-     virtual VectorHandler& operator -= (const VectorHandler& VH);
+     virtual VectorHandler& operator-=(const VectorHandler& VH);
 
-     virtual VectorHandler& operator *= (const doublereal &d);
+     virtual VectorHandler& operator*=(const doublereal& d);
 
-     virtual VectorHandler& operator = (const VectorHandler& VH);
+     virtual VectorHandler& operator=(const VectorHandler& VH);
 
-     virtual doublereal Dot(void) const;
+     virtual doublereal Dot() const;
 
-     virtual doublereal Norm(void) const;
+     virtual doublereal Norm() const;
 
      virtual doublereal InnerProd(const VectorHandler& VH) const;
 
-     const Epetra_Vector* pGetEpetraVector() const { return &oEPV; }
-     Epetra_Vector* pGetEpetraVector() { return &oEPV; }
+     Teuchos::RCP<const TpetraMV> pGetTpetraVector() const { return pVec; }
+     Teuchos::RCP<TpetraMV>       pGetTpetraVector()       { return pVec; }
+
 private:
-     Epetra_Vector oEPV;
+     /* Rebuild the map and vector with a new size, preserving the communicator. */
+     void RebuildVector(integer iNewSize, bool bZeroOut);
+
+     /*
+      * Host-side 1-D view into the Tpetra vector data.
+      * We keep a raw pointer for O(1) element access so that the
+      * per-element VectorHandler methods stay as cheap as before.
+      * The pointer is refreshed whenever the vector is rebuilt.
+      */
+     doublereal* pData;
+
+     Teuchos::RCP<const TpetraComm>   pComm;
+     Teuchos::RCP<const TpetraMap>    pMap;
+     Teuchos::RCP<TpetraMV>       pVec;
+
+     /* Kokkos host view – kept alive so the pointer stays valid. */
+     mutable TpetraMV::dual_view_type::t_host oHostView;
 };
 
-#endif
-#endif
+#endif  /* USE_TRILINOS */
+#endif  /* ___TPETRA_VECTOR_HANDLER__INCLUDED___ */

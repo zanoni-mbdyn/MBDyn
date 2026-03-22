@@ -48,9 +48,9 @@
 #undef HAVE_BLAS
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcpp"
-#include "epetraspmh.h"
-#include "epetravh.h"
-#include <Epetra_SerialComm.h>
+#include "tpetraspmh.h"
+//#include "epetravh.h"
+//#include <Teuchos_Comm.hpp>
 #pragma GCC diagnostic pop
 #endif
 
@@ -139,8 +139,8 @@ MBDYN_TESTSUITE_TEST(matmultest, matmultest1)
 
         SpGradientSparseMatrixHandler spgmh(5, 5);
 #ifdef USE_TRILINOS
-        Epetra_SerialComm comm;
-        EpetraSparseMatrixHandler epmh(5, 5, 5, comm);
+        Teuchos::RCP<const TpetraComm> comm = tpetraSerialComm();
+        TpetraSparseMatrixHandler epmh(5, 5, 5, comm);
 #endif
         for (int r = 0; r < 5; r++) {
                 for (int c = 0; c < 5; c++) {
@@ -177,7 +177,7 @@ MBDYN_TESTSUITE_TEST(matmultest, matmultest1)
 #ifdef USE_TRILINOS
         epmh.PacMat(); // Call before using operator()
         
-        std::cout << "matrix in Epetra sparse form: " << std::endl
+        std::cout << "matrix in Tpetra sparse form: " << std::endl
                   << epmh << std::endl;
 #endif
 

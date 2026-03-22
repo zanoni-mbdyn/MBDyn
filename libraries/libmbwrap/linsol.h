@@ -59,8 +59,8 @@ public:
                 SPQR_SOLVER,
 		STRUMPACK_SOLVER,
 		WATSON_SOLVER,
-                AZTECOO_SOLVER,
-                AMESOS_SOLVER,
+                BELOS_SOLVER,
+                AMESOS2_SOLVER,
                 SICONOS_SPARSE_SOLVER,
                 SICONOS_DENSE_SOLVER,
 		LAST_SOLVER

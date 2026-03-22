@@ -43,7 +43,7 @@ trilinos-build-job:       # This job runs in the build stage, which runs first.
   variables:
       UMFPACK_INCLUDE_DIR: "/usr/include/suitesparse"
       UMFPACK_LIBRARY: "/usr/lib64/libumfpack.so"
-      TRILINOS_CONFIG: "-DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DTrilinos_ENABLE_NOX=ON -DTrilinos_ENABLE_Epetra=ON -DTrilinos_ENABLE_EpetraExt=ON -DTrilinos_ENABLE_Amesos=ON -DTrilinos_ENABLE_AztecOO=ON -DEpetra_ENABLE_MPI=OFF -DNOX_ENABLE_Epetra=ON -DNOX_ENABLE_EpetraExt=ON -DNOX_ENABLE_ABSTRACT_IMPLEMENTATION_EPETRA=ON -DNOX_ENABLE_AztecOO=ON -DNOX_ENABLE_Ifpack=ON -DTrilinos_ENABLE_TESTS=OFF"
+      TRILINOS_CONFIG: "-DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DTrilinos_ENABLE_NOX:BOOL=ON -DTrilinos_ENABLE_Tpetra:BOOL=ON -DTrilinos_ENABLE_Amesos2:BOOL=ON -DTpetra_ENABLE_MPI:BOOL=OFF -D Trilinos_ENABLE_Belos:BOOL=ON -D Trilinos_ENABLE_Ifpack2:BOOL=ON -D Trilinos_ENABLE_Kokkos:BOOL=ON -D Trilinos_ENABLE_KokkosKernels:BOOL=ON -D Trilinos_ENABLE_Teuchos:BOOL=ON -DTrilinos_ENABLE_TESTS:BOOL=OFF"
   script:
       - echo "trilinos installation job"
       - TRILINOS_INSTALL_PREFIX=${CI_PROJECT_DIR}/${TRILINOS_INSTALL_PREFIX}

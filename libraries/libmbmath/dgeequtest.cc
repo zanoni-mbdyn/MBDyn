@@ -50,11 +50,11 @@
 
 #ifdef USE_TRILINOS
 #undef HAVE_BLAS
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcpp"
-#include "epetraspmh.h"
-#include <Epetra_SerialComm.h>
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wcpp"
+#include "tpetraspmh.h"
+//#include <Epetra_SerialComm.h>
+//#pragma GCC diagnostic pop
 #endif
 
 static doublereal mat[5][5] = {
@@ -203,7 +203,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                MatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >* pCSC0;
                MatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >* pCSC1;
 #ifdef USE_TRILINOS
-               MatrixScale<EpetraSparseMatrixHandler>* pEpetra;
+               MatrixScale<TpetraSparseMatrixHandler>* pTpetra;
 #endif
                MatrixScale<SpMapMatrixHandler>* pMap;
           } matScale[] = {
@@ -218,7 +218,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new RowMaxMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new RowMaxMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new RowMaxMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new RowMaxMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new RowMaxMatrixScale<SpMapMatrixHandler>(scale)},
                { new RowSumMatrixScale<NaiveMatrixHandler>(scale),
@@ -232,7 +232,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new RowSumMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new RowSumMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new RowSumMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new RowSumMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new RowSumMatrixScale<SpMapMatrixHandler>(scale)},
                { new ColMaxMatrixScale<NaiveMatrixHandler>(scale),
@@ -246,7 +246,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new ColMaxMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new ColMaxMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new ColMaxMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new ColMaxMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new ColMaxMatrixScale<SpMapMatrixHandler>(scale)},
                { new ColSumMatrixScale<NaiveMatrixHandler>(scale),
@@ -260,7 +260,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new ColSumMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new ColSumMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new ColSumMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new ColSumMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new ColSumMatrixScale<SpMapMatrixHandler>(scale)},
                { new LapackMatrixScale<NaiveMatrixHandler>(scale),
@@ -274,7 +274,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new LapackMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new LapackMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new LapackMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new LapackMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new LapackMatrixScale<SpMapMatrixHandler>(scale)},
                { new IterativeMatrixScale<NaiveMatrixHandler>(scale),
@@ -288,7 +288,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new IterativeMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new IterativeMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new IterativeMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new IterativeMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new IterativeMatrixScale<SpMapMatrixHandler>(scale)},
                { new RowMaxColMaxMatrixScale<NaiveMatrixHandler>(scale),
@@ -302,7 +302,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                  new RowMaxColMaxMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 0> >(scale),
                  new RowMaxColMaxMatrixScale<CSCMatrixHandlerTpl<doublereal, integer, 1> >(scale),
 #ifdef USE_TRILINOS
-                 new RowMaxColMaxMatrixScale<EpetraSparseMatrixHandler>(scale),
+                 new RowMaxColMaxMatrixScale<TpetraSparseMatrixHandler>(scale),
 #endif
                  new RowMaxColMaxMatrixScale<SpMapMatrixHandler>(scale)}
           };
@@ -328,8 +328,8 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                SpGradientSparseMatrixHandler spgmh(5, 5);
 
 #ifdef USE_TRILINOS
-               Epetra_SerialComm oComm;
-               EpetraSparseMatrixHandler epmh(5, 5, 5, oComm);
+               Teuchos::RCP<const TpetraComm> oComm = tpetraSerialComm();
+               TpetraSparseMatrixHandler epmh(5, 5, 5, oComm);
 #endif
                nm.Reset();
                npm.Reset();
@@ -410,7 +410,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                ScaleMatrix("csc0^T", *matScale[iMatScale].pCSC0, csc0T, x, b, true);
                ScaleMatrix("csc1^T", *matScale[iMatScale].pCSC1, csc1T, x, b, true);
 #ifdef USE_TRILINOS
-               ScaleMatrix("epmh", *matScale[iMatScale].pEpetra, epmh, x, b);
+               ScaleMatrix("epmh", *matScale[iMatScale].pTpetra, epmh, x, b);
                ScaleMatrix("epcsc0", *matScale[iMatScale].pCSC0, epcsc0, x, b);
                ScaleMatrix("epcsc0", *matScale[iMatScale].pCSC1, epcsc1, x, b);
                ScaleMatrix("epcsc^T", *matScale[iMatScale].pCSC0, epcsc0T, x, b, true);
@@ -431,7 +431,7 @@ MBDYN_TESTSUITE_TEST(dgeequtest, dgeequtest1)
                delete matScale[ii].pCSC0;
                delete matScale[ii].pCSC1;
 #ifdef USE_TRILINOS
-               delete matScale[ii].pEpetra;
+               delete matScale[ii].pTpetra;
 #endif
           }
      }

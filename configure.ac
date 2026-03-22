@@ -1827,7 +1827,6 @@ dnl Check for LAPACK
 dnl
 ol_link_lapack=no
 if test $ol_with_lapack != no ; then
-        AC_MSG_CHECKING([for lapack])
 
         save_LIBS="$LIBS"
 
@@ -2004,6 +2003,7 @@ if test $ol_with_lapack != no ; then
            AC_DEFINE(HAVE_DSYEV,1,[define to use LAPACK's dsyev function])
         fi
 
+        AC_MSG_CHECKING([for lapack])
         if test "$have_lapack" = "yes" ; then
                 ol_link_lapack=yes
                 AC_MSG_RESULT([yes])
@@ -2822,25 +2822,34 @@ if test $ol_with_trilinos != no ; then
         have_trilinos=no
 
         AC_LANG([C++])
-        AC_CHECK_HEADERS([Epetra_Comm.h Epetra_SerialComm.h Epetra_Vector.h Epetra_Operator.h Epetra_CrsMatrix.h AztecOO.h Amesos.h Amesos_BaseSolver.h NOX.H NOX_Epetra.H NOX_Solver_Generic.H NOX_Epetra_Vector.H NOX_Epetra_Interface_Required.H NOX_Epetra_Interface_Jacobian.H NOX_Epetra_Interface_Preconditioner.H NOX_Epetra_LinearSystem_AztecOO.H],[have_trilinos_h=yes],[have_trilinos_h=no])
+        AC_CHECK_HEADERS([Tpetra_Vector.hpp Tpetra_Operator.hpp Tpetra_CrsMatrix.hpp Amesos2.hpp Amesos2_Solver.hpp NOX.H NOX_Thyra.H NOX_Solver_Generic.H NOX_Tpetra_Vector.hpp],[have_trilinos_h=yes],[have_trilinos_h=no])
 
         AC_MSG_CHECKING([for Trilinos library])
         if test "$have_trilinos_h" = "yes" ; then
                 have_trilinos="no"
-                for trilinos_lib_config in prefix_none_without_mpi_minimal prefix_none_without_mpi prefix_trilinos_with_mpi prefix_trilinos_with_openmpi prefix_user ; do
+                for trilinos_lib_config in prefix_none_without_mpi_minimal prefix_none_with_mpi_minimal1 prefix_none_with_mpi_minimal2 prefix_none_with_mpi_minimal3 prefix_none_without_mpi prefix_trilinos_with_mpi prefix_trilinos_with_openmpi prefix_user ; do
                     if test $have_trilinos = no; then
                        case $trilinos_lib_config in
                          prefix_none_without_mpi_minimal)
-                           try_trilinos_LIBS="-lamesos -laztecoo -lepetra -lnoxepetra -lnox -lteuchoscore -lteuchosparameterlist"
+                           try_trilinos_LIBS="-lamesos2 -lstratimikos -ltpetra -lbelos -lbelostpetra -lthyratpetra -lthyracore -lifpack2 -lnox -lteuchoscore -lteuchoscomm -lteuchosparameterlist -lkokkoscore"
+                           ;;
+                         prefix_none_with_mpi_minimal1)
+                           try_trilinos_LIBS="-lamesos2 -lstratimikos -ltpetra -lbelos -lbelostpetra -lthyratpetra -lthyracore -lifpack2 -lnox -lteuchoscore -lteuchoscomm -lteuchosparameterlist -lkokkoscore -lmpi"
+                           ;;
+                         prefix_none_with_mpi_minimal2)
+                           try_trilinos_LIBS="-lamesos2 -lstratimikos -ltpetra -lbelos -lbelostpetra -lthyratpetra -lthyracore -lifpack2 -lnox -lteuchoscore -lteuchoscomm -lteuchosparameterlist -lkokkoscore -lmpic++ -lmpi"
+                           ;;
+                         prefix_none_with_mpi_minimal3)
+                           try_trilinos_LIBS="-lamesos2 -lstratimikos -ltpetra -lbelos -lbelostpetra -lthyratpetra -lthyracore -lifpack2 -lnox -lteuchoscore -lteuchoscomm -lteuchosparameterlist -lkokkoscore -lmpi_cxx -lmpi"
                            ;;
                          prefix_none_without_mpi)
-                           try_trilinos_LIBS="-lamd -lamesos -lamesos2 -lanasazi -lanasaziepetra -lanasazitpetra -laztecoo -lbelos -lbelosepetra -lbelostpetra -lbelosxpetra -lcmumps -ldl -ldmumps -lepetra -lepetraext -lgaleri-epetra -lgaleri-xpetra -lgtest -lifpack -lifpack2 -lifpack2-adapters -lisorropia -lkokkosalgorithms -lkokkoscontainers -lkokkoscore -lkokkoskernels -lkokkostsqr -lloca -llocaepetra -llocalapack -llocathyra -lm -lml -lModeLaplace -lmumps_common -lnox -lnoxepetra -lnoxlapack -lopenblas -lpamgen -lpamgen_extras -lpord -lpthread -lrtop -lshylu_nodehts -lshylu_nodetacho -lsimpi -lsmumps -lstratimikos -lstratimikosamesos -lstratimikosamesos2 -lstratimikosaztecoo -lstratimikosbelos -lstratimikosifpack -lstratimikosml -lteko -lteuchoscomm -lteuchoscore -lteuchoskokkoscomm -lteuchoskokkoscompat -lteuchosnumerics -lteuchosparameterlist -lteuchosparser -lteuchosremainder -lthyracore -lthyraepetra -lthyraepetraext -lthyratpetra -ltpetra -ltpetraclassic -ltpetraclassiclinalg -ltpetraclassicnodeapi -ltpetraext -ltpetrainout -ltrilinosss -ltriutils -lumfpack -lxpetra -lxpetra-sup -lzmumps -lzoltan -lzoltan2"
+                           try_trilinos_LIBS="-lamd -lamesos2 -lanasazi -lanasazitpetra -lbelos -lbelostpetra -lbelosxpetra -lcmumps -ldl -ldmumps -ltpetra -ltpetraext -lgaleri-tpetra -lgaleri-xpetra -lgtest -lifpack -lifpack2 -lifpack2-adapters -lisorropia -lkokkosalgorithms -lkokkoscontainers -lkokkoscore -lkokkoskernels -lkokkostsqr -lloca -llocatpetra -llocalapack -llocathyra -lm -lml -lModeLaplace -lmumps_common -lnox -lnoxtpetra -lnoxlapack -lopenblas -lpamgen -lpamgen_extras -lpord -lpthread -lrtop -lshylu_nodehts -lshylu_nodetacho -lsimpi -lsmumps -lstratimikos -lstratimikosamesos2 -lstratimikosbelos -lstratimikosifpack -lstratimikosml -lteko -lteuchoscomm -lteuchoscore -lteuchoskokkoscomm -lteuchoskokkoscompat -lteuchosnumerics -lteuchosparameterlist -lteuchosparser -lteuchosremainder -lthyracore -lthyratpetra -lthyratpetraext -lthyratpetra -ltpetra -ltpetraclassic -ltpetraclassiclinalg -ltpetraclassicnodeapi -ltpetraext -ltpetrainout -ltrilinosss -ltriutils -lumfpack -lxpetra -lxpetra-sup -lzmumps -lzoltan -lzoltan2 -lkokkoscore"
                            ;;
                          prefix_trilinos_with_mpi)
-                           try_trilinos_LIBS="-lblas -lcmumps -ldl -ldmumps -lhdf5 -llapack -lm -lmpi -lmpi++ -lmumps_common -lpord -lptscotch -lptscotcherr -lscotch -lscotcherr -lsmumps -ltbb -ltrilinos_amesos -ltrilinos_amesos2 -ltrilinos_anasazi -ltrilinos_anasaziepetra -ltrilinos_anasazitpetra -ltrilinos_aztecoo -ltrilinos_belos -ltrilinos_belosepetra -ltrilinos_belostpetra -ltrilinos_belosxpetra -ltrilinos_dpliris -ltrilinos_epetra -ltrilinos_epetraext -ltrilinos_galeri-epetra -ltrilinos_galeri-xpetra -ltrilinos_globipack -ltrilinos_ifpack -ltrilinos_ifpack2 -ltrilinos_ifpack2-adapters -ltrilinos_intrepid -ltrilinos_intrepid2 -ltrilinos_isorropia -ltrilinos_kokkosalgorithms -ltrilinos_kokkoscontainers -ltrilinos_kokkoscore -ltrilinos_kokkoskernels -ltrilinos_kokkostsqr -ltrilinos_komplex -ltrilinos_loca -ltrilinos_locaepetra -ltrilinos_localapack -ltrilinos_locathyra -ltrilinos_ml -ltrilinos_ModeLaplace -ltrilinos_moertel -ltrilinos_muelu -ltrilinos_muelu-adapters -ltrilinos_muelu-interface -ltrilinos_nox -ltrilinos_noxepetra -ltrilinos_noxlapack -ltrilinos_optipack -ltrilinos_pamgen -ltrilinos_pamgen_extras -ltrilinos_phalanx -ltrilinos_pike-blackbox -ltrilinos_piro -ltrilinos_rol -ltrilinos_rtop -ltrilinos_rythmos -ltrilinos_sacado -ltrilinos_shards -ltrilinos_shylu_ddcommon -ltrilinos_shylu_ddfrosch -ltrilinos_shylu_nodehts -ltrilinos_shylu_nodetacho -ltrilinos_stokhos -ltrilinos_stokhos_amesos2 -ltrilinos_stokhos_ifpack2 -ltrilinos_stokhos_muelu -ltrilinos_stokhos_sacado -ltrilinos_stokhos_tpetra -ltrilinos_stratimikos -ltrilinos_stratimikosamesos -ltrilinos_stratimikosamesos2 -ltrilinos_stratimikosaztecoo -ltrilinos_stratimikosbelos -ltrilinos_stratimikosifpack -ltrilinos_stratimikosml -ltrilinos_teko -ltrilinos_teuchoscomm -ltrilinos_teuchoscore -ltrilinos_teuchoskokkoscomm -ltrilinos_teuchoskokkoscompat -ltrilinos_teuchosnumerics -ltrilinos_teuchosparameterlist -ltrilinos_teuchosparser -ltrilinos_teuchosremainder -ltrilinos_thyracore -ltrilinos_thyraepetra -ltrilinos_thyraepetraext -ltrilinos_thyratpetra -ltrilinos_tpetra -ltrilinos_tpetraclassic -ltrilinos_tpetraclassiclinalg -ltrilinos_tpetraclassicnodeapi -ltrilinos_tpetraext -ltrilinos_tpetrainout -ltrilinos_trilinoscouplings -ltrilinos_trilinosss -ltrilinos_triutils -ltrilinos_xpetra -ltrilinos_xpetra-sup -ltrilinos_zoltan -ltrilinos_zoltan2 -lz -lzmumps"
+                           try_trilinos_LIBS="-lblas -lcmumps -ldl -ldmumps -lhdf5 -llapack -lm -lmpi -lmpi++ -lmumps_common -lpord -lptscotch -lptscotcherr -lscotch -lscotcherr -lsmumps -ltbb -ltrilinos_amesos2 -ltrilinos_anasazi -ltrilinos_anasazitpetra -ltrilinos_belos -ltrilinos_belostpetra -ltrilinos_belosxpetra -ltrilinos_dpliris -ltrilinos_tpetra -ltrilinos_tpetraext -ltrilinos_galeri-tpetra -ltrilinos_galeri-xpetra -ltrilinos_globipack -ltrilinos_ifpack -ltrilinos_ifpack2 -ltrilinos_ifpack2-adapters -ltrilinos_intrepid -ltrilinos_intrepid2 -ltrilinos_isorropia -ltrilinos_kokkosalgorithms -ltrilinos_kokkoscontainers -ltrilinos_kokkoscore -ltrilinos_kokkoskernels -ltrilinos_kokkostsqr -ltrilinos_komplex -ltrilinos_loca -ltrilinos_locatpetra -ltrilinos_localapack -ltrilinos_locathyra -ltrilinos_ml -ltrilinos_ModeLaplace -ltrilinos_moertel -ltrilinos_muelu -ltrilinos_muelu-adapters -ltrilinos_muelu-interface -ltrilinos_nox -ltrilinos_noxtpetra -ltrilinos_noxlapack -ltrilinos_optipack -ltrilinos_pamgen -ltrilinos_pamgen_extras -ltrilinos_phalanx -ltrilinos_pike-blackbox -ltrilinos_piro -ltrilinos_rol -ltrilinos_rtop -ltrilinos_rythmos -ltrilinos_sacado -ltrilinos_shards -ltrilinos_shylu_ddcommon -ltrilinos_shylu_ddfrosch -ltrilinos_shylu_nodehts -ltrilinos_shylu_nodetacho -ltrilinos_stokhos -ltrilinos_stokhos_amesos2 -ltrilinos_stokhos_ifpack2 -ltrilinos_stokhos_muelu -ltrilinos_stokhos_sacado -ltrilinos_stokhos_tpetra -ltrilinos_stratimikos -ltrilinos_stratimikosamesos2 -ltrilinos_stratimikosbelos -ltrilinos_stratimikosifpack -ltrilinos_stratimikosml -ltrilinos_teko -ltrilinos_teuchoscomm -ltrilinos_teuchoscore -ltrilinos_teuchoskokkoscomm -ltrilinos_teuchoskokkoscompat -ltrilinos_teuchosnumerics -ltrilinos_teuchosparameterlist -ltrilinos_teuchosparser -ltrilinos_teuchosremainder -ltrilinos_thyracore -ltrilinos_thyratpetra -ltrilinos_thyratpetraext -ltrilinos_thyratpetra -ltrilinos_tpetra -ltrilinos_tpetraclassic -ltrilinos_tpetraclassiclinalg -ltrilinos_tpetraclassicnodeapi -ltrilinos_tpetraext -ltrilinos_tpetrainout -ltrilinos_trilinoscouplings -ltrilinos_trilinosss -ltrilinos_triutils -ltrilinos_xpetra -ltrilinos_xpetra-sup -ltrilinos_zoltan -ltrilinos_zoltan2 -lz -lzmumps -ltrilinos_kokkoscore"
                            ;;
                          prefix_trilinos_with_openmpi)
-                           try_trilinos_LIBS="-lblas -lcmumps -ldl -ldmumps -lhdf5_openmpi -llapack -lm -lmpi -lmpi++ -lmumps_common -lpord -lptscotch -lptscotcherr -lscotch -lscotcherr -lsmumps -ltbb -ltrilinos_amesos -ltrilinos_amesos2 -ltrilinos_anasazi -ltrilinos_anasaziepetra -ltrilinos_anasazitpetra -ltrilinos_aztecoo -ltrilinos_belos -ltrilinos_belosepetra -ltrilinos_belostpetra -ltrilinos_belosxpetra -ltrilinos_dpliris -ltrilinos_epetra -ltrilinos_epetraext -ltrilinos_galeri-epetra -ltrilinos_galeri-xpetra -ltrilinos_ifpack -ltrilinos_ifpack2 -ltrilinos_ifpack2-adapters -ltrilinos_intrepid -ltrilinos_intrepid2 -ltrilinos_isorropia -ltrilinos_kokkosalgorithms -ltrilinos_kokkoscontainers -ltrilinos_kokkoscore -ltrilinos_kokkoskernels -ltrilinos_kokkostsqr -ltrilinos_komplex -ltrilinos_loca -ltrilinos_locaepetra -ltrilinos_localapack -ltrilinos_locathyra -ltrilinos_ml -ltrilinos_ModeLaplace -ltrilinos_moertel -ltrilinos_muelu -ltrilinos_muelu-adapters -ltrilinos_muelu-interface -ltrilinos_nox -ltrilinos_noxepetra -ltrilinos_noxlapack -ltrilinos_pamgen -ltrilinos_pamgen_extras -ltrilinos_phalanx -ltrilinos_pike-blackbox -ltrilinos_piro -ltrilinos_rol -ltrilinos_rtop -ltrilinos_rythmos -ltrilinos_sacado -ltrilinos_shards -ltrilinos_shylu_ddcommon -ltrilinos_shylu_ddfrosch -ltrilinos_shylu_nodehts -ltrilinos_stokhos -ltrilinos_stokhos_amesos2 -ltrilinos_stokhos_ifpack2 -ltrilinos_stokhos_muelu -ltrilinos_stokhos_sacado -ltrilinos_stokhos_tpetra -ltrilinos_stratimikos -ltrilinos_stratimikosamesos -ltrilinos_stratimikosamesos2 -ltrilinos_stratimikosaztecoo -ltrilinos_stratimikosbelos -ltrilinos_stratimikosifpack -ltrilinos_stratimikosml -ltrilinos_teko -ltrilinos_teuchoscomm -ltrilinos_teuchoscore -ltrilinos_teuchoskokkoscomm -ltrilinos_teuchoskokkoscompat -ltrilinos_teuchosnumerics -ltrilinos_teuchosparameterlist -ltrilinos_teuchosparser -ltrilinos_teuchosremainder -ltrilinos_thyracore -ltrilinos_thyraepetra -ltrilinos_thyraepetraext -ltrilinos_thyratpetra -ltrilinos_tpetra -ltrilinos_tpetraclassic -ltrilinos_tpetraclassiclinalg -ltrilinos_tpetraclassicnodeapi -ltrilinos_tpetraext -ltrilinos_tpetrainout -ltrilinos_trilinoscouplings -ltrilinos_trilinosss -ltrilinos_triutils -ltrilinos_xpetra -ltrilinos_xpetra-sup -ltrilinos_zoltan -ltrilinos_zoltan2 -lz -lzmumps"
+                           try_trilinos_LIBS="-lblas -lcmumps -ldl -ldmumps -lhdf5_openmpi -llapack -lm -lmpi -lmpi++ -lmumps_common -lpord -lptscotch -lptscotcherr -lscotch -lscotcherr -lsmumps -ltbb -ltrilinos_amesos -ltrilinos_amesos2 -ltrilinos_anasazi -ltrilinos_anasazitpetra -ltrilinos_anasazitpetra -ltrilinos_belos -ltrilinos_belostpetra -ltrilinos_belostpetra -ltrilinos_belosxpetra -ltrilinos_dpliris -ltrilinos_tpetra -ltrilinos_tpetraext -ltrilinos_galeri-tpetra -ltrilinos_galeri-xpetra -ltrilinos_ifpack -ltrilinos_ifpack2 -ltrilinos_ifpack2-adapters -ltrilinos_intrepid -ltrilinos_intrepid2 -ltrilinos_isorropia -ltrilinos_kokkosalgorithms -ltrilinos_kokkoscontainers -ltrilinos_kokkoscore -ltrilinos_kokkoskernels -ltrilinos_kokkostsqr -ltrilinos_komplex -ltrilinos_loca -ltrilinos_locatpetra -ltrilinos_localapack -ltrilinos_locathyra -ltrilinos_ml -ltrilinos_ModeLaplace -ltrilinos_moertel -ltrilinos_muelu -ltrilinos_muelu-adapters -ltrilinos_muelu-interface -ltrilinos_nox -ltrilinos_noxtpetra -ltrilinos_noxlapack -ltrilinos_pamgen -ltrilinos_pamgen_extras -ltrilinos_phalanx -ltrilinos_pike-blackbox -ltrilinos_piro -ltrilinos_rol -ltrilinos_rtop -ltrilinos_rythmos -ltrilinos_sacado -ltrilinos_shards -ltrilinos_shylu_ddcommon -ltrilinos_shylu_ddfrosch -ltrilinos_shylu_nodehts -ltrilinos_stokhos -ltrilinos_stokhos_amesos2 -ltrilinos_stokhos_ifpack2 -ltrilinos_stokhos_muelu -ltrilinos_stokhos_sacado -ltrilinos_stokhos_tpetra -ltrilinos_stratimikos -ltrilinos_stratimikosamesos2 -ltrilinos_stratimikosbelos -ltrilinos_stratimikosifpack -ltrilinos_stratimikosml -ltrilinos_teko -ltrilinos_teuchoscomm -ltrilinos_teuchoscore -ltrilinos_teuchoskokkoscomm -ltrilinos_teuchoskokkoscompat -ltrilinos_teuchosnumerics -ltrilinos_teuchosparameterlist -ltrilinos_teuchosparser -ltrilinos_teuchosremainder -ltrilinos_thyracore -ltrilinos_thyratpetra -ltrilinos_thyratpetraext -ltrilinos_thyratpetra -ltrilinos_tpetra -ltrilinos_tpetraclassic -ltrilinos_tpetraclassiclinalg -ltrilinos_tpetraclassicnodeapi -ltrilinos_tpetraext -ltrilinos_tpetrainout -ltrilinos_trilinoscouplings -ltrilinos_trilinosss -ltrilinos_triutils -ltrilinos_xpetra -ltrilinos_xpetra-sup -ltrilinos_zoltan -ltrilinos_zoltan2 -lz -lzmumps -ltrilinos_kokkoscore"
                            ;;
                          *)
                            trilinos_LIBS=""
@@ -2851,69 +2860,85 @@ if test $ol_with_trilinos != no ; then
                        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
                                 #undef HAVE_BLAS
                                 #undef HAVE_BOOL
+                                #include <Teuchos_Comm.hpp>
                                 #include <NOX.H>
-                                #include <NOX_Epetra.H>
                                 #include <NOX_Solver_Generic.H>
-                                #include <NOX_Epetra_Vector.H>
-                                #include <NOX_Epetra_Interface_Required.H>
-                                #include <NOX_Epetra_Interface_Jacobian.H>
-                                #include <NOX_Epetra_Interface_Preconditioner.H>
-                                #include <NOX_Epetra_LinearSystem_AztecOO.H>
-                                #include <Epetra_Comm.h>
-                                #include <Epetra_SerialComm.h>
-                                #include <Epetra_Map.h>
-                                #include <Epetra_Vector.h>
-                                #include <Epetra_Operator.h>
-                                #include <Epetra_RowMatrix.h>
-                                #include <Epetra_CrsMatrix.h>
-                                #include <Epetra_LinearProblem.h>
-                                #include <AztecOO.h>
-                                #include <Amesos.h>
-                                #include <Amesos_BaseSolver.h>
-                                struct NonlinearProblem: NOX::Epetra::Interface::Required, NOX::Epetra::Interface::Jacobian, NOX::Epetra::Interface::Preconditioner {
-                                       virtual bool computeF(const Epetra_Vector &x, Epetra_Vector &f, const FillType fillFlag) override {
+                                #include <NOX_Tpetra_Vector.hpp>
+                                #include <NOX_Thyra_Group.H>
+                                #include <Tpetra_Map.hpp>
+                                #include <Tpetra_Vector.hpp>
+                                #include <Tpetra_Operator.hpp>
+                                #include <Tpetra_RowMatrix.hpp>
+                                #include <Tpetra_CrsMatrix.hpp>
+                                #include <Tpetra_LinearProblem.hpp>
+                                #include <Amesos2.hpp>
+                                #include <Amesos2_Solver.hpp>
+                                
+                                using TpetraSC   = double;
+                                using TpetraLO   = int;
+                                using TpetraGO   = long long;   /* 64-bit global indices */
+                                using TpetraNode = Tpetra::KokkosClassic::DefaultNode::DefaultNodeType;
+
+                                /* Convenience type aliases */
+                                using TpetraComm   = Teuchos::Comm<int>;
+                                using TpetraMap    = Tpetra::Map<TpetraLO, TpetraGO, TpetraNode>;
+                                using TpetraCrs    = Tpetra::CrsMatrix<TpetraSC, TpetraLO, TpetraGO, TpetraNode>;
+                                using TpetraVector = Tpetra::Vector<TpetraSC, TpetraLO, TpetraGO, TpetraNode>;
+                                using TpetraMV     = Tpetra::MultiVector<TpetraSC, TpetraLO, TpetraGO, TpetraNode>;
+                                using TpetraImport = Tpetra::Import<TpetraLO, TpetraGO, TpetraNode>;
+                                using TpetraOp     = Tpetra::Operator<TpetraSC, TpetraLO, TpetraGO, TpetraNode>;
+
+                                inline Teuchos::RCP<const TpetraComm> tpetraSerialComm()
+                                {
+                                        return Teuchos::rcp(new Teuchos::SerialComm<int>());
+                                }
+                                /*
+                                struct NonlinearProblem: NOX::Tpetra::Interface::Required, NOX::Tpetra::Interface::Jacobian, NOX::Tpetra::Interface::Preconditioner {
+                                       virtual bool computeF(const Tpetra_Vector &x, Tpetra_Vector &f, const FillType fillFlag) override {
                                                return true;
                                        }
 
-                                       virtual bool computeJacobian(const Epetra_Vector& x, Epetra_Operator&) override {
+                                       virtual bool computeJacobian(const Tpetra_Vector& x, Tpetra_Operator&) override {
                                                return true;
                                        }
 
-                                       virtual bool computePreconditioner(const Epetra_Vector &x, Epetra_Operator &M, Teuchos::ParameterList *precParams) override {
+                                       virtual bool computePreconditioner(const Tpetra_Vector &x, Tpetra_Operator &M, Teuchos::ParameterList *precParams) override {
                                                return true;
                                        }
                                 };
+                                */
                         ]], [[
                                 int N = 100;
 
-                                Epetra_SerialComm Comm;
-                                Epetra_Map Map(N, 0, Comm);
-                                Teuchos::RCP<Epetra_CrsMatrix> crsMatrix{new Epetra_CrsMatrix(Copy, Map, 3, true)};
-                                crsMatrix->NormOne();
-                                crsMatrix->NormInf();
-                                crsMatrix->FillComplete();
-                                Teuchos::RCP<NonlinearProblem> noxProblem(new NonlinearProblem);
-                                Teuchos::RCP<NOX::Epetra::Interface::Required> noxInterface{noxProblem};
-                                Teuchos::RCP<Epetra_Vector> soln{new Epetra_Vector(Map, true)};
-                                soln->NormInf(nullptr);
-                                NOX::Epetra::Vector noxSol(soln, NOX::Epetra::Vector::CreateView);
+                                const Teuchos::RCP<const TpetraComm> Comm = tpetraSerialComm();
+                                Teuchos::RCP<TpetraMap> Map = Teuchos::rcp(new TpetraMap(N, 0, Comm));
+                                Teuchos::RCP<TpetraCrs> crsMatrix = Teuchos::rcp(new TpetraCrs(Map, Map, 100));
+                                //crsMatrix->normOne();
+                                //crsMatrix->getNormInf();
+                                crsMatrix->fillComplete();
+                                //Teuchos::RCP<NonlinearProblem> noxProblem(new NonlinearProblem);
+                                //Teuchos::RCP<NOX::Tpetra::Interface::Required> noxInterface{noxProblem};
+                                Teuchos::RCP<TpetraVector> soln{new TpetraVector(Map, true)};
+                                //soln->normInf(nullptr);
+                                TpetraVector::dual_view_type::t_host noxSol = soln->getLocalViewHost(Tpetra::Access::ReadWrite);
+;
                                 Teuchos::RCP<Teuchos::ParameterList> noxParam{new Teuchos::ParameterList};
                                 Teuchos::ParameterList printParam, lineSearch, linearSolver;
-                                Teuchos::RCP<NOX::Epetra::Interface::Jacobian> intJacobian(noxProblem);
-                                Teuchos::RCP<NOX::Epetra::Interface::Preconditioner> intPrecond(noxProblem);
-                                Teuchos::RCP<Epetra_Operator> operPrecond{new Epetra_CrsMatrix(Copy, Map, 3, true)};
-                                Teuchos::RCP<NOX::Epetra::LinearSystemAztecOO> linearSystem{new NOX::Epetra::LinearSystemAztecOO(printParam,
+                                //Teuchos::RCP<NOX::Tpetra::Interface::Jacobian> intJacobian(noxProblem);
+                                //Teuchos::RCP<NOX::Tpetra::Interface::Preconditioner> intPrecond(noxProblem);
+                                Teuchos::RCP<TpetraOp> operPrecond(new TpetraCrs(Map, Map, 100));
+                                
+                                /*
+                                Teuchos::RCP<NOX::Tpetra::LinearSystemAztecOO> linearSystem{new NOX::Epetra::LinearSystemAztecOO(printParam,
                                                                                                                                  linearSolver,
                                                                                                                                  intJacobian,
                                                                                                                                  crsMatrix,
                                                                                                                                  intPrecond,
                                                                                                                                  operPrecond,
                                                                                                                                  noxSol)};
+                                */
 
-                                Teuchos::RCP<NOX::Epetra::Group> grpPtr{new NOX::Epetra::Group(printParam,
-                                                                                               noxInterface,
-                                                                                               noxSol,
-                                                                                               linearSystem)};
+                                //NOX::Abstract::Group& grpPtr(problem.getSolutionGroup());
 
                                 Teuchos::RCP<NOX::StatusTest::Combo> converged =
                                 Teuchos::rcp(new NOX::StatusTest::Combo(NOX::StatusTest::Combo::AND));
@@ -2927,8 +2952,8 @@ if test $ol_with_trilinos != no ; then
                                 combo->addStatusTest(converged);
                                 combo->addStatusTest(maxiters);
 
-                                Teuchos::RCP<NOX::Solver::Generic> nonlinSolver =  NOX::Solver::buildSolver(grpPtr, combo, noxParam);
-                                nonlinSolver->solve();
+                                //Teuchos::RCP<NOX::Solver::Generic> nonlinSolver =  NOX::Solver::buildSolver(grpPtr, combo, noxParam);
+                                //nonlinSolver->solve();
                        ]])],[have_trilinos="yes"],[])
 
                        LIBS="$save_LIBS"
