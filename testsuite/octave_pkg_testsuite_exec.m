@@ -65,7 +65,11 @@ function status = octave_pkg_testsuite_exec(idx, test_data)
 
     printf("Run test %d: \"%s\" ...\n", idx, test_data.pkg_functions{idx});
 
+    start = tic();
+
     [status.test.N, status.test.NMAX] = test(test_data.pkg_functions{idx}, test_data.test_args{:});
+
+    status.test.elapsed_time = toc(start);
 
     printf("Exit status of test %d: \"%s\"\n", idx, test_data.pkg_functions{idx});
     printf("N=%d\n", status.test.N);

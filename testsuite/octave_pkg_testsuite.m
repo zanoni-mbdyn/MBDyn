@@ -122,7 +122,7 @@ try
   endwhile
 
   if (isempty(test_data.pkg_name))
-    error("missing argument --package-name <PKG_NAME>");
+    error("missing argument --octave-pkg-list <PKG_NAME>:<BUILD>:<BRANCH>:<RUN>:<LIMIT>");
   endif
 
   if (isempty(test_data.octave_pkg_test_dir))
@@ -173,7 +173,7 @@ try
     total.NMAX += status{i}.test.NMAX;
     total.NREGRESSION += NREGRESSION;
 
-    printf("%3d: test(\"%s\":\"%s\"): %2d/%2d passed, %2d/%2d failed)\n", i, test_data.pkg_name{status{i}.pkg_index}, status{i}.pkg_function, status{i}.test.N, status{i}.test.NMAX, NREGRESSION, status{i}.test.NMAX);
+    printf("%3d: test(\"%s\":\"%s\"): %2d/%2d passed, %2d/%2d failed, elapsed time: %.2fs\n", i, test_data.pkg_name{status{i}.pkg_index}, status{i}.pkg_function, status{i}.test.N, status{i}.test.NMAX, NREGRESSION, status{i}.test.NMAX, status{i}.test.elapsed_time);
   endfor
 catch
   gtest_error = lasterror();
