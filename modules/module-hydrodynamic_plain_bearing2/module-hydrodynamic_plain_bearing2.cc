@@ -4875,7 +4875,7 @@ namespace {
                      const HydroMesh* pMesh,
                      const ElementContainer& rgElements,
                      const NodesContainer& rgNodes,
-                     doublereal dPressScale);
+                     doublereal& dPressScale);
 
      private:
           struct NodeRec {
@@ -4921,7 +4921,7 @@ namespace {
                                      const HydroMesh* pMesh,
                                      const ElementContainer& rgElements,
                                      const NodesContainer& rgNodes,
-                                     doublereal dPressScale) const=0;
+                                     doublereal& dPressScale) const=0;
      };
 
      class ElasticHalfSpace: public ComplianceMatrix {
@@ -4933,7 +4933,7 @@ namespace {
                                      const HydroMesh* pMesh,
                                      const ElementContainer& rgElements,
                                      const NodesContainer& rgNodes,
-                                     doublereal dPressScale) const;
+                                     doublereal& dPressScale) const;
      private:
           doublereal Ered;
      };
@@ -4946,7 +4946,7 @@ namespace {
                                      const HydroMesh* pMesh,
                                      const ElementContainer& rgElements,
                                      const NodesContainer& rgNodes,
-                                     doublereal dPressScale) const;
+                                     doublereal& dPressScale) const;
      private:
           std::string strFileName;
      };
@@ -4961,8 +4961,7 @@ namespace {
           };
 
           explicit ComplianceModel(HydroMesh* pMesh,
-                                   doublereal dDefScale,
-                                   doublereal dPressScale);
+                                   doublereal dDefScale);
           virtual ~ComplianceModel();
           virtual int GetNumConnectedElements() const;
           virtual void GetConnectedElements(std::vector<const DofOwnerOwner*>& rgElem) const;
@@ -5021,7 +5020,8 @@ namespace {
 
           ElementContainer rgElements;
           NodesContainer rgNodes;
-          const doublereal dDefScale, dPressScale;
+          const doublereal dDefScale;
+          doublereal dPressScale;
           bool bDoInitAss;
      };
 
@@ -5033,7 +5033,6 @@ namespace {
           explicit ComplianceModelNodal(HydroMesh* pMesh,
                                         const ModalAd* pModalJoint,
                                         doublereal dDefScale,
-                                        doublereal dPressScale,
                                         SolverBase::StepIntegratorType eStepInteg,
                                         ComplianceMatrixArray&& rgMatrices);
           virtual ~ComplianceModelNodal();
@@ -5180,7 +5179,6 @@ namespace {
           explicit ComplianceModelNodalDouble(HydroMesh* pMesh,
                                               const ModalJointArray& rgModalJoints,
                                               doublereal dDefScale,
-                                              doublereal dPressScale,
                                               ComplianceMatrixArray&& rgMatrices,
                                               const CylindricalBearing& oGeometry,
                                               DEhdInterpolOption eInterpolOption,
@@ -5394,7 +5392,6 @@ namespace {
      public:
           explicit ComplianceModelModal(HydroMesh* pMesh,
                                         doublereal dDefScale,
-                                        doublereal dPressScale,
                                         SolverBase::StepIntegratorType eStepInteg,
                                         const std::string& strFileName);
           virtual ~ComplianceModelModal();
@@ -12344,11 +12341,10 @@ namespace {
      }
 
      ComplianceModel::ComplianceModel(HydroMesh* pMesh_a,
-                                      doublereal dDefScale_a,
-                                      doublereal dPressScale_a)
+                                      doublereal dDefScale_a)
           :HydroElement(pMesh_a, COMPLIANCE_ELEM),
            dDefScale(dDefScale_a),
-           dPressScale(dPressScale_a),
+           dPressScale(0.),
            bDoInitAss(false)
      {
           HYDRO_ASSERT(pMesh_a->iGetNumNodes() > 0);
@@ -12500,10 +12496,9 @@ namespace {
      ComplianceModelNodal::ComplianceModelNodal(HydroMesh* pMesh_a,
                                                 const ModalAd* pModalJoint_a,
                                                 doublereal dDefScale_a,
-                                                doublereal dPressScale_a,
                                                 SolverBase::StepIntegratorType eStepInteg_a,
                                                 ComplianceMatrixArray&& rgMatArg)
-          :ComplianceModel(pMesh_a, dDefScale_a, dPressScale_a),
+          :ComplianceModel(pMesh_a, dDefScale_a),
            iNumNodes(-1), iNumModes(-1),
            pModalJoint(pModalJoint_a),
            rgMatrices(std::move(rgMatArg)),
@@ -12973,12 +12968,11 @@ namespace {
      ComplianceModelNodalDouble::ComplianceModelNodalDouble(HydroMesh* pMesh_a,
                                                             const ModalJointArray& rgModalJoints_a,
                                                             doublereal dDefScale_a,
-                                                            doublereal dPressScale_a,
                                                             ComplianceMatrixArray&& rgMatrices_a,
                                                             const CylindricalBearing& oGeometry,
                                                             DEhdInterpolOption eInterpolOption_a,
                                                             SolverBase::StepIntegratorType eStepInteg_a)
-          :ComplianceModel(pMesh_a, dDefScale_a, dPressScale_a),
+          :ComplianceModel(pMesh_a, dDefScale_a),
            rgModalJoints(rgModalJoints_a),
            dPressDofScale(0.),
            dMeshRadius(oGeometry.dGetMeshRadius()),
@@ -14100,10 +14094,9 @@ namespace {
 
      ComplianceModelModal::ComplianceModelModal(HydroMesh* pMesh_a,
                                                 doublereal dDefScale_a,
-                                                doublereal dPressScale_a,
                                                 SolverBase::StepIntegratorType eStepInteg_a,
                                                 const std::string& strFileName_a)
-          :ComplianceModel(pMesh_a, dDefScale_a, dPressScale_a),
+          :ComplianceModel(pMesh_a, dDefScale_a),
            iNumModes(0),
            strFileName(strFileName_a),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG),
@@ -14568,7 +14561,7 @@ namespace {
                                             const HydroMesh* pMesh,
                                             const ElementContainer& rgElements,
                                             const NodesContainer& rgNodes,
-                                            doublereal dPressScale)
+                                            doublereal& dPressScale)
      {
           std::ifstream oFile(strFileName.c_str(), std::ios::in);
 
@@ -14984,6 +14977,7 @@ namespace {
 
                                    case REF_PRESSURE:
                                         oFile >> oMatData.dRefPressure;
+                                        dPressScale = 1. / oMatData.dRefPressure;
                                         pedantic_cout("\tFEM reference pressure=" << oMatData.dRefPressure << "\n");
                                         rgTagsParsed[REF_PRESSURE] = true;
                                         break;
@@ -15188,26 +15182,7 @@ namespace {
                                              HYDRO_ASSERT(0);
                                         }
 
-                                        doublereal dVal, dScale = 0.;
-
-                                        switch (eCurrMatrix) {
-                                        case MATRIX_C1:
-                                        case MATRIX_C2:
-                                        case MATRIX_E2:
-                                        case MATRIX_E3:
-                                        case MATRIX_RPhiK:
-                                             dScale = 1. / (dPressScale * oMatData.dRefPressure);
-                                             break;
-
-                                        case MATRIX_D2:
-                                        case MATRIX_D3:
-                                        case MATRIX_Phin:
-                                             dScale = 1.; // we assume that Phi has already been scaled by L2 norm
-                                             break;
-
-                                        default:
-                                             HYDRO_ASSERT(0);
-                                        };
+                                        doublereal dVal;
 
                                         MatrixType* pCurrMat = nullptr;
 
@@ -15328,7 +15303,7 @@ namespace {
                                                   HYDRO_ASSERT(iRowIndexMat <= pCurrMat->iGetNumRows());
                                                   HYDRO_ASSERT(iColIndexMat <= pCurrMat->iGetNumCols());
 
-                                                  (*pCurrMat)(iRowIndexMat, iColIndexMat) += dVal * dScale;
+                                                  (*pCurrMat)(iRowIndexMat, iColIndexMat) += dVal;
                                              }
 
                                              pedantic_cout('\n');
@@ -15562,11 +15537,13 @@ namespace {
                                           const HydroMesh* const pMesh,
                                           const ElementContainer& rgElements,
                                           const NodesContainer& rgNodes,
-                                          doublereal dPressScale) const
+                                          doublereal& dPressScale) const
      {
           SpMatrix<doublereal>& C = *oMatData.rgMatrices.C();
 
-          const doublereal alpha = 0.25 / (M_PI * Ered * dPressScale);
+          dPressScale = 1. / Ered;
+
+          const doublereal alpha = 0.25 / M_PI;
 
           typedef std::multimap<const HydroNode*, const PressureElement*> NodeToElemCont;
 
@@ -15713,7 +15690,7 @@ namespace {
                                             const HydroMesh* pMesh,
                                             const ElementContainer& rgElements,
                                             const NodesContainer& rgNodes,
-                                            doublereal dPressScale) const
+                                            doublereal& dPressScale) const
      {
           ComplianceMatrixFileParser oParser{oMatData};
 
@@ -23168,7 +23145,6 @@ namespace {
                std::array<std::unique_ptr<ComplianceMatrix>, iNumMatricesMax> rgMatrices;
                std::array<const ModalAd*, iNumMatricesMax> rgModalJoints = {nullptr};
                index_type iNumMatrices = iNumMatricesMax;
-               index_type iNumMaterials = iNumMatrices;
                std::string strFileNameModal;
                auto eInterpolOption = ComplianceModelNodalDouble::INT_AXIAL_EXTRAPOLATE;
                ComplianceModel::Type eCompModType = ComplianceModel::COMP_MOD_UNKNOWN;
@@ -23195,7 +23171,6 @@ namespace {
                     iNumMatrices = 1;
 
                     if (!pContact.get()) {
-                         iNumMaterials = 1;
                          rgMaterials[0].ParseInput(1, HP, pGetParent());
                     }
 
@@ -23206,7 +23181,7 @@ namespace {
 
                     std::fill(std::begin(rgMeshPos), std::end(rgMeshPos), BearingGeometry::CYLINDRICAL_MESH_UNKNOWN);
 
-                    iNumMaterials = iNumMatrices = rgMeshPos.size();
+                    iNumMatrices = rgMeshPos.size();
 
                     for (index_type i = 0; i < iNumMatrices; ++i) {
                          BearingGeometry::Type eMeshPos = BearingGeometry::CYLINDRICAL_MESH_UNKNOWN;
@@ -23288,7 +23263,7 @@ namespace {
 
                     for (index_type i = 0; i < iNumMatrices; ++i) {
                          if (!HP.IsKeyWord("matrix")) {
-                              iNumMaterials = iNumMatrices = i;
+                              iNumMatrices = i;
                               break;
                          }
 
@@ -23338,19 +23313,6 @@ namespace {
                     throw ErrGeneric(MBDYN_EXCEPT_ARGS);
                }
 
-               doublereal dPressScale = 0.;
-
-               switch (iNumMaterials) {
-               case 1:
-                    dPressScale = 1. / rgMaterials[0].dGetReducedModulus();
-                    break;
-               case 2:
-                    dPressScale = 1. / rgMaterials[0].dGetReducedModulus(rgMaterials[1]);
-                    break;
-               default:
-                    HYDRO_ASSERT(0);
-               };
-
                doublereal dDefScale = pGetGeometry()->dGetReferenceClearance();
 
                if (HP.IsKeyWord("deformation" "dof" "scale")) {
@@ -23361,7 +23323,6 @@ namespace {
                case ComplianceModel::COMP_MOD_MODAL:
                     pCompliance.reset(new ComplianceModelModal(this,
                                                                dDefScale,
-                                                               dPressScale,
                                                                rgStepInteg[INT_DEFORMATION],
                                                                strFileNameModal));
                     break;
@@ -23369,7 +23330,6 @@ namespace {
                     pCompliance.reset(new ComplianceModelNodal(this,
                                                                rgModalJoints[0],
                                                                dDefScale,
-                                                               dPressScale,
                                                                rgStepInteg[INT_DEFORMATION],
                                                                std::move(rgMatrices)));
                } break;
@@ -23377,7 +23337,6 @@ namespace {
                     pCompliance.reset(new ComplianceModelNodalDouble(this,
                                                                      rgModalJoints,
                                                                      dDefScale,
-                                                                     dPressScale,
                                                                      std::move(rgMatrices),
                                                                      *pGeometry,
                                                                      eInterpolOption,
