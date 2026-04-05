@@ -1351,7 +1351,7 @@ As described in section~\ref{sec:fsi_100}, it is necessary on one hand to apply 
 \boldsymbol{w}_i & = & \boldsymbol{D}_i \, \boldsymbol{q} \\
 \boldsymbol{R}_{red} & = & \boldsymbol{R}_{red}^{\star} + \sum_{i=1}^{n}\boldsymbol{E}_i\,\boldsymbol{p}_{tot_i} \\
 \boldsymbol{D}_{ij} & = & \boldsymbol{n}_{ij}^T \, \boldsymbol{T}_{red_{ij}} \\
-\boldsymbol{E}_{i} & = & \boldsymbol{T}_{red}^T \, \boldsymbol{R}_{p_i}
+\boldsymbol{E}_{i} & = & \boldsymbol{D}_{i}^T \, \boldsymbol{A}_i
 \end{IEEEeqnarray}
 \begin{description}
 \item[$\boldsymbol{w}_i$] Vector of radial displacements at the surface of bearing~$i$
@@ -1360,7 +1360,7 @@ As described in section~\ref{sec:fsi_100}, it is necessary on one hand to apply 
 \item[$\boldsymbol{E}_{i}$] Pressure load coupling matrix for the surface of bearing~$i$
 \item[$\boldsymbol{R}_{red}^{\star}$] Modal loads contributed by other elements including the modal joint itself.
 \item[$\boldsymbol{n}_{ij}$] Surface normal vector at bearing surface~$i$ and node~$j$
-\item[$\boldsymbol{R}_{p_i}$] Matrix of unit pressure load vectors at bearing surface~$i$
+\item[$\boldsymbol{A}_{i}$] Diagonal matrix of equivalent surface areas at bearing surface~$i$
 \end{description}
 \subsubsection{The global system of equations}
 Equation~\ref{eq:fsi_750} to equation~\ref{eq:fsi_760} are showing an example for the global system of equations of motion of two flexible bodies connected with a hydrodynamic plain bearing.
