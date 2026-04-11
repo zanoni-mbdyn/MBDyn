@@ -39,10 +39,16 @@ mbdyn-checkout-job:
   cache: []
   needs:
     - job: mbdyn-cleanup-job
+  variables:
+    GIT_STRATEGY: fetch
   script:
-    - echo "checkout branch $CI_COMMIT_BRANCH ..."
-    - git checkout $CI_COMMIT_BRANCH --force
-    ## FIXME: git pull --force fails whenever workflow rules are active
-    ## Need to set upstream branch in order to fix it
-    - echo "pulling ..."
-    - git pull --force --ff-only
+    # 1. Fetch the latest updates from the server
+    - git fetch origin $CI_COMMIT_BRANCH
+
+    # 2. Force the local branch to match the remote exactly
+    - git reset --hard origin/$CI_COMMIT_BRANCH
+
+    # 3. Clean up any untracked files or leftovers
+    - git clean -fd
+
+    - echo "Successfully synced to $CI_COMMIT_BRANCH"
