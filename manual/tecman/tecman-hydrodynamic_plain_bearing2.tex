@@ -1464,7 +1464,7 @@ The interpolation coefficient is defined as:
 \alpha&=&\left\vert \begin{array}{ccccc}
 1 & \text{if} & -\frac{1}{2} \, B + \epsilon \le z_{f_i} \le \frac{B}{2} - \epsilon \\
 0 & \text{if} & z_{f_i} > \frac{B}{2} + \epsilon & \text{or} & z_{f_i} < -\frac{B}{2} - \epsilon \\
-\frac{z_{f_j} - \left(\frac{B}{2} - \epsilon\right)}{2 \, \epsilon} & \text{if} & -\frac{B}{2} - \epsilon \le z_{f_i} \le -\frac{B}{2} + \epsilon \\
+\frac{z_{f_j} + \frac{B}{2} + \epsilon}{2 \, \epsilon} & \text{if} & -\frac{B}{2} - \epsilon \le z_{f_i} \le -\frac{B}{2} + \epsilon \\
 \frac{\frac{B}{2} + \epsilon - z_{f_i}}{2 \, \epsilon} & \text{if} & \frac{B}{2} - \epsilon \le z_{f_i} \le \frac{B}{2} + \epsilon
 \end{array}\right.
 \end{IEEEeqnarray}
