@@ -148,6 +148,8 @@ DeformableAxialJoint::OutputPrepare(OutputHandler& OH)
 			Var_Omega = OH.CreateVar<doublereal>(m_sOutputNameBase + "." "Omega",
 				OutputHandler::Dimensions::AngularVelocity,
 				"relative angular velocity");
+
+			pDC->OutputAppendPrepare(OH, m_sOutputNameBase + "." "constitutiveLaw");
 		}
 #endif // USE_NETCDF
 	}
@@ -162,13 +164,16 @@ DeformableAxialJoint::Output(OutputHandler& OH) const
 		Mat3x3 R(R1h.MulTM(R2h));
 
 		Vec3 v(0., 0., pDC->GetF());
+		doublereal Theta(RotManip::VecRot(R)(3));
+		doublereal ThetaP(R1h.GetVec(3).Dot(pNode2->GetWCurr() - pNode1->GetWCurr()));
 
 		if (OH.UseText(OutputHandler::JOINTS)) {
-			Joint::Output(OH.Joints(), "DeformableHinge", GetLabel(),
-					Zero3, v, Zero3, R1h*v) << " " << RotManip::VecRot(R)(3);
-			if (GetConstLawType() & ConstLawType::VISCOUS) {
-				OH.Joints() << " " << R1h.GetVec(3).Dot(pNode2->GetWCurr() - pNode1->GetWCurr());
-			}
+			std::ostream& out = OH.Joints();
+
+			Joint::Output(out, "DeformableHinge", GetLabel(),
+					Zero3, v, Zero3, R1h*v) << " " << Theta
+				<< " " << ThetaP
+				<< " ", pDC->OutputAppend(out) << std::endl;
 
 			OH.Joints() << std::endl;
 		}
@@ -176,8 +181,10 @@ DeformableAxialJoint::Output(OutputHandler& OH) const
 #ifdef USE_NETCDF
 		if (OH.UseNetCDF(OutputHandler::JOINTS)) {
 			Joint::NetCDFOutput(OH, Zero3, v, Zero3, R1h*v);
-			OH.WriteNcVar(Var_Theta, RotManip::VecRot(R)(3));
-			OH.WriteNcVar(Var_Omega, R1h.GetVec(3).Dot(pNode2->GetWCurr() - pNode1->GetWCurr()));
+			OH.WriteNcVar(Var_Theta, Theta);
+			OH.WriteNcVar(Var_Omega, ThetaP);
+
+			pDC->NetCDFOutputAppend(OH);
 		}
 #endif // USE_NETCDF
 
