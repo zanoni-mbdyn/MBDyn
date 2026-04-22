@@ -147,6 +147,13 @@ public:
 		}
 	};
 
+	virtual void OutputAppendPrepare(OutputHandler& OH, const std::string& name) {
+		unsigned cnt = 0;
+		for (typename std::vector<ConstitutiveLaw<T, Tder> *>::const_iterator i = m_clv.begin(); i != m_clv.end(); ++i, ++cnt) {
+			(*i)->OutputAppendPrepare(OH, name + "." + std::to_string(cnt));
+		}
+	};
+	
 	virtual std::ostream& OutputAppend(std::ostream& out) const {
 		for (typename std::vector<ConstitutiveLaw<T, Tder> *>::const_iterator i = m_clv.begin(); i != m_clv.end(); ++i) {
 			(*i)->OutputAppend(out);
