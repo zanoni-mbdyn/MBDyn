@@ -351,6 +351,8 @@ DeformableDispJoint::OutputPrepare(OutputHandler& OH)
 			Var_dPrime = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "DPrime",
 					OutputHandler::Dimensions::Velocity,
 					"relative linear velocity in global frame (x, y, z)");
+
+			pDC->OutputAppendPrepare(OH, m_sOutputNameBase + "." "constitutiveLaw");
 		}
 #endif // USE_NETCDF
 	}
@@ -372,6 +374,7 @@ DeformableDispJoint::Output(OutputHandler& OH) const
 				OH.WriteNcVar(Var_tilde_dPrime, Zero3);
 				OH.WriteNcVar(Var_dPrime, Zero3);
 			}
+			pDC->NetCDFOutputAppend(OH);
 		}
 #endif // USE_NETCDF
 
@@ -382,8 +385,10 @@ DeformableDispJoint::Output(OutputHandler& OH) const
 				<< " " << tilde_d;
 			if (GetConstLawType() & ConstLawType::VISCOUS) {
 				OH.Joints() << " " << tilde_dPrime;
+			} else {
+				OH.Joints() << " " << Zero3;
 			}
-			OH.Joints() << std::endl;
+			OH.Joints() << " ", pDC->OutputAppend(OH.Joints()) << std::endl;
 		}
 	}
 }

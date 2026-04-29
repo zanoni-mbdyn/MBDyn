@@ -191,6 +191,8 @@ DeformableHingeJoint::OutputPrepare(OutputHandler& OH)
 			Var_Omega = OH.CreateVar<Vec3>(m_sOutputNameBase + "." "Omega",
 				OutputHandler::Dimensions::AngularVelocity,
 				"local relative angular velocity (x, y, z)");
+
+			pDC->OutputAppendPrepare(OH, m_sOutputNameBase + "." "constitutiveLaw");
 		}
 #endif // USE_NETCDF
 	}
@@ -254,6 +256,7 @@ DeformableHingeJoint::Output(OutputHandler& OH) const
 				/* impossible */
 				break;
 			}
+			pDC->NetCDFOutputAppend(OH);
 		}
 
 #endif // USE_NETCDF
@@ -281,9 +284,11 @@ DeformableHingeJoint::Output(OutputHandler& OH) const
 
 			if (GetConstLawType() & ConstLawType::VISCOUS) {
 				OH.Joints() << " " << OmegaTmp;
+			} else {
+				OH.Joints() << " " << Zero3;
 			}
 
-			OH.Joints() << std::endl;
+			OH.Joints() << " ", pDC->OutputAppend(OH.Joints()) << std::endl;
 		}
 	}
 }
