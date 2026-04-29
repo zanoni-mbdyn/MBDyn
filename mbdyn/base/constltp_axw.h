@@ -98,6 +98,18 @@ public:
 		}
 	};
 
+	virtual std::ostream& OutputAppend(std::ostream& out) const {
+		return m_pCL->OutputAppend(out);
+	};
+	
+	virtual void NetCDFOutputAppend(OutputHandler& OH) const {
+		m_pCL->NetCDFOutputAppend(OH);
+	};
+
+	virtual void OutputAppendPrepare(OutputHandler& OH, const std::string& name) {
+		m_pCL->OutputAppendPrepare(OH, name);
+	};
+
 	virtual void AfterConvergence(const Vec3& Eps, const Vec3& EpsPrime = mb_zero<Vec3>()) {
 		m_pCL->AfterConvergence(m_v*Eps, m_v*EpsPrime);
 	};

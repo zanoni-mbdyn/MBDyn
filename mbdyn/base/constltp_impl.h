@@ -2637,6 +2637,22 @@ public:
 		}
 	};
 
+	virtual std::ostream& OutputAppend(std::ostream& out) const {
+		// append activation status?
+		// output only when active?
+		return m_pCL->OutputAppend(out);
+	};
+	
+	virtual void NetCDFOutputAppend(OutputHandler& OH) const {
+		// append activation status?
+		// output only when active?
+		m_pCL->NetCDFOutputAppend(OH);
+	};
+
+	virtual void OutputAppendPrepare(OutputHandler& OH, const std::string& name) {
+		m_pCL->OutputAppendPrepare(OH, name);
+	};
+
 	virtual void AfterConvergence(const T& Eps, const T& EpsPrime = mb_zero<T>()) {
 		if (m_status == ACTIVE) {
 			m_pCL->AfterConvergence(Eps - m_EpsRef, EpsPrime);
