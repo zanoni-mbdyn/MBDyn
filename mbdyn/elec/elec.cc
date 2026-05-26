@@ -494,6 +494,12 @@ ReadElectric(DataManager* pDM,
 		// Dati generali del controllore
 		integer iNumOutputs = HP.GetInt();
 		integer iNumInputs = HP.GetInt();
+		if (iNumOutputs <= 0 || iNumInputs <= 0) {
+			silent_cerr("DiscreteControl(" << uLabel
+				<< "): invalid number of outputs/inputs"
+				" at line " << HP.GetLineData() << std::endl);
+			throw DataManager::ErrGeneric(MBDYN_EXCEPT_ARGS);
+		}
 		integer iOrderA = HP.GetInt();
 		integer iOrderB = iOrderA;
 		if (HP.IsKeyWord("fir")) {

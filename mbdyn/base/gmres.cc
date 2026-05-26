@@ -57,20 +57,20 @@
 Gmres::Gmres(const Preconditioner::PrecondType PType, 
 		const integer iPStep,
 		doublereal ITol,
-		integer MaxIt,
+		unsigned int MaxIt,
 		doublereal etaMx,
 		doublereal T,
 		const NonlinearSolverTestOptions& options)
 : MatrixFreeSolver(PType, iPStep, ITol, MaxIt, etaMx, T, options),
 v(NULL),
-s(MaxLinIt + 1), cs(MaxLinIt + 1), sn(MaxLinIt + 1)
+s(MaxLinIt + 1), vCs(MaxLinIt + 1), sn(MaxLinIt + 1)
 {
 	SAFENEWARRNOFILL(v, MyVectorHandler, MaxLinIt + 1); 
 }
 	
 Gmres::~Gmres(void)
 {
-	for (int i = 0; i < MaxLinIt + 1; i++) {
+	for (unsigned int i = 0; i < MaxLinIt + 1; i++) {
 		v[i].Detach();
 	}
 
@@ -302,11 +302,11 @@ rebuild_matrix:;
 
 		}
 
-		int i = 0;
+		unsigned int i = 0;
         	v[0].Resize(Size);
 		v[0].ScalarMul(*pr, 1./resid);
 		s.Reset();
-		cs.Reset();
+		vCs.Reset();
 		sn.Reset();
 		s.PutCoef(1, resid);
 		while ((i < MaxLinIt)) {
@@ -349,8 +349,7 @@ rebuild_matrix:;
 			std::cerr << "norm1: " << norm1 << std::endl; 
 #endif /* DEBUG_ITERATIVE */
 
-			for (int k = 0; k <= i; k++) {
-        			H(k+1, i+1) = w.InnerProd(v[k]);
+			for (unsigned int k = 0; k <= i; k++) {
 
 #ifdef DEBUG_ITERATIVE
 				std::cerr << "H(k, i): " << k+1 << " " << i+1 << " "<< H(k+1, i+1) << std::endl; 
@@ -375,7 +374,7 @@ rebuild_matrix:;
 			
 			/*  Reorthogonalize? */
 			if  (.001*norm2/norm1 < std::numeric_limits<doublereal>::epsilon()) {
-    				for (int k = 0;  k <= i; k++) {       
+    				for (unsigned int k = 0;  k <= i; k++) {       
 					doublereal hr = v[k].InnerProd(w);
         				H(k+1, i+1) += hr;
         				w.ScalarAddMul(v[k], -hr);
@@ -407,9 +406,9 @@ rebuild_matrix:;
 
 				v[i+1].Reset();
 			} 
-			for (int k = 0; k < i; k++) {
+			for (unsigned int k = 0; k < i; k++) {
         			ApplyPlaneRotation(H(k+1, i+1), H(k+2, i+1),
-						cs(k+1),
+						vCs(k+1),
 						sn(k+1));
 
 #ifdef DEBUG_ITERATIVE
@@ -420,16 +419,16 @@ rebuild_matrix:;
 			}
 							
 			GeneratePlaneRotation(H(i+1, i+1), H(i+2, i+1),
-					cs(i+1), sn(i+1));
+					vCs(i+1), sn(i+1));
 
 #ifdef DEBUG_ITERATIVE
-			std::cerr << "cs(i): " << cs(i+1) << std::endl;
+			std::cerr << "cs(i): " << vCs(i+1) << std::endl;
 			std::cerr << "sn(i): " << sn(i+1) << std::endl;
 #endif /* DEBUG_ITERATIVE */
 
       			ApplyPlaneRotation(H(i+1, i+1), H(i+2, i+1),
-					cs(i+1), sn(i+1));
-      			ApplyPlaneRotation(s(i+1), s(i+2), cs(i+1), sn(i+1));
+					vCs(i+1), sn(i+1));
+      			ApplyPlaneRotation(s(i+1), s(i+2), vCs(i+1), sn(i+1));
 			if ((resid = fabs(s(i+2))) < LocTol) {
 
 #ifdef DEBUG_ITERATIVE

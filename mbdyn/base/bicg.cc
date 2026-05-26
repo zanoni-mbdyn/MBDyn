@@ -57,7 +57,7 @@
 BiCGStab::BiCGStab(const Preconditioner::PrecondType PType, 
 		const integer iPStep,
 		doublereal ITol,
-		integer MaxIt,
+		unsigned int MaxIt,
 		doublereal etaMx,
 		doublereal T,
 		const NonlinearSolverTestOptions& options)
@@ -268,7 +268,7 @@ rebuild_matrix:;
 		std::cerr << "rho_1 " << rho_1 << std::endl;
 #endif /* DEBUG_ITERATIVE */
 
-		int It = 0;
+		unsigned int It = 0;
         	while ((resid > LocTol) && (It++ < MaxLinIt)) {
 			if (It == 1) {
 				p = *pr;
