@@ -48,7 +48,7 @@ MatrixFreeSolver::MatrixFreeSolver(
 		const Preconditioner::PrecondType PType, 
 		const integer iPStep,
 		doublereal ITol,
-		integer MaxIt,
+		unsigned int MaxIt,
 		doublereal etaMx,
 		doublereal T,
 		const NonlinearSolverTestOptions& options)

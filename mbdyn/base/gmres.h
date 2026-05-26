@@ -47,19 +47,19 @@ class Gmres : public MatrixFreeSolver
 {
 private:
 	MyVectorHandler	*v;
-	MyVectorHandler s, cs, sn, w, vHat, dx; 
+	MyVectorHandler s, vCs, sn, w, vHat, dx; 
 	FullMatrixHandler H;
 
 public:
 	Gmres(const Preconditioner::PrecondType PType, 
 			const integer iPStep,
 			doublereal ITol,
-			integer MaxIt,
+			unsigned int MaxIt,
 			doublereal etaMx,
 			doublereal T,
 			const NonlinearSolverTestOptions& options);
 	
-	~Gmres(void);
+	virtual ~Gmres(void);
 	
 	virtual void Solve(const NonlinearProblem* NLP,
 			Solver* pS,

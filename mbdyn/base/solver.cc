@@ -5315,6 +5315,15 @@ Solver::ReadData()
 
 				if (HP.IsKeyWord("steps")) {
 					iIterativeMaxSteps = HP.GetInt();
+					if (iIterativeMaxSteps <= 0) {
+						silent_cerr("invalid number of "
+							"maximum inner steps "
+							<< iIterativeMaxSteps
+							<< " at line "
+							<< HP.GetLineData()
+							<< std::endl);
+						throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+					}
 					DEBUGLCOUT(MYDEBUG_INPUT, "maximum "
 							"number of inner "
 							"steps for iterative "
