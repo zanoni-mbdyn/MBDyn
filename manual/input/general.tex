@@ -3739,6 +3739,7 @@ where arguments have the same meaning those defined for the \kw{modlugre} one di
         (\hty{ScalarFunction}) \bnt{friction_function}
         [ , \kw{sigma2} , \bnt{sigma2} ]
         [ , \kw{velocity ratio} , \bnt{vel_ratio} ]
+        [ , \kw{velocity tolerance} , \bnt{vel_tolerance} ]
 \end{Verbatim}
 %\end{verbatim}
     where \nt{sigma2} gives the viscous friction;
@@ -3750,6 +3751,9 @@ where arguments have the same meaning those defined for the \kw{modlugre} one di
     The \kw{preload} parameter needs to be used to make sure
     the joint is preloaded as appropriate
     (see the documentation of the specific joint for details).
+    The optional parameter \nt{vel\_tolerance} set the threshold below which, when sliding without any internal state transition, the friction direction is taken
+    equal to the direction of the previous friction coefficient. It defaults to 1.E-6 
+    (whatever the measurement units of the model are), anc can influence the convergence of the model.
 \end{enumerate}
 
 \subsection{Shape functions}

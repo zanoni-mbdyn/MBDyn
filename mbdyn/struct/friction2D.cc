@@ -503,7 +503,8 @@ ModLugreFriction2D::GetEquationDimension(integer index) const {
 DiscreteCoulombFriction2D::DiscreteCoulombFriction2D(
 		const BasicScalarFunction *const ff,
 		const doublereal s2,
-		const doublereal vr) :
+		const doublereal vr,
+		const doublereal vt) :
 //converged_sticked(true),
 status(sticked),
 transition_type(null),
@@ -515,6 +516,7 @@ current_velocity({0., 0.}),
 sigma2(s2),
 vel_ratio(vr),
 current_friction_force({0., 0.}),
+vel_tolerance(vt),
 fss(dynamic_cast<const DifferentiableScalarFunction&>(*ff)),
 f({0., 0.})
 {
@@ -678,7 +680,7 @@ void DiscreteCoulombFriction2D::AssRes(
 					break;
 				}
 				default: {
-					if (vm >= 1.E-6) {
+					if (vm >= vel_tolerance) {
 						if (Dot(v, current_velocity) > 0.) {
 							// std::cerr << "xx1"  << std::endl;
 							// std::cerr << "v: "  << v << std::endl;
@@ -709,6 +711,8 @@ void DiscreteCoulombFriction2D::AssRes(
 			}
 			//save friction force value in the (algebric) state
 			// std::cerr << "current_friction_force " << current_friction_force << std::endl;
+			// std::cerr << "f " << f << std::endl;
+			// std::cerr << "v " << v << std::endl;
 			WorkVec.IncCoef(startdof+1, f.x[0] - current_friction_force.x[0]);
 			WorkVec.IncCoef(startdof+2, f.x[1] - current_friction_force.x[1]);
 			break;
@@ -917,13 +921,17 @@ BasicFriction2D *const ParseFriction2D(MBDynParser& HP,
 			ParseScalarFunction(HP, pDM);
 		doublereal sigma2 = 0.;
 		doublereal vel_ratio = 0.8;
+		doublereal vel_tolerance = 1.E-6;
 		if (HP.IsKeyWord("sigma2")) {
 			sigma2 = HP.GetReal();
 		}
 		if (HP.IsKeyWord("velocity" "ratio")) {
 			vel_ratio = HP.GetReal();
 		}
-		return new DiscreteCoulombFriction2D(sf,sigma2, vel_ratio);
+		if (HP.IsKeyWord("velocity" "tolerance")) {
+			vel_tolerance = HP.GetReal();
+		}
+		return new DiscreteCoulombFriction2D(sf,sigma2, vel_ratio, vel_tolerance);
 		break;
 	}
 	default: {

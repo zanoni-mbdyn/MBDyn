@@ -247,6 +247,7 @@ private:
 	doublereal sigma2;
 	doublereal vel_ratio;
 	d2D current_friction_force;
+	doublereal vel_tolerance;
 
 	const DifferentiableScalarFunction & fss;
 	d2D f;
@@ -256,7 +257,8 @@ public:
 	DiscreteCoulombFriction2D(
 		const BasicScalarFunction *const ff,
 		const doublereal s2,
-		const doublereal vr);
+		const doublereal vr,
+		const doublereal vt);
 	void SetValue(DataManager *pDM,
 			VectorHandler&X, VectorHandler&XP,
 			SimulationEntity::Hints *ph = 0,
