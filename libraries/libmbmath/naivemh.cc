@@ -587,10 +587,12 @@ NaivePermMatrixHandler::NaivePermMatrixHandler(integer iSize_a,
 #endif
 }
 
+/* NOTE: we use NaiveMatrixHandler(1, nmh) and not NaiveMatrixHandler(0, nmh) only to avoid
+         compiler warnings complaining of possible zero-size arrays being created */
 NaivePermMatrixHandler::NaivePermMatrixHandler(NaiveMatrixHandler *const nmh,
                 const std::vector<integer>& tperm,
                 const std::vector<integer>& tinvperm)
-: NaiveMatrixHandler(0, nmh), perm(tperm), invperm(tinvperm), m_end(*this, true)
+: NaiveMatrixHandler(1, nmh), perm(tperm), invperm(tinvperm), m_end(*this, true)
 {
 #ifdef DEBUG
         IsValid();
