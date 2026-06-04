@@ -38,8 +38,42 @@ extern "C" {
 
 #include <ac/f2c.h>
 
-#define min(a,b) ((a) < (b) ? (a) : (b))
-#define max(a,b) ((a) > (b) ? (a) : (b))
+// #define min(a,b) ((a) < (b) ? (a) : (b))
+// #define max(a,b) ((a) > (b) ? (a) : (b))
+
+#include <math.h>
+
+// 1. Safe helper for integers using the bit-twiddling hack
+static inline int __min_int(int a, int b) {
+    return b + ((a - b) & ((a - b) >> (sizeof(int) * 8 - 1)));
+}
+static inline long __min_long(long a, long b) {
+    return b + ((a - b) & ((a - b) >> (sizeof(long) * 8 - 1)));
+}
+
+static inline int __max_int(int a, int b) {
+    return a - ((a - b) & ((a - b) >> (sizeof(int) * 8 - 1)));
+}
+static inline long __max_long(long a, long b) {
+    return a - ((a - b) & ((a - b) >> (sizeof(long) * 8 - 1)));
+}
+// 2. The Master C11 Macro
+#define min(a, b) _Generic((a) + (b), \
+    float: fminf(a, b),                               \
+    double: fmin(a, b),                               \
+    long double: fminl(a, b),                         \
+    long: __min_long(a, b),                           \
+    default: __min_int(a, b)                          \
+)
+
+#define max(a, b) _Generic((a) + (b), \
+    float: fmaxf(a, b),                               \
+    double: fmax(a, b),                               \
+    long double: fmaxl(a, b),                         \
+    long: __max_long(a, b),                           \
+    default: __max_int(a, b)                          \
+)
+
 
 #ifdef __cplusplus
 }
