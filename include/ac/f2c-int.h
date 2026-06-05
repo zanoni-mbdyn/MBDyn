@@ -38,42 +38,196 @@ extern "C" {
 
 #include <ac/f2c.h>
 
-// #define min(a,b) ((a) < (b) ? (a) : (b))
-// #define max(a,b) ((a) > (b) ? (a) : (b))
+#include <limits.h>   /* CHAR_BIT                           */
+#include <math.h>     /* fminf/fmin/fminl, fmaxf/fmax/fmaxl */
 
-#include <math.h>
+/* Number of value bits in type T. */
+#define __BITS(T)  (sizeof(T) * (unsigned)CHAR_BIT)
 
-// 1. Safe helper for integers using the bit-twiddling hack
+/* Number of value bits in type T. */
+#define __BITS_FOR_MINMAX(T)  (sizeof(T) * (unsigned)CHAR_BIT)
+
+/*
+ * BRANCHLESS INTEGER MIN / MAX — design notes
+ * ────────────────────────────────────────────
+ * Naive bit-hack  b + ((a-b) & ((a-b) >> 31))  has two defects:
+ *   (a) signed subtraction (a-b) is undefined behaviour on overflow;
+ *   (b) right-shifting a negative signed value is implementation-defined.
+ *
+ * Fix: do the subtraction in the *unsigned* domain (well-defined wrap),
+ * then recover the true signed comparison bit via the two's-complement
+ * overflow detector:
+ *
+ *   d        = (UT)a − (UT)b               [unsigned wrap, no UB]
+ *   overflow = MSB( (ua ^ ub) & (ua ^ d) ) [1 iff subtraction overflowed]
+ *   true_lt  = MSB(d) ^ overflow           [1 iff a < b, signed]
+ *   mask     = −(T)true_lt                 [0 or all-ones]
+ *
+ *   min(a,b) = (a & mask) | (b & ~mask)
+ *   max(a,b) = (a & ~mask) | (b & mask)
+ *
+ * All right-shifts are on *unsigned* types → always logical, never
+ * implementation-defined.
+ *
+ * For unsigned types: XOR both operands with SIGN_BIT first, which maps
+ * the unsigned total order onto the signed total order; the same formula
+ * then applies unchanged.
+ *
+ * _Generic dispatch: explicit casts in every branch suppress
+ * implicit-conversion warnings that arise because all branches are
+ * syntactically type-checked even when not selected (C11 §6.5.1.1 — the
+ * controlling expression is not evaluated, but each association expression
+ * is still parsed and type-checked by the compiler).  The casts in
+ * non-selected branches are never evaluated and carry zero runtime cost.
+ *
+ * ── Floating-point and -ffast-math ──────────────────────────────────────
+ * The float/double/long double cases delegate to fminf/fmin/fminl (and
+ * their fmax counterparts), which follow IEEE 754 under standard
+ * optimisation levels.
+ *
+ * Under -ffast-math (implied by -Ofast), the compiler is permitted to
+ * replace these library calls with plain comparisons, which do NOT preserve
+ * IEEE 754 NaN semantics: min(NaN, x) may return NaN instead of x.
+ * This is an intentional trade-off of -ffast-math; it cannot be worked
+ * around portably without disabling fast-math for the affected translation
+ * unit.  All integer helpers are pure unsigned arithmetic and are
+ * completely unaffected by -ffast-math.
+ */
+
+/* ── signed int ─────────────────────────────────────────────────────────── */
 static inline int __min_int(int a, int b) {
-    return b + ((a - b) & ((a - b) >> (sizeof(int) * 8 - 1)));
+    unsigned int ua = (unsigned int)a, ub = (unsigned int)b;
+    unsigned int d  = ua - ub;
+    unsigned int ov = ((ua ^ ub) & (ua ^ d)) >> (__BITS_FOR_MINMAX(int) - 1);
+    int mask = -(int)((d >> (__BITS_FOR_MINMAX(int) - 1)) ^ ov);
+    return (a & mask) | (b & ~mask);
 }
-static inline long __min_long(long a, long b) {
-    return b + ((a - b) & ((a - b) >> (sizeof(long) * 8 - 1)));
+static inline int __max_int(int a, int b) {
+    unsigned int ua = (unsigned int)a, ub = (unsigned int)b;
+    unsigned int d  = ua - ub;
+    unsigned int ov = ((ua ^ ub) & (ua ^ d)) >> (__BITS_FOR_MINMAX(int) - 1);
+    int mask = -(int)((d >> (__BITS_FOR_MINMAX(int) - 1)) ^ ov);
+    return (a & ~mask) | (b & mask);
 }
 
-static inline int __max_int(int a, int b) {
-    return a - ((a - b) & ((a - b) >> (sizeof(int) * 8 - 1)));
+/* ── signed long ─────────────────────────────────────────────────────────── */
+static inline long __min_long(long a, long b) {
+    unsigned long ua = (unsigned long)a, ub = (unsigned long)b;
+    unsigned long d  = ua - ub;
+    unsigned long ov = ((ua ^ ub) & (ua ^ d)) >> (__BITS_FOR_MINMAX(long) - 1);
+    long mask = -(long)((d >> (__BITS_FOR_MINMAX(long) - 1)) ^ ov);
+    return (a & mask) | (b & ~mask);
 }
 static inline long __max_long(long a, long b) {
-    return a - ((a - b) & ((a - b) >> (sizeof(long) * 8 - 1)));
+    unsigned long ua = (unsigned long)a, ub = (unsigned long)b;
+    unsigned long d  = ua - ub;
+    unsigned long ov = ((ua ^ ub) & (ua ^ d)) >> (__BITS_FOR_MINMAX(long) - 1);
+    long mask = -(long)((d >> (__BITS_FOR_MINMAX(long) - 1)) ^ ov);
+    return (a & ~mask) | (b & mask);
 }
-// 2. The Master C11 Macro
-#define min(a, b) _Generic((a) + (b), \
-    float: fminf(a, b),                               \
-    double: fmin(a, b),                               \
-    long double: fminl(a, b),                         \
-    long: __min_long(a, b),                           \
-    default: __min_int(a, b)                          \
+
+/* ── signed long long ───────────────────────────────────────────────────── */
+static inline long long __min_llong(long long a, long long b) {
+    unsigned long long ua = (unsigned long long)a, ub = (unsigned long long)b;
+    unsigned long long d  = ua - ub;
+    unsigned long long ov = ((ua ^ ub) & (ua ^ d)) >> (__BITS_FOR_MINMAX(long long) - 1);
+    long long mask = -(long long)((d >> (__BITS_FOR_MINMAX(long long) - 1)) ^ ov);
+    return (a & mask) | (b & ~mask);
+}
+static inline long long __max_llong(long long a, long long b) {
+    unsigned long long ua = (unsigned long long)a, ub = (unsigned long long)b;
+    unsigned long long d  = ua - ub;
+    unsigned long long ov = ((ua ^ ub) & (ua ^ d)) >> (__BITS_FOR_MINMAX(long long) - 1);
+    long long mask = -(long long)((d >> (__BITS_FOR_MINMAX(long long) - 1)) ^ ov);
+    return (a & ~mask) | (b & mask);
+}
+
+/* ── unsigned helpers (flip-MSB trick) ──────────────────────────────────── */
+/*
+ * XOR with SIGN_BIT maps the unsigned total order to the signed total order:
+ *   a <(u) b   iff   (a ^ SIGN_BIT) <(s) (b ^ SIGN_BIT)
+ * After the flip, the signed formula above yields the correct mask.
+ */
+static inline unsigned int __min_uint(unsigned int a, unsigned int b) {
+    unsigned int F  = 1u << (__BITS_FOR_MINMAX(unsigned int) - 1);
+    unsigned int sa = a ^ F, sb = b ^ F, d = sa - sb;
+    unsigned int ov = ((sa ^ sb) & (sa ^ d)) >> (__BITS_FOR_MINMAX(unsigned int) - 1);
+    unsigned int mask = -((d >> (__BITS_FOR_MINMAX(unsigned int) - 1)) ^ ov);
+    return (a & mask) | (b & ~mask);
+}
+static inline unsigned int __max_uint(unsigned int a, unsigned int b) {
+    unsigned int F  = 1u << (__BITS_FOR_MINMAX(unsigned int) - 1);
+    unsigned int sa = a ^ F, sb = b ^ F, d = sa - sb;
+    unsigned int ov = ((sa ^ sb) & (sa ^ d)) >> (__BITS_FOR_MINMAX(unsigned int) - 1);
+    unsigned int mask = -((d >> (__BITS_FOR_MINMAX(unsigned int) - 1)) ^ ov);
+    return (a & ~mask) | (b & mask);
+}
+
+static inline unsigned long __min_ulong(unsigned long a, unsigned long b) {
+    unsigned long F  = 1ul << (__BITS_FOR_MINMAX(unsigned long) - 1);
+    unsigned long sa = a ^ F, sb = b ^ F, d = sa - sb;
+    unsigned long ov = ((sa ^ sb) & (sa ^ d)) >> (__BITS_FOR_MINMAX(unsigned long) - 1);
+    unsigned long mask = -((d >> (__BITS_FOR_MINMAX(unsigned long) - 1)) ^ ov);
+    return (a & mask) | (b & ~mask);
+}
+static inline unsigned long __max_ulong(unsigned long a, unsigned long b) {
+    unsigned long F  = 1ul << (__BITS_FOR_MINMAX(unsigned long) - 1);
+    unsigned long sa = a ^ F, sb = b ^ F, d = sa - sb;
+    unsigned long ov = ((sa ^ sb) & (sa ^ d)) >> (__BITS_FOR_MINMAX(unsigned long) - 1);
+    unsigned long mask = -((d >> (__BITS_FOR_MINMAX(unsigned long) - 1)) ^ ov);
+    return (a & ~mask) | (b & mask);
+}
+
+static inline unsigned long long __min_ullong(unsigned long long a, unsigned long long b) {
+    unsigned long long F  = 1ull << (__BITS_FOR_MINMAX(unsigned long long) - 1);
+    unsigned long long sa = a ^ F, sb = b ^ F, d = sa - sb;
+    unsigned long long ov = ((sa ^ sb) & (sa ^ d)) >> (__BITS_FOR_MINMAX(unsigned long long) - 1);
+    unsigned long long mask = -((d >> (__BITS_FOR_MINMAX(unsigned long long) - 1)) ^ ov);
+    return (a & mask) | (b & ~mask);
+}
+static inline unsigned long long __max_ullong(unsigned long long a, unsigned long long b) {
+    unsigned long long F  = 1ull << (__BITS_FOR_MINMAX(unsigned long long) - 1);
+    unsigned long long sa = a ^ F, sb = b ^ F, d = sa - sb;
+    unsigned long long ov = ((sa ^ sb) & (sa ^ d)) >> (__BITS_FOR_MINMAX(unsigned long long) - 1);
+    unsigned long long mask = -((d >> (__BITS_FOR_MINMAX(unsigned long long) - 1)) ^ ov);
+    return (a & ~mask) | (b & mask);
+}
+
+/* ── Master C11 macros ──────────────────────────────────────────────────── */
+/*
+ * Dispatch on typeof((a)+(b)) after usual arithmetic conversions, so
+ * mixed-type pairs naturally route to the wider/promoted type:
+ *   int + long long  → long long  → __min_llong   ✓
+ *   int + float      → float      → fminf          ✓
+ *   int + uint       → uint       → __min_uint     ✓
+ *
+ * The controlling expression (a)+(b) is NOT evaluated (C11 §6.5.1.1),
+ * so arguments with side-effects are evaluated exactly once (in the
+ * selected branch only).
+ */
+#define min(a, b) _Generic((a) + (b),                                               \
+    long double:        fminl((a), (b)),                                             \
+    double:             fmin((a), (b)),                                              \
+    float:              fminf((a), (b)),                                             \
+    unsigned long long: __min_ullong((unsigned long long)(a), (unsigned long long)(b)), \
+    long long:          __min_llong((long long)(a), (long long)(b)),                 \
+    unsigned long:      __min_ulong((unsigned long)(a), (unsigned long)(b)),         \
+    long:               __min_long((long)(a), (long)(b)),                            \
+    unsigned int:       __min_uint((unsigned int)(a), (unsigned int)(b)),            \
+    default:            __min_int((int)(a), (int)(b))                                \
 )
 
-#define max(a, b) _Generic((a) + (b), \
-    float: fmaxf(a, b),                               \
-    double: fmax(a, b),                               \
-    long double: fmaxl(a, b),                         \
-    long: __max_long(a, b),                           \
-    default: __max_int(a, b)                          \
+#define max(a, b) _Generic((a) + (b),                                               \
+    long double:        fmaxl((a), (b)),                                             \
+    double:             fmax((a), (b)),                                              \
+    float:              fmaxf((a), (b)),                                             \
+    unsigned long long: __max_ullong((unsigned long long)(a), (unsigned long long)(b)), \
+    long long:          __max_llong((long long)(a), (long long)(b)),                 \
+    unsigned long:      __max_ulong((unsigned long)(a), (unsigned long)(b)),         \
+    long:               __max_long((long)(a), (long)(b)),                            \
+    unsigned int:       __max_uint((unsigned int)(a), (unsigned int)(b)),            \
+    default:            __max_int((int)(a), (int)(b))                                \
 )
-
 
 #ifdef __cplusplus
 }
