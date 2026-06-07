@@ -124,18 +124,18 @@ void mbdyn_operator_delete(void* pMem) noexcept
 
 /* Funzioni usate anche senza memory manager */
 void 
-_Safenew(const char *file, int line, int flag)
+_Safenew(const char *file, int line, int flag_a)
 {
-   	std::cout.flush();
-   	if (flag == 0) {
-      		std::cerr << std::endl 
-			<< "SAFENEW fault: NULL return pointer in file " 
-			<< file << " at line " << line << std::endl;
-   	} else if (flag == 1) {
-      		std::cerr << std::endl 
-			<< "SAFENEWARR fault: NULL return pointer in file " 
-			<< file << " at line " << line << std::endl;
-   	}
+        std::cout.flush();
+        if (flag_a == 0) {
+                std::cerr << std::endl
+                        << "SAFENEW fault: NULL return pointer in file "
+                        << file << " at line " << line << std::endl;
+        } else if (flag_a == 1) {
+                std::cerr << std::endl
+                        << "SAFENEWARR fault: NULL return pointer in file "
+                        << file << " at line " << line << std::endl;
+        }
 }
 
 

@@ -30,7 +30,7 @@
 
 /*
   AUTHOR: Reinhard Resch <mbdyn-user@a1.net>
-  Copyright (C) 2013(-2025) all rights reserved.
+  Copyright (C) 2013(-2026) all rights reserved.
 
   The copyright of this code is transferred
   to Pierangelo Masarati and Paolo Mantegazza
@@ -245,6 +245,7 @@ namespace {
      class ContactModel;
      class FrictionModel;
      class ComplianceModel;
+     class FlowFactorModel;
 
      class Geometry2D {
      protected:
@@ -475,10 +476,15 @@ namespace {
      class SurfaceGrid: public Pocket
      {
      public:
+          enum Mode {
+               EXTRAPOLATE,
+               TRUNCATE
+          };
           explicit SurfaceGrid(std::unique_ptr<Geometry2D>&& pGeometry,
                                const SpColVector<doublereal>& x,
                                const SpColVector<doublereal>& z,
-                               const SpMatrix<doublereal>& f);
+                               const SpMatrix<doublereal>& f,
+                               Mode mode);
           virtual ~SurfaceGrid();
           virtual void GetHeight(const SpColVector<doublereal, 2>& x, doublereal& Deltay) const;
           virtual void GetHeight(const SpColVector<SpGradient, 2>& x, SpGradient& Deltay) const;
@@ -492,6 +498,9 @@ namespace {
           virtual std::unique_ptr<Pocket> Clone(const SpColVector<doublereal, 2>& x) const;
 
      private:
+          template <typename T>
+          bool bPointIsInside(const SpColVector<T, 2>& xci) const;
+
           template <typename T> inline
           index_type iFindGridX(const SpColVector<T, 2>& xci) const;
 
@@ -509,6 +518,7 @@ namespace {
 
           const SpColVector<doublereal> x, z;
           const SpMatrix<doublereal> f;
+          const Mode mode;
      };
 
      class HelicalGroove: public Pocket
@@ -566,7 +576,6 @@ namespace {
           inline void GetClearance(T& h) const;
           inline void GetClearanceDerTime(T& dh_dt) const;
           inline void GetVelocity(SpColVector<T, 2>& U1, SpColVector<T, 2>& U2) const;
-          inline void GetHydraulicVelocity(SpColVector<T, 2>& U) const;
           inline bool GetContactPressure(T& pasp) const;
           inline bool GetContactStress(SpColVector<T, 2>& tauc_0) const;
           inline bool GetContactFrictionLossDens(T& Pfc) const;
@@ -578,7 +587,6 @@ namespace {
           T pasp;                 // asperity contact pressure
           SpColVectorA<T, 2, 12> U1;        // velocity at the shaft
           SpColVectorA<T, 2, 12> U2;        // velocity at the bearing
-          SpColVectorA<T, 2, 12> U;         // effective hydraulic velocity
           SpColVectorA<T, 2, 12> tauc_0;    // asperity contact shear stress at y=0
           T Pfc;                  // asperity contact power losses per unit area
      };
@@ -1636,7 +1644,8 @@ namespace {
                    HydroMesh* pMesh,
                    const std::array<const HydroNode*, iNumNodes>& rgNodes,
                    PressureSource ePressSrc,
-                   NodeDataReq eNodeDataReq);
+                   NodeDataReq eNodeDataReq,
+                   const FlowFactorModel* pFlowFactors);
 
           virtual ~FluxNode();
           inline void GetEnergyBalance(doublereal& Qu) const;
@@ -1713,7 +1722,6 @@ namespace {
           template <typename G>
           struct NodeDataHydr {
                G p, h, eta, rho;
-               SpColVectorA<G, 2, 12> U;
                G T, Pfc;
                SpColVectorA<G, 2, 12> U1, U2;
           };
@@ -1735,6 +1743,7 @@ namespace {
           std::array<FluxData<doublereal>, iNumPressSources> rgFlux;
           std::array<FluxData<SpGradient>, iNumPressSources> rgFlux_grad;
           std::array<FluxData<GpGradProd>, iNumPressSources> rgFlux_gradp;
+          const FlowFactorModel* const pFlowFactors;
      };
 
      class HydroNode: public Node2D {
@@ -1795,9 +1804,6 @@ namespace {
           virtual void GetVelocity(SpColVector<doublereal, 2>& U1, SpColVector<doublereal, 2>& U2) const=0;
           virtual void GetVelocity(SpColVector<SpGradient, 2>& U1, SpColVector<SpGradient, 2>& U2) const=0;
           virtual void GetVelocity(SpColVector<GpGradProd, 2>& U1, SpColVector<GpGradProd, 2>& U2) const=0;
-          virtual void GetHydraulicVelocity(SpColVector<doublereal, 2>& U) const=0;
-          virtual void GetHydraulicVelocity(SpColVector<SpGradient, 2>& U) const=0;
-          virtual void GetHydraulicVelocity(SpColVector<GpGradProd, 2>& U) const=0;
           virtual bool bGetPrivateData(HydroRootBase::PrivateDataType eType, doublereal& dPrivData) const;
           virtual void Output(std::ostream& os, unsigned uOutputFlags) const;
 
@@ -1886,9 +1892,6 @@ namespace {
           virtual void GetVelocity(SpColVector<doublereal, 2>& U1, SpColVector<doublereal, 2>& U2) const override;
           virtual void GetVelocity(SpColVector<SpGradient, 2>& U1, SpColVector<SpGradient, 2>& U2) const override;
           virtual void GetVelocity(SpColVector<GpGradProd, 2>& U1, SpColVector<GpGradProd, 2>& U2) const override;
-          virtual void GetHydraulicVelocity(SpColVector<doublereal, 2>& U) const override;
-          virtual void GetHydraulicVelocity(SpColVector<SpGradient, 2>& U) const override;
-          virtual void GetHydraulicVelocity(SpColVector<GpGradProd, 2>& U) const override;
           virtual void Restart(unsigned uLabel, size_t uNode, RestartData& oData, RestartData::RestartAction eAction) override {
                // Restart to be performed by the HydroNode
           }
@@ -1961,9 +1964,6 @@ namespace {
           virtual void GetVelocity(SpColVector<doublereal, 2>& U1, SpColVector<doublereal, 2>& U2) const override;
           virtual void GetVelocity(SpColVector<SpGradient, 2>& U1, SpColVector<SpGradient, 2>& U2) const override;
           virtual void GetVelocity(SpColVector<GpGradProd, 2>& U1, SpColVector<GpGradProd, 2>& U2) const override;
-          virtual void GetHydraulicVelocity(SpColVector<doublereal, 2>& U) const override;
-          virtual void GetHydraulicVelocity(SpColVector<SpGradient, 2>& U) const override;
-          virtual void GetHydraulicVelocity(SpColVector<GpGradProd, 2>& U) const override;
           index_type iGetComplianceIndex() const override;
 
      private:
@@ -2492,6 +2492,385 @@ namespace {
           FluidState<GpGradProd> oState_gradp;
      };
 
+     class FlowFactorModel {
+     public:
+          enum Direction: index_type {
+               DIR_X = 0,
+               DIR_Z,
+               DIR_COUNT
+          };
+
+          FlowFactorModel() {
+          }
+
+          virtual ~FlowFactorModel() {
+          }
+
+          virtual void SetMinClearance(BearingGeometry* pGeometry) const=0;
+          virtual doublereal PressureFlowFactor(const doublereal& h, index_type dir) const=0;
+          virtual SpGradient PressureFlowFactor(const SpGradient& h, index_type dir) const=0;
+          virtual GpGradProd PressureFlowFactor(const GpGradProd& h, index_type dir) const=0;
+          virtual doublereal ShearFlowFactor(const doublereal& h, index_type dir) const=0;
+          virtual SpGradient ShearFlowFactor(const SpGradient& h, index_type dir) const=0;
+          virtual GpGradProd ShearFlowFactor(const GpGradProd& h, index_type dir) const=0;
+          virtual doublereal ShearStressFactorF(const doublereal& h) const=0;
+          virtual SpGradient ShearStressFactorF(const SpGradient& h) const=0;
+          virtual GpGradProd ShearStressFactorF(const GpGradProd& h) const=0;
+          virtual doublereal ShearStressFactorFS(const doublereal& h, index_type dir) const=0;
+          virtual SpGradient ShearStressFactorFS(const SpGradient& h, index_type dir) const=0;
+          virtual GpGradProd ShearStressFactorFS(const GpGradProd& h, index_type dir) const=0;
+          virtual doublereal ShearStressFactorFP(const doublereal& h, index_type dir) const=0;
+          virtual SpGradient ShearStressFactorFP(const SpGradient& h, index_type dir) const=0;
+          virtual GpGradProd ShearStressFactorFP(const GpGradProd& h, index_type dir) const=0;
+          virtual doublereal AverageClearance(const doublereal& h) const=0;
+          virtual SpGradient AverageClearance(const SpGradient& h) const=0;
+          virtual GpGradProd AverageClearance(const GpGradProd& h) const=0;
+          virtual doublereal AverageClearanceDeriv(const doublereal& h, const doublereal& dh_dt) const=0;
+          virtual SpGradient AverageClearanceDeriv(const SpGradient& h, const SpGradient& dh_dt) const=0;
+          virtual GpGradProd AverageClearanceDeriv(const GpGradProd& h, const GpGradProd& dh_dt) const=0;
+     protected:
+          static doublereal Interpolate(const doublereal* x, const doublereal* y, size_t N, doublereal xi) {
+               if (xi < x[0]) {
+                    return y[0];
+               }
+
+               for (size_t i = 1; i < N; ++i) {
+                    if (xi >= x[i - 1] && xi <= x[i]) {
+                         return (y[i] - y[i - 1]) / (x[i] - x[i - 1]) * (xi - x[i - 1]) + y[i - 1];
+                    }
+               }
+
+               return y[N - 1];
+          }
+     };
+
+     class PerfectlySmoothSurface: public FlowFactorModel {
+     public:
+          virtual void SetMinClearance(BearingGeometry* pGeometry) const override {
+               // Keep the default
+          }
+
+          virtual doublereal PressureFlowFactor(const doublereal& h, index_type dir) const override {
+               return 1.;
+          }
+
+          virtual SpGradient PressureFlowFactor(const SpGradient& h, index_type dir) const override {
+               return SpGradient{1.};
+          }
+
+          virtual GpGradProd PressureFlowFactor(const GpGradProd& h, index_type dir) const override {
+               return GpGradProd{1};
+          }
+
+          virtual doublereal ShearFlowFactor(const doublereal& h, index_type dir) const override {
+               return 0.;
+          }
+
+          virtual SpGradient ShearFlowFactor(const SpGradient& h, index_type dir) const override {
+               return SpGradient{0.};
+          }
+
+          virtual GpGradProd ShearFlowFactor(const GpGradProd& h, index_type dir) const override {
+               return GpGradProd{0.};
+          }
+
+          virtual doublereal ShearStressFactorF(const doublereal& h) const override {
+               return 1.;
+          }
+
+          virtual SpGradient ShearStressFactorF(const SpGradient& h) const override {
+               return SpGradient{1.};
+          }
+
+          virtual GpGradProd ShearStressFactorF(const GpGradProd& h) const override {
+               return GpGradProd{1.};
+          }
+
+          virtual doublereal ShearStressFactorFS(const doublereal& h, index_type dir) const override {
+               return 0.;
+          }
+
+          virtual SpGradient ShearStressFactorFS(const SpGradient& h, index_type dir) const override {
+               return SpGradient{0.};
+          }
+
+          virtual GpGradProd ShearStressFactorFS(const GpGradProd& h, index_type dir) const override {
+               return GpGradProd{0.};
+          }
+
+          virtual doublereal ShearStressFactorFP(const doublereal& h, index_type dir) const override {
+               return 1.;
+          }
+
+          virtual SpGradient ShearStressFactorFP(const SpGradient& h, index_type dir) const override {
+               return SpGradient{1.};
+          }
+
+          virtual GpGradProd ShearStressFactorFP(const GpGradProd& h, index_type dir) const override {
+               return GpGradProd{1.};
+          }
+
+          virtual doublereal AverageClearance(const doublereal& h) const {
+               return h;
+          }
+
+          virtual SpGradient AverageClearance(const SpGradient& h) const {
+               return h;
+          }
+
+          virtual GpGradProd AverageClearance(const GpGradProd& h) const {
+               return h;
+          }
+
+          virtual doublereal AverageClearanceDeriv(const doublereal& h, const doublereal& dh_dt) const {
+               return dh_dt;
+          }
+
+          virtual SpGradient AverageClearanceDeriv(const SpGradient& h, const SpGradient& dh_dt) const {
+               return dh_dt;
+          }
+
+          virtual GpGradProd AverageClearanceDeriv(const GpGradProd& h, const GpGradProd& dh_dt) const {
+               return dh_dt;
+          }
+     };
+
+     class PatirCheng: public FlowFactorModel {
+     public:
+          enum SurfaceIndex {
+               SURFACE_1 = 0,
+               SURFACE_2,
+               SURFACE_COUNT
+          };
+
+          enum Tables {
+               ORIGINAL,
+               REPLICATED
+          };
+
+          PatirCheng(const std::array<doublereal, SURFACE_COUNT>& sigma_a,
+                     const std::array<doublereal, SURFACE_COUNT>& lambdax,
+                     const std::array<doublereal, SURFACE_COUNT>& lambdaz,
+                     Tables tables = ORIGINAL);
+
+          virtual void SetMinClearance(BearingGeometry* pGeometry) const;
+
+          virtual doublereal PressureFlowFactor(const doublereal& h, index_type dir) const override;
+
+          virtual SpGradient PressureFlowFactor(const SpGradient& h, index_type dir) const override;
+
+          virtual GpGradProd PressureFlowFactor(const GpGradProd& h, index_type dir) const override;
+
+          virtual doublereal ShearFlowFactor(const doublereal& h, index_type dir) const override;
+
+          virtual SpGradient ShearFlowFactor(const SpGradient& h, index_type dir) const override;
+
+          virtual GpGradProd ShearFlowFactor(const GpGradProd& h, index_type dir) const override;
+
+          virtual doublereal ShearStressFactorF(const doublereal& h) const override;
+
+          virtual SpGradient ShearStressFactorF(const SpGradient& h) const override;
+
+          virtual GpGradProd ShearStressFactorF(const GpGradProd& h) const override;
+
+          virtual doublereal ShearStressFactorFS(const doublereal& h, index_type dir) const override;
+
+          virtual SpGradient ShearStressFactorFS(const SpGradient& h, index_type dir) const override;
+
+          virtual GpGradProd ShearStressFactorFS(const GpGradProd& h, index_type dir) const override;
+
+          virtual doublereal ShearStressFactorFP(const doublereal& h, index_type dir) const override;
+
+          virtual SpGradient ShearStressFactorFP(const SpGradient& h, index_type dir) const override;
+
+          virtual GpGradProd ShearStressFactorFP(const GpGradProd& h, index_type dir) const override;
+
+          virtual doublereal AverageClearance(const doublereal& h) const;
+
+          virtual SpGradient AverageClearance(const SpGradient& h) const;
+
+          virtual GpGradProd AverageClearance(const GpGradProd& h) const;
+
+          virtual doublereal AverageClearanceDeriv(const doublereal& h, const doublereal& dh_dt) const;
+
+          virtual SpGradient AverageClearanceDeriv(const SpGradient& h, const SpGradient& dh_dt) const;
+
+          virtual GpGradProd AverageClearanceDeriv(const GpGradProd& h, const GpGradProd& dh_dt) const;
+
+     private:
+          void InterpolatePressureFlow(const doublereal gammai[],
+                                       const doublereal Ci[],
+                                       const doublereal ri[],
+                                       const doublereal Di[],
+                                       const doublereal si[],
+                                       size_t Ni);
+
+          void InterpolateShearFlow(const doublereal gammai[],
+                                    const doublereal alpha1i[],
+                                    const doublereal alpha2i[],
+                                    const doublereal alpha3i[],
+                                    const doublereal alpha4i[],
+                                    const doublereal alpha5i[],
+                                    const doublereal alpha6i[],
+                                    const doublereal alpha8i[],
+                                    const doublereal A1i[],
+                                    const doublereal A2i[],
+                                    const doublereal A3i[],
+                                    const size_t Ni);
+
+          template <typename T>
+          T PressureFlowFactorTpl(const T& h, index_type dir) const {
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+
+               if (gammac[dir] <= 1) {
+                    return 1. - C[dir] * exp(-r[dir] * h / sigmac);
+               } else {
+                    return 1. + C[dir] * pow(h / sigmac, -r[dir]);
+               }
+          }
+
+          template <typename T>
+          T ShearFlowFactorTpl(const T& h, index_type dir) const {
+               const T Phis1 = ShearFlowFactorSurfTpl(h, SURFACE_1, dir);
+               const T Phis2 = ShearFlowFactorSurfTpl(h, SURFACE_2, dir);
+               return sigmac * (Vr[SURFACE_1] * Phis1 - Vr[SURFACE_2] * Phis2);
+          }
+
+          template <typename T>
+          T ShearFlowFactorSurf5Tpl(const T& H, index_type surface, index_type dir) const {
+               HYDRO_ASSERT(surface >= SURFACE_1);
+               HYDRO_ASSERT(surface <= SURFACE_2);
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+
+               return A1[surface][dir] * pow(H, alpha1[surface][dir]) * exp(-alpha2[surface][dir] * H + alpha3[surface][dir] * H * H);
+          }
+
+          template <typename T>
+          T ShearFlowFactorSurf6Tpl(const T& H, index_type surface, index_type dir) const {
+               HYDRO_ASSERT(surface >= SURFACE_1);
+               HYDRO_ASSERT(surface <= SURFACE_2);
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+
+               return A2[surface][dir] * exp(-alpha8[surface][dir] * H);
+          }
+
+          template <typename T>
+          T ShearFlowFactorSurfTpl(const T& h, index_type surface, index_type dir) const {
+               HYDRO_ASSERT(surface >= SURFACE_1);
+               HYDRO_ASSERT(surface <= SURFACE_2);
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+
+               const T H = h / sigmac;
+
+               if (H <= 5) {
+                    return ShearFlowFactorSurf5Tpl(H, surface, dir);
+               } else if (H >= 6) {
+                    return ShearFlowFactorSurf6Tpl(H, surface, dir);
+               } else {
+                    const doublereal Phi5 = ShearFlowFactorSurf5Tpl(5., surface, dir);
+                    const doublereal Phi6 = ShearFlowFactorSurf6Tpl(6., surface, dir);
+
+                    return (Phi6 - Phi5) * (H - 5.) + Phi5;
+               }
+          }
+
+          template <typename T>
+          T ShearStressFactorF5Tpl(const T& H) const {
+               return 1. + A4 / pow(H + alpha9, alpha7);
+          }
+
+          template <typename T>
+          T ShearStressFactorF6Tpl(const T& H) const {
+               return 1. + 1. / (H * H);
+          }
+
+          template <typename T>
+          T ShearStressFactorFTpl(const T& h) const {
+               const T H = h / sigmac;
+
+               if (H <= 5) {
+                    return ShearStressFactorF5Tpl(H);
+               } else if (H >= 6) {
+                    return ShearStressFactorF6Tpl(H);
+               } else {
+                    const doublereal Phi5 = ShearStressFactorF5Tpl(5.);
+                    const doublereal Phi6 = ShearStressFactorF6Tpl(6.);
+
+                    return (Phi6 - Phi5) * (H - 5.) + Phi5;
+               }
+          }
+
+          template <typename T>
+          T ShearStressFactorFSTpl(const T& h, index_type dir) const {
+               const T PhiFS1 = ShearStressFactorSurfFSTpl(h, SURFACE_1, dir);
+               const T PhiFS2 = ShearStressFactorSurfFSTpl(h, SURFACE_2, dir);
+
+               return Vr[SURFACE_1] * PhiFS1 - Vr[SURFACE_2] * PhiFS2;
+          }
+
+          template <typename T>
+          T ShearStressFactorSurfFS7Tpl(const T& H, index_type surface, index_type dir) const {
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+               HYDRO_ASSERT(surface >= SURFACE_1);
+               HYDRO_ASSERT(surface <= SURFACE_2);
+
+               return A3[surface][dir] * pow(H, alpha4[surface][dir]) * exp(-alpha5[surface][dir] * H + alpha6[surface][dir] * H * H);
+          }
+
+          template <typename T>
+          T ShearStressFactorSurfFSTpl(const T& h, index_type surface, index_type dir) const {
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+               HYDRO_ASSERT(surface >= SURFACE_1);
+               HYDRO_ASSERT(surface <= SURFACE_2);
+
+               const T H = h / sigmac;
+
+               if (H <= 7.) {
+                    return ShearStressFactorSurfFS7Tpl(H, surface, dir);
+               } else if (H >= 8) {
+                    return T{0.};
+               } else {
+                    const doublereal Phi7 = ShearStressFactorSurfFS7Tpl(7., surface, dir);
+
+                    return Phi7 * (1. - (H - 7));
+               }
+          }
+
+          template <typename T>
+          T ShearStressFactorFPTpl(const T& h, index_type dir) const {
+               HYDRO_ASSERT(dir >= DIR_X);
+               HYDRO_ASSERT(dir <= DIR_Z);
+
+               return 1. - D[dir] * exp(-s[dir] * h / sigmac);
+          }
+
+          template <typename T>
+          T AverageClearanceTpl(const T& h) const {
+               return h / 2. * (1 + erf(h / (sigmac * sqrt(2)))) + sigmac / sqrt(2 * M_PI) * exp(-h * h / (2. * sigmac * sigmac));
+          }
+
+          template <typename T>
+          T AverageClearanceDerivTpl(const T& h, const T& dh_dt) const {
+               return 0.5 * dh_dt * (1. + erf(h / (sigmac * sqrt(2.))));
+          }
+
+          const std::array<doublereal, SURFACE_COUNT> sigma;
+          const doublereal sigmac;
+          std::array<doublereal, SURFACE_COUNT> gammax, Vr;
+          std::array<doublereal, DIR_COUNT> gammac;
+          std::array<doublereal, DIR_COUNT> C, r;
+          std::array<std::array<doublereal, DIR_COUNT>, SURFACE_COUNT> A1, A2, A3;
+          std::array<std::array<doublereal, DIR_COUNT>, SURFACE_COUNT> alpha1, alpha2, alpha3, alpha4, alpha5, alpha6, alpha8;
+          std::array<doublereal, DIR_COUNT> D, s;
+          doublereal A4, alpha7, alpha9;
+     };
+
      class BearingGeometry {
      public:
           enum Type {
@@ -2524,7 +2903,6 @@ namespace {
                                 doublereal& dh_dt,
                                 SpColVector<doublereal, 2>& U1,
                                 SpColVector<doublereal, 2>& U2,
-                                SpColVector<doublereal, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const=0;
 
@@ -2534,7 +2912,6 @@ namespace {
                                 SpGradient& dh_dt,
                                 SpColVector<SpGradient, 2>& U1,
                                 SpColVector<SpGradient, 2>& U2,
-                                SpColVector<SpGradient, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const=0;
 
@@ -2544,7 +2921,6 @@ namespace {
                                 GpGradProd& dh_dt,
                                 SpColVector<GpGradProd, 2>& U1,
                                 SpColVector<GpGradProd, 2>& U2,
-                                SpColVector<GpGradProd, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const=0;
 
@@ -2669,8 +3045,10 @@ namespace {
           virtual void GetMovingMeshOffset(SpColVector<GpGradProd, 2>& x) const = 0;
 
           SpGradExpDofMapHelper<SpGradient>& GetDofMap() { return oDofMapSpGradient; }
-     protected:
+
           virtual doublereal dGetMinClearance() const=0;
+          virtual void SetMinClearance(doublereal hmin)=0;
+     protected:
           virtual doublereal dGetPocketHeightMesh(const SpColVector<doublereal, 2>& x) const=0;
 
           const SpGradExpDofMapHelper<doublereal>& GetDofMap(const SpGradientVectorHandler<doublereal>&) const {
@@ -2793,7 +3171,7 @@ namespace {
 
           virtual doublereal dGetMinClearance() const override;
           virtual doublereal dGetReferenceClearance() const override;
-
+          virtual void SetMinClearance(doublereal hmin) override;
      protected:
           typedef std::unique_ptr<Pocket> PocketPtr;
           typedef std::vector<PocketPtr> PocketVector;
@@ -2833,6 +3211,8 @@ namespace {
           virtual doublereal
           dGetPocketHeightMesh(const SpColVector<doublereal, 2>& x) const override;
 
+          doublereal dGetClearanceVariation() const { return DeltaH->dGet(); }
+          doublereal dGetClearanceVariationDot() const { return DeltaH->dGetP(); }
      private:
           template <typename T>
           static const Pocket* pFindPocket(const SpColVector<T, 2>& x, const PocketVector& rgPockets);
@@ -2854,6 +3234,7 @@ namespace {
           doublereal hmin;
           PocketVector rgPocketsShaft;
           PocketVector rgPocketsBearing;
+          std::unique_ptr<DriveCaller> DeltaH;
      };
 
      class CylindricalMeshAtShaft: public CylindricalBearing {
@@ -2869,7 +3250,6 @@ namespace {
                                 doublereal& dh_dt,
                                 SpColVector<doublereal, 2>& U1,
                                 SpColVector<doublereal, 2>& U2,
-                                SpColVector<doublereal, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const override;
 
@@ -2879,7 +3259,6 @@ namespace {
                                 SpGradient& dh_dt,
                                 SpColVector<SpGradient, 2>& U1,
                                 SpColVector<SpGradient, 2>& U2,
-                                SpColVector<SpGradient, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const override;
 
@@ -2889,7 +3268,6 @@ namespace {
                                 GpGradProd& dh_dt,
                                 SpColVector<GpGradProd, 2>& U1,
                                 SpColVector<GpGradProd, 2>& U2,
-                                SpColVector<GpGradProd, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const override;
 
@@ -3026,7 +3404,6 @@ namespace {
                                      T& dh_dt,
                                      SpColVector<T, 2>& U1,
                                      SpColVector<T, 2>& U2,
-                                     SpColVector<T, 2>& U,
                                      doublereal dCoef,
                                      SpFunctionCall func) const;
 
@@ -3093,7 +3470,6 @@ namespace {
                                 doublereal& dh_dt,
                                 SpColVector<doublereal, 2>& U1,
                                 SpColVector<doublereal, 2>& U2,
-                                SpColVector<doublereal, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const override;
 
@@ -3103,7 +3479,6 @@ namespace {
                                 SpGradient& dh_dt,
                                 SpColVector<SpGradient, 2>& U1,
                                 SpColVector<SpGradient, 2>& U2,
-                                SpColVector<SpGradient, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const override;
 
@@ -3113,7 +3488,6 @@ namespace {
                                 GpGradProd& dh_dt,
                                 SpColVector<GpGradProd, 2>& U1,
                                 SpColVector<GpGradProd, 2>& U2,
-                                SpColVector<GpGradProd, 2>& U,
                                 doublereal dCoef,
                                 SpFunctionCall func) const override;
 
@@ -3252,7 +3626,6 @@ namespace {
                                      T& dh_dt,
                                      SpColVector<T, 2>& U1,
                                      SpColVector<T, 2>& U2,
-                                     SpColVector<T, 2>& U,
                                      doublereal dCoef,
                                      SpFunctionCall func) const;
 
@@ -3458,7 +3831,7 @@ namespace {
           template <typename T>
           bool ContactPressureTpl(const T& h, T& pasp) const;
 
-          doublereal a, b, c, h0, h1, href;
+          doublereal k, sigmaDelta, plim;
      };
 
      class HydroElement {
@@ -3625,7 +3998,8 @@ namespace {
 
      class LinFD5ReynoldsElem: public LinFD5Elem {
      public:
-          explicit LinFD5ReynoldsElem(HydroMesh* pMesh);
+          explicit LinFD5ReynoldsElem(HydroMesh* pMesh,
+                                      const FlowFactorModel* pFlowFactors);
           virtual ~LinFD5ReynoldsElem();
 
           virtual void
@@ -3680,6 +4054,7 @@ namespace {
                           const SpGradientVectorHandler<T>& XCurr,
                           SpFunctionCall func);
      private:
+          const FlowFactorModel* const pFlowFactors;
 #if MBDYN_ENABLE_PROFILE
           enum { PROF_RES = 0, PROF_JAC = 1 };
           static struct ProfileData {
@@ -3741,7 +4116,7 @@ namespace {
 
      class LinFD4FrictionElem: public LinFD4Elem {
      public:
-          explicit LinFD4FrictionElem(HydroMesh* pMesh);
+          explicit LinFD4FrictionElem(HydroMesh* pMesh, const FlowFactorModel* pFlowFactors);
           virtual ~LinFD4FrictionElem();
 
           virtual void
@@ -3812,7 +4187,7 @@ namespace {
           SpColVector<doublereal, 3> vc;
           SpMatrix<doublereal, 3, 3> Rtc;
           doublereal dScaleEnergy;
-
+          const FlowFactorModel* const pFlowFactors;
 #if MBDYN_ENABLE_PROFILE
           enum { PROF_RES = 0, PROF_JAC = 1 };
           static struct ProfileData {
@@ -3885,7 +4260,7 @@ namespace {
 
      class LinFD5ComprReynoldsElem: public LinFD5Elem {
      public:
-          explicit LinFD5ComprReynoldsElem(HydroMesh* pMesh);
+          explicit LinFD5ComprReynoldsElem(HydroMesh* pMesh, const FlowFactorModel* pFlowFactors);
           virtual ~LinFD5ComprReynoldsElem();
 
           virtual void
@@ -3939,12 +4314,13 @@ namespace {
                           const SpGradientVectorHandler<T>& XCurr,
                           SpFunctionCall func);
      private:
+          const FlowFactorModel* const pFlowFactors;
           static const index_type iNumDofMax = HydroActiveComprNode::iNumDofMax;
      };
 
      class LinFD5ComprReynoldsElemMCP: public LinFD5Elem {
      public:
-          explicit LinFD5ComprReynoldsElemMCP(HydroMesh* pMesh);
+          explicit LinFD5ComprReynoldsElemMCP(HydroMesh* pMesh, const FlowFactorModel* pFlowFactors);
           virtual ~LinFD5ComprReynoldsElemMCP();
 
           virtual void
@@ -3998,6 +4374,7 @@ namespace {
                           const SpGradientVectorHandler<T>& XCurr,
                           SpFunctionCall func);
      private:
+          const FlowFactorModel* const pFlowFactors;
           static const index_type iNumDofMax = HydroActiveComprNode::iNumDofMax;
      };
 
@@ -4656,6 +5033,7 @@ namespace {
 
           bool bLineSearchControl;
           bool bEnableMCP;
+          std::unique_ptr<FlowFactorModel> pFlowFactors;
      };
 
      class QuadFeIso9Mesh: public HydroMesh {
@@ -7940,7 +8318,15 @@ namespace {
                     }
                }
 
-               return std::unique_ptr<Pocket>{new SurfaceGrid(std::move(pGeometry), x, z, Deltay)};
+               SurfaceGrid::Mode mode = SurfaceGrid::EXTRAPOLATE;
+
+               if (HP.IsKeyWord("extrapolate")) {
+                    if (!HP.GetYesNoOrBool()) {
+                         mode = SurfaceGrid::TRUNCATE;
+                    }
+               }
+
+               return std::unique_ptr<Pocket>{new SurfaceGrid(std::move(pGeometry), x, z, Deltay, mode)};
           } else if (HP.IsKeyWord("helical" "groove")) {
                if (!HP.IsKeyWord("profile")) {
                     silent_cerr("hydrodynamic plain bearing2(" << pRoot->GetLabel()
@@ -8162,11 +8548,13 @@ namespace {
      SurfaceGrid::SurfaceGrid(std::unique_ptr<Geometry2D>&& pGeometry_a,
                               const SpColVector<doublereal>& x_a,
                               const SpColVector<doublereal>& z_a,
-                              const SpMatrix<doublereal>& f_a)
+                              const SpMatrix<doublereal>& f_a,
+                              Mode mode_a)
           :Pocket(std::move(pGeometry_a)),
            x(x_a),
            z(z_a),
-           f(f_a)
+           f(f_a),
+           mode(mode_a)
      {
           HYDRO_ASSERT(x.iGetNumRows() >= 2);
           HYDRO_ASSERT(z.iGetNumRows() >= 2);
@@ -8225,7 +8613,17 @@ namespace {
 
      std::unique_ptr<Pocket> SurfaceGrid::Clone(const SpColVector<doublereal, 2>& xc) const
      {
-          return std::unique_ptr<Pocket>{new SurfaceGrid{pGetGeometry()->Clone(xc), x, z, f}};
+          return std::unique_ptr<Pocket>{new SurfaceGrid{pGetGeometry()->Clone(xc), x, z, f, mode}};
+     }
+
+     template <typename T>
+     bool SurfaceGrid::bPointIsInside(const SpColVector<T, 2>& xci) const
+     {
+          if (mode == EXTRAPOLATE) {
+               return true;
+          }
+
+          return xci(1) >= x(1) && xci(1) <= x(x.iGetNumRows()) && xci(2) >= z(1) && xci(2) <= z(z.iGetNumRows());
      }
 
      template <typename T> inline
@@ -8261,38 +8659,50 @@ namespace {
      template <typename T> inline
      void SurfaceGrid::GetHeightTpl(const SpColVector<T, 2>& xci, T& Deltay) const
      {
-          const index_type ix = iFindGridX(xci);
-          const index_type iz = iFindGridZ(xci);
-          const T dx = (xci(1) - x(ix)) / (x(ix + 1) - x(ix));
-          const T dz = (xci(2) - z(iz)) / (z(iz + 1) - z(iz));
-          const T fi1 = (f(ix + 1, iz) - f(ix, iz)) * dx + f(ix, iz);
-          const T fi2 = (f(ix + 1, iz + 1) - f(ix, iz + 1)) * dx + f(ix, iz + 1);
+          if (bPointIsInside(xci)) {
+               const index_type ix = iFindGridX(xci);
+               const index_type iz = iFindGridZ(xci);
+               const T dx = (xci(1) - x(ix)) / (x(ix + 1) - x(ix));
+               const T dz = (xci(2) - z(iz)) / (z(iz + 1) - z(iz));
+               const T fi1 = (f(ix + 1, iz) - f(ix, iz)) * dx + f(ix, iz);
+               const T fi2 = (f(ix + 1, iz + 1) - f(ix, iz + 1)) * dx + f(ix, iz + 1);
 
-          Deltay = (fi2 - fi1) * dz + fi1;
+               Deltay = (fi2 - fi1) * dz + fi1;
+          } else {
+               Deltay = T{0.};
+          }
      }
 
      template <typename T> inline
      void SurfaceGrid::GetHeightDerXTpl(const SpColVector<T, 2>& xci, T& dDeltay_dx) const
      {
-          const index_type ix = iFindGridX(xci);
-          const index_type iz = iFindGridZ(xci);
-          const T dz = (xci(2) - z(iz)) / (z(iz + 1) - z(iz));
-          const doublereal dfi1_dx = (f(ix + 1, iz) - f(ix, iz)) / (x(ix + 1) - x(ix));
-          const doublereal dfi2_dx = (f(ix + 1, iz + 1) - f(ix, iz + 1)) / (x(ix + 1) - x(ix));
+          if (bPointIsInside(xci)) {
+               const index_type ix = iFindGridX(xci);
+               const index_type iz = iFindGridZ(xci);
+               const T dz = (xci(2) - z(iz)) / (z(iz + 1) - z(iz));
+               const doublereal dfi1_dx = (f(ix + 1, iz) - f(ix, iz)) / (x(ix + 1) - x(ix));
+               const doublereal dfi2_dx = (f(ix + 1, iz + 1) - f(ix, iz + 1)) / (x(ix + 1) - x(ix));
 
-          dDeltay_dx = (dfi2_dx - dfi1_dx) * dz + dfi1_dx;
+               dDeltay_dx = (dfi2_dx - dfi1_dx) * dz + dfi1_dx;
+          } else {
+               dDeltay_dx = T{0.};
+          }
      }
 
      template <typename T> inline
      void SurfaceGrid::GetHeightDerZTpl(const SpColVector<T, 2>& xci, T& dDeltay_dz) const
      {
-          const index_type ix = iFindGridX(xci);
-          const index_type iz = iFindGridZ(xci);
-          const T dx = (xci(1) - x(ix)) / (x(ix + 1) - x(ix));
-          const T fi1 = (f(ix + 1, iz) - f(ix, iz)) * dx + f(ix, iz);
-          const T fi2 = (f(ix + 1, iz + 1) - f(ix, iz + 1)) * dx + f(ix, iz + 1);
+          if (bPointIsInside(xci)) {
+               const index_type ix = iFindGridX(xci);
+               const index_type iz = iFindGridZ(xci);
+               const T dx = (xci(1) - x(ix)) / (x(ix + 1) - x(ix));
+               const T fi1 = (f(ix + 1, iz) - f(ix, iz)) * dx + f(ix, iz);
+               const T fi2 = (f(ix + 1, iz + 1) - f(ix, iz + 1)) * dx + f(ix, iz + 1);
 
-          dDeltay_dz = (fi2 - fi1) / (z(iz + 1) - z(iz));
+               dDeltay_dz = (fi2 - fi1) / (z(iz + 1) - z(iz));
+          } else {
+               dDeltay_dz = T{0.};
+          }
      }
 
      HelicalGroove::HelicalGroove(std::unique_ptr<Geometry2D>&& pGeometry_a,
@@ -8429,7 +8839,7 @@ namespace {
           const ContactModel* const pContact = pNode->pGetContactModel();
           FrictionModel* const pFriction = pNode->pGetFrictionModel();
 
-          pGeometry->GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          pGeometry->GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
 
           // Attention: stiction states for LuGre friction have to be updated
           // also if there is no contact at the current time step
@@ -8473,12 +8883,6 @@ namespace {
      {
           U1_a = this->U1;
           U2_a = this->U2;
-     }
-
-     template <typename T>
-     void KinematicsBoundaryCond<T>::GetHydraulicVelocity(SpColVector<T, 2>& U_a) const
-     {
-          U_a = this->U;
      }
 
      template <typename T>
@@ -9163,7 +9567,8 @@ namespace {
                         HydroMesh* pMesh_a,
                         const std::array<const HydroNode*, iNumNodes>& rgNodes_a,
                         PressureSource ePressSrc,
-                        NodeDataReq eNodeDataReq)
+                        NodeDataReq eNodeDataReq,
+                        const FlowFactorModel* pFlowFactors_a)
           :Node2D(iNodeNo_a,
                   (rgNodes_a[0]->GetPosition2D() + rgNodes_a[1]->GetPosition2D()) * 0.5,
                   pMesh_a,
@@ -9175,7 +9580,8 @@ namespace {
            du(0.),
            rgNodes(rgNodes_a),
            ePressSource(ePressSrc),
-           uNodeDataReq(eNodeDataReq)
+           uNodeDataReq(eNodeDataReq),
+           pFlowFactors(pFlowFactors_a)
      {
 #if HYDRO_DEBUG > 0
           HYDRO_ASSERT(ePressSource >= 0);
@@ -9462,9 +9868,10 @@ namespace {
 
                oDofMap.GetDofStat(rgNDH[i].eta);
 
-               rgNodes[i]->GetHydraulicVelocity(rgNDH[i].U);
+               rgNodes[i]->GetVelocity(rgNDH[i].U1, rgNDH[i].U2);
 
-               oDofMap.GetDofStat(rgNDH[i].U(iDirection));
+               oDofMap.GetDofStat(rgNDH[i].U1(iDirection));
+               oDofMap.GetDofStat(rgNDH[i].U2(iDirection));
 
                rgNodes[i]->GetDensity(rgNDH[i].rho, dCoef);
 
@@ -9478,11 +9885,6 @@ namespace {
                     rgNodes[i]->GetTemperature(rgNDH[i].T, dCoef);
 
                     oDofMap.GetDofStat(rgNDH[i].T);
-
-                    rgNodes[i]->GetVelocity(rgNDH[i].U1, rgNDH[i].U2);
-
-                    oDofMap.GetDofStat(rgNDH[i].U1(iDirection));
-                    oDofMap.GetDofStat(rgNDH[i].U2(iDirection));
                }
 
                if (uNodeDataReq & ND_THERMAL_WALL) {
@@ -9497,14 +9899,13 @@ namespace {
           for (index_type i = 0; i < iNumNodes; ++i) {
                oDofMap.InsertDof(rgNDH[i].h);
                oDofMap.InsertDof(rgNDH[i].eta);
-               oDofMap.InsertDof(rgNDH[i].U(iDirection));
+               oDofMap.InsertDof(rgNDH[i].U1(iDirection));
+               oDofMap.InsertDof(rgNDH[i].U2(iDirection));
                oDofMap.InsertDof(rgNDH[i].rho);
                oDofMap.InsertDof(rgNDH[i].p);
 
                if (uNodeDataReq & ND_THERMAL) {
                     oDofMap.InsertDof(rgNDH[i].T);
-                    oDofMap.InsertDof(rgNDH[i].U1(iDirection));
-                    oDofMap.InsertDof(rgNDH[i].U2(iDirection));
                }
 
                if (uNodeDataReq & ND_THERMAL_WALL) {
@@ -9514,12 +9915,18 @@ namespace {
 
           oDofMap.InsertDone();
 
-          G h, U, a0;
+          G h, U1, U2, a0;
 
           oDofMap.MapAssign(h, 0.5 * (rgNDH[iNodeDown].h + rgNDH[iNodeUp].h));
-          oDofMap.MapAssign(U, 0.5 * (rgNDH[iNodeDown].U(iDirection) + rgNDH[iNodeUp].U(iDirection)));
+          oDofMap.MapAssign(U1, 0.5 * (rgNDH[iNodeDown].U1(iDirection) + rgNDH[iNodeUp].U1(iDirection)));
+          oDofMap.MapAssign(U2, 0.5 * (rgNDH[iNodeDown].U2(iDirection) + rgNDH[iNodeUp].U2(iDirection)));
+
+          const G hT = pFlowFactors->AverageClearance(h);
 
           const G eta = 0.5 * (rgNDH[iNodeDown].eta + rgNDH[iNodeUp].eta);
+
+          const G Phi_p = pFlowFactors->PressureFlowFactor(h, iDirection - 1);
+          const G Phi_s = pFlowFactors->ShearFlowFactor(h, iDirection - 1);
 
           for (index_type j = 0; j <= ePressSource; ++j) {
                switch (j) {
@@ -9532,10 +9939,11 @@ namespace {
 
                const G dp_du = (rgNDH[iNodeUp].p - rgNDH[iNodeDown].p) / du;
 
-               oDofMap.MapAssign(a0, h * h / (12. * eta) * dp_du);
+               oDofMap.MapAssign(a0, Phi_p * h * h * h / (12. * eta) * dp_du);
 
-               oDofMap.MapAssign(rgFlux_a[j].wu, U - a0);
-               oDofMap.MapAssign(rgFlux_a[j].qu, h * rgFlux_a[j].wu);
+               // Sign convention for shear flow factor Phi_s according to Patir Cheng
+               oDofMap.MapAssign(rgFlux_a[j].qu, (U1 + U2) / 2. * hT + (U1 - U2) / 2. * Phi_s - a0);
+               oDofMap.MapAssign(rgFlux_a[j].wu, rgFlux_a[j].qu / h);
 
                const index_type iUpwindu = rgFlux_a[j].qu >= 0. ? iNodeDown : iNodeUp;
 
@@ -9546,8 +9954,7 @@ namespace {
                     if (uNodeDataReq & ND_THERMAL) {
                          G dU;
 
-                         oDofMap.MapAssign(dU, 0.5 * (rgNDH[iNodeDown].U1(iDirection) + rgNDH[iNodeUp].U1(iDirection)
-                                                      - rgNDH[iNodeDown].U2(iDirection) - rgNDH[iNodeUp].U2(iDirection)));
+                         oDofMap.MapAssign(dU, U1 - U2);
 
                          doublereal beta = 0.;
 
@@ -9574,7 +9981,7 @@ namespace {
 
                          oDofMap.MapAssign(oNode_a.Qu, rgFlux_a[j].qu * (beta * rgNDH[iUpwindu].T * dp_du
                                                                      - rgNDH[iUpwindu].rho * cp * (rgNDH[iNodeUp].T - rgNDH[iNodeDown].T) / du)
-                                           + h * a0 * dp_du + eta * dU * dU / h);
+                                           + a0 * dp_du + eta * dU * dU / h);
 
                          if (uNodeDataReq & ND_THERMAL_WALL) {
                               G a1, Psi0, Psih;
@@ -10019,21 +10426,6 @@ namespace {
           pMasterNode->GetVelocity(U1, U2);
      }
 
-     void HydroSlaveNode::GetHydraulicVelocity(SpColVector<doublereal, 2>& U) const
-     {
-          pMasterNode->GetHydraulicVelocity(U);
-     }
-
-     void HydroSlaveNode::GetHydraulicVelocity(SpColVector<SpGradient, 2>& U) const
-     {
-          pMasterNode->GetHydraulicVelocity(U);
-     }
-
-     void HydroSlaveNode::GetHydraulicVelocity(SpColVector<GpGradProd, 2>& U) const
-     {
-          pMasterNode->GetHydraulicVelocity(U);
-     }
-
      index_type HydroSlaveNode::iGetComplianceIndex() const
      {
           return pMasterNode->iGetComplianceIndex();
@@ -10306,21 +10698,6 @@ namespace {
      void HydroUpdatedNode::GetVelocity(SpColVector<GpGradProd, 2>& U1, SpColVector<GpGradProd, 2>& U2) const
      {
           oBoundary_gradp.GetVelocity(U1, U2);
-     }
-
-     void HydroUpdatedNode::GetHydraulicVelocity(SpColVector<doublereal, 2>& U) const
-     {
-          oBoundary.GetHydraulicVelocity(U);
-     }
-
-     void HydroUpdatedNode::GetHydraulicVelocity(SpColVector<SpGradient, 2>& U) const
-     {
-          oBoundary_grad.GetHydraulicVelocity(U);
-     }
-
-     void HydroUpdatedNode::GetHydraulicVelocity(SpColVector<GpGradProd, 2>& U) const
-     {
-          oBoundary_gradp.GetHydraulicVelocity(U);
      }
 
      index_type HydroUpdatedNode::iGetComplianceIndex() const
@@ -12338,6 +12715,218 @@ namespace {
           oStateCurr.eCavitationState = pGetFluid()->Cavitation(oStateCurr.p, &oStateCurr.dp_dt);
 
           oStateCurr.drho_dt = drho_dp * oStateCurr.dp_dt + drho_dT * dT_dt;
+     }
+
+     PatirCheng::PatirCheng(const std::array<doublereal, SURFACE_COUNT>& sigma_a,
+                            const std::array<doublereal, SURFACE_COUNT>& lambdax,
+                            const std::array<doublereal, SURFACE_COUNT>& lambdaz,
+                            Tables tables)
+          :sigma{sigma_a},
+           sigmac(sqrt(pow(sigma[SURFACE_1], 2) + pow(sigma[SURFACE_2], 2))) {
+
+          for (index_type i = SURFACE_1; i <= SURFACE_2; ++i) {
+               gammax[i] = lambdax[i] / lambdaz[i];
+               Vr[i] = pow(sigma[i] / sigmac, 2);
+          }
+
+          gammac[DIR_X] = (Vr[SURFACE_1] / lambdaz[SURFACE_1] + Vr[SURFACE_2] / lambdaz[SURFACE_2])
+               / (Vr[SURFACE_1] / lambdax[SURFACE_1] + Vr[SURFACE_2] / lambdax[SURFACE_2]);
+          gammac[DIR_Z] = 1. / gammac[DIR_X];
+
+          switch (tables) {
+          case ORIGINAL: {
+               static constexpr doublereal gammai[] = {1./9., 1./6., 1./3., 1., 3., 6., 9.};
+               static constexpr size_t Ni = sizeof(gammai) / sizeof(gammai[0]);
+
+               static constexpr doublereal Ci[] = {1.48, 1.38, 1.18, 0.9, 0.225, 0.52, 0.87};
+               static constexpr doublereal ri[] = {0.42, 0.42, 0.42, 0.56, 1.5, 1.5, 1.5};
+
+               static constexpr doublereal Di[] = {1.51, 1.51, 1.47, 1.40, 0.98, 0.97, 0.73};
+               static constexpr doublereal si[] = {0.52, 0.54, 0.58, 0.66, 0.79, 0.91, 0.91};
+
+               InterpolatePressureFlow(gammai, Ci, ri, Di, si, Ni);
+
+               static constexpr doublereal A1i[] = {2.046, 1.962, 1.858, 1.899, 1.56, 1.29, 1.011};
+               static constexpr doublereal A2i[] = {1.856, 1.754, 1.561, 1.126, 0.556, 0.388, 0.295};
+               static constexpr doublereal A3i[] = {14.1, 13.4, 12.3, 11.1, 9.8, 10.1, 8.7};
+
+               static constexpr doublereal alpha1i[] = {1.12, 1.08, 1.01, 0.98, 0.85, 0.62, 0.54};
+               static constexpr doublereal alpha2i[] = {0.78, 0.77, 0.76, 0.92, 1.13, 1.09, 1.07};
+               static constexpr doublereal alpha3i[] = {0.03, 0.03, 0.03, 0.05, 0.08, 0.08, 0.08};
+               static constexpr doublereal alpha4i[] = {2.45, 2.42, 2.32, 2.31, 2.25, 2.25, 2.15};
+               static constexpr doublereal alpha5i[] = {2.3, 2.3, 2.3, 2.38, 2.8, 2.9, 2.97};
+               static constexpr doublereal alpha6i[] = {0.1, 0.1, 0.1, 0.11, 0.18, 0.18, 0.18};
+               static constexpr doublereal alpha8i[] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25};
+
+               A4 = 0.88;
+               alpha7 = 1.5;
+               alpha9 = 0.;
+
+               InterpolateShearFlow(gammai, alpha1i, alpha2i, alpha3i, alpha4i, alpha5i, alpha6i, alpha8i, A1i, A2i, A3i, Ni);
+          } break;
+          case REPLICATED: {
+               static constexpr doublereal gammai[] = {0.111111, 0.166667, 0.333333, 1, 3, 6, 9, };
+               static constexpr size_t Ni = sizeof(gammai) / sizeof(gammai[0]);
+               static constexpr doublereal Ci[] = {1.19031, 1.2379, 1.20554, 1.27678, 0.329967, 0.553163, 0.997119, };
+               static constexpr doublereal ri[] = {0.625518, 0.525195, 0.498786, 0.904877, 1.27958, 1.02471, 1.23847, };
+               static constexpr doublereal Di[] = {1.0675, 1.14672, 1.14296, 1.11879, 1.09396, 0.893236, 0.764631, };
+               static constexpr doublereal si[] = {0.73529, 0.600005, 0.555506, 0.664549, 1.04094, 1.07373, 1.17504, };
+
+               InterpolatePressureFlow(gammai, Ci, ri, Di, si, Ni);
+
+               static constexpr doublereal alpha1i[] = {2.04903, 7.3028, 4.34939, 1.86494, 1.62992, 0.960549, 0.79014, };
+               static constexpr doublereal alpha2i[] = {0.856319, 4.50019, 2.71474, 1.33917, 1.51507, 1.0591, 1.07199, };
+               static constexpr doublereal alpha3i[] = {0.00854434, 0.294314, 0.164666, 0.0738716, 0.109593, 0.0734443, 0.0768388, };
+               static constexpr doublereal alpha4i[] = {15.8714, 3.1378, 12.1455, 3.69492, 3.52591, 2.45495, 2.3601, };
+               static constexpr doublereal alpha5i[] = {7.70025, 2.46514, 7.45364, 3.22043, 3.32167, 2.61033, 2.65346, };
+               static constexpr doublereal alpha6i[] = {0.390475, 0.131264, 0.43545, 0.195664, 0.220165, 0.171563, 0.16866, };
+               alpha7 = 2.45732;
+               static constexpr doublereal alpha8i[] = {0.136294, 0.154348, 0.154146, 0.132538, 0.0974879, 0.0938101, 0.112677, };
+               alpha9 = 1.20089;
+               static constexpr doublereal A1i[] = {0.593959, 11.6989, 4.35617, 1.8748, 1.97291, 0.843688, 0.682016, };
+               static constexpr doublereal A2i[] = {0.54353, 0.853445, 0.806793, 0.573281, 0.351585, 0.199012, 0.137158, };
+               static constexpr doublereal A3i[] = {1.41553, 4.6102, 52.4991, 11.8271, 12.3303, 4.34208, 3.77684, };
+               A4 = 8.8;
+
+               InterpolateShearFlow(gammai, alpha1i, alpha2i, alpha3i, alpha4i, alpha5i, alpha6i, alpha8i, A1i, A2i, A3i, Ni);
+          } break;
+          default:
+               ASSERT(0);
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
+     }
+
+     void PatirCheng::InterpolatePressureFlow(const doublereal gammai[],
+                                              const doublereal Ci[],
+                                              const doublereal ri[],
+                                              const doublereal Di[],
+                                              const doublereal si[],
+                                              size_t Ni) {
+          for (index_type i = DIR_X; i <= DIR_Z; ++i) {
+               C[i] = Interpolate(gammai, Ci, Ni, gammac[i]);
+               r[i] = Interpolate(gammai, ri, Ni, gammac[i]);
+               D[i] = Interpolate(gammai, Di, Ni, gammac[i]);
+               s[i] = Interpolate(gammai, si, Ni, gammac[i]);
+          }
+     }
+
+     void PatirCheng::InterpolateShearFlow(const doublereal gammai[],
+                                           const doublereal alpha1i[],
+                                           const doublereal alpha2i[],
+                                           const doublereal alpha3i[],
+                                           const doublereal alpha4i[],
+                                           const doublereal alpha5i[],
+                                           const doublereal alpha6i[],
+                                           const doublereal alpha8i[],
+                                           const doublereal A1i[],
+                                           const doublereal A2i[],
+                                           const doublereal A3i[],
+                                           const size_t Ni) {
+          for (index_type i = SURFACE_1; i <= SURFACE_2; ++i) {
+               for (index_type j = DIR_X; j <= DIR_Z; ++j) {
+                    const doublereal gammaij = (j == DIR_X) ? gammax[i] : 1. / gammax[i];
+
+                    alpha1[i][j] = Interpolate(gammai, alpha1i, Ni, gammaij);
+                    alpha2[i][j] = Interpolate(gammai, alpha2i, Ni, gammaij);
+                    alpha3[i][j] = Interpolate(gammai, alpha3i, Ni, gammaij);
+                    alpha4[i][j] = Interpolate(gammai, alpha4i, Ni, gammaij);
+                    alpha5[i][j] = Interpolate(gammai, alpha5i, Ni, gammaij);
+                    alpha6[i][j] = Interpolate(gammai, alpha6i, Ni, gammaij);
+                    alpha8[i][j] = Interpolate(gammai, alpha8i, Ni, gammaij);
+                    A1[i][j] = Interpolate(gammai, A1i, Ni, gammaij);
+                    A2[i][j] = Interpolate(gammai, A2i, Ni, gammaij);
+                    A3[i][j] = Interpolate(gammai, A3i, Ni, gammaij);
+               }
+          }
+     }
+
+     void PatirCheng::SetMinClearance(BearingGeometry* pGeometry) const {
+          // Because Patir Cheng is valid only from 0.5 sigmac upwards
+          pGeometry->SetMinClearance(std::max(pGeometry->dGetMinClearance(), 0.5 * sigmac));
+     }
+
+     doublereal PatirCheng::PressureFlowFactor(const doublereal& h, index_type dir) const  {
+          return PressureFlowFactorTpl(h, dir);
+     }
+
+     SpGradient PatirCheng::PressureFlowFactor(const SpGradient& h, index_type dir) const  {
+          return PressureFlowFactorTpl(h, dir);
+     }
+
+     GpGradProd PatirCheng::PressureFlowFactor(const GpGradProd& h, index_type dir) const  {
+          return PressureFlowFactorTpl(h, dir);
+     }
+
+     doublereal PatirCheng::ShearFlowFactor(const doublereal& h, index_type dir) const  {
+          return ShearFlowFactorTpl(h, dir);
+     }
+
+     SpGradient PatirCheng::ShearFlowFactor(const SpGradient& h, index_type dir) const  {
+          return ShearFlowFactorTpl(h, dir);
+     }
+
+     GpGradProd PatirCheng::ShearFlowFactor(const GpGradProd& h, index_type dir) const  {
+          return ShearFlowFactorTpl(h, dir);
+     }
+
+     doublereal PatirCheng::ShearStressFactorF(const doublereal& h) const  {
+          return ShearStressFactorFTpl(h);
+     }
+
+     SpGradient PatirCheng::ShearStressFactorF(const SpGradient& h) const  {
+          return ShearStressFactorFTpl(h);
+     }
+
+     GpGradProd PatirCheng::ShearStressFactorF(const GpGradProd& h) const  {
+          return ShearStressFactorFTpl(h);
+     }
+
+     doublereal PatirCheng::ShearStressFactorFS(const doublereal& h, index_type dir) const  {
+          return ShearStressFactorFSTpl(h, dir);
+     }
+
+     SpGradient PatirCheng::ShearStressFactorFS(const SpGradient& h, index_type dir) const  {
+          return ShearStressFactorFSTpl(h, dir);
+     }
+
+     GpGradProd PatirCheng::ShearStressFactorFS(const GpGradProd& h, index_type dir) const  {
+          return ShearStressFactorFSTpl(h, dir);
+     }
+
+     doublereal PatirCheng::ShearStressFactorFP(const doublereal& h, index_type dir) const  {
+          return ShearStressFactorFPTpl(h, dir);
+     }
+
+     SpGradient PatirCheng::ShearStressFactorFP(const SpGradient& h, index_type dir) const  {
+          return ShearStressFactorFPTpl(h, dir);
+     }
+
+     GpGradProd PatirCheng::ShearStressFactorFP(const GpGradProd& h, index_type dir) const  {
+          return ShearStressFactorFPTpl(h, dir);
+     }
+
+     doublereal PatirCheng::AverageClearance(const doublereal& h) const {
+          return AverageClearanceTpl(h);
+     }
+
+     SpGradient PatirCheng::AverageClearance(const SpGradient& h) const {
+          return AverageClearanceTpl(h);
+     }
+
+     GpGradProd PatirCheng::AverageClearance(const GpGradProd& h) const {
+          return AverageClearanceTpl(h);
+     }
+
+     doublereal PatirCheng::AverageClearanceDeriv(const doublereal& h, const doublereal& dh_dt) const {
+          return AverageClearanceDerivTpl(h, dh_dt);
+     }
+
+     SpGradient PatirCheng::AverageClearanceDeriv(const SpGradient& h, const SpGradient& dh_dt) const {
+          return AverageClearanceDerivTpl(h, dh_dt);
+     }
+
+     GpGradProd PatirCheng::AverageClearanceDeriv(const GpGradProd& h, const GpGradProd& dh_dt) const {
+          return AverageClearanceDerivTpl(h, dh_dt);
      }
 
      ComplianceModel::ComplianceModel(HydroMesh* pMesh_a,
@@ -16063,7 +16652,7 @@ namespace {
      }
 
      CylindricalBearing::CylindricalBearing(HydroRootElement* pParent_a)
-          :RigidBodyBearing(pParent_a), hmin(0.)
+          :RigidBodyBearing(pParent_a), hmin(0.), DeltaH(new NullDriveCaller)
      {
 
      }
@@ -16085,6 +16674,14 @@ namespace {
 
           b = HP.GetReal();
 
+          if (b <= 0) {
+               silent_cerr("hydrodynamic plain bearing2("
+                           << pGetParent()->GetLabel()
+                           << "): bearing width must be greater than zero at line "
+                           << HP.GetLineData() << std::endl);
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
+
           if (!HP.IsKeyWord("shaft" "diameter"))
           {
                silent_cerr("hydrodynamic plain bearing2("
@@ -16096,6 +16693,14 @@ namespace {
 
           r = 0.5 * HP.GetReal();
 
+          if (r <= 0.) {
+               silent_cerr("hydrodynamic plain bearing2("
+                           << pGetParent()->GetLabel()
+                           << "): shaft diameter must be greater than zero at line "
+                           << HP.GetLineData() << std::endl);
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
+
           if ( !HP.IsKeyWord("bearing" "diameter") )
           {
                silent_cerr("hydrodynamic plain bearing2("
@@ -16106,6 +16711,14 @@ namespace {
           }
 
           R = 0.5 * HP.GetReal();
+
+          if (R <= 0.) {
+               silent_cerr("hydrodynamic plain bearing2("
+                           << pGetParent()->GetLabel()
+                           << "): bearing diameter must be greater than zero at line "
+                           << HP.GetLineData() << std::endl);
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
 
           if (HP.IsKeyWord("minimum" "clearance")) {
                if (HP.IsKeyWord("relative")) {
@@ -16121,6 +16734,10 @@ namespace {
                }
           } else {
                hmin = 1e-3 * (R - r);
+          }
+
+          if (HP.IsKeyWord("clearance" "variation")) {
+               DeltaH.reset(HP.GetDriveCaller());
           }
 
           if (HP.IsKeyWord("pockets")) {
@@ -16283,6 +16900,11 @@ namespace {
      doublereal CylindricalBearing::dGetMinClearance() const
      {
           return hmin;
+     }
+
+     void CylindricalBearing::SetMinClearance(doublereal hmin_a)
+     {
+          hmin = hmin_a;
      }
 
      doublereal CylindricalBearing::dGetReferenceClearance() const
@@ -16460,7 +17082,6 @@ namespace {
                                                                 T& dh_dt,
                                                                 SpColVector<T, 2>& U1,
                                                                 SpColVector<T, 2>& U2,
-                                                                SpColVector<T, 2>& U,
                                                                 doublereal dCoef,
                                                                 SpFunctionCall func) const
      {
@@ -16578,7 +17199,10 @@ namespace {
                SpGradientTraits<T>::ResizeReset(dDeltay2_dz2, 0., 0);
           }
 
-          const T h0 = oDofMap.MapEval(R + Deltay2 - a3);
+          const doublereal DeltaH = rParent.dGetClearanceVariation();
+          const doublereal DeltaHDot = rParent.dGetClearanceVariationDot();
+
+          const T h0 = oDofMap.MapEval(R + Deltay2 - a3 + DeltaH);
 
           HYDRO_DUMP_VAR(rParent.pGetParent(), h0);
 
@@ -16598,7 +17222,7 @@ namespace {
 
           const T dDeltay2_dt = oDofMap.MapEval(dDeltay2_dx2 * dx2_dt + dDeltay2_dz2 * dz2_dt);
 
-          oDofMap.MapAssign(dh_dt, dDeltay2_dt - (b(1) * db_dt(1) + b(2) * db_dt(2)) / a3 + dw_dt);
+          oDofMap.MapAssign(dh_dt, dDeltay2_dt - (b(1) * db_dt(1) + b(2) * db_dt(2)) / a3 + dw_dt + DeltaHDot);
 
           HYDRO_TRACE("dh_dt=" << dh_dt << ";\n");
 
@@ -16625,8 +17249,6 @@ namespace {
 
           U1.ResizeReset(2, 0);
           U2.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt1)) * DeltaPDot_R1, oDofMap);
-
-          U.MapAssign((U2 - U1) * 0.5, oDofMap);
 
 #if HYDRO_DEBUG > 1
           std::cout.precision(prec1);
@@ -16688,19 +17310,19 @@ namespace {
           oBound_gradp.GetMovingMeshOffset(x);
      }
 
-     void CylindricalMeshAtShaft::GetBoundaryConditions(HydroNode* pNode, doublereal& h, doublereal& dh_dt, SpColVector<doublereal, 2>& U1, SpColVector<doublereal, 2>& U2, SpColVector<doublereal, 2>& U, doublereal dCoef, SpFunctionCall func) const
+     void CylindricalMeshAtShaft::GetBoundaryConditions(HydroNode* pNode, doublereal& h, doublereal& dh_dt, SpColVector<doublereal, 2>& U1, SpColVector<doublereal, 2>& U2, doublereal dCoef, SpFunctionCall func) const
      {
-          oBound.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          oBound.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
      }
 
-     void CylindricalMeshAtShaft::GetBoundaryConditions(HydroNode* pNode, SpGradient& h, SpGradient& dh_dt, SpColVector<SpGradient, 2>& U1, SpColVector<SpGradient, 2>& U2, SpColVector<SpGradient, 2>& U, doublereal dCoef, SpFunctionCall func) const
+     void CylindricalMeshAtShaft::GetBoundaryConditions(HydroNode* pNode, SpGradient& h, SpGradient& dh_dt, SpColVector<SpGradient, 2>& U1, SpColVector<SpGradient, 2>& U2, doublereal dCoef, SpFunctionCall func) const
      {
-          oBound_grad.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          oBound_grad.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
      }
 
-     void CylindricalMeshAtShaft::GetBoundaryConditions(HydroNode* pNode, GpGradProd& h, GpGradProd& dh_dt, SpColVector<GpGradProd, 2>& U1, SpColVector<GpGradProd, 2>& U2, SpColVector<GpGradProd, 2>& U, doublereal dCoef, SpFunctionCall func) const
+     void CylindricalMeshAtShaft::GetBoundaryConditions(HydroNode* pNode, GpGradProd& h, GpGradProd& dh_dt, SpColVector<GpGradProd, 2>& U1, SpColVector<GpGradProd, 2>& U2, doublereal dCoef, SpFunctionCall func) const
      {
-          oBound_gradp.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          oBound_gradp.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
      }
 
      doublereal CylindricalMeshAtShaft::dGetMeshRadius() const
@@ -17141,11 +17763,10 @@ namespace {
                                                      doublereal& dh_dt,
                                                      SpColVector<doublereal, 2>& U1,
                                                      SpColVector<doublereal, 2>& U2,
-                                                     SpColVector<doublereal, 2>& U,
                                                      doublereal dCoef,
                                                      SpFunctionCall func) const
      {
-          oBound.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          oBound.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
      }
 
      void
@@ -17154,11 +17775,10 @@ namespace {
                                                      SpGradient& dh_dt,
                                                      SpColVector<SpGradient, 2>& U1,
                                                      SpColVector<SpGradient, 2>& U2,
-                                                     SpColVector<SpGradient, 2>& U,
                                                      doublereal dCoef,
                                                      SpFunctionCall func) const
      {
-          oBound_grad.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          oBound_grad.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
      }
 
      void
@@ -17167,11 +17787,10 @@ namespace {
                                                      GpGradProd& dh_dt,
                                                      SpColVector<GpGradProd, 2>& U1,
                                                      SpColVector<GpGradProd, 2>& U2,
-                                                     SpColVector<GpGradProd, 2>& U,
                                                      doublereal dCoef,
                                                      SpFunctionCall func) const
      {
-          oBound_gradp.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, U, dCoef, func);
+          oBound_gradp.GetBoundaryConditions(pNode, h, dh_dt, U1, U2, dCoef, func);
      }
 
      void
@@ -17581,7 +18200,6 @@ namespace {
                                                                   T& dh_dt,
                                                                   SpColVector<T, 2>& U1,
                                                                   SpColVector<T, 2>& U2,
-                                                                  SpColVector<T, 2>& U,
                                                                   doublereal dCoef,
                                                                   SpFunctionCall func) const
      {
@@ -17656,7 +18274,10 @@ namespace {
                pPocket1->GetHeightDerZ(x1, dDeltay1_dz1);
           }
 
-          const T h0 = oDofMap.MapEval(a0 - r - Deltay1);
+          const doublereal DeltaH = rParent.dGetClearanceVariation();
+          const doublereal DeltaHDot = rParent.dGetClearanceVariationDot();
+
+          const T h0 = oDofMap.MapEval(a0 - r - Deltay1 + DeltaH);
           h = h0 + w;
 
           const SpColVector<T, 3> v1{oDofMap.MapEval((r + Deltay1) * cos_Phi1),
@@ -17670,7 +18291,7 @@ namespace {
           const T& dz1_dt = db_dt(3);
           const T dDeltay1_dt = oDofMap.MapEval(dDeltay1_dx1 * dx1_dt + dDeltay1_dz1 * dz1_dt);
 
-          dh_dt = oDofMap.MapEval((b(1) * db_dt(1) + b(2) * db_dt(2)) / a0 - dDeltay1_dt + dw_dt);
+          dh_dt = oDofMap.MapEval((b(1) * db_dt(1) + b(2) * db_dt(2)) / a0 - dDeltay1_dt + dw_dt + DeltaHDot);
 
           const SpColVector<T, 3> vh{oDofMap.MapEval(h0 * cos_Phi1),
                                      oDofMap.MapEval(h0 * sin_Phi1),
@@ -17688,8 +18309,6 @@ namespace {
 
           U1.MapAssign(Transpose(SubMatrix<1, 1, 3, 1, 2, 2>(Rbt2)) * Delta_dP_dt_R2, oDofMap);
           U2.ResizeReset(2, 0);
-
-          U.MapAssign((U1 - U2) * 0.5, oDofMap);
      }
 
      template <typename T>
@@ -18025,12 +18644,9 @@ namespace {
 
      PenaltyCM::PenaltyCM(HydroMesh* pMesh_a, doublereal href_a)
           :ContactModel(pMesh_a),
-           a(0.),
-           b(0.),
-           c(0.),
-           h0(0.),
-           h1(0.),
-           href(href_a)
+           k(0.),
+           sigmaDelta(0.),
+           plim(std::numeric_limits<doublereal>::max())
      {
 
      }
@@ -18044,54 +18660,25 @@ namespace {
      {
           ContactModel::ParseInput(HP);
 
-          doublereal dDefScale = 1;
-
-          if (HP.IsKeyWord("reference" "gap" "height")) {
-               dDefScale = HP.GetReal();
-          } else {
-               dDefScale = href;
-          }
-
-          const doublereal Ered = GetMaterial(0).dGetReducedModulus(GetMaterial(1));
-
-          if (HP.IsKeyWord("compliance" "factor")) {
-               b = Ered / (HP.GetReal() * dDefScale);
-          } else {
+          if (!HP.IsKeyWord("sigma")) {
                silent_cerr("hydrodynamic plain bearing2("
                            << pGetMesh()->pGetParent()->GetLabel()
-                           << "): keyword \"compliance factor\" expected at line "
+                           << "): keyword \"sigma\" expected at line "
                            << HP.GetLineData() << std::endl);
-
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
           }
 
-          if (b < 0.) {
-               silent_cerr("hydrodynamic plain bearing2("
-                           << pGetMesh()->pGetParent()->GetLabel()
-                           << "): \"stiffness coefficient\" must not be negative "
-                           << HP.GetLineData() << std::endl);
+          sigmaDelta = HP.GetReal();
 
-               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          const doublereal K = HP.IsKeyWord("elastic" "factor") ? HP.GetReal() : 3e-3;
+
+          const doublereal E = GetMaterial(0).dGetReducedModulus(GetMaterial(1));
+
+          if (HP.IsKeyWord("yield" "pressure")) {
+               plim = HP.GetReal();
           }
 
-          if (HP.IsKeyWord("transition" "region")) {
-               h0 = HP.GetReal() * dDefScale;
-
-               if (h0 < 0.) {
-                    silent_cerr("hydrodynamic plain bearing2("
-                                << pGetMesh()->pGetParent()->GetLabel()
-                                << "): \"transition region\" must not be negative "
-                                << HP.GetLineData() << std::endl);
-
-                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-               }
-          }
-
-          if (HP.IsKeyWord("offset")) {
-               h1 = HP.GetReal() * dDefScale;
-          }
-
-          h0 += h1;
+          k = 4.4086e-5 * K * E;
      }
 
      bool PenaltyCM::GetContactPressure(const doublereal h, doublereal& pasp) const
@@ -18112,12 +18699,13 @@ namespace {
      template <typename T>
      bool PenaltyCM::ContactPressureTpl(const T& h, T& pasp) const
      {
-          if (h <= h0) {
-               if (h <= h1) {
-                    pasp = b * (h1 - h) + c;
-               } else {
-                    const T dh = h0 - h;
-                    pasp = a * dh * dh;
+          const T H = h / sigmaDelta;
+
+          if (H <= 4.) {
+               pasp = k * pow(4 - H, 6.804);
+
+               if (pasp > plim) {
+                    SpGradientTraits<T>::ResizeReset(pasp, plim, 0);
                }
 
                return true;
@@ -18720,8 +19308,9 @@ namespace {
           dA = dx * dz;
      }
 
-     LinFD5ReynoldsElem::LinFD5ReynoldsElem(HydroMesh* pMesh_a)
-          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM)
+     LinFD5ReynoldsElem::LinFD5ReynoldsElem(HydroMesh* pMesh_a, const FlowFactorModel* pFlowFactors_a)
+          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM),
+           pFlowFactors(pFlowFactors_a)
      {
 
 #if MBDYN_ENABLE_PROFILE
@@ -18884,6 +19473,9 @@ namespace {
 
           pGeometry->GetNonNegativeClearance(h, h, &dh_dt, &dh_dt);
 
+          const T hT = pFlowFactors->AverageClearance(h);
+          const T dhT_dt = pFlowFactors->AverageClearanceDeriv(h, dh_dt);
+
           HYDRO_DUMP_VAR(pGetMesh()->pGetParent(), h);
           HYDRO_DUMP_VAR(pGetMesh()->pGetParent(), dh_dt);
           HYDRO_DUMP_VAR(pGetMesh()->pGetParent(), rho);
@@ -18897,7 +19489,7 @@ namespace {
 
           const T Re = EvalUnique(((mdot[iNodeFlxEast] - mdot[iNodeFlxWest]) / dx
                                    + (mdot[iNodeFlzNorth] - mdot[iNodeFlzSouth]) / dz
-                                   + (drho_dt * h + rho * dh_dt))
+                                   + (drho_dt * hT + rho * dhT_dt))
                                   * dEquationScale);
 
           HYDRO_DUMP_VAR(pGetMesh()->pGetParent(), Re);
@@ -19022,12 +19614,13 @@ namespace {
           WorkVec.AddItem(iFirstIndex, dm_dt);
      }
 
-     LinFD4FrictionElem::LinFD4FrictionElem(HydroMesh* pMesh_a)
+     LinFD4FrictionElem::LinFD4FrictionElem(HydroMesh* pMesh_a, const FlowFactorModel* pFlowFactors_a)
           :LinFD4Elem(pMesh_a, FRICTION_ELEM),
            xc(2, 0),
            vc(3, 0),
            Rtc(3, 3, 0),
-           dScaleEnergy(0.)
+           dScaleEnergy(0.),
+           pFlowFactors(pFlowFactors_a)
      {
 
 #if MBDYN_ENABLE_PROFILE
@@ -19263,21 +19856,27 @@ namespace {
 
           pGeometry->GetNonNegativeClearance(h, h);
 
-          const T tau_xy_p_h = oDofMap.MapEval(0.5 * h * dp_dx);
+          const T Phi_f = pFlowFactors->ShearStressFactorF(h);
+          const T Phi_fs_xy = pFlowFactors->ShearStressFactorFS(h, FlowFactorModel::DIR_X);
+          const T Phi_fs_yz = pFlowFactors->ShearStressFactorFS(h, FlowFactorModel::DIR_Z);
+          const T Phi_fp_xy = pFlowFactors->ShearStressFactorFP(h, FlowFactorModel::DIR_X);
+          const T Phi_fp_yz = pFlowFactors->ShearStressFactorFP(h, FlowFactorModel::DIR_Z);
+
+          const T tau_xy_p_h = oDofMap.MapEval(0.5 * h * dp_dx * Phi_fp_xy);
 
           const T tau_xy_U_h = oDofMap.MapEval(eta * U(1) / h);
 
-          const T tau_yz_p_h = oDofMap.MapEval(0.5 * h * dp_dz);
+          const T tau_yz_p_h = oDofMap.MapEval(0.5 * h * dp_dz * Phi_fp_yz);
 
           const T tau_yz_U_h = oDofMap.MapEval(eta * U(2) / h);
 
-          const T tau_xy_0 = oDofMap.MapEval(-tau_xy_p_h + tau_xy_U_h);
+          const T tau_xy_0 = oDofMap.MapEval(-tau_xy_p_h + tau_xy_U_h * (Phi_f + Phi_fs_xy));
 
-          const T tau_yz_0 = oDofMap.MapEval(-tau_yz_p_h + tau_yz_U_h);
+          const T tau_yz_0 = oDofMap.MapEval(-tau_yz_p_h + tau_yz_U_h * (Phi_f + Phi_fs_yz));
 
-          const T tau_xy_h = oDofMap.MapEval(tau_xy_p_h + tau_xy_U_h);
+          const T tau_xy_h = oDofMap.MapEval(tau_xy_p_h + tau_xy_U_h * (Phi_f - Phi_fs_xy));
 
-          const T tau_yz_h = oDofMap.MapEval(tau_yz_p_h + tau_yz_U_h);
+          const T tau_yz_h = oDofMap.MapEval(tau_yz_p_h + tau_yz_U_h * (Phi_f - Phi_fs_yz));
 
           for (index_type i = 0; i < iNumNodes; ++i) {
                SetStress(rgHydroNodes[i], tau_xy_0, tau_yz_0, tau_xy_h, tau_yz_h);
@@ -19538,8 +20137,9 @@ namespace {
           rgFluxNodes[iNode] = pFluxNode;
      }
 
-     LinFD5ComprReynoldsElem::LinFD5ComprReynoldsElem(HydroMesh* pMesh_a)
-          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM)
+     LinFD5ComprReynoldsElem::LinFD5ComprReynoldsElem(HydroMesh* pMesh_a, const FlowFactorModel* pFlowFactors_a)
+          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM),
+           pFlowFactors(pFlowFactors_a)
      {
 
      }
@@ -19674,6 +20274,9 @@ namespace {
           rgHydroNodes[iNodeCenter]->GetClearanceDerTime(dh_dt);
           pGetMesh()->pGetGeometry()->GetNonNegativeClearance(h, h, &dh_dt, &dh_dt);
 
+          const G hT = pFlowFactors->AverageClearance(h);
+          const G dhT_dt = pFlowFactors->AverageClearanceDeriv(h, dh_dt);
+
           if (func & SpFunctionCall::REGULAR_FLAG) {
                rgHydroNodes[iNodeCenter]->GetDensityDerTime(drho_dt, dCoef);
           } else {
@@ -19682,7 +20285,7 @@ namespace {
 
           const G Re = ((mdot[iNodeFlxEast] - mdot[iNodeFlxWest]) / dx
                         + (mdot[iNodeFlzNorth] - mdot[iNodeFlzSouth]) / dz
-                        + (drho_dt * h + rho * dh_dt)) * dEquationScaleReynolds;
+                        + (drho_dt * hT + rho * dhT_dt)) * dEquationScaleReynolds;
 
           if (bSetMaxTimeStep) {
                SetMaxTimeStep(w);
@@ -19732,8 +20335,9 @@ namespace {
           }
      }
 
-     LinFD5ComprReynoldsElemMCP::LinFD5ComprReynoldsElemMCP(HydroMesh* pMesh_a)
-          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM)
+     LinFD5ComprReynoldsElemMCP::LinFD5ComprReynoldsElemMCP(HydroMesh* pMesh_a, const FlowFactorModel* pFlowFactors_a)
+          :LinFD5Elem(pMesh_a, REYNOLDS_ELEM),
+           pFlowFactors(pFlowFactors_a)
      {
 
      }
@@ -19868,6 +20472,9 @@ namespace {
           rgHydroNodes[iNodeCenter]->GetClearanceDerTime(dh_dt);
           pGetMesh()->pGetGeometry()->GetNonNegativeClearance(h, h, &dh_dt, &dh_dt);
 
+          const G hT = pFlowFactors->AverageClearance(h);
+          const G dhT_dt = pFlowFactors->AverageClearanceDeriv(h, dh_dt);
+
           if (bRegularFlag) {
                rgHydroNodes[iNodeCenter]->GetDensityDerTime(drho_dt, dCoef);
           } else {
@@ -19876,7 +20483,7 @@ namespace {
 
           const G Re = ((mdot[iNodeFlxEast] - mdot[iNodeFlxWest]) / dx
                         + (mdot[iNodeFlzNorth] - mdot[iNodeFlzSouth]) / dz
-                        + (drho_dt * h + rho * dh_dt)) * dEquationScale;
+                        + (drho_dt * hT + rho * dhT_dt)) * dEquationScale;
 
           if (bSetMaxTimeStep) {
                SetMaxTimeStep(w);
@@ -21011,12 +21618,12 @@ namespace {
           for (index_type i = 1; i <= iNumNodes; ++i) {
                rgNodes[i - 1]->GetPressure(pe(i), dCoef);
 
-               SpColVectorA<T, 2> Ui;
+               SpColVectorA<T, 2> U1, U2;
 
-               rgNodes[i - 1]->GetHydraulicVelocity(Ui);
+               rgNodes[i - 1]->GetVelocity(U1, U2);
 
                for (index_type j = 1; j <= 2; ++j) {
-                    Ue(i, j) = Ui(j);
+                    Ue(i, j) = 0.5 * (U1(j) + U2(j));
                }
 
                rgNodes[i - 1]->GetClearance(he(i));
@@ -21589,12 +22196,12 @@ namespace {
      {
           const BearingGeometry* const pGeometry = pGetMesh()->pGetGeometry();
           SpColVector<T, iNumNodes> pe(iNumNodes, 1), he(iNumNodes, 1);
-          std::array<SpColVectorA<T, 2, 12>, iNumNodes> Ue;
+          std::array<SpColVectorA<T, 2, 12>, iNumNodes> U1e, U2e;
           SpColVector<doublereal, iNumNodes> etae(iNumNodes, 1), rhoe(iNumNodes, 1);
 
           for (index_type i = 1; i <= iNumNodes; ++i) {
                pGetMesh()->GetPressure(rgNodes[i - 1], pe(i), dCoef);
-               rgNodes[i - 1]->GetHydraulicVelocity(Ue[i - 1]);
+               rgNodes[i - 1]->GetVelocity(U1e[i - 1], U2e[i - 1]);
                rgNodes[i - 1]->GetClearance(he(i));
                rgNodes[i - 1]->GetViscosity(etae(i), dCoef);
                rgNodes[i - 1]->GetDensity(rhoe(i), dCoef);
@@ -21604,8 +22211,12 @@ namespace {
 
           oDofMap.GetDofStat(pe);
 
-          for (const auto& Uei: Ue) {
-               oDofMap.GetDofStat(Uei);
+          for (const auto& U1ei: U1e) {
+               oDofMap.GetDofStat(U1ei);
+          }
+
+          for (const auto& U2ei: U2e) {
+               oDofMap.GetDofStat(U2ei);
           }
 
           oDofMap.GetDofStat(he);
@@ -21614,8 +22225,12 @@ namespace {
 
           oDofMap.InsertDof(pe);
 
-          for (const auto& Uei: Ue) {
-               oDofMap.InsertDof(Uei);
+          for (const auto& U1ei: U1e) {
+               oDofMap.InsertDof(U1ei);
+          }
+
+          for (const auto& U2ei: U2e) {
+               oDofMap.InsertDof(U2ei);
           }
 
           oDofMap.InsertDof(he);
@@ -21644,7 +22259,7 @@ namespace {
                T Uz{0.};
 
                for (index_type l = 1; l <= iNumNodes; ++l) {
-                    oDofMap.Add(Uz, N(l) * Ue[l - 1](2));
+                    oDofMap.Add(Uz, N(l) * 0.5 * (U1e[l - 1](2) + U2e[l - 1](2)));
                }
 
                oDofMap.Sub(mdotz, (rho * dx / iNumNodesOutletBound) * h * (Uz - h * h * dp_dz / (12. * eta)));
@@ -22870,9 +23485,9 @@ namespace {
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
           }
 
-          if (HP.IsKeyWord("at" "shaft")) {
+          if (HP.IsKeyWord("at" "shaft") || HP.IsKeyWord("at" "journal")) {
                pGeometry.reset(new CylindricalMeshAtShaft(pGetParent()));
-          } else if (HP.IsKeyWord("at" "bearing")) {
+          } else if (HP.IsKeyWord("at" "bearing") || HP.IsKeyWord("at" "shell")) {
                pGeometry.reset(new CylindricalMeshAtBearing(pGetParent()));
           } else {
                silent_cerr("hydrodynamic plain bearing2("
@@ -23596,6 +24211,96 @@ namespace {
                bEnableMCP = HP.GetYesNoOrBool();
           }
 
+          if (HP.IsKeyWord("flow" "factors")) {
+               if (HP.IsKeyWord("patir" "cheng")) {
+                    PatirCheng::Tables tables = PatirCheng::ORIGINAL;
+
+                    if (HP.IsKeyWord("original")) {
+                         tables = PatirCheng::ORIGINAL;
+                    } else if (HP.IsKeyWord("replicated")) {
+                         tables = PatirCheng::REPLICATED;
+                    }
+
+                    if (!HP.IsKeyWord("sigma")) {
+                         silent_cerr("hydrodynamic plain bearing2("
+                                     << pGetParent()->GetLabel()
+                                     << "): keywords \"sigma\" expected at line "
+                                     << HP.GetLineData() << std::endl);
+                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                    }
+
+                    std::array<doublereal, PatirCheng::SURFACE_COUNT> sigma;
+
+                    for (index_type i = PatirCheng::SURFACE_1; i <= PatirCheng::SURFACE_2; ++i) {
+                         sigma[i] = HP.GetReal();
+
+                         if (sigma[i] <= 0.) {
+                              silent_cerr("hydrodynamic plain bearing2("
+                                     << pGetParent()->GetLabel()
+                                     << "): sigma must be greater than zero at line "
+                                     << HP.GetLineData() << std::endl);
+                              throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                         }
+                    }
+
+                    if (!HP.IsKeyWord("lambdax")) {
+                         silent_cerr("hydrodynamic plain bearing2("
+                                     << pGetParent()->GetLabel()
+                                     << "): keyword \"lambdax\" expected at line "
+                                     << HP.GetLineData() << std::endl);
+                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                    }
+
+                    std::array<doublereal, PatirCheng::SURFACE_COUNT> lambdax;
+
+                    for (index_type i = PatirCheng::SURFACE_1; i <= PatirCheng::SURFACE_2; ++i) {
+                         lambdax[i] = HP.GetReal();
+
+                         if (lambdax[i] <= 0.) {
+                              silent_cerr("hydrodynamic plain bearing2("
+                                          << pGetParent()->GetLabel()
+                                          << "): lambdax must be greater than zero at line "
+                                          << HP.GetLineData() << std::endl);
+                              throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                         }
+                    }
+
+                    if (!HP.IsKeyWord("lambdaz")) {
+                         silent_cerr("hydrodynamic plain bearing2("
+                                     << pGetParent()->GetLabel()
+                                     << "): keyword \"lambdaz\" expected at line "
+                                     << HP.GetLineData() << std::endl);
+                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                    }
+
+                    std::array<doublereal, PatirCheng::SURFACE_COUNT> lambdaz;
+
+                    for (index_type i = PatirCheng::SURFACE_1; i <= PatirCheng::SURFACE_2; ++i) {
+                         lambdaz[i] = HP.GetReal();
+
+                         if (lambdaz[i] <= 0.) {
+                              silent_cerr("hydrodynamic plain bearing2("
+                                          << pGetParent()->GetLabel()
+                                          << "): lambdaz must be greater than zero at line "
+                                          << HP.GetLineData() << std::endl);
+                              throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                         }
+                    }
+
+                    pFlowFactors.reset(new PatirCheng(sigma, lambdax, lambdaz, tables));
+               } else {
+                    silent_cerr("hydrodynamic plain bearing2("
+                                << pGetParent()->GetLabel()
+                                << "): keywords \"patir cheng\" expected at line "
+                                << HP.GetLineData() << std::endl);
+                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+               }
+          }
+
+          if (!pFlowFactors) {
+               pFlowFactors.reset(new PerfectlySmoothSurface);
+          }
+
           ParseStepIntegrator(pDM, HP);
 
           if (HP.IsKeyWord("line" "search" "control")) {
@@ -23603,6 +24308,8 @@ namespace {
           }
 
           ParseGeometry(pDM, HP);
+
+          pFlowFactors->SetMinClearance(pGeometry.get()); // override the default
 
           enum GridSpacing {
                UNIFORM,
@@ -24183,8 +24890,8 @@ namespace {
                                                                  this,
                                                                  rgNodesFlux,
                                                                  FluxNode::PRESSURE_FROM_NODE,
-                                                                 eFluxData)};
-
+                                                                 eFluxData,
+                                                                 pFlowFactors.get())};
                     pGetParent()->AddNode(std::move(pNode));
                }
           }
@@ -24202,7 +24909,8 @@ namespace {
                                                                  this,
                                                                  rgNodesFlux,
                                                                  FluxNode::PRESSURE_FROM_NODE,
-                                                                 eFluxData)};
+                                                                 eFluxData,
+                                                                 pFlowFactors.get())};
 
                     pGetParent()->AddNode(std::move(pNode));
                }
@@ -24328,11 +25036,11 @@ namespace {
                     std::unique_ptr<LinFD5Elem> pElement;
 
                     if (typeid(*pCenterNode) == typeid(HydroActiveNode)) {
-                         pElement.reset(new LinFD5ReynoldsElem(this));
+                         pElement.reset(new LinFD5ReynoldsElem(this, pFlowFactors.get()));
                     } else if (typeid(*pCenterNode) == typeid(HydroActiveComprNode)) {
-                         pElement.reset(new LinFD5ComprReynoldsElem(this));
+                         pElement.reset(new LinFD5ComprReynoldsElem(this, pFlowFactors.get()));
                     } else if (typeid(*pCenterNode) == typeid(HydroActiveComprNodeMCP)) {
-                         pElement.reset(new LinFD5ComprReynoldsElemMCP(this));
+                         pElement.reset(new LinFD5ComprReynoldsElemMCP(this, pFlowFactors.get()));
                     } else if (typeid(*pCenterNode) == typeid(HydroCoupledNode) ||
                                typeid(*pCenterNode) == typeid(HydroCoupledComprNode)) {
                          if (bThermalModel) {
@@ -24369,7 +25077,7 @@ namespace {
 
           for (integer i = 0; i <= M - 1; ++i) {
                for (integer j = 1; j <= N - 1; ++j) {
-                    std::unique_ptr<HydroElement> pElement{new LinFD4FrictionElem(this)};
+                    std::unique_ptr<HydroElement> pElement{new LinFD4FrictionElem(this, pFlowFactors.get())};
 
                     pElement->SetNode(LinFD4Elem::iNode1NE, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j + 1)));
                     pElement->SetNode(LinFD4Elem::iNode2NW, pGetParent()->pGetNode<HydroNode>(iGetNodeIndexHydro(i + 1, j)));
@@ -25175,6 +25883,182 @@ bool hydrodynamic_plain_bearing2_set(void)
      return true;
 }
 
+#ifdef USE_GTEST
+MBDYN_TESTSUITE_TEST(module_hydrodynamic_plain_bearing2, PatirCheng)
+{
+     static constexpr doublereal H[] = {1., 2., 3., 5.};
+     static constexpr doublereal gamma[7] = {1./9., 1./6., 1./3., 1., 3., 6., 9.};
+
+     static constexpr doublereal PhiP_ref[7][4] = {
+          {0.0275707066737160, 0.3610684253249620, 0.5801920407803398, 0.8187644861855867},
+          {0.0932753886552218, 0.4042394776678701, 0.6085574434303169, 0.8310101290108850},
+          {0.2246847526182331, 0.4905815823536860, 0.6652882487302709, 0.8555014146614813},
+          {0.4859118425360666, 0.7063481848392645, 0.8322634215645310, 0.9452709436373038},
+          {1.2250000000000001, 1.0795495128834867, 1.0433012701892219, 1.0201246117974980},
+          {1.5200000000000000, 1.1838477631085023, 1.1000740466595351, 1.0465102139319957},
+          {1.8700000000000001, 1.3075914498161483, 1.1674315780649915, 1.0778151656169928},
+     };
+
+     static constexpr doublereal PhiS_ref[7][4] = {
+          {0.9664619669081159, 1.0535985653240127, 0.8836735523999566, 0.5317707143830118},
+          {0.9360975022522694, 1.0025666042516324, 0.8356592312692402, 0.5026592904163718},
+          {0.8953869035875962, 0.9227280663355980, 0.7551031262104753, 0.4471026502790781},
+          {0.7955889920212664, 0.7265933356364209, 0.5532017447493206, 0.3225737734624399},
+          {0.5459028886134025, 0.4040813437944139, 0.2748599088797391, 0.1592480940055332},
+          {0.4698424836472651, 0.3086317286037329, 0.1990462313988602, 0.1110798156769180},
+          {0.3756640346232881, 0.2381723798345648, 0.1517062150558541, 0.0845879390251975},
+     };
+
+     static constexpr doublereal PhiFS_ref[7][4] = {
+          {1.5623245329089082, 1.1553292748054464, 0.5157025695054851, 0.0897522378958125},
+          {1.4847623220552744, 1.0753765549423573, 0.4742106937500176, 0.0812759157988195},
+          {1.3628788478567071, 0.9209962828554392, 0.3899954416859034, 0.0635133740198034},
+          {1.1467651989224121, 0.7320657807921556, 0.2996139384594396, 0.0485455224538633},
+          {0.7134680557088691, 0.3541493868673323, 0.1318962085149514, 0.0274227501857141},
+          {0.6653350197066701, 0.2988291062797106, 0.1007022710732430, 0.0171419042335598},
+          {0.5343645610605010, 0.2087932948794515, 0.0629974799803195, 0.0088584323772829},
+     };
+
+     static constexpr doublereal PhiFP_ref[7][4] = {
+          {0.1022739725650065, 0.4662834302422419, 0.6826945324868452, 0.8878468968963559},
+          {0.1200501389152756, 0.4872107562761420, 0.7011729643837419, 0.8985196757629779},
+          {0.1769494011488590, 0.5391753141025701, 0.7419850110930145, 0.9191158665170813},
+          {0.2764081317116212, 0.6260105772478095, 0.8067030677647501, 0.9483635656382640},
+          {0.5552321006232913, 0.7981444037592142, 0.9083888882475027, 0.9811303922601208},
+          {0.6095515026873731, 0.8428350215941357, 0.9367372890219163, 0.9897498117476630},
+          {0.7061573164554458, 0.8817212018182671, 0.9523899185422670, 0.9922859407997876},
+     };
+
+     constexpr size_t M = sizeof(H) / sizeof(H[0]);
+     constexpr size_t N = sizeof(gamma) / sizeof(gamma[0]);
+
+     for (size_t i = 0; i < N; ++i)
+     {
+          constexpr std::array<doublereal, 2> sigma{1., 1e-16};
+          const std::array<doublereal, 2> lambdax{gamma[i], 1.}, lambdaz{1., 1.};
+          const PatirCheng oPatirCheng(sigma, lambdax, lambdaz);
+
+          for (size_t j = 0; j < M; ++j) {
+               const doublereal PhiP_x = oPatirCheng.PressureFlowFactor(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiS_x = oPatirCheng.ShearFlowFactor(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiFP_x = oPatirCheng.ShearStressFactorFP(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiFS_x = oPatirCheng.ShearStressFactorFS(H[j], FlowFactorModel::DIR_X);
+
+               constexpr doublereal tol = 1e-3;
+
+               EXPECT_NEAR(PhiP_x, PhiP_ref[i][j], tol);
+               EXPECT_NEAR(PhiS_x, PhiS_ref[i][j], tol);
+               EXPECT_NEAR(PhiFP_x, PhiFP_ref[i][j], tol);
+               EXPECT_NEAR(PhiFS_x, PhiFS_ref[i][j], tol);
+          }
+     }
+
+     for (size_t i = 0; i < N; ++i)
+     {
+          constexpr std::array<doublereal, 2> sigma{1e-16, 1.};
+          const std::array<doublereal, 2> lambdax{1., gamma[i]}, lambdaz{1., 1.};
+          const PatirCheng oPatirCheng(sigma, lambdax, lambdaz);
+
+          for (size_t j = 0; j < M; ++j) {
+               const doublereal PhiP_x = oPatirCheng.PressureFlowFactor(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiS_x = oPatirCheng.ShearFlowFactor(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiFP_x = oPatirCheng.ShearStressFactorFP(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiFS_x = oPatirCheng.ShearStressFactorFS(H[j], FlowFactorModel::DIR_X);
+
+               constexpr doublereal tol = 1e-3;
+
+               EXPECT_NEAR(PhiP_x, PhiP_ref[i][j], tol);
+               EXPECT_NEAR(PhiS_x, -PhiS_ref[i][j], tol);
+               EXPECT_NEAR(PhiFP_x, PhiFP_ref[i][j], tol);
+               EXPECT_NEAR(PhiFS_x, -PhiFS_ref[i][j], tol);
+          }
+     }
+
+     for (size_t i = 0; i < N; ++i)
+     {
+          constexpr std::array<doublereal, 2> sigma{1 / sqrt(2.), 1. / sqrt(2.)};
+          const std::array<doublereal, 2> lambdax{gamma[i], gamma[i]}, lambdaz{1., 1.};
+          const PatirCheng oPatirCheng(sigma, lambdax, lambdaz);
+
+          for (size_t j = 0; j < M; ++j) {
+               const doublereal PhiP_x = oPatirCheng.PressureFlowFactor(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiS_x = oPatirCheng.ShearFlowFactor(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiFP_x = oPatirCheng.ShearStressFactorFP(H[j], FlowFactorModel::DIR_X);
+               const doublereal PhiFS_x = oPatirCheng.ShearStressFactorFS(H[j], FlowFactorModel::DIR_X);
+
+               constexpr doublereal tol = 1e-3;
+
+               EXPECT_NEAR(PhiP_x, PhiP_ref[i][j], tol);
+               EXPECT_NEAR(PhiS_x, 0., tol);
+               EXPECT_NEAR(PhiFP_x, PhiFP_ref[i][j], tol);
+               EXPECT_NEAR(PhiFS_x, 0., tol);
+          }
+     }
+
+     for (size_t i = 0; i < N; ++i)
+     {
+          constexpr std::array<doublereal, 2> sigma{1., 1e-16};
+          const std::array<doublereal, 2> lambdax{1., 1.}, lambdaz{gamma[i], 1.};
+          const PatirCheng oPatirCheng(sigma, lambdax, lambdaz);
+
+          for (size_t j = 0; j < M; ++j) {
+               const doublereal PhiP_z = oPatirCheng.PressureFlowFactor(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiS_z = oPatirCheng.ShearFlowFactor(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiFP_z = oPatirCheng.ShearStressFactorFP(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiFS_z = oPatirCheng.ShearStressFactorFS(H[j], FlowFactorModel::DIR_Z);
+
+               constexpr doublereal tol = 1e-3;
+
+               EXPECT_NEAR(PhiP_z, PhiP_ref[i][j], tol);
+               EXPECT_NEAR(PhiS_z, PhiS_ref[i][j], tol);
+               EXPECT_NEAR(PhiFP_z, PhiFP_ref[i][j], tol);
+               EXPECT_NEAR(PhiFS_z, PhiFS_ref[i][j], tol);
+          }
+     }
+
+     for (size_t i = 0; i < N; ++i)
+     {
+          constexpr std::array<doublereal, 2> sigma{1e-16, 1.};
+          const std::array<doublereal, 2> lambdax{1., 1.}, lambdaz{1., gamma[i]};
+          const PatirCheng oPatirCheng(sigma, lambdax, lambdaz);
+
+          for (size_t j = 0; j < M; ++j) {
+               const doublereal PhiP_z = oPatirCheng.PressureFlowFactor(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiS_z = oPatirCheng.ShearFlowFactor(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiFP_z = oPatirCheng.ShearStressFactorFP(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiFS_z = oPatirCheng.ShearStressFactorFS(H[j], FlowFactorModel::DIR_Z);
+
+               constexpr doublereal tol = 1e-3;
+
+               EXPECT_NEAR(PhiP_z, PhiP_ref[i][j], tol);
+               EXPECT_NEAR(PhiS_z, -PhiS_ref[i][j], tol);
+               EXPECT_NEAR(PhiFP_z, PhiFP_ref[i][j], tol);
+               EXPECT_NEAR(PhiFS_z, -PhiFS_ref[i][j], tol);
+          }
+     }
+
+     for (size_t i = 0; i < N; ++i)
+     {
+          constexpr std::array<doublereal, 2> sigma{1. / sqrt(2.), 1. / sqrt(2.)};
+          const std::array<doublereal, 2> lambdax{1., 1.}, lambdaz{gamma[i], gamma[i]};
+          const PatirCheng oPatirCheng(sigma, lambdax, lambdaz);
+
+          for (size_t j = 0; j < M; ++j) {
+               const doublereal PhiP_z = oPatirCheng.PressureFlowFactor(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiS_z = oPatirCheng.ShearFlowFactor(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiFP_z = oPatirCheng.ShearStressFactorFP(H[j], FlowFactorModel::DIR_Z);
+               const doublereal PhiFS_z = oPatirCheng.ShearStressFactorFS(H[j], FlowFactorModel::DIR_Z);
+
+               constexpr doublereal tol = 1e-3;
+
+               EXPECT_NEAR(PhiP_z, PhiP_ref[i][j], tol);
+               EXPECT_NEAR(PhiS_z, 0., tol);
+               EXPECT_NEAR(PhiFP_z, PhiFP_ref[i][j], tol);
+               EXPECT_NEAR(PhiFS_z, 0., tol);
+          }
+     }
+}
+#endif
 #ifndef STATIC_MODULES
 
 extern "C"

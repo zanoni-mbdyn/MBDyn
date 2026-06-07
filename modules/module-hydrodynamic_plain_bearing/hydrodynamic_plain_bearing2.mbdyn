@@ -55,9 +55,9 @@ begin: initial value;
         derivatives max iterations: 20;
         derivatives coefficient: 1e-5, auto;
 
-        set: bool enable_mcp = TRUE;
-        linear solver: umfpack, grad, scale, row max column max, always, max iterations, 10;
-        nonlinear solver: mcp newton min fb, print convergence info, no, lambda min, 0., tolerance x, 1e-7;
+        ## set: bool enable_mcp = TRUE;
+        ## linear solver: umfpack, grad, scale, row max column max, always, max iterations, 10;
+        ## nonlinear solver: mcp newton min fb, print convergence info, no, lambda min, 0., tolerance x, 1e-7;
 
         ## set: bool enable_mcp = TRUE;
         ## linear solver: siconos dense;
@@ -71,26 +71,26 @@ begin: initial value;
         ## linear solver: siconos dense;
         ## nonlinear solver: siconos mcp newton min fb, lambda min, 1e-16;
 
-        ## set: bool enable_mcp = FALSE;
-        ## linear solver: umfpack, grad;
+        set: bool enable_mcp = FALSE;
+        linear solver: umfpack, grad;
 
-        ## nonlinear solver: nox,
-        ## modified, 100,
-        ## keep jacobian matrix,
-        ## inner iterations before assembly, 10,
-        ## jacobian operator, newton krylov,
-        ## solver, line search based,
-        ## linesearch method, backtrack,
-        ## direction, newton,
-        ## forcing term, type 2,
-        ## print convergence info, no,
-        ## verbose, yes,
-        ## minimum step, 1e-12,
-        ## recovery step, 1e-6,
-        ## linear solver tolerance, 1e-12,
-        ## linear solver max iterations, 30,
-        ## krylov subspace size, 30,
-        ## verbose, yes;
+        nonlinear solver: nox,
+        modified, 100,
+        keep jacobian matrix,
+        inner iterations before assembly, 10,
+        jacobian operator, newton krylov,
+        solver, line search based,
+        linesearch method, backtrack,
+        direction, newton,
+        forcing term, type 2,
+        print convergence info, no,
+        verbose, yes,
+        minimum step, 1e-12,
+        recovery step, 1e-6,
+        linear solver tolerance, 1e-12,
+        linear solver max iterations, 30,
+        krylov subspace size, 30,
+        verbose, yes;
 
         threads: assembly, 1;
         threads: solver, 1;
@@ -699,116 +699,16 @@ begin: elements;
                 null,
                 orientation, reference, (5004), eye;
 
-    ## hydraulic fluid: (6001), incompressible,
-    ##     density, (950),
-    ##     viscosity, (0.0015/4.),
-    ##     pressure, (10000);
-
-    hydraulic fluid: (6001), linear compressible,
-        density, (950),
-        1.,
-        0.,
-        viscosity, (0.0015);
-
-    user defined: (7001),
-        hydrodynamic plain bearing2,
-            hydraulic fluid, reference, (6001),
-            viscosity vapor, (1.5e-06),
-            ##mesh, quadratic finite element,
-            mesh, linear finite difference,
-            enable mcp, enable_mcp,
-            flow factors, patir cheng, replicated, sigma, 2.060E-07, 4.170E-07, lambdax, 3., 3., lambdaz, 1., 1.,
-            pressure step integrator, implicit euler,
-            density step integrator, implicit euler,
-            geometry, cylindrical,
-                mesh position, at shaft,
-                bearing width, (0.0062),
-                shaft diameter, (0.01),
-                bearing diameter, (0.0100155),
-                shaft node,
-                    (1002),
-                    offset, reference, (5003), null,
-                    orientation, reference, (5003), eye,
-                bearing node,
-                    (1003),
-                    offset, reference, (5005), null,
-                    orientation, reference, (5005), eye,
-            number of nodes z, 10,
-            number of nodes Phi, 50,
-            boundary conditions, (10000), (10000),
-            lubrication grooves, 1,
-                at shaft,
-                    pressure, (10000),
-                    position, (0.01) * pi * 71. / 360., 0.,
-                    rectangle, width, 1.38e-3, height, 0.8 * (0.0062),
-            contact model,
-                        greenwood tripp,
-                                E1, 175000e6,
-                                nu1, 0.275,
-                                E2, 120000e6,
-                                nu2, 0.3,
-                                base unit, meters,
-                                        sigma, 1.598E-07,
-                                        eta, 1.979E+10,
-                                        beta, 1.665E-05,
-                                        offset, 3.770E-07,
-                friction model, lugre,
-                        method, implicit euler,
-                        coulomb friction coefficient, 0.05,
-                        micro slip stiffness, 1e6,
-            theta dof scale, 1e6,
-            pressure dof scale, 1e9,
-            equation scale, 5e-5,
-            output pressure, yes,
-            output contact pressure, yes,
-            output density, yes,
-            output friction loss, yes,
-            output clearance, yes,
-            output clearance derivative, yes,
-            output velocity, yes,
-            output stress, yes,
-            output reaction force, yes,
-            output mesh, yes;
-
-    drive caller: (8005), name, "Pff",
-        element, (7001), loadable, string, "Pff", direct,
-        output trace, yes;
-
-    drive caller: (8006), name, "Pfc",
-        element, (7001), loadable, string, "Pfc", direct,
-        output trace, yes;
-
-    drive caller: (8007), name, "maxp",
-        element, (7001), loadable, string, "maxp", direct,
-        output trace, yes;
-
-    drive caller: (8008), name, "maxpc",
-        element, (7001), loadable, string, "maxpc", direct,
-        output trace, yes;
-
-    drive caller: (8009), name, "minh",
-        element, (7001), loadable, string, "minh", direct,
-        output trace, yes;
-
-    drive caller: (8010), name, "minrho",
-        element, (7001), loadable, string, "minrho", direct,
-        output trace, yes;
-
-    drive caller: (8011), name, "maxrho",
-        element, (7001), loadable, string, "maxrho", direct,
-        output trace, yes;
-
-    drive caller: (8012), name, "minT",
-        element, (7001), loadable, string, "minT", direct,
-        output trace, yes;
-
-    drive caller: (8013), name, "maxT",
-        element, (7001), loadable, string, "maxT", direct,
-        output trace, yes;
-
-    drive caller: (8014), name, "meanT",
-        element, (7001), loadable, string, "meanT", direct,
-        output trace, yes;
+    user defined: 7001,
+                hydrodynamic_plain_bearing_with_offset,
+                shaft, 1002,
+                offset, reference, 5003, null,
+                bearing, 1003,
+                offset, reference, 5005, null,
+                bearing width, 0.0062,
+                bearing diameter, 0.01,
+                relative clearance, 0.0100155 / 0.01 - 1,
+                oil viscosity, 0.0015;
 end: elements;
 
 ##############################################################################################################

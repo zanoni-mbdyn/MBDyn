@@ -45,6 +45,10 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
                 (\hty{HydraulicFluid}) \bnt{hydraulic_fluid},
             \kw{mesh}, \{ \kw{linear finite difference} | \kw{quadratic finite element} \},
                 \kw{enable mcp}, (\ty{bool}) \bnt{mixed_complementarity_problem}
+                [ \kw{flow factors}, \kw{patir cheng},
+                         \kw{sigma}, (\ty{real}) \bnt{sigma_1}, (\ty{real}) \bnt{sigma_2},
+                         \kw{lambdax}, (\ty{real}) \bnt{lambdax_1}, (\ty{real}) \bnt{lambdax_2},
+                         \kw{lambdaz}, (\ty{real}) \bnt{lambdaz_1}, (\ty{real}) \bnt{lambdaz_2}, ]
             \kw{geometry}, \kw{cylindrical},
                 \kw{mesh position}, \{ \kw{at shaft} | \kw{at bearing} \},
                 \kw{bearing width}, (\ty{real}) \bnt{bearing_width},
@@ -278,6 +282,8 @@ In order to use a mass conserving cavitation model, a \kw{linear compressible} h
 Mass conserving cavitation models are not yet supported by the Finite Element discretization.
 \subsubsection{MCP based solution}
 This option may be used if, and only if a mass conserving cavitation model is used and a proper nonlinear solver has been selected. See also section~\ref{sec:problems:nonlin:mcp}.
+\subsubsection{Flow factors}
+Flow factors may be used in order to consider micro-hydrodynamic effects. Currently only the flow factor model from Patir and Cheng is implemented \cite{PatirCheng1978}. This model takes the following parameters: \bnt{sigma\_1} and \bnt{sigma\_2} are the standard deviation of the surface profile for the bearing journal and shell respectively. \bnt{lambdax\_1} and \bnt{lambdax\_2} are the correlation lengths in x-direction of the surface profiles for the bearing journal and shell respectively. \bnt{lambdaz\_1} and \bnt{lambdaz\_2} are the correlation lengths in z-direction of the surface profile for the bearing journal and shell respectively.
 \subsubsection{Bearing geometry}
 Currently only bearings with cylindrical surfaces are supported. The main dimensions are \bnt{diameter\_shaft}, \bnt{diameter\_bearing} and \bnt{bearing\_widht} and the so called relative clearance $\Psi$ is:
 \begin{equation}

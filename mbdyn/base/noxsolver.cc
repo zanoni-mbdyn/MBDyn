@@ -281,9 +281,9 @@ public:
      using SC = TpetraSC;
 
      TpetraMatFreeJacOper(
-          NoxNonlinearSolver& solver,
+          NoxNonlinearSolver& solver_a,
           const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
-          : oNoxSolver(solver), pSpace(pSpace_a)
+          : oNoxSolver(solver_a), pSpace(pSpace_a)
 #ifdef DEBUG_JACOBIAN
           , pA(nullptr)
 #endif
@@ -339,9 +339,9 @@ class MBDynJacobianOp : public Thyra::LinearOpBase<TpetraSC>
 public:
      using SC = TpetraSC;
 
-     MBDynJacobianOp(NoxNonlinearSolver& solver,
+     MBDynJacobianOp(NoxNonlinearSolver& solver_a,
                      const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
-          : oNoxSolver(solver), pSpace(pSpace_a) {}
+          : oNoxSolver(solver_a), pSpace(pSpace_a) {}
 
      Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
      range()  const override { return pSpace; }
@@ -382,9 +382,9 @@ class MBDynLinearOpWithSolve : public Thyra::LinearOpWithSolveBase<TpetraSC>
 public:
      using SC = TpetraSC;
 
-     MBDynLinearOpWithSolve(NoxNonlinearSolver& solver,
+     MBDynLinearOpWithSolve(NoxNonlinearSolver& solver_a,
                             const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
-          : oNoxSolver(solver), pSpace(pSpace_a), pJacOp(Teuchos::null) {}
+          : oNoxSolver(solver_a), pSpace(pSpace_a), pJacOp(Teuchos::null) {}
 
      /* ---- LinearOpBase interface ---------------------------------------- */
      Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
@@ -451,9 +451,9 @@ class MBDynLOWSFactory
 public:
      using SC = TpetraSC;
 
-     MBDynLOWSFactory(NoxNonlinearSolver& solver,
+     MBDynLOWSFactory(NoxNonlinearSolver& solver_a,
                       const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
-          : oNoxSolver(solver), pSpace(pSpace_a) {}
+          : oNoxSolver(solver_a), pSpace(pSpace_a) {}
 
      bool isCompatible(const Thyra::LinearOpSourceBase<SC>& /* fwdOpSrc */) const override
      { return true; }
@@ -543,9 +543,9 @@ class MBDynPrecOp : public Thyra::LinearOpBase<TpetraSC>
 public:
      using SC = TpetraSC;
 
-     MBDynPrecOp(NoxNonlinearSolver& solver,
+     MBDynPrecOp(NoxNonlinearSolver& solver_a,
                  const Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>& pSpace_a)
-          : oNoxSolver(solver), pSpace(pSpace_a) {}
+          : oNoxSolver(solver_a), pSpace(pSpace_a) {}
 
      Teuchos::RCP<const Thyra::VectorSpaceBase<SC>>
      range()  const override { return pSpace; }
@@ -1094,10 +1094,10 @@ Thyra::SolveStatus<TpetraSC> MBDynLinearOpWithSolve::solveImpl(
  * ModelEvaluatorWrapper  implementation
  * ========================================================================= */
 ModelEvaluatorWrapper::ModelEvaluatorWrapper(
-     NoxNonlinearSolver& solver,
+     NoxNonlinearSolver& solver_a,
      integer iSize,
      const Teuchos::RCP<const TpetraComm>& pComm_a)
-     : oNoxSolver(solver), pComm(pComm_a)
+     : oNoxSolver(solver_a), pComm(pComm_a)
 {
      Rebuild(iSize);
 }

@@ -193,10 +193,10 @@ int get_debug_options(const char *const s, const debug_array da[])
 
            bool validFlag = false;
 
-           for (const auto& flag: flags) {
-              const size_t n = strlen(flag.name);
-              if (l == n && strncmp(flag.name, p, n) == 0) {
-                 ::debug_level = flag.value;
+           for (const auto& flag_a: flags) {
+              const size_t n = strlen(flag_a.name);
+              if (l == n && strncmp(flag_a.name, p, n) == 0) {
+                 ::debug_level = flag_a.value;
                  validFlag = true;
                  break;
               }
