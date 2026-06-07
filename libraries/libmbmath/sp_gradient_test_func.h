@@ -336,5 +336,10 @@ namespace sp_grad_test {
                          doublereal Dd[],
                          doublereal Tmp1[],
                          doublereal Tmp1d[]);
+
+     template <typename T>
+     void func_scalar13(const T& u, const T& v, const T& w, T& f);
+
+     void func_scalar13_dv(int nbdirs, double u, const double ud[], double v, const double vd[], double w, const double wd[], double& f, double fd[]);
 }
 #endif

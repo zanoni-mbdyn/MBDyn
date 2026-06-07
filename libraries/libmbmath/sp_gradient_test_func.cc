@@ -3259,4 +3259,23 @@ namespace sp_grad_test {
                           const SpMatrixBase<doublereal>&,
                           const SpMatrixBase<SpGradient>&,
                           SpMatrixBase<SpGradient>&);
+
+     template <typename T>
+     void func_scalar13(const T& u, const T& v, const T& w, T& f)
+     {
+          f = erf(u * v) * w;
+     }
+
+     template void func_scalar13(const doublereal&, const doublereal&, const doublereal&, doublereal&);
+     template void func_scalar13(const SpGradient&, const SpGradient&, const SpGradient&, SpGradient&);
+     template void func_scalar13(const GpGradProd&, const GpGradProd&, const GpGradProd&, GpGradProd&);
+
+     void func_scalar13_dv(int nbdirs, double u, const double ud[], double v, const double vd[], double w, const double wd[], double& f, double fd[])
+     {
+          f = erf(u * v) * w;
+
+          for (int i = 0; i < nbdirs; ++i) {
+               fd[i] = erf(u * v) * wd[i] + (2 * exp(-(u*u)*(v*v))*w*(u*vd[i]+v*ud[i]))/sqrt(M_PI);
+          }
+     }     
 }

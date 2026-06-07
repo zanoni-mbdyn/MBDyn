@@ -567,6 +567,22 @@ namespace sp_grad {
 #endif
      };
 
+     struct SpGradErf {
+          static constexpr doublereal f(doublereal u) {
+               return erf(u);
+          }
+
+          static constexpr doublereal df_du(doublereal u) {
+               return 2. * exp(-u * u) / sqrt(M_PI);
+          }
+
+#ifdef SP_GRAD_DEBUG
+          static void Print(std::ostream& os) {
+               os << "erf";
+          }
+#endif
+     };
+     
      struct SpGradBoolLessThan {
 	  static constexpr bool f(doublereal u, doublereal v) {
 	       return u < v;

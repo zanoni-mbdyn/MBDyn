@@ -4990,6 +4990,127 @@ MBDYN_TESTSUITE_TEST(sp_gradient_test, test23) {
      test23();
 }
 
+MBDYN_TESTSUITE_TEST(sp_gradient_test, test24) {
+     using namespace sp_gradient_test_parameters;
+     using namespace std;
+     using namespace std::chrono;
+
+     cerr << __PRETTY_FUNCTION__ << ":\n";
+
+     random_device rd;
+     mt19937 gen(rd());
+     uniform_real_distribution<doublereal> randval(-1., 1.);
+     uniform_int_distribution<index_type> randdof(1, inumdof);
+     uniform_int_distribution<index_type> randnz(0, inumnz - 1);
+
+     gen.seed(0);
+
+     SpGradient u, v, w, f;
+
+     doublereal fVal;
+     index_type unz = 0, vnz = 0, wnz = 0;
+     index_type fnz = 0;
+     const doublereal dTol = pow(numeric_limits<doublereal>::epsilon(), 0.5);
+     vector<doublereal> ud, vd, wd, fd;
+     duration<long long, ratio<1L, 1000000000L> > sp_grad_time(0), c_full_time(0);
+
+     for (index_type iloop = 0; iloop < inumloops; ++iloop) {
+          sp_grad_rand_gen(u, randnz, randdof, randval, gen);
+          sp_grad_rand_gen(v, randnz, randdof, randval, gen);
+          sp_grad_rand_gen(w, randnz, randdof, randval, gen);
+
+          unz += u.iGetSize();
+          vnz += v.iGetSize();
+          wnz += w.iGetSize();
+
+          SpGradDofStat s;
+
+          u.GetDofStat(s);
+          v.GetDofStat(s);
+          w.GetDofStat(s);
+
+          const index_type nbdirs = s.iNumNz ? s.iMaxDof : 0;
+
+          func_scalar13(u.dGetValue(), v.dGetValue(), w.dGetValue(), fVal);
+
+          auto sp_grad_start = high_resolution_clock::now();
+
+          func_scalar13(u, v, w, f);
+
+          sp_grad_time += high_resolution_clock::now() - sp_grad_start;
+
+          f.Sort();
+
+          fnz += f.iGetSize();
+
+          MBDYN_TESTSUITE_ASSERT(fabs(f.dGetValue() / fVal - 1.) < dTol);
+
+          ud.clear();
+          vd.clear();
+          wd.clear();
+          fd.clear();
+
+          ud.resize(nbdirs);
+          vd.resize(nbdirs);
+          wd.resize(nbdirs);
+          fd.resize(nbdirs);
+
+          for (index_type i = 1; i <= s.iMaxDof; ++i) {
+               ud[i - 1] = u.dGetDeriv(i);
+               vd[i - 1] = v.dGetDeriv(i);
+               wd[i - 1] = w.dGetDeriv(i);
+          }
+
+          auto c_full_start = high_resolution_clock::now();
+
+          func_scalar13_dv(nbdirs,
+                           u.dGetValue(),
+                           front(ud),
+                           v.dGetValue(),
+                           front(vd),
+                           w.dGetValue(),
+                           front(wd),
+                           fVal,
+                           front(fd));
+
+          c_full_time += high_resolution_clock::now() - c_full_start;
+
+          MBDYN_TESTSUITE_ASSERT(fabs(f.dGetValue() - fVal) < dTol * max(1., fabs(fVal)));
+
+          SP_GRAD_TRACE("fref f\n");
+          SP_GRAD_TRACE(fVal << " " << f.dGetValue() << endl);
+
+          for (index_type i = 1; i <= s.iMaxDof; ++i) {
+               MBDYN_TESTSUITE_ASSERT(fabs(fd[i - 1] - f.dGetDeriv(i)) < dTol * max(1.0, fabs(fd[i - 1])));
+               SP_GRAD_TRACE(fd[i - 1] << " " << f.dGetDeriv(i) << endl);
+          }
+     }
+
+     auto sp_grad_time_ns = duration_cast<nanoseconds>(sp_grad_time).count();
+     auto c_full_time_ns = duration_cast<nanoseconds>(c_full_time).count();
+
+     cerr << "test24: test passed with tolerance "
+          << scientific << setprecision(6)
+          << dTol
+          << " and nz=" << inumnz
+          << " unz=" << fixed << setprecision(0) << ceil(static_cast<doublereal>(unz) / inumloops)
+          << " vnz=" << fixed << setprecision(0) << ceil(static_cast<doublereal>(vnz) / inumloops)
+          << " wnz=" << fixed << setprecision(0) << ceil(static_cast<doublereal>(wnz) / inumloops)
+          << endl;
+
+     cerr << "test24: sp_grad_time = " << fixed << setprecision(6)
+          << static_cast<doublereal>(sp_grad_time_ns) / 1e9
+          << " nz=" << fixed << setprecision(0) << ceil(static_cast<doublereal>(fnz) / inumloops)
+          << endl;
+
+     cerr << "test24: c_full_time = " << fixed << setprecision(6)
+          << static_cast<doublereal>(c_full_time_ns) / 1e9 << endl;
+     cerr << "test24: sp_grad_time / c_full_time = "
+          << static_cast<doublereal>(sp_grad_time_ns) / max<int64_t>(1L, c_full_time_ns) // Avoid division by zero
+          << endl;
+
+}
+
 MBDYN_DEFINE_OPERATOR_NEW_DELETE
 
 int main(int argc, char* argv[]) {

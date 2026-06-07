@@ -113,7 +113,8 @@ namespace sp_grad {
      SP_GRADIENT_DEFINE_UNARY_OPERATOR(asinh, SpGradAsinh)
      SP_GRADIENT_DEFINE_UNARY_OPERATOR(acosh, SpGradAcosh)
      SP_GRADIENT_DEFINE_UNARY_OPERATOR(atanh, SpGradAtanh)
-
+     SP_GRADIENT_DEFINE_UNARY_OPERATOR(erf, SpGradErf)
+     
      template <typename Expr>
      constexpr inline SpGradComprExpr<const SpGradBase<Expr>&>
      EvalUnique(const SpGradBase<Expr>& g) noexcept {
@@ -228,7 +229,8 @@ namespace sp_grad {
      GRAD_PROD_DEFINE_UNARY_OPERATOR(asinh, SpGradAsinh)
      GRAD_PROD_DEFINE_UNARY_OPERATOR(acosh, SpGradAcosh)
      GRAD_PROD_DEFINE_UNARY_OPERATOR(atanh, SpGradAtanh)
-
+     GRAD_PROD_DEFINE_UNARY_OPERATOR(erf, SpGradErf)
+     
 #ifdef SP_GRAD_DEBUG
      std::ostream& operator<<(std::ostream& os, const GpGradProd& g);
 #endif

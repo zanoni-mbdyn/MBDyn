@@ -360,12 +360,6 @@ begin: elements;
                     M4, 0.0076271,
                     linearize, never,
                     #offset, 
-           /*contact model, penalty,
-                    E1, E1,
-                    nu1, nu1,
-                    E2, E2,
-                    nu2, nu2,
-                    compliance factor, 10.,*/
             sliding velocity threshold, 1e-3,
             compliance model,
             elastic half space,

@@ -106,6 +106,7 @@ public:
      void SetValue(DataManager *pDM, VectorHandler& X, VectorHandler& XP,
                    SimulationEntity::Hints *ph) override;
      std::ostream& Restart(std::ostream& out) const override;
+     virtual void Restart(RestartData& oData, RestartData::RestartAction eAction) override;
      virtual unsigned int iGetInitialNumDof(void) const override;
      virtual void
      InitialWorkSpaceDim(integer* piNumRows, integer* piNumCols) const override;
@@ -983,6 +984,10 @@ HydrodynamicPlainBearing::Restart(std::ostream& out) const
      out << ";\n";
 
      return out;
+}
+
+void HydrodynamicPlainBearing::Restart(RestartData& oData, RestartData::RestartAction eAction)
+{
 }
 
 unsigned int
