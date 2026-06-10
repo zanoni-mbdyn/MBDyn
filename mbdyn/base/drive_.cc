@@ -461,6 +461,86 @@ Step5DriveCaller::Restart(std::ostream& out) const
 /* Step5DriveCaller - end */
 
 
+/* Step7DriveCaller - begin */
+
+Step7DriveCaller::Step7DriveCaller(const DriveHandler* pDH,
+	doublereal t0, doublereal h0, doublereal t1, doublereal h1)
+: DriveCaller(pDH),
+dStepTime0(t0), dStepTime1(t1), dFinalValue(h1), dInitialValue(h0)
+{
+	NO_OP;
+}
+
+Step7DriveCaller::~Step7DriveCaller(void)
+{
+	NO_OP;
+}
+
+/* Copia */
+DriveCaller *
+Step7DriveCaller::pCopy(void) const
+{
+	DriveCaller* pDC = 0;
+	SAFENEWWITHCONSTRUCTOR(pDC,
+		Step7DriveCaller,
+		Step7DriveCaller(pDrvHdl, dStepTime0, dInitialValue, dStepTime1, dFinalValue));
+	return pDC;
+}
+
+/* Scrive il contributo del DriveCaller al file di restart */
+std::ostream&
+Step7DriveCaller::Restart(std::ostream& out) const
+{
+	return out
+		<< " step7, " << dStepTime0
+		<< ", " << dInitialValue
+		<< ", " << dStepTime1
+		<< ", " << dFinalValue;
+}
+
+/* Step7DriveCaller - end */
+
+
+/* Step9DriveCaller - begin */
+
+Step9DriveCaller::Step9DriveCaller(const DriveHandler* pDH,
+	doublereal t0, doublereal h0, doublereal t1, doublereal h1)
+: DriveCaller(pDH),
+dStepTime0(t0), dStepTime1(t1), dFinalValue(h1), dInitialValue(h0)
+{
+	NO_OP;
+}
+
+Step9DriveCaller::~Step9DriveCaller(void)
+{
+	NO_OP;
+}
+
+/* Copia */
+DriveCaller *
+Step9DriveCaller::pCopy(void) const
+{
+	DriveCaller* pDC = 0;
+	SAFENEWWITHCONSTRUCTOR(pDC,
+		Step9DriveCaller,
+		Step9DriveCaller(pDrvHdl, dStepTime0, dInitialValue, dStepTime1, dFinalValue));
+	return pDC;
+}
+
+/* Scrive il contributo del DriveCaller al file di restart */
+std::ostream&
+Step9DriveCaller::Restart(std::ostream& out) const
+{
+	return out
+		<< " step9, " << dStepTime0
+		<< ", " << dInitialValue
+		<< ", " << dStepTime1
+		<< ", " << dFinalValue;
+}
+
+/* Step9DriveCaller - end */
+
+
 /* DoubleStepDriveCaller - begin */
 
 DoubleStepDriveCaller::DoubleStepDriveCaller(const DriveHandler* pDH,
@@ -1867,7 +1947,7 @@ Step5DCR::Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred)
 	try {
 		dStepTime1 = HP.GetReal(dStepTime0, HighParser::range_gt<doublereal>(dStepTime0));
 	} catch (HighParser::ErrValueOutOfRange<doublereal>& e) {
-		silent_cerr("error: invalid final time " << e.Get() << " (must be greater than initial time " << dStepTime0 << " " << e.what() << " at line " << HP.GetLineData() << std::endl);
+		silent_cerr("Step5: error, invalid final time " << e.Get() << " (must be greater than initial time " << dStepTime0 << " " << e.what() << " at line " << HP.GetLineData() << std::endl);
 		throw e;
 	}
 	DEBUGCOUT("Final time: " << dStepTime1 << std::endl);
@@ -1882,6 +1962,98 @@ Step5DCR::Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred)
 	SAFENEWWITHCONSTRUCTOR(pDC,
 		Step5DriveCaller,
 		Step5DriveCaller(pDrvHdl, dStepTime0, dInitialValue, dStepTime1, dFinalValue));
+
+	return pDC;
+}
+
+struct Step7DCR : public DriveCallerRead {
+	DriveCaller *
+	Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred);
+};
+
+DriveCaller *
+Step7DCR::Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred)
+{
+	NeedDM(pDM, HP, bDeferred, "step7");
+
+	const DriveHandler* pDrvHdl = 0;
+	if (pDM != 0) {
+		pDrvHdl = pDM->pGetDrvHdl();
+	}
+
+	DriveCaller *pDC = 0;
+
+	doublereal dStepTime0 = HP.GetReal();
+	DEBUGCOUT("Initial time: " << dStepTime0 << std::endl);
+
+	doublereal dInitialValue = HP.GetReal();
+	DEBUGCOUT("InitialValue: " << dInitialValue << std::endl);
+
+	doublereal dStepTime1;
+	try {
+		dStepTime1 = HP.GetReal(dStepTime0, HighParser::range_gt<doublereal>(dStepTime0));
+	} catch (HighParser::ErrValueOutOfRange<doublereal>& e) {
+		silent_cerr("Step7: error, invalid final time " << e.Get() << " (must be greater than initial time " << dStepTime0 << " " << e.what() << " at line " << HP.GetLineData() << std::endl);
+		throw e;
+	}
+	DEBUGCOUT("Final time: " << dStepTime1 << std::endl);
+
+	doublereal dFinalValue = HP.GetReal();
+	DEBUGCOUT("Final Value: " << dFinalValue << std::endl);
+
+	if (dFinalValue == dInitialValue) {
+		silent_cerr("Step7: warning, final value " << dFinalValue << " at time " << dStepTime1 << " identical to initial value at time " << dStepTime0 << " at line " << HP.GetLineData() << std::endl);
+	}
+
+	SAFENEWWITHCONSTRUCTOR(pDC,
+		Step7DriveCaller,
+		Step7DriveCaller(pDrvHdl, dStepTime0, dInitialValue, dStepTime1, dFinalValue));
+
+	return pDC;
+}
+
+struct Step9DCR : public DriveCallerRead {
+	DriveCaller *
+	Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred);
+};
+
+DriveCaller *
+Step9DCR::Read(const DataManager* pDM, MBDynParser& HP, bool bDeferred)
+{
+	NeedDM(pDM, HP, bDeferred, "step9");
+
+	const DriveHandler* pDrvHdl = 0;
+	if (pDM != 0) {
+		pDrvHdl = pDM->pGetDrvHdl();
+	}
+
+	DriveCaller *pDC = 0;
+
+	doublereal dStepTime0 = HP.GetReal();
+	DEBUGCOUT("Initial time: " << dStepTime0 << std::endl);
+
+	doublereal dInitialValue = HP.GetReal();
+	DEBUGCOUT("InitialValue: " << dInitialValue << std::endl);
+
+	doublereal dStepTime1;
+	try {
+		dStepTime1 = HP.GetReal(dStepTime0, HighParser::range_gt<doublereal>(dStepTime0));
+	} catch (HighParser::ErrValueOutOfRange<doublereal>& e) {
+		silent_cerr("Step9: error, invalid final time " << e.Get() << " (must be greater than initial time " << dStepTime0 << " " << e.what() << " at line " << HP.GetLineData() << std::endl);
+		throw e;
+	}
+	DEBUGCOUT("Final time: " << dStepTime1 << std::endl);
+
+	doublereal dFinalValue = HP.GetReal();
+	DEBUGCOUT("Final Value: " << dFinalValue << std::endl);
+
+	if (dFinalValue == dInitialValue) {
+		silent_cerr("Step9: warning, final value " << dFinalValue << " at time " << dStepTime1 << " identical to initial value at time " << dStepTime0 << " at line " << HP.GetLineData() << std::endl);
+	}
+
+	SAFENEWWITHCONSTRUCTOR(pDC,
+		Step9DriveCaller,
+		Step9DriveCaller(pDrvHdl, dStepTime0, dInitialValue, dStepTime1, dFinalValue));
 
 	return pDC;
 }
@@ -3288,6 +3460,8 @@ InitDriveCallerData(void)
 	SetDriveCallerData("sine", new SineDCR);
 	SetDriveCallerData("step", new StepDCR);
 	SetDriveCallerData("step5", new Step5DCR);
+	SetDriveCallerData("step7", new Step7DCR);
+	SetDriveCallerData("step9", new Step9DCR);
 	SetDriveCallerData("string", new StringDCR);
 	SetDriveCallerData("tanh", new TanhDCR);
 	SetDriveCallerData("time", new TimeDCR);

@@ -582,6 +582,158 @@ Step5DriveCaller::dGetP(const doublereal& dVar) const
 /* Step5DriveCaller - end */
 
 
+/* Step7DriveCaller - begin */
+
+class Step7DriveCaller : public DriveCaller {
+private:
+	doublereal dStepTime0;
+	doublereal dStepTime1;
+	doublereal dFinalValue;
+	doublereal dInitialValue;
+
+public:
+	Step7DriveCaller(const DriveHandler* pDH,
+		doublereal t0, doublereal h0, doublereal t1, doublereal h1);
+	~Step7DriveCaller(void);
+
+	/* Copia */
+	virtual DriveCaller* pCopy(void) const;
+
+	/* Scrive il contributo del DriveCaller al file di restart */
+	virtual std::ostream& Restart(std::ostream& out) const;
+
+	inline doublereal dGet(const doublereal& dVar) const;
+#if 0
+	inline doublereal dGet(void) const;
+#endif
+
+	/* this is about drives that are differentiable */
+	virtual bool bIsDifferentiable(void) const;
+	virtual doublereal dGetP(const doublereal& dVar) const;
+#if 0
+	virtual inline doublereal dGetP(void) const;
+#endif
+};
+
+inline doublereal
+Step7DriveCaller::dGet(const doublereal& dVar) const
+{
+	if (dVar >= dStepTime1) {
+		return dFinalValue;
+	}
+
+	if (dVar <= dStepTime0) {
+		return dInitialValue;
+	}
+
+	/* else */
+	doublereal dXi = (dVar - dStepTime0)/(dStepTime1 - dStepTime0);
+	return dInitialValue + (dFinalValue - dInitialValue)*dXi*dXi*dXi*dXi*(35. - 84.*dXi + 70.*dXi*dXi - 20*dXi*dXi*dXi);
+}
+
+inline bool
+Step7DriveCaller::bIsDifferentiable(void) const
+{
+	return true;
+}
+
+inline doublereal 
+Step7DriveCaller::dGetP(const doublereal& dVar) const
+{
+	if (dVar >= dStepTime1 || dVar <= dStepTime0) {
+		return 0.;
+	}
+
+	/* else */
+	doublereal dT = dStepTime1 - dStepTime0;
+	doublereal dXi = (dVar - dStepTime0)/dT;
+	doublereal dXim1 = 1 - dXi;
+	/*
+		f = 10*x^3 - 15*x^4 + 6*x^5
+		f' = 30*x^2 - 60*x^3 + 30*x^4
+	*/
+	return (dFinalValue - dInitialValue)*dXi*dXi*dXi*140.*dXim1*dXim1*dXim1/dT;
+}
+
+/* Step7DriveCaller - end */
+
+
+/* Step9DriveCaller - begin */
+
+class Step9DriveCaller : public DriveCaller {
+private:
+	doublereal dStepTime0;
+	doublereal dStepTime1;
+	doublereal dFinalValue;
+	doublereal dInitialValue;
+
+public:
+	Step9DriveCaller(const DriveHandler* pDH,
+		doublereal t0, doublereal h0, doublereal t1, doublereal h1);
+	~Step9DriveCaller(void);
+
+	/* Copia */
+	virtual DriveCaller* pCopy(void) const;
+
+	/* Scrive il contributo del DriveCaller al file di restart */
+	virtual std::ostream& Restart(std::ostream& out) const;
+
+	inline doublereal dGet(const doublereal& dVar) const;
+#if 0
+	inline doublereal dGet(void) const;
+#endif
+
+	/* this is about drives that are differentiable */
+	virtual bool bIsDifferentiable(void) const;
+	virtual doublereal dGetP(const doublereal& dVar) const;
+#if 0
+	virtual inline doublereal dGetP(void) const;
+#endif
+};
+
+inline doublereal
+Step9DriveCaller::dGet(const doublereal& dVar) const
+{
+	if (dVar >= dStepTime1) {
+		return dFinalValue;
+	}
+
+	if (dVar <= dStepTime0) {
+		return dInitialValue;
+	}
+
+	/* else */
+	doublereal dXi = (dVar - dStepTime0)/(dStepTime1 - dStepTime0);
+	return dInitialValue + (dFinalValue - dInitialValue)*dXi*dXi*dXi*dXi*dXi*(126. - 420.*dXi + 540.*dXi*dXi - 315*dXi*dXi*dXi + 70*dXi*dXi*dXi*dXi);
+}
+
+inline bool
+Step9DriveCaller::bIsDifferentiable(void) const
+{
+	return true;
+}
+
+inline doublereal 
+Step9DriveCaller::dGetP(const doublereal& dVar) const
+{
+	if (dVar >= dStepTime1 || dVar <= dStepTime0) {
+		return 0.;
+	}
+
+	/* else */
+	doublereal dT = dStepTime1 - dStepTime0;
+	doublereal dXi = (dVar - dStepTime0)/dT;
+	doublereal dXim1 = 1 - dXi;
+	/*
+		f = 10*x^3 - 15*x^4 + 6*x^5
+		f' = 30*x^2 - 60*x^3 + 30*x^4
+	*/
+	return (dFinalValue - dInitialValue)*dXi*dXi*dXi*dXi*630.*dXim1*dXim1*dXim1*dXim1/dT;
+}
+
+/* Step9DriveCaller - end */
+
+
 /* DoubleStepDriveCaller - begin */
 
 class DoubleStepDriveCaller : public DriveCaller {
