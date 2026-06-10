@@ -575,7 +575,7 @@ but the \kw{default::} portion is optional, as the \kw{default} namespace is imp
 The namespace that refers to the current model is loaded by default.
 Its name is \kw{model}, and contains the functions 
 defined in Tables~\ref{tab:MODEL-NS-FUNCS} and \ref{tab:MODEL-NS-FUNCS-2}.
-With the exception of the \kw{drive} and \kw{sf} functions,
+With the exception of the \kw{drive}, \kw{drivep}, and \kw{sf} functions,
 all functions in the \kw{model} namespace
 with the suffix \kw{\_prev} (e.g.\ \kw{position\_prev})
 use the configuration at the previous time step.
@@ -698,7 +698,13 @@ To extract the current from an electric circuit where a resistor $R$ is defined 
 		\kw{drive}	& Real	& Integer [ , Real ]		&
 				evaluates the \htmlref{\kw{drive caller}}{sec:DRIVE-CALLER}
 				indicated by its label (the first argument)
-				for the input specified as second (optional) argument
+				for the input specified as the second (optional) argument
+				(\kw{Time} is used instead, if needed) \\
+		\kw{drivep}	& Real	& Integer [ , Real ]		&
+				evaluates the derivative of the \htmlref{\kw{drive caller}}{sec:DRIVE-CALLER}
+				indicated by its label (the first argument),
+				if it is differentiable,
+				for the input specified as the second (optional) argument
 				(\kw{Time} is used instead, if needed) \\
 		\kw{sf}\texttt{::}\bnt{name}	& Real	& Real [ , Integer ]	&
 				evaluates the \htmlref{\kw{scalar function}}{sec:ScalarFunction}
