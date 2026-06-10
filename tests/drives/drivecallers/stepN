@@ -58,9 +58,9 @@ begin: elements;
 		### x
 		step5, 0.1, 1, 0.9, 4,		# direct call to step5
 		### y
-		reference, 7;			# reference call to step7
+		reference, 7,			# reference call to step7
 		### z
-		string, "model::drive(9)",	# model namespace call to step9
+		string, "model::drive(9)";	# model namespace call to step9
 
 	couple: 2, absolute, 1, position, null, component,
 		### x
