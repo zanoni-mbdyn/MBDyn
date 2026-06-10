@@ -2264,6 +2264,8 @@ Drive callers are listed in Table~\ref{tab:DRIVE:DRIVE-CALLERS}.
 \kw{sine} & $\surd$ & \\
 \kw{step} & $\surd$ & \\
 \kw{step5} & $\surd$ & \\
+\kw{step7} & $\surd$ & \\
+\kw{step9} & $\surd$ & \\
 \kw{string} & $\surd$ & \\ %
 \kw{tanh} & $\surd$ & \\
 \kw{time} & $\surd$ & \\
@@ -3277,6 +3279,76 @@ i.e.\ a continuous 5th order polynomial approximation of a step of amplitude $A 
 and finite duration $\nt{final\_time} - \nt{initial\_time}$,
 starting at time \nt{initial\_time} with value \nt{initial\_value} and ending at time \nt{final\_time} with value \nt{final\_value},
 with continuous 1st- and 2nd-order derivatives.
+
+\subsection{Step7 drive}
+%\begin{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{drive_caller} ::= \kw{step7} ,
+        \bnt{initial_time} , 
+        \bnt{initial_value} ,
+        \bnt{final_time} ,
+        \bnt{final_value}
+\end{Verbatim}    
+%\end{verbatim}    
+The function
+\begin{align}
+	f\plbr{t} &= 
+	\lcubr{\matr{ll}{
+		\nt{initial\_value} % \nonumber \\ &
+			& t \le \nt{initial\_time} \\
+		\\
+		\nt{initial\_value} + A \xi^4 \plbr{35 - 84 \xi + 70 \xi^2 - 20 \xi^3}
+			& \nt{initial\_time} < t < \nt{final\_time}
+		\\
+		\nt{final\_value}
+			& \nt{final\_time} \le t \\
+	}}
+	\\
+	A &= \nt{final\_value} - \nt{initial\_value}
+	\nonumber \\
+	\xi &= \cfrac{t - \nt{initial\_time}}{\nt{final\_time} - \nt{initial\_time}}
+	\hspace{40pt} 0 \le \xi \le 1
+	\nonumber 
+\end{align}
+i.e.\ a continuous 7th order polynomial approximation of a step of amplitude $A = \nt{final\_value} - \nt{initial\_value}$
+and finite duration $\nt{final\_time} - \nt{initial\_time}$,
+starting at time \nt{initial\_time} with value \nt{initial\_value} and ending at time \nt{final\_time} with value \nt{final\_value},
+with continuous 1st-, 2nd-, and 3rd-order derivatives.
+
+\subsection{Step9 drive}
+%\begin{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+    \bnt{drive_caller} ::= \kw{step9} ,
+        \bnt{initial_time} , 
+        \bnt{initial_value} ,
+        \bnt{final_time} ,
+        \bnt{final_value}
+\end{Verbatim}    
+%\end{verbatim}    
+The function
+\begin{align}
+	f\plbr{t} &= 
+	\lcubr{\matr{ll}{
+		\nt{initial\_value} % \nonumber \\ &
+			& t \le \nt{initial\_time} \\
+		\\
+		\nt{initial\_value} + A \xi^5 \plbr{126 - 420 \xi + 540 \xi^2 - 315 \xi^3 + 70 \xi^4}
+			& \nt{initial\_time} < t < \nt{final\_time}
+		\\
+		\nt{final\_value}
+			& \nt{final\_time} \le t \\
+	}}
+	\\
+	A &= \nt{final\_value} - \nt{initial\_value}
+	\nonumber \\
+	\xi &= \cfrac{t - \nt{initial\_time}}{\nt{final\_time} - \nt{initial\_time}}
+	\hspace{40pt} 0 \le \xi \le 1
+	\nonumber 
+\end{align}
+i.e.\ a continuous 9th order polynomial approximation of a step of amplitude $A = \nt{final\_value} - \nt{initial\_value}$
+and finite duration $\nt{final\_time} - \nt{initial\_time}$,
+starting at time \nt{initial\_time} with value \nt{initial\_value} and ending at time \nt{final\_time} with value \nt{final\_value},
+with continuous 1st-, 2nd-, 3rd-, and 4th-order derivatives.
 
 \subsection{String drive}
 %\begin{verbatim}
