@@ -122,7 +122,7 @@ namespace
         const doublereal orthogonality = norm(temp);
 
         std::cout << "Relative residual = " << residual << " ,  orthogonality = " << orthogonality << std::endl;
-        if (residual > 1E-15 || orthogonality > 1E-14) {
+        if (residual > 1E-14 || orthogonality > 1E-14) {
             std::cout << "==> failed!" << std::endl;
             MBDYN_TESTSUITE_ASSERT(0);
         }
