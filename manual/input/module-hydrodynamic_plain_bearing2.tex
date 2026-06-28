@@ -43,6 +43,11 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
     \bnt{arglist} ::=
             \kw{hydraulic fluid},
                 (\hty{HydraulicFluid}) \bnt{hydraulic_fluid},
+                [ \kw{alpha}, (\ty{real}) \bnt{alpha}, ]
+                [ \kw{Arho1}, (\ty{real}) \bnt{Arho1}, ]
+                [ \kw{Arho2}, (\ty{real}) \bnt{Arho2}, ]
+                [ \kw{viscosity vapor}, \{\kw{factor}, (\ty{real}) \bnt{etavap_factor}\ |
+                                            (\ty{real}) \bnt{etavap}\}, ]
             \kw{mesh}, \{ \kw{linear finite difference} | \kw{quadratic finite element} \},
                 \kw{enable mcp}, (\ty{bool}) \bnt{mixed_complementarity_problem}
                 [ \kw{flow factors}, \kw{patir cheng},
@@ -276,12 +281,32 @@ This module implements a hydrodynamic lubricated plain bearing based on a numeri
      [ , \kw{modal element}, (\hty{ModalJoint}) \bnt{elem_id_modal_joint} ]
 \end{Verbatim}
 
+\subsubsection{Pressure dependent fluid properties}
+\paragraph{Pressure dependent viscosity}
+If a value is provided for \bnt{alpha}, then the dynamic liquid viscosity $\eta_{liquid}$ of the fluid will be computed from the Barus equation\cite{DIRKBARTEL2010} as:
+\begin{equation}
+\eta_{liquid}=\bnt{viscosity}\,exp{\left[\bnt{alpha}\,\left(p - \bnt{ref\_pressure}\right)\right]}
+\end{equation}
+Otherwise the dynamic viscosity will be $\eta_{liquid}=\bnt{viscosity}$.
+\paragraph{Pressure dependent density}
+If values are provided for \bnt{Arho1} and \bnt{Arho2}, then the liquid density $\rho_{liquid}$ will be computed from the Dowson Higginson equation\cite{DIRKBARTEL2010} as:
+\begin{equation}
+\rho_{liquid}=\bnt{ref\_density}\,\left[1 + \frac{\bnt{Arho1}\,\left(p - \bnt{ref\_pressure}\right)}{1 + \bnt{Arho2}\,\left(p - \bnt{ref\_pressure}\right)}\right]
+\end{equation}
+Otherwise the liquid density will be $\rho_{liquid}=\bnt{ref\_density}$.
+\subsubsection{Viscosity of the liquid-vapor mixture}
+If a mass conserving cavitation model is used, then the dynamic viscosity $\eta$ of the liquid-vapor mixture is computed as:
+\begin{equation}
+\label{hydro:eq100}
+\eta=\eta_{liquid}\,\left[\left(1 - \bnt{etavap\_factor}\right)\,\frac{\rho}{\rho_{liquid}} + \bnt{etavap\_factor}\right]
+\end{equation}
+Otherwise, it is assumed that $\eta=\eta_{liquid}$. In equation~\ref{hydro:eq100} $\bnt{etavap\_factor}=\frac{\bnt{etavap}}{\bnt{viscosity}}$. By default $\bnt{etavap\_factor}=0$ is assumed.
 \subsubsection{Mass conserving versus non-mass conserving cavitation}
-In order to use a mass conserving cavitation model, a \kw{linear compressible} hydraulic fluid must be selected. In that case the fluid density at the surface of the bearing may vary between zero and the liquid density, which is equal to the reference density of the hydraulic fluid, during the simulation. Otherwise, an \kw{incompressible} hydraulic fluid should be used, and the density of the fluid will remain constant during the simulation.
+In order to use a mass conserving cavitation model, a \kw{linear compressible} hydraulic fluid must be selected. In that case the fluid density at the surface of the bearing may vary between zero and the liquid density, which is equal to the reference density of the hydraulic fluid by default, during the simulation. Otherwise, an \kw{incompressible} hydraulic fluid should be used, and the density of the fluid will be equal to the liquid density during the simulation.
 \subsubsection{Finite Difference versus Finite Element discretization}
 Mass conserving cavitation models are not yet supported by the Finite Element discretization.
 \subsubsection{MCP based solution}
-This option may be used if, and only if a mass conserving cavitation model is used and a proper nonlinear solver has been selected. See also section~\ref{sec:problems:nonlin:mcp}.
+This option may be used if, and only if a mass conserving cavitation model is used and a proper nonlinear solver has been selected. See also section~\ref{sec:problems:nonlin:mcp}. It is enabled by the flag \bnt{mixed\_complementarity\_problem}.
 \subsubsection{Flow factors}
 Flow factors may be used in order to consider micro-hydrodynamic effects. Currently only the flow factor model from Patir and Cheng is implemented \cite{PatirCheng1978}. This model takes the following parameters: \bnt{sigma\_1} and \bnt{sigma\_2} are the standard deviation of the surface profile for the bearing journal and shell respectively. \bnt{lambdax\_1} and \bnt{lambdax\_2} are the correlation lengths in x-direction of the surface profiles for the bearing journal and shell respectively. \bnt{lambdaz\_1} and \bnt{lambdaz\_2} are the correlation lengths in z-direction of the surface profile for the bearing journal and shell respectively.
 \subsubsection{Bearing geometry}

@@ -79,7 +79,7 @@ The $z$~axes of $\boldsymbol{R}_{b1}$ and $\boldsymbol{R}_{b2}$ correspond to th
 
 \subsection{Derivation of the Reynolds equation from the compressible Navier Stokes equation}
 \label{sec:navier_stokes}
-Since, according to \cite{Butenschoen-1976}, the radial gap height $h$ is small compared to the radius $R$, the curvature of the oil-filled gap can be neglected. For this reason, as shown in Figure~\ref{fig:h100}, the volume of the gap can be unrolled onto a plane and the Navier Stokes equation can be written in Cartesian coordinates. If we assume a Newtonian fluid with constant viscosity and laminar flow, then according to \cite{DIRKBARTEL2010} the Navier Stokes equation given in equation~\ref{eq:h100} follows for the flow in $x$ and $z$~direction. As the flow velocity in the radial gap height direction is neglected, the Navier Stokes equation for the $y$~direction is not applicable.
+Since, according to \cite{Butenschoen-1976}, the radial gap height $h$ is small compared to the radius $R$, the curvature of the oil-filled gap can be neglected. For this reason, as shown in figure~\ref{fig:h100}, the volume of the gap can be unrolled onto a plane and the Navier Stokes equation can be written in Cartesian coordinates. If we assume a Newtonian fluid with constant viscosity and laminar flow, then according to \cite{DIRKBARTEL2010} the Navier Stokes equation given in equation~\ref{eq:h100} follows for the flow in $x$ and $z$~direction. As the flow velocity in the radial gap height direction is neglected, the Navier Stokes equation for the $y$~direction is not applicable.
 
 \begin{IEEEeqnarray}{rCl}
 \label{eq:h100}
@@ -91,9 +91,9 @@ Since, according to \cite{Butenschoen-1976}, the radial gap height $h$ is small 
 
 \begin{description}
 \item[$\boldsymbol{u}=\begin{pmatrix} u_x \cr u_z \end{pmatrix}$] Flow velocity measured in the coordinate system $\boldsymbol{R}_{t1}$ or $\boldsymbol{R}_{t2}$\footnote{Strictly speaking, an inertial coordinate system would have to be used for the derivation. However, since the inertial forces are neglected in the derivation of Reynolds' differential equation, this does not matter}
-\item[$p$] Pressure
-\item[$\rho$] Density
-\item[$\eta$] dynamic viscosity
+\item[$p$] Fluid pressure
+\item[$\rho$] Fluid density
+\item[$\eta$] Dynamic viscosity of the fluid
 \end{description}
 
 According to \cite{Butenschoen-1976} and \cite{DIRKBARTEL2010}, the following simplifying assumptions can be made:
@@ -113,7 +113,7 @@ With these assumptions, equation~\ref{eq:h100} is reduced to equation~\ref{eq:h2
 \end{IEEEeqnarray}
 
 \subsubsection{Boundary conditions for the flow velocity at the bearing surface}
-If it is assumed that the fluid adheres to the surface of the bearing journal and the surface of the bearing shell, the boundary conditions according to equation~\ref{eq:h300} apply\cite{Butenschoen-1976}. This requirement is usually fulfilled for radial plain bearings by selecting the appropriate bearing materials, as the adhesion condition is of decisive importance for the load carrying capacity of the bearing. For piston-cylinder bearings, however, adhesion to the surface is not absolutely necessary. For example, when using special coatings for pistons, the adhesion condition may not be fulfilled. However, this case is excluded here.
+If it is assumed that the fluid adheres to the surface of the bearing journal and the surface of the bearing shell, the boundary conditions according to equation~\ref{eq:h300} apply\cite{Butenschoen-1976}. This requirement is usually fulfilled for radial plain bearings by selecting the appropriate bearing materials, as the adhesion condition is of decisive importance for the load carrying capacity of the bearing. For piston-cylinder bearings, however, adhesion to the surface is not absolutely necessary. For example, when using special coatings for pistons, the adhesion condition may not be fulfilled. This specific case, however, is excluded from this formulation.
 \begin{IEEEeqnarray}{rCl}
 \label{eq:h300}
 \left. u_x \right\vert_{y=0}&=& \Delta U_{2x} \nonumber \\
@@ -160,7 +160,7 @@ dy}_{q_x}
 \,u_z\,dy}_{q_z}
 \end{IEEEeqnarray}
 
-It is assumed, that the density $\rho$ is only a function of the pressure $p$. Since the pressure is assumed to be constant in the direction of the radial gap height, the density is also constant in the $y$~direction.
+It is assumed that the density $\rho$ is only a function of the pressure $p$. Since the pressure is assumed to be constant in the direction of the radial gap height, the density is also constant in the $y$~direction.
 
 \begin{IEEEeqnarray}{rCl}
 \dot{m}_x&=&\rho \, q_x \\
@@ -171,7 +171,7 @@ q_z & = & \underbrace{\frac{\Delta U_{1z} + \Delta U_{2z}}{2}\,h}_{\text{Couette
                   \underbrace{- \frac{h^3}{12\,\eta}\,\frac{\partial p}{\partial z}}_{\text{Poiseuille term}}
 \end{IEEEeqnarray}
 
-The compressible Reynolds differential equation~\ref{eq:h350} follows from the application of the continuity equation to the infinitesimal volume element\cite{Butenschoen-1976}, \cite{DIRKBARTEL2010}. To close this equation, a relationship between pressure and density must be specified. This is the purpose of the cavitation model.
+The compressible Reynolds differential equation~\ref{eq:h350} follows from the application of the continuity equation to the infinitesimal volume element\cite{Butenschoen-1976}, \cite{DIRKBARTEL2010}. To close this equation, a relationship between pressure and density must be specified. This is the purpose of the cavitation model, which will be introduced in section~\ref{sec:h400}.
 \begin{IEEEeqnarray}{rCl}
 \label{eq:h350}
 \underbrace{\frac{\partial}{\partial t}\left(\rho \, h\right)}_{a} & = & -\frac{\partial \dot{m}_x}{\partial x} -\frac{\partial \dot{m}_z}{\partial z} \nonumber \\
@@ -179,10 +179,84 @@ The compressible Reynolds differential equation~\ref{eq:h350} follows from the a
 &&-\frac{\partial}{\partial z} \, \left[ \rho \, \left(\frac{\Delta U_{1z} + \Delta U_{2z}}{2} \, h - \frac{h^3}{12 \, \eta} \, \frac{\partial p}{\partial z} \right) \right]
 \end{IEEEeqnarray}
 
+\subsubsection{Micro hydrodynamic effects}
+Equation~\ref{eq:h350} is valid for smooth and rough surfaces, as long as the resolution of the mesh is sufficiently high in order to capture the surface roughness profile at micrometer scale. Otherwise, the averaged Reynolds equation~\ref{eq:h351} according to Patir and Cheng must be used\cite{PatirCheng1978}. In equation~\ref{eq:h351} $\bar{h}_T$ is the average radial clearance considering the roughness profile, $\phi_x$ and $\phi_z$ are the pressure flow factors in $x$ and $z$-direction respectively, $\phi_{s_x}$ and $\phi_{s_z}$ are the shear flow factors in $x$ and $z$-direction respectively, and $\sigma_c=\sqrt{\sigma_1^2+\sigma_2^2}$ is the combined standard deviation of the roughness profiles of the bearing journal and shell surface. $\sigma_1$ and $\sigma_2$ are the standard deviations of the roughness profiles of the bearing journal and shell surface respectively.
+\begin{IEEEeqnarray}{rCl}
+\label{eq:h351}
+\frac{\partial}{\partial t}\left(\rho \, \bar{h}_T\right) &=&-\frac{\partial}{\partial x} \, \left[\rho \, \left(\frac{\Delta U_{1x} + \Delta U_{2x}}{2} \, \bar{h}_T + \frac{\Delta U_{1x} - \Delta U_{2x}}{2} \, \sigma_c \, \phi_{s_x} - \phi_x \, \frac{h^3}{12 \, \eta} \, \frac{\partial p}{\partial x} \right) \right] \nonumber \\
+&&-\frac{\partial}{\partial z} \, \left[\rho \, \left(\frac{\Delta U_{1z} + \Delta U_{2z}}{2} \, \bar{h}_T + \frac{\Delta U_{1z} - \Delta U_{2z}}{2} \, \sigma_c \, \phi_{s_z} - \phi_z \, \frac{h^3}{12 \, \eta} \, \frac{\partial p}{\partial z} \right) \right] \\
+\bar{h}_T&=&\frac{h}{2}\left[1+erf\left(\frac{h}{\sqrt{2}\,\sigma_c}\right)\right]+\frac{\sigma_c}{\sqrt{2\pi}}\exp{\left(-\frac{h^2}{2\sigma_c^2}\right)}
+\end{IEEEeqnarray}
+\paragraph{Pressure flow factors}
+The pressure flow factors are defined as\cite{PatirCheng1978}:
+\begin{IEEEeqnarray}{rCl}
+H&=&\frac{h}{\sigma_c} \\
+\phi_x&=&\left\{\begin{array}{rcl} 1 - C\,\exp{\left(-r\,H\right)} & \text{if} & \gamma_c \leq 1 \\
+                            1 + C\,H^{-r} & \text{if} & \gamma_c > 1
+         \end{array}\right. \\
+\phi_z\left(H, \gamma_c\right)&=&\phi_x\left(H, \frac{1}{\gamma_c}\right)
+\end{IEEEeqnarray}
+Where $C$ and $r$ are functions of the combined Peklenik factor $\gamma_c$, which are interpolated from table~\ref{tb:h360}. The combined Peklenik factor $\gamma_c$ is defined as:
+\begin{IEEEeqnarray}{rCl}
+\gamma_c&=&\frac{\frac{V_{r1}}{\lambda_{z1}} + \frac{V_{r2}}{\lambda_{z2}}}{\frac{V_{r1}}{\lambda_{x1}}+\frac{V_{r2}}{\lambda_{x2}}} \\
+V_{r1}&=&\left(\frac{\sigma_1}{\sigma_c}\right)^2 \\
+V_{r2}&=&\left(\frac{\sigma_2}{\sigma_c}\right)^2
+\end{IEEEeqnarray}
+Where $\sigma_1$ and $\sigma_2$ are the standard deviations of the roughness profiles from the bearing journal and shell surface respectively. $\lambda_{x1}$ and $\lambda_{x2}$ are the autocorrelation lengths in $x$-direction of the roughness profiles of the bearing journal and shell surface respectively. $\lambda_{z1}$ and $\lambda_{z2}$ are the corresponding autocorrelation lengths in $z$-direction.
+Standard deviations and autocorrelation lengths can be determined from a profilometer trace of the respective bearing surface.
+\begin{table}
+\centering
+\caption{Coefficients for the calculation of the pressure flow factors $\phi_x$ and $\phi_z$\cite{PatirCheng1978}}
+\begin{tabular}{c|c|c}
+\hline
+$\gamma_c$ & $C$ & $r$ \\
+\hline
+1/9 & 1.48 & 0.42 \\
+1/6 & 1.38 & 0.42 \\
+1/3 & 1.18 & 0.42 \\
+1 & 0.9 & 0.56 \\
+3 & 0.225 & 1.5 \\
+6 & 0.520 & 1.5 \\
+9 & 0.870 & 1.5
+\end{tabular}
+\label{tb:h360}
+\end{table}
+\paragraph{Shear flow factors}
+The shear flow factors are defined as\cite{PatirCheng1978}:
+\begin{IEEEeqnarray}{rCl}
+\phi_{s_x} & = & V_{r1} \, \Phi_{s}\left(H, \gamma_1\right) - V_{r2} \, \Phi_{s}\left(H, \gamma_2\right) \\
+\phi_{s_z} & = & V_{r1} \, \Phi_{s}\left(H, \frac{1}{\gamma_1}\right) - V_{r2} \, \Phi_{s}\left(H, \frac{1}{\gamma_2}\right) \\
+\Phi_s & = & \left\{\begin{array}{rcl} A_1\,H^{\alpha_1}\,\exp{\left(-\alpha_2\,H+\alpha_3\,H^2\right)} & \text{if} & H \leq 5 \\
+A_2\,\exp{\left(-0.25\,H\right)} & \text{if} & H > 5
+\end{array}\right. \\
+\gamma_1 & = & \frac{\lambda_{x1}}{\lambda_{z1}} \\
+\gamma_2 & = & \frac{\lambda_{x2}}{\lambda_{z2}}
+\end{IEEEeqnarray}
+Where $\gamma_1$ and $\gamma_2$ are the Peklenik factors of the bearing journal and shell surface respectively. $A_1$, $A_2$, $\alpha_1$, $\alpha_2$ and $\alpha_3$ are functions of the Peklenik factor of the corresponding bearing surface. Those values must be interpolated from table~\ref{tb:h370}.
+
+\begin{table}
+\centering
+\caption{Coefficients for the calculation of the shear flow factors $\Phi_s$\cite{PatirCheng1978}}
+\begin{tabular}{c|c|c|c|c|c}
+\hline
+$\gamma_1/\gamma_2$ & $A_1$ & $\alpha_1$ & $\alpha_2$ & $\alpha_3$ & $A_2$ \\
+\hline
+1/9 & 2.046 & 1.12 & 0.78 & 0.03 & 1.856 \\
+1/6 & 1.962 & 1.08 & 0.77 & 0.03 & 1.754 \\
+1/3 & 1.858 & 1.01 & 0.76 & 0.03 & 1.561 \\
+1   & 1.899 & 0.98 & 0.92 & 0.05 & 1.126 \\
+3   & 1.560 & 0.85 & 1.13 & 0.08 & 0.556 \\
+6   & 1.290 & 0.62 & 1.09 & 0.08 & 0.388 \\
+9   & 1.011 & 0.54 & 1.07 & 0.08 & 0.295 \\
+\end{tabular}
+\label{tb:h370}
+\end{table}
+
 \section{Cavitation models}
+\label{sec:h400}
 \subsection{Non-mass conserving cavitation}
 \subsubsection{The incompressible Reynolds differential equation}
-For the incompressible case, the density $\rho$ is constant. This results in a linear partial differential equation of elliptic type with the pressure $p$ as an unknown.
+For the incompressible case, the density $\rho$ is constant\footnote{In fact the fluid will be incompressible if the Dowson-Higginson relation is not used, which is the default.}. This results in a linear partial differential equation of elliptic type with the pressure $p$ as an unknown.
 \begin{IEEEeqnarray}{rCl}
 \frac{\partial q_x}{\partial x} + \frac{\partial q_z}{\partial z} + \frac{\partial h}{\partial t} & = &
 \frac{\partial}{\partial x}\left(\frac{\Delta U_{1x} + \Delta
@@ -191,7 +265,7 @@ U_{2x}}{2}\,h-\frac{h^3}{12\,\eta}\,\frac{\partial p}{\partial x}\right) \nonumb
 \frac{h^3}{12\,\eta}\,\frac{\partial p}{\partial z}\right) + \frac{\partial h}{\partial t} = 0
 \end{IEEEeqnarray}
 \subsubsection{The G\"umbel boundary condition}
-After discretization using finite differences or finite elements, a linear system of equations results. Since no cavitation model was used, its solution can contain negative pressures\cite{Butenschoen-1976}. According to \cite{Butenschoen-1976}, the negative pressures are set to zero after the solution of the linear system of equations in accordance with the G\"umbel boundary condition. However, this violates the continuity equation at the boundary of the cavitation region. According to \cite{Butenschoen-1976}, this causes an error in the pressure distribution. That error is increasing with the pressure gradient. The analytical solution of the incompressible Reynolds differential equation for an infinitely wide bearing given in \cite{Butenschoen-1976} results in a deviation in the Sommerfeld number between G\"umbel boundary condition and Reynolds boundary condition of $18\%$ with a relative eccentricity of $\varepsilon=0.999$ for the case of pure rotary motion\cite{Butenschoen-1976}. See also Figure~\ref{fig:h300}. Due to its simple implementation, the G\"umbel boundary condition was used for the incompressible case. With this method, however, it is not possible to calculate the amount of oil supplied via a lubrication groove as soon as the G\"umbel boundary condition becomes active, as the global mass conservation is not fulfilled. Instead, the required oil quantity must be calculated from the volume flow that exits via the bearings boundaries.
+After discretization using finite differences or finite elements, a linear system of equations results. Since no cavitation model was used, its solution can contain negative pressures\cite{Butenschoen-1976}. According to \cite{Butenschoen-1976}, the negative pressures are set to zero after the solution of the linear system of equations in accordance with the G\"umbel boundary condition. However, this violates the continuity equation at the boundary of the cavitation region. According to \cite{Butenschoen-1976}, this causes an error in the pressure distribution. That error is increasing with the pressure gradient. The analytical solution of the incompressible Reynolds differential equation for an infinitely wide bearing given in \cite{Butenschoen-1976} results in a deviation in the Sommerfeld number between G\"umbel boundary condition and Reynolds boundary condition of $18\%$ with a relative eccentricity of $\varepsilon=0.999$ for the case of pure rotary motion\cite{Butenschoen-1976}. See also Figure~\ref{fig:h300}. Due to its simple implementation, the G\"umbel boundary condition was used for the incompressible case. With this method, however, it is not possible to calculate the amount of oil supplied via a lubrication groove as soon as the G\"umbel boundary condition becomes active, as the global conservation of mass is not fulfilled. Instead, the required oil quantity must be calculated from the volume flow that exits via the bearings boundaries.
 
 \begin{figure}[htb]
 \centering
@@ -227,16 +301,25 @@ g & = & \left\{
 \item[$\Theta$] dimensionless density/pressure
 \end{description}
 
-By assuming a slightly compressible fluid, it is possible to calculate the distribution of pressure and density in the bearing without having to know the boundaries of the cavitation region. The problem is that the bulk modulus $\beta$ is very high, which affects the numerical stability. According to \cite{Luis-San-Andres-2010}, for example, the bulk modulus of mineral oil is $\beta=2.41GPa$. To avoid numerical stability problems, \cite{Luis-San-Andres-2010} often uses values for $\beta$ that are ten to one hundred times smaller than the physically correct bulk modulus. This circumstance was taken into account in \cite{Elrod-1981} by assuming the fluid to be incompressible for the calculation of the mass flows. The linear compressibility of the fluid is only taken into account in the term $a$ in equation~\ref{eq:h350}. According to \cite{Francisco-2009}, this makes it possible to artificially reduce the bulk modulus $\beta$ without affecting the results for the steady state. According to \cite{Francisco-2009}, the choice of the bulk modulus only influences the rate of convergence with which the solution tends towards the steady state. However, a reduction of $\beta$ is not applicable to transient analysis at all, because the orbital path would be affected for sure.
+By assuming a slightly compressible fluid, it is possible to calculate the distribution of pressure and density in the bearing without having to know the boundaries of the cavitation region. The problem is that the bulk modulus $\beta$ is very high, which affects the numerical stability. According to \cite{Luis-San-Andres-2010}, for example, the bulk modulus of mineral oil is $\beta=2.41GPa$. To avoid numerical stability problems, \cite{Luis-San-Andres-2010} often uses values for $\beta$ that are ten to one hundred times smaller than the physically correct bulk modulus. This circumstance was taken into account in \cite{Elrod-1981} by assuming the fluid to be incompressible for the calculation of the mass flows. The linear compressibility of the fluid is only taken into account in the term $a$ in equation~\ref{eq:h350}. According to \cite{Francisco-2009}, this makes it possible to artificially reduce the bulk modulus $\beta$ without affecting the results for the steady state. According to \cite{Francisco-2009}, the choice of the bulk modulus only affects the rate of convergence towards the steady state. However, an artificial reduction of $\beta$ is not applicable to transient analysis, because the orbital path would be undoubtedly affected.
 
 \paragraph{The solution of the cavitation condition based on a mixed-complementarity problem}
-Since the original Elrod model is not really applicable, it is necessary to modify the solution procedure. Instead of having only one unknown variable (e.g. either pressure $p$ or density $\rho$), it is necessary to solve for $p$ and $rho$ simultaneously, and to add another inequality in order to make the mathematical problem well posed.
+Since the original Elrod model is not really applicable, it is necessary to modify the solution procedure. Instead of having only one unknown variable (e.g. either pressure $p$ or density $\rho$), it is necessary to solve for $p$ and $\rho$ simultaneously, and to add another inequality in order to make the mathematical problem well posed. This is a mixed nonlinear complementarity problem (MCP).
 Now the complementarity condition describing the cavitation model is:
 \begin{itemize}
 \item If $p \geq 0$ then $\rho = \rho_{liquid}$
 \item If $\rho$ < $\rho_{liquid}$ then $p = 0$
 \end{itemize}
-Where $\rho_{liquid}$ is a constant value which is the density of pure liquid without void fraction. Actually $\rho >= 0$ is not a complementary condition but usually it is not hard to fulfill. In any case, it is necessary to use a dedicated nonlinear solver like \href{https://github.com/siconos/siconos}{SICONOS}, for the solution of this so called mixed-nonlinear complementarity problem.
+Where $\rho_{liquid}$ is the density of pure liquid without void fraction which is determined by equation~\ref{eq:h350b}. Actually $\rho >= 0$ is not a complementary condition but usually it is not hard to fulfill. In any case, it is necessary to use a dedicated nonlinear solver like \href{https://github.com/siconos/siconos}{SICONOS}, for the solution of this MCP. See also MBDyn's input manual about the nonlinear solvers which are usable for MCP's.
+
+\subsubsection{Fluid properties}
+So far, no assumptions have been made regarding the fluid viscosity $\eta$ and fluid density $\rho_{liquid}$. Actually MBDyn uses the Barus equation~\ref{eq:h350a} for the viscosity\cite{DIRKBARTEL2010} and the Dowson-Higginson equation~\ref{eq:h350b} for the density\cite{DIRKBARTEL2010}.
+\begin{IEEEeqnarray}{rCl}
+  \eta_{liquid} & = & \eta_c \, \exp{\left[\alpha_p\,\left(p - p_{c}\right)\right]} \label{eq:h350a}\\
+  \rho_{liquid} & = & \rho_c \, \left[1 + \frac{ A_{\rho_1} \, \left(p - p_{c}\right)}{1 + A_{\rho_2} \, \left(p - p_{c}\right)}\right] \label{eq:h350b} \\
+  \eta&=&\eta_{liquid}\,\frac{\rho}{\rho_{liquid}}
+\end{IEEEeqnarray}
+Where $\eta_{liquid}$ is the dynamic viscosity of the pure liquid without any void fraction, $\alpha_p$ is the pressure-viscosity coefficient and $\eta_c$ is the reference viscosity at pressure $p_c$. $\rho_c$ is the reference density at pressure $p_c$ and the coefficients for mineral oil are $A_{\rho_1}=0.6GPa^{-1}$ and $A_{\rho_2}=1.7GPa^{-1}$\cite{DIRKBARTEL2010}.
 
 \section{Discretization of the Reynolds differential equation using finite differences}
 \label{sec:h150}
@@ -254,9 +337,11 @@ Figure~\ref{fig:h150} shows the basic structure of such a mesh. The grid spacing
 \begin{IEEEeqnarray}{rCl}
 \left.\frac{\partial p}{\partial x} \right\vert_{\textit{wc}} & \approx & \frac{\left. p \right\vert_{\textit{center}} - \left. p \right\vert_{\textit{west}}}{\left. x \right\vert_{\textit{center}} -\left. x \right\vert_{\textit{west}}} \\
 \left. h \right\vert_{\textit{wc}}&\approx&\frac{1}{2}\,\left(\left. h\right\vert_{\textit{west}} + \left. h \right\vert_{\textit{center}}\right) \\
+\left. \phi_{s_x}\right\vert_{\textit{wc}}&\approx&\phi_{s_x}\left(\left. h \right\vert_{\textit{wc}}\right) \\
 \left. \Delta U_{1x} \right\vert_{\textit{wc}} &\approx& \frac{1}{2}\,\left(\left. \Delta U_{1x} \right\vert_{\textit{west}} + \left. \Delta U_{1x} \right\vert_{\textit{center}}\right)\\
 \left. \Delta U_{2x} \right\vert_{\textit{wc}} &\approx& \frac{1}{2}\,\left(\left. \Delta U_{2x} \right\vert_{\textit{west}} + \left. \Delta U_{2x} \right\vert_{\textit{center}}\right)\\
-\left. q_x \right\vert_{\textit{wc}} & \approx & \frac{\left. \Delta U_{1x} \right\vert_{\textit{wc}} + \left. \Delta U_{2x} \right\vert_{\textit{wc}}}{2} \, \left. h \right\vert_{\textit{wc}} -\frac{\left. h^3 \right\vert_{\textit{wc}}}{12\,\eta} \, \left. \frac{\partial p}{\partial x}\right\vert_{\textit{wc}} \\
+\left. q_x \right\vert_{\textit{wc}} & \approx & \frac{\left. \Delta U_{1x} \right\vert_{\textit{wc}} + \left. \Delta U_{2x} \right\vert_{\textit{wc}}}{2} \, \left. \bar{h}_T \right\vert_{\textit{wc}} + \frac{\left. \Delta U_{1x} \right\vert_{\textit{wc}} - \left. \Delta U_{2x} \right\vert_{\textit{wc}}}{2} \, \sigma_c \, \left.\phi_{s_x}\right\vert_{\textit{wc}} \nonumber\\
+&&-\phi_x \, \frac{\left. h^3 \right\vert_{\textit{wc}}}{12\,\left.\eta\right\vert_{\textit{wc}}} \, \left. \frac{\partial p}{\partial x}\right\vert_{\textit{wc}} \\
 \left. \rho \right\vert_{\textit{wc}} & \approx & \left\{
 \begin{array}{ll}
     \left.\rho\right\vert_{\textit{west}} & \text{if} \qquad q_x\vert_{\textit{wc}} \geq 0 \\
@@ -274,7 +359,7 @@ Since the compressible Reynolds equation is of parabolic type, it is necessary t
 \begin{IEEEeqnarray}{rCl}
 \Delta t & \leq & \frac{C_{max}}{\frac{q_x}{h\,\Delta x} + \frac{q_z}{h\,\Delta z}}
 \end{IEEEeqnarray}
-The CFL condition is checked in the multibody system in each iteration after the calculation of the residual and the time step size is reduced accordingly if necessary. For explicit methods, $C_{max}=1$ usually applies. However, since the solution method used is implicit, it is also possible that $C_{max} \geq 1$ is specified. However, values of $C_{max}$ that are too high can lead to divergence of the non-linear solver.
+The CFL condition is checked in the multibody system in each iteration after the calculation of the residual, and the time step size is reduced accordingly if necessary. For explicit methods, $C_{max}=1$ usually applies. However, since the solution method used is implicit, it is also possible that $C_{max} \geq 1$ is specified. However, values of $C_{max}$ that are too high can lead to divergence of the non-linear solver.
 
 \section{Hydraulic boundary conditions}
 \subsection{Dirichlet boundary condition}
@@ -293,7 +378,7 @@ This assumption was made based on the commercial software AVL-Excite. In the cas
 \Phi & = & \frac{h_0}{h} \\
 \rho & = & \left\{
 \begin{array}{ll}
-\rho_c \, \Phi & \text{when} \qquad \Phi \leq 1 \cr
+\rho_c \, \Phi & \text{if} \qquad \Phi \leq 1 \cr
 \rho_c & \text{if} \qquad \Phi > 1
 \end{array}
 \right.
@@ -301,7 +386,7 @@ This assumption was made based on the commercial software AVL-Excite. In the cas
 However, since Reynolds' differential equation only knows one independent variable, it is not possible to specify density and pressure at the boundaries of the bearing at the same time. In order to be able to specify pressure and density independently of each other, it would be necessary to switch to a multiphase flow which also takes into account the proportion of dissolved gas. However, such an approach was not pursued.
 
 \subsubsection{Coupling of boundary conditions with other variables}
-When specifying a Dirichlet boundary condition, it is possible to specify not only constants but also any function as a boundary conditions. For example the pressure can be specified as a boundary condition for the lubricating film at the boundaries of a bearing, or within lubrication grooves, by means of a ``DriveCaller''.
+When specifying a Dirichlet boundary condition, it is possible to specify not only constants but also any function as a boundary conditions. For example the pressure can be specified as a boundary condition for the lubricating film at the boundaries of a bearing, or within lubrication grooves, by means of a ``DriveCaller''. See also MBDyn's input manual.
 
 \subsubsection{Geometric locations for the application of boundary conditions}
 A Dirichlet boundary condition is always required at the boundaries of the bearing for cylindrical plain bearings. In addition, lubrication grooves with a circular or rectangular cross-section can be defined and Dirichlet boundary conditions can be specified there. For reasons of accuracy, the mesh must be located at the same side as the lubrication grooves.
@@ -310,14 +395,15 @@ A Dirichlet boundary condition is always required at the boundaries of the beari
 Since the surface of the cylindrical plain bearing is unwound onto a plane, it is necessary that the radial boundaries of the unwound bearing surface are coupled with each other. For this purpose, so-called mirror nodes were introduced which have their own nodal coordinates but obtain their value and equation number from their corresponding nodes at the opposite side of the mesh.
 
 \subsection{Coupling of a plain bearing with a hydraulic network}
-In the multi-body system \href{http://www.mbdyn.org}{MBDyn} used, it is also possible to set up hydraulic networks consisting of pipelines, valves, throttle points, tanks and hydraulic actuators. For this reason, it was obvious to provide a coupling between individual plain bearings with a hydraulic network. In this way, for example, the two journal bearings may be connected to each other via a pipeline. The quantity of oil supplied via the oil pump can be specified as a function of the revolution speed, for example.
+In MBDyn, it is also possible to set up hydraulic networks consisting of pipelines, valves, throttle points, tanks and hydraulic actuators. For this reason, it was obvious to provide a coupling between individual plain bearings with a hydraulic network. In this way, for example, two journal bearings may be connected to each other via a pipeline. The quantity of oil supplied via the oil pump can be specified as a function of the revolution speed, for example.
 
 \subsubsection{Coupling at the boundaries of the bearing surface}
 When coupling the mass flow through the boundaries of the bearing with the hydraulic network, the following conditions apply for the bearing boundary at $z=\frac{B}{2}$:
 \begin{IEEEeqnarray}{rCl}
 \left.p\right\vert_{z=\frac{B}{2}} & = & p_{hyd} \\
 \dot{m}_{hyd} & = & -\int_{x=0}^{2\pi\,r} \left[\rho \, \left.\left(\frac{\Delta U_{1z} + \Delta
-U_{2z}}{2} \, h - \frac{h^3}{12 \, \eta} \, \frac{\partial p}{\partial
+U_{2z}}{2} \, \bar{h}_T + \frac{\Delta U_{1z} - \Delta
+U_{2z}}{2}\,\sigma_c\,\phi_{s_z} - \phi_{z}\,\frac{h^3}{12 \, \eta} \, \frac{\partial p}{\partial
 z}\right)\right]\right\vert_{z=\frac{B}{2}} \, dx
 \label{h:710}
 \end{IEEEeqnarray}
@@ -334,11 +420,11 @@ Coupling with the hydraulic network is achieved using four node coupling element
 When coupling with a radial lubrication groove, the continuity equation is extended by an additional source term.
 \begin{IEEEeqnarray}{rCl}
 \left. p \right\vert_{A_{hyd}} & = & p_{hyd} \\
-\dot{m}_{hyd} & = & \int_{A_{hyd}} \left\{\frac{\partial \left(\rho \, h\right)}{\partial t} +
-\frac{\partial}{\partial x}\left[\rho \, \left(\frac{\Delta U_{1x} + \Delta U_{2x}}{2} \, h - \frac{h^3}{12 \, \eta}
+\dot{m}_{hyd} & = & \int_{A_{hyd}} \left\{\frac{\partial \left(\rho \, \bar{h}_T\right)}{\partial t} +
+\frac{\partial}{\partial x}\left[\rho \, \left(\frac{\Delta U_{1x} + \Delta U_{2x}}{2} \, \bar{h}_T + \frac{\Delta U_{1x} - \Delta U_{2x}}{2} \, \sigma_c \, \phi_{s_x} - \phi_x \, \frac{h^3}{12 \, \eta}
 \, \frac{\partial p}{\partial x}\right)\right]\right. \nonumber \\
 & & + \left.\frac{\partial}{\partial z}\left[\rho\,\left(\frac{\Delta U_{1z} + \Delta U_{2z}}{2}
-\, h - \frac{h^3}{12 \, \eta} \, \frac{p}{z}\right)\right]\right\} \, dA_{hyd}
+\, \bar{h}_T + \frac{\Delta U_{1z} + \Delta U_{2z}}{2} \, \sigma_c \, \phi_{s_z} - \phi_z \, \frac{h^3}{12 \, \eta} \, \frac{\partial p}{\partial z}\right)\right]\right\} \, dA_{hyd}
 \end{IEEEeqnarray}
 \begin{description}
 \item[$A_{hyd}$] Area of the radial lubrication groove on the bearing surface
@@ -705,7 +791,7 @@ With these simplifications we get
 & = & \frac{\mu_k \, p_{asp}}{\left\Vert \Delta\boldsymbol{U} \right\Vert_2} \, \Delta\boldsymbol{U}
 \label{eq:h750}
 \end{IEEEeqnarray}
-Equation~\ref{eq:h750} therefore corresponds exactly to the surface area of the cone in Coulomb's law of friction.
+Equation~\ref{eq:h750} therefore corresponds exactly to the surface of the friction cone in Coulomb's law of friction.
 
 \subsubsection{The transition to static friction}
 For the unsteady one-dimensional case, the simplifications of equation~\ref{eq:h723}-\ref{eq:h725}:
@@ -768,7 +854,7 @@ u_y}{\partial x}}_{\approx 0}\right) \nonumber \\
 \tau_{yz} & = & \eta \, \left(\underbrace{\frac{\partial u_y}{\partial z}}_{\approx 0} +
 \frac{\partial u_z}{\partial y}\right) \label{eq:h800}
 \end{IEEEeqnarray}
-As in the derivation of the Reynolds differential equation, the derivatives of the velocity in the circumferential direction and axial direction are neglected compared to the derivative in the radial gap height direction. If equation~\ref{eq:h325} is differentiated according to $y$, the velocity gradients are obtained:
+As in the derivation of the Reynolds differential equation, the derivatives of the velocity in the circumferential direction and axial direction are neglected compared to the derivative in the radial gap height direction. If equation~\ref{eq:h325} is differentiated versus $y$, the velocity gradients are obtained:
 \begin{IEEEeqnarray}{rCl}
 \frac{\partial u_x}{\partial y} & = & \frac{1}{\eta} \, \frac{\partial p}{\partial x} \,
 \left(y - \frac{h}{2}\right) + \frac{\Delta U_{1x} - \Delta U_{2x}}{h} \nonumber \\
@@ -786,6 +872,64 @@ p}{\partial x} + \eta \, \frac{\Delta U_{1x} - \Delta U_{2x}}{h} \\
 \left.\tau_{yz}\right\vert_{y=h} & = & \frac{h}{2} \, \frac{\partial p}{\partial z} + \eta \,
 \frac{\Delta U_{1z} - \Delta U_{2z}}{h}
 \end{IEEEeqnarray}
+\subsubsection{Micro hydrodynamic effects}
+In order to account for micro hydrodynamic effects also the shear stresses must be corrected\cite{PatirCheng1979}. The corrected shear stresses are:
+\begin{IEEEeqnarray}{rCl}
+\left.\tau_{xy}\right\vert_{y=0} & = & -\phi_{fp_{xy}} \, \frac{h}{2} \, \frac{\partial p}{\partial x} + \eta \, \frac{\Delta U_{1x} - \Delta U_{2x}}{h} \, \left(\phi_f + \phi_{fs_{xy}}\right)\\
+\left.\tau_{xy}\right\vert_{y=h} & = & \phi_{fp_{xy}} \, \frac{h}{2} \, \frac{\partial p}{\partial x} + \eta \, \frac{\Delta U_{1x} - \Delta U_{2x}}{h} \, \left(\phi_f - \phi_{fs_{xy}}\right)\\
+\left.\tau_{yz}\right\vert_{y=0} & = & -\phi_{fp_{yz}}\,\frac{h}{2} \, \frac{\partial p}{\partial z} + \eta \,
+\frac{\Delta U_{1z} - \Delta U_{2z}}{h} \, \left(\phi_f + \phi_{fs_{yz}}\right)\\
+\left.\tau_{yz}\right\vert_{y=h} & = & \phi_{fp_{yz}}\,\frac{h}{2} \, \frac{\partial p}{\partial z} + \eta \,\frac{\Delta U_{1z} - \Delta U_{2z}}{h}\,\left(\phi_f - \phi_{fs_{yz}}\right)
+\end{IEEEeqnarray}
+Where $\phi_{fp_{xy}}$ and $\phi_{fp_{yz}}$ are the shear stress factors due to pressure gradient in $x$ and $z$ direction respectively. $\phi_{fs_{xy}}$ and $\phi_{fs_{yz}}$ are the shear stress factors due to sliding and roughness in $x$ and $z$ direction respectively. $\phi_f$ is the mean shear stress factor which accounts for the change in the base shear stress due to the varying gap height. Those factors are defined as\cite{PatirCheng1979}:
+\begin{IEEEeqnarray}{rCl}
+\phi_{fp}&=&1 - D\,\exp{\left(-s\,H\right)} \\
+\phi_{fp_{xy}}&=&\phi_{fp}\left(H, \gamma_c\right) \\
+\phi_{fp_{yz}}&=&\phi_{fp}\left(H, \frac{1}{\gamma_c}\right) \\
+\phi_{fs_{xy}}&=&V_{r1}\,\Phi_{fs}\left(H, \gamma_1\right) - V_{r2}\,\Phi_{fs}\left(H, \gamma_2\right) \\
+\phi_{fs_{yz}}&=&V_{r1}\,\Phi_{fs}\left(H, \frac{1}{\gamma_1}\right) - V_{r2}\,\Phi_{fs}\left(H, \frac{1}{\gamma_2}\right) \\
+\Phi_{fs}&=&A_3\,H^{\alpha_4}\,\exp{\left(-\alpha_5\,H+\alpha_6\,H^2\right)} \\
+\phi_f & = & \left\{\begin{array}{rcl} 1 + \frac{0.88}{H^{1.5}} & \text{if} & 0.5 \leq H \leq 5 \\
+                                1 + \frac{1}{H^2} & \text{if} & H > 5
+             \end{array}\right.
+\end{IEEEeqnarray}
+The coefficients for $\phi_{fp_{xy}}$ and $\phi_{fp_{yz}}$ must be interpolated from table~\ref{tb:h901} whereas the coefficients for $\Phi_{fs_{xy}}$ and $\Phi_{fs_{yz}}$ must be interpolated from table~\ref{tb:h900}.
+
+\begin{table}
+\centering
+\caption{Coefficients for the calculation of the shear stress factors $\phi_{fs}$\cite{PatirCheng1979}}
+\begin{tabular}{c|c|c|c|c}
+\hline
+$\gamma_1/\gamma_2$ & $A_3$ & $\alpha_4$ & $\alpha_5$ & $\alpha_6$ \\
+\hline
+1/9 & 14.1 & 2.45 & 2.30 & 0.10 \\
+1/6 & 13.4 & 2.42 & 2.30 & 0.10 \\
+1/3 & 12.3 & 2.32 & 2.30 & 0.10 \\
+  1 & 11.1 & 2.31 & 2.38 & 0.11 \\
+  3 &  9.8 & 2.25 & 2.80 & 0.18 \\
+  6 & 10.1 & 2.25 & 2.90 & 0.18 \\
+  9 &  8.7 & 2.15 & 2.97 & 0.18
+\end{tabular}
+\label{tb:h900}
+\end{table}
+
+\begin{table}
+\centering
+\caption{Coefficients for the calculation of the shear stress factors $\phi_{fp}$\cite{PatirCheng1979}}
+\begin{tabular}{c|c|c}
+\hline
+$\gamma_c$ & $D$ & $s$ \\
+\hline
+1/9 & 1.51 & 0.52 \\
+1/6 & 1.51 & 0.54 \\
+1/3 & 1.47 & 0.58 \\
+  1 & 1.40 & 0.66 \\
+  3 & 0.98 & 0.79 \\
+  6 & 0.97 & 0.91 \\
+  9 & 0.73 & 0.91
+\end{tabular}
+\label{tb:h901}
+\end{table}
 
 \subsection{The mesh moves with the bearing shell}
 \label{sec:h350}
@@ -886,7 +1030,7 @@ P_f & = & -\int_A \left[\left(\Delta U_{1x} - \Delta U_{2x}\right)\, \left.\tau_
 P_{asp} & = & -\int_A \left[\left(\Delta U_{1x} - \Delta U_{2x}\right)\, \tau_{asp_{xy}} + \left(\Delta U_{1z} - \Delta U_{2z}\right)\,
 \tau_{asp_{yz}}\right]\,dA \label{eq:h501}
 \end{IEEEeqnarray}
-The negative sign in equation~\ref{eq:h500} and equation~\ref{eq:h501} is due to the convention, that losses of kinetic energy should have a negative sign.
+The negative sign in equation~\ref{eq:h500} and equation~\ref{eq:h501} follows the convention that kinetic energy losses are denoted as negative.
 \begin{description}
 \item[$P_f$] Frictional losses due to fluid friction
 \item[$P_{asp}$] Frictional losses due to dry friction
@@ -894,7 +1038,7 @@ The negative sign in equation~\ref{eq:h500} and equation~\ref{eq:h501} is due to
 
 \section{Alternative solution of the incompressible Reynolds differential equation using the
 finite element method}
-The discretization chosen in section~\ref{sec:h150} using finite differences was based on an orthogonal grid. This is completely sufficient for simple geometries such as a cylindrical plain bearing without lubrication grooves. Even a rectangular lubrication groove can still be captured accurately thanks to the variable grid spacing. In the case of a circular lubricating oil bore, however, the method is very inefficient, as a very fine grid is required for accurate resolution of the circular edge, which extends over the entire bearing surface due to the orthogonal grid lines in the circumferential direction and in the axial direction. Using the finite element method, however, it is easily possible to handle complex geometries. The general procedure for the discretization of partial differential equations in this section is essentially based on \cite{BATHE2016}.
+The discretization chosen in section~\ref{sec:h150} using finite differences was based on an orthogonal grid. This is completely sufficient for simple geometries such as a cylindrical plain bearing without lubrication grooves. Even a rectangular lubrication groove can still be captured accurately thanks to the variable grid spacing. In the case of a circular lubricating oil bore, however, the method is very inefficient, as a very fine grid is required for accurate resolution of the circular edge, which extends over the entire bearing surface due to the orthogonal grid lines in the circumferential direction and in the axial direction. Using the finite element method, however, makes it much easier to handle complex geometries. The general procedure for the discretization of partial differential equations in this section is essentially based on \cite{BATHE2016}.
 
 \subsection{The weak formulation of the Reynolds differential equation}
 The starting point for the finite element formulation is the incompressible Reynolds differential equation. In equation~\ref{eq:hfe_100} it was assumed that the radial velocity of the bearing journal is small compared to the circumferential velocity. This results in the frequently encountered simplification $\frac{\partial}{\partial x}\left(\frac{\Delta U_{1x} + \Delta U_{2x}}{2} \, h\right)\approx \frac{\Delta U_{1x} + \Delta U_{2x}}{2} \, \frac{\partial h}{\partial x}$.
@@ -1085,7 +1229,7 @@ z\left(r,\,s\right) & = & \boldsymbol{N} \, \hat{\boldsymbol{z}}_e \\
 \end{description}
 
 \subsubsection{Structure of the element matrices}
-If you insert the expressions from equation~\ref{eq:hfe_200} to equation~\ref{eq:hfe_300} and equation~\ref{eq:hfe_175} into equation~\ref{eq:hfe_150}, you get:
+Substituting equation~\ref{eq:hfe_200} to equation~\ref{eq:hfe_300} and equation~\ref{eq:hfe_175} into equation~\ref{eq:hfe_150}, yields:
 \begin{IEEEeqnarray}{lCl}
 \sum_{e=1}^{N_e} \left\{\bar{\hat{\boldsymbol{p}}}_{e}^T \, \underbrace{\left[\int_{A_e}
 \left(\boldsymbol{N} \, \hat{\boldsymbol{h}}_e\right)^3 \, \left( \boldsymbol{B}_1^T \, \boldsymbol{B}_1 +
@@ -1157,7 +1301,7 @@ In equation~\ref{eq:hfe_500} the following rule was used for the evaluation of t
 \end{IEEEeqnarray}
 
 \begin{description}
-\item[$\alpha_1$, $\alpha_2$, $\hdots$] This is a constant which is always equal to one if a boundary condition for the pressure gradient $\left.\frac{\partial p}{\partial x}\right\vert_{g_e}$ or $\left.\frac{\partial p}{\partial z}\right\vert_{g_e}$ is specified at the corresponding edge of the element. Otherwise $\alpha$ is zero.
+\item[$\alpha_1$, $\alpha_2$, $\hdots$] This is a constant which is always equal to one if a boundary condition for the pressure gradient $\left.\frac{\partial p}{\partial x}\right\vert_{g_e}$ or $\left.\frac{\partial p}{\partial z}\right\vert_{g_e}$ is specified at the corresponding edge of the element. Otherwise, $\alpha$ is zero.
 \end{description}
 
 \paragraph{Numerical integration of the element matrices}
@@ -1201,7 +1345,7 @@ The following condition applies to these Boolean matrices:
 \begin{IEEEeqnarray}{rCl}
 \check{\boldsymbol{T}}_1^T \, \check{\boldsymbol{T}}_2 & = & \boldsymbol{0}
 \end{IEEEeqnarray}
-If you insert equation~\ref{eq:hfe_800} to \ref{eq:hfe_801} into equation~\ref{eq:hfe_700}, you get:
+Substituting equation~\ref{eq:hfe_800} to \ref{eq:hfe_801} into equation~\ref{eq:hfe_700} yields:
 \begin{IEEEeqnarray}{l}
 \bar{\check{\boldsymbol{p}}}_1^T \, \check{\boldsymbol{T}}_1^T \, \boldsymbol{K} \,
 \check{\boldsymbol{T}}_1 \, \check{\boldsymbol{p}}_1 + \check{\boldsymbol{p}}_1^T \,
@@ -1236,11 +1380,11 @@ Equation~\ref{eq:hfe_900} was derived without the use of a cavitation model. To 
 
 \section{Fluid structure interactions}
 \label{sec:fsi_100}
-In order to calculate the value of $w_{tot}$ which is needed for equation~\ref{eq:h_1400}, it is necessary to apply the pressure loads due to the hydrodynamic pressure $p$ and due to the contact pressure $p_{asp}$ to a Finite Element model for the bodies attached to the bearing shell and bearing journal respectively. Then the equations of motion of the Finite Element models need to be solved somehow and the resulting displacements can be used to calculate the total deformation $w_{tot}$ and it's time derivative $\dot{w}_{tot}$. Since the hydraulic mesh used for the solution of the Reynolds equation can be attached either to the bearing journal or to the bearing shell, it is necessary to interpolate the total pressure $p_{tot} = p + p_{ap}$ from one body to the other. In the same way, it is necessary to interpolate the radial deformation $w_{2}$ in order to compute the total deformation $w_{tot}=w_1+w_2$.
+In order to calculate the value of $w_{tot}$ which is needed for equation~\ref{eq:h_1400}, it is necessary to apply the pressure loads due to the hydrodynamic pressure $p$ and due to the contact pressure $p_{asp}$ to a Finite Element model for the bodies attached to the bearing shell and bearing journal respectively. The equations of motion of the Finite Element models must then be solved, and the resulting displacements can be used to calculate the total deformation $w_{tot}$ and its time derivative $\dot{w}_{tot}$. Since the hydraulic mesh used for the solution of the Reynolds equation can be attached either to the bearing journal or to the bearing shell, it is necessary to interpolate the total pressure $p_{tot} = p + p_{asp}$ from one body to the other. In the same way, it is necessary to interpolate the radial deformation $w_{2}$ in order to compute the total deformation $w_{tot}=w_1+w_2$.
 \subsection{Reduced order models}
 Because the bodies attached to the bearing shell and journal surface are assumed to undergo large rigid body motions, but the elastic deformations itself are assumed to be small and the material is assumed to be linear elastic, it is possible to apply model order reduction techniques in order to reduce the computational cost of the coupled fluid structure interaction problem. The software \href{https://github.com/octave-user/mboct-fem-pkg}{mboct-fem-pkg}, which is used to generate those reduced order models, implements a combined modal and static reduction based on \cite{Gash-1989}.
 \subsubsection{Equations of motion with respect to the moving reference frame}
-Despite of the large rigid body motions of the bodies, the linear time invariant equations of motion~\ref{eq:fsi_100} of a representative body attached to the bearing shell or journal surface may be used as the basis of the model order reduction.
+Despite the large rigid body motions of the bodies, the linear time invariant equations of motion~\ref{eq:fsi_100} of a representative body attached to the bearing shell or journal surface may be used as the basis of the model order reduction.
 \begin{IEEEeqnarray}{rCl}
 \label{eq:fsi_100}
 \boldsymbol{M}_{fem} \, \ddot{\boldsymbol{U}}_{fem} + \boldsymbol{D}_{fem} \, \dot{\boldsymbol{U}}_{fem} + \boldsymbol{K}_{fem} \, \boldsymbol{U}_{fem} & = & \boldsymbol{R}_{fem}
@@ -1287,7 +1431,7 @@ Despite of the large rigid body motions of the bodies, the linear time invariant
 \subsubsection{Constraint equations}
 In order to perform a model order reduction, it is necessary to impose prescribed displacements at the surface of the bearing journal or bearing shell. This is achieved by means of load distributing coupling elements based on \cite{CODEASTERR30308}. All the constraint equations are assembled to the global $\boldsymbol{C}$ matrix.
 \subsubsection{Static mode shapes}
-The static mode shapes, needed for the model order reduction, are obtained by solving the linear system of equations~\ref{eq:fsi_300}. In equation~\ref{eq:fsi_300}, the identity matrix $\boldsymbol{I}_{pre}$ imposes unit displacements and rotations at the center of each bearing surface. However, it must be ensured, that the resulting mode shapes $\boldsymbol{\varphi}_s$ do not contain any rigid body motions of the flexible body. Otherwise the modal stiffness matrix would become singular.
+The static mode shapes, needed for the model order reduction, are obtained by solving the linear system of equations~\ref{eq:fsi_300}. In equation~\ref{eq:fsi_300}, the identity matrix $\boldsymbol{I}_{pre}$ imposes unit displacements and rotations at the center of each bearing surface. However, it must be ensured that the resulting mode shapes $\boldsymbol{\varphi}_s$ do not contain any rigid body motions of the flexible body. Otherwise the modal stiffness matrix would become singular.
 \begin{IEEEeqnarray}{rCl}
 \label{eq:fsi_300}
 \boldsymbol{\varphi}_s&=&\boldsymbol{K}_{fem}^{-1}\,\begin{pmatrix}\boldsymbol{0} \\
@@ -1306,7 +1450,7 @@ It is important to include additional mode shapes, in order to get a better repr
 \label{eq:fsi_500}
 \left(\boldsymbol{K}_{fem} - \lambda\,\boldsymbol{A}_{diag}\right)\,\boldsymbol{\varphi}_p & = & \boldsymbol{0}
 \end{IEEEeqnarray}
-In order to get the diagonal matrix $\boldsymbol{A}_{diag}$, a load vector $\boldsymbol{R}_{p}$ is assembled with a uniform pressure load at the respective bearing surface. Then the components of the pressure load vector $\boldsymbol{R}_{p}$ are summed up and are stored at the diagonal of the matrix $\boldsymbol{A}$. All the nodes which are not withing the respective bearing surface have zero entries at the diagonal of matrix $\boldsymbol{A}$. Typical mode shapes are shown in figure~\ref{fig:h1000} and figure~\ref{fig:h1100}.
+In order to get the diagonal matrix $\boldsymbol{A}_{diag}$, a load vector $\boldsymbol{R}_{p}$ is assembled with a uniform pressure load at the respective bearing surface. Then the components of the pressure load vector $\boldsymbol{R}_{p}$ are summed up and are stored at the diagonal of the matrix $\boldsymbol{A}$. All the nodes which are not within the respective bearing surface have zero entries at the diagonal of matrix $\boldsymbol{A}$. Typical mode shapes are shown in figure~\ref{fig:h1000} and figure~\ref{fig:h1100}.
 \begin{IEEEeqnarray}{rCl}
 \label{eq:fsi_600}
 \boldsymbol{R}_{p}&=&\begin{pmatrix}
@@ -1333,10 +1477,10 @@ In order to get the diagonal matrix $\boldsymbol{A}_{diag}$, a load vector $\bol
 \end{figure}
 
 \subsubsection{Model order reduction}
-Finally, all the different mode shapes $\boldsymbol{\varphi}_n$, $\boldsymbol{\varphi}_s$ and $\boldsymbol{\varphi}_p$ are combined in the model reduction matrix $\boldsymbol{T}_{red}$. It is important to note, that the matrix $\boldsymbol{\varphi}_p$ is not necessarily orthogonal to $\boldsymbol{\varphi}_n$ and $\boldsymbol{\varphi}_s$. For that reason, it is necessary to apply the correction equation~\ref{eq:fsi_700}.
+Finally, all the different mode shapes $\boldsymbol{\varphi}_n$, $\boldsymbol{\varphi}_s$ and $\boldsymbol{\varphi}_p$ are combined in the model reduction matrix $\boldsymbol{T}_{red}$. It is important to note that the matrix $\boldsymbol{\varphi}_p$ is not necessarily orthogonal to $\boldsymbol{\varphi}_n$ and $\boldsymbol{\varphi}_s$. For that reason, it is necessary to apply a re-orthogonalization equation~\ref{eq:fsi_700}.
 \begin{IEEEeqnarray}{rCl}
 \boldsymbol{T}_{red}&=&\begin{pmatrix} \boldsymbol{\varphi}_n & \boldsymbol{\varphi}_s & \boldsymbol{\varphi}_p^{\star} \end{pmatrix} \\
-\boldsymbol{\varphi}_p^{\star}&=&\boldsymbol{\varphi}_p - \boldsymbol{\varphi}_{ns} \, \left(\boldsymbol{\varphi}_{ns}^T\,\boldsymbol{\varphi}_{ns}\right)^{-1}\,\boldsymbol{\varphi}_{ns}^T\,\boldsymbol{\varphi}_{p} \label{eq:fsi_700} \\
+\boldsymbol{\varphi}_p^{\star}&=&\boldsymbol{\varphi}_p - \boldsymbol{\varphi}_{ns} \, \left(\boldsymbol{\varphi}_{ns}^T\, \boldsymbol{M}_{fem}\,\boldsymbol{\varphi}_{ns}\right)^{-1}\,\boldsymbol{\varphi}_{ns}^T\, \boldsymbol{M}_{fem}\,\boldsymbol{\varphi}_{p} \label{eq:fsi_700} \\
 \boldsymbol{\varphi}_{ns} & = & \begin{pmatrix} \boldsymbol{\varphi}_n & \boldsymbol{\varphi}_s \end{pmatrix}
 \end{IEEEeqnarray}
 Now, the reduced set of degrees of freedom $\boldsymbol{q}$ is defined and the model order reduction can be performed.
@@ -1365,7 +1509,7 @@ As described in section~\ref{sec:fsi_100}, it is necessary on one hand to apply 
 \subsubsection{The global system of equations}
 Equation~\ref{eq:fsi_750} to equation~\ref{eq:fsi_760} are showing an example for the global system of equations of motion of two flexible bodies connected with a hydrodynamic plain bearing.
 All the terms marked with ``$a$'' are contributions from the hydrodynamic bearing element whereas the terms marked with ``$c$'' are contributions from the modal joint element.
-The additional terms ``$b$'' are contributions from the automatic modal element. It is important to note, that the pressure loads $\boldsymbol{E}_1 \, \boldsymbol{p}_{tot}$ and $\boldsymbol{E}_2 \, \boldsymbol{f}\left(\boldsymbol{p}_{tot}\right)$ do not contribute to the rigid body motion of the flexible bodies, but they contribute only to the the deformations of the flexible bodies with respect to the moving reference frame. Those moving reference frame is represented by a so called ``modal node'' and the equations of motion for the moving reference frame are equation~\ref{eq:fsi_755} - \ref{eq:fsi_760}. Since the reaction forces according to equation~\ref{eq:h310} - \ref{eq:h311}, \ref{eq:h410} - \ref{eq:h411}, \ref{eq:h420} - \ref{eq:h421} and \ref{eq:h430} - \ref{eq:h431} must contribute to the rigid body motion of the flexible bodies, those loads must be applied to the respective ``modal nodes'' attached to the modal joint elements.
+The additional terms ``$b$'' are contributions from the automatic modal element. It is important to note that the pressure loads $\boldsymbol{E}_1 \, \boldsymbol{p}_{tot}$ and $\boldsymbol{E}_2 \, \boldsymbol{f}\left(\boldsymbol{p}_{tot}\right)$ do not contribute to the rigid body motion of the flexible bodies, but they contribute only to the deformations of the flexible bodies with respect to the moving reference frame. This moving reference frame is represented by a so called ``modal node'' and the equations of motion for the moving reference frame are equation~\ref{eq:fsi_755} - \ref{eq:fsi_760}. Since the reaction forces according to equation~\ref{eq:h310} - \ref{eq:h311}, \ref{eq:h410} - \ref{eq:h411}, \ref{eq:h420} - \ref{eq:h421} and \ref{eq:h430} - \ref{eq:h431} must contribute to the rigid body motion of the flexible bodies, these loads must be applied to the respective ``modal nodes'' attached to the modal joint elements.
 \begin{IEEEeqnarray}{rCl}
 \underbrace{-\boldsymbol{M}_{red_1} \, \ddot{\boldsymbol{q}}_1 - \boldsymbol{D}_{red_1} \, \dot{\boldsymbol{q}}_1 - \boldsymbol{K}_{red_1} \, \boldsymbol{q}_1 + \boldsymbol{R}_{red_1}^{\star}}_{c} + \underbrace{\boldsymbol{E}_1 \, \boldsymbol{p}_{tot}}_{a} &=&\boldsymbol{0}\label{eq:fsi_750}\\
 \underbrace{-\boldsymbol{M}_{red_2} \, \ddot{\boldsymbol{q}}_2 - \boldsymbol{D}_{red_2} \, \dot{\boldsymbol{q}}_2 - \boldsymbol{K}_{red_2} \, \boldsymbol{q}_2 + \boldsymbol{R}_{red_2}^{\star}}_{c} + \underbrace{\boldsymbol{E}_2 \, f\left(\boldsymbol{p}_{tot}\right)}_{a} &=&\boldsymbol{0} \\
@@ -1394,11 +1538,11 @@ The additional terms ``$b$'' are contributions from the automatic modal element.
 \item[$\boldsymbol{M}^{\star}$] Additional moment contributions form the modal joint element. See section~\ref{sec:modal-element}.
 \end{description}
 \subsubsection{Implementation}
-It must be emphasized, that the process of generating the matrices $\boldsymbol{M}_{red}$, $\boldsymbol{D}_{red}$, $\boldsymbol{K}_{red}$, $\boldsymbol{T}_{red}$, $\boldsymbol{D}$ and $\boldsymbol{E}$ is not built into MBDyn. For that purpose it is necessary to use the toolkit \href{https://github.com/octave-user/mboct-fem-pkg}{mboct-fem-pkg}.
+It must be emphasized that the process of generating the matrices $\boldsymbol{M}_{red}$, $\boldsymbol{D}_{red}$, $\boldsymbol{K}_{red}$, $\boldsymbol{T}_{red}$, $\boldsymbol{D}$ and $\boldsymbol{E}$ is not built into MBDyn. For that purpose it is necessary to use the toolkit \href{https://github.com/octave-user/mboct-fem-pkg}{mboct-fem-pkg}.
 The related function call to generate those matrices is ``fem\_ehd\_pre\_comp\_mat\_linear\_mesh''. Furthermore, the functions ``fem\_ehd\_pre\_comp\_mat\_export'' and ``fem\_cms\_export'' can be used to export all those matrices to a file format which can be read by MBDyn. See also MBDyn's \emph{input-manual}.
 
-\subsection{Interpolation from the bearing journal to the bearing shell and visa verse}
-It was mentioned in section~\ref{sec:fsi_100}, that the hydraulic mesh must be attached either to the bearing journal or to the bearing shell. So, there is still the question how to interpolate the total pressure $p_{tot}$ and the radial deformation $w_1$ from the bearing journal to the bearing shell for instance.
+\subsection{Interpolation from the bearing journal to the bearing shell and vice versa}
+It was mentioned in section~\ref{sec:fsi_100}, that the hydraulic mesh must be attached either to the bearing journal or to the bearing shell. Therefore, there remains the question of how to interpolate the total pressure $p_{tot}$ and the radial deformation $w_1$ from the bearing journal to the bearing shell for instance.
 Actually MBDyn uses the interpolation according to R.J. Renka\cite{Renka-1988}.
 \subsubsection{Construction of polynomials}
 For each node at the hydraulic mesh, a polynomial function $C_{kl}$ is defined.
@@ -1419,7 +1563,7 @@ The coefficients $\boldsymbol{a}$ of the polynomial are fitted to the data to be
 A_{mn}&=&\Delta x_{m}^{p_{x_n}}\,\Delta z_{m}^{p_{z_n}}
 \end{IEEEeqnarray}
 \begin{description}
-\item[$\boldsymbol{A}$] A constant 16x9 matrix which is a function of the distances $\Delta x_{m}$ and $\Delta z_{m}$ between the central node, where the polynomial is constructed, an it's neighbor nodes
+\item[$\boldsymbol{A}$] A constant 16x9 matrix which is a function of the distances $\Delta x_{m}$ and $\Delta z_{m}$ between the central node, where the polynomial is constructed, and its neighbor nodes
 \item[$\boldsymbol{A}^{+}$] The Moore-Penrose pseudo-inverse matrix of $\boldsymbol{A}$
 \item[$p_x$] Exponents of the polynomial in $x$ direction
 \item[$p_z$] Exponents of the polynomial in $z$ direction
