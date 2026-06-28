@@ -55,17 +55,17 @@ begin: initial value;
         derivatives max iterations: 20;
         derivatives coefficient: 1e-5, auto;
 
-        set: bool enable_mcp = TRUE;
-        linear solver: umfpack, grad, scale, row max column max, always, max iterations, 10;
-        nonlinear solver: mcp newton min fb, print convergence info, no, lambda min, 0., tolerance x, 1e-7;
+        ## set: bool enable_mcp = TRUE;
+        ## linear solver: umfpack, grad, scale, row max column max, always, max iterations, 10;
+        ## nonlinear solver: mcp newton min fb, print convergence info, no, lambda min, 0., tolerance x, 1e-7;
 
         ## set: bool enable_mcp = TRUE;
         ## linear solver: siconos dense;
         ## nonlinear solver: siconos mcp newton min fb, lambda min, 1e-16;
 
-        ## set: bool enable_mcp = FALSE;
-        ## linear solver: umfpack, grad, scale, row max column max, always, max iterations, 10;
-        ##nonlinear solver: line search, modified, 0, default solver options, heavy nonlinear, print convergence info, no, lambda min, 0., tolerance x, 1e-7;
+        set: bool enable_mcp = FALSE;
+        linear solver: umfpack, grad, scale, row max column max, always, max iterations, 10;
+        nonlinear solver: line search, modified, 0, default solver options, heavy nonlinear, print convergence info, no, lambda min, 0., tolerance x, 1e-7;
 
         ## set: bool enable_mcp = TRUE;
         ## linear solver: siconos dense;
@@ -713,11 +713,14 @@ begin: elements;
     user defined: (7001),
         hydrodynamic plain bearing2,
             hydraulic fluid, reference, (6001),
+            alpha, 18e-9,
+            Arho1, 0.6e-9,
+            Arho2, 1.7e-9,
             viscosity vapor, (1.5e-06),
             ##mesh, quadratic finite element,
             mesh, linear finite difference,
             enable mcp, enable_mcp,
-            flow factors, patir cheng, replicated, sigma, 2.060E-07, 4.170E-07, lambdax, 3., 3., lambdaz, 1., 1.,
+            flow factors, patir cheng, original, sigma, 2.060E-07, 4.170E-07, lambdax, 3., 3., lambdaz, 1., 1.,
             pressure step integrator, implicit euler,
             density step integrator, implicit euler,
             geometry, cylindrical,

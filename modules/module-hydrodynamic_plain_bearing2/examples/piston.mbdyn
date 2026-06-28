@@ -358,7 +358,6 @@ begin: elements;
                 viscosity, eta,
                 pressure, 0,
                 temperature, 0,
-            viscosity vapor, etav,
             mesh, linear finite difference,
             geometry, cylindrical,
                 mesh position, at shaft,

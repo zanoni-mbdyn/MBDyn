@@ -650,73 +650,20 @@ namespace {
           };
      };
 
-     class ThermalFluidModel: public HydroFluidBase {
-     public:
-          explicit ThermalFluidModel(doublereal T0,
-                                     doublereal rho0,
-                                     doublereal eta0,
-                                     doublereal beta);
-
-          void ParseInput(DataManager* pDM, MBDynParser& HP, const HydroRootElement* pParent);
-
-          template <typename U>
-          inline void GetViscosityLiquid(const U& T, U& eta) const;
-
-          template <typename U>
-          inline U GetSpecHeatPerVolume(const U& p, const U& T, HeatCapacityType eType) const;
-
-          template <typename U>
-          inline U GetDensityLiquid(const U& T, U* drho_dT = nullptr) const;
-
-          template <typename U>
-          inline U GetThermalConductivityLiquid(const U& T) const;
-
-          template <typename U>
-          U GetThermalConductivityMixture(const U& T, const U& rho) const;
-
-          template <typename U>
-          inline U GetSpecificHeatLiquid(const U& p, const U& T, HeatCapacityType eType) const;
-
-          doublereal dGetRefDensity() const { return rho0; }
-
-          doublereal dGetRefViscosity() const { return eta0; }
-
-          doublereal dGetRefTemperature() const { return T0; }
-
-          ThermalType GetThermalType() const { return eType; }
-
-     private:
-          bool bValid() const;
-
-          ThermalType eType;
-          doublereal T0;
-          doublereal cp0;
-          const doublereal rho0;
-          const doublereal eta0;
-          doublereal beta;
-          doublereal lambda0;
-          doublereal alphalambda;
-          doublereal Aeta2_Aeta3;
-          doublereal Aeta3;
-          doublereal Ac1;
-          doublereal Ac2;
-          doublereal Ac3;
-          doublereal Ac4;
-          doublereal Ac5;
-          doublereal Alambda;
-     };
-
      class HydroFluid: public HydroFluidBase {
      public:
-          static const index_type iNumDof = 2;
+          static constexpr index_type iNumDof = 2;
 
           class ErrNotUnique : public ErrNotImplementedYet {
           public:
                ErrNotUnique(MBDYN_EXCEPT_ARGS_DECL) : ErrNotImplementedYet(MBDYN_EXCEPT_ARGS_PASSTHRU) {};
           };
 
-          HydroFluid(doublereal pc, const ThermalFluidModel& oThermModel);
+          HydroFluid();
           virtual ~HydroFluid();
+
+          virtual void ParseInput(DataManager* pDM, MBDynParser& HP, const HydroRootElement* pParent)=0;
+
           virtual void GetDensity(const doublereal& p,
                                   const doublereal& T,
                                   doublereal& rho,
@@ -753,27 +700,27 @@ namespace {
                                    GpGradProd* dp_drho = nullptr,
                                    GpGradProd* dp_dT = nullptr) const=0;
 
-          virtual void GetViscosity(const doublereal& rho,
+          virtual void GetViscosity(const doublereal& p,
+                                    const doublereal& rho,
                                     const doublereal& T,
                                     doublereal& eta) const=0;
 
-          virtual void GetViscosity(const SpGradient& rho,
+          virtual void GetViscosity(const SpGradient& p,
+                                    const SpGradient& rho,
                                     const SpGradient& T,
                                     SpGradient& eta) const=0;
 
-          virtual void GetViscosity(const GpGradProd& rho,
+          virtual void GetViscosity(const GpGradProd& p,
+                                    const GpGradProd& rho,
                                     const GpGradProd& T,
                                     GpGradProd& eta) const=0;
 
-          template <typename U>
-          void GetSpecificHeat(const U& p, const U& T, const U& rho, U& cp, HeatCapacityType eType) const {
-               cp = oThermModel.GetSpecificHeatLiquid(p, T, eType);
-          }
-
-          template <typename U>
-          void GetThermalConductivity(const U& T, const U& rho, U& lambda) const {
-               lambda = oThermModel.GetThermalConductivityMixture(T, rho);
-          }
+          virtual void GetSpecificHeat(const doublereal& p, const doublereal& T, const doublereal& rho, doublereal& cp, HeatCapacityType eType) const=0;
+          virtual void GetSpecificHeat(const SpGradient& p, const SpGradient& T, const SpGradient& rho, SpGradient& cp, HeatCapacityType eType) const=0;
+          virtual void GetSpecificHeat(const GpGradProd& p, const GpGradProd& T, const GpGradProd& rho, GpGradProd& cp, HeatCapacityType eType) const=0;
+          virtual void GetThermalConductivity(const doublereal& p, const doublereal& T, const doublereal& rho, doublereal& lambda) const=0;
+          virtual void GetThermalConductivity(const SpGradient& p, const SpGradient& T, const SpGradient& rho, SpGradient& lambda) const=0;
+          virtual void GetThermalConductivity(const GpGradProd& p, const GpGradProd& T, const GpGradProd& rho, GpGradProd& lambda) const=0;
 
           virtual void
           ThetaToPhysical(const std::array<doublereal, iNumDof>& Theta,
@@ -808,80 +755,161 @@ namespace {
           virtual CavitationState Cavitation(doublereal& p, doublereal* dp_dt=0) const=0;
           virtual CavitationState Cavitation(SpGradient& p, SpGradient* dp_dt=0) const=0;
           virtual CavitationState Cavitation(GpGradProd& p, GpGradProd* dp_dt=0) const=0;
-          virtual doublereal dGetRefPressure() const;
-          virtual doublereal dGetRefDensity() const;
-
-          doublereal dGetRefTemperature() const {
-               return oThermModel.dGetRefTemperature();
-          }
-
-          doublereal dGetRefViscosity() const {
-               return oThermModel.dGetRefViscosity();
-          }
-
+          virtual doublereal dGetRefPressure() const=0;
+          virtual doublereal dGetRefDensity() const=0;
+          virtual doublereal dGetRefTemperature() const=0;
+          virtual doublereal dGetRefViscosity() const=0;
           virtual HydraulicType GetHydraulicType() const=0;
+          virtual ThermalType GetThermalType() const=0;
+     };
 
-          ThermalType GetThermalType() const {
-               return oThermModel.GetThermalType();
+     class ThermalFluidModel: public HydroFluid {
+     public:
+          explicit ThermalFluidModel(doublereal T0,
+                                     doublereal rho0,
+                                     doublereal pc,
+                                     doublereal eta0,
+                                     doublereal beta);
+          virtual ~ThermalFluidModel();
+
+          virtual void ParseInput(DataManager* pDM, MBDynParser& HP, const HydroRootElement* pParent) override;
+
+          virtual doublereal dGetRefDensity() const override final { return rho0; }
+
+          virtual doublereal dGetRefViscosity() const override final { return eta0; }
+
+          virtual doublereal dGetRefTemperature() const override final { return T0; }
+
+          virtual doublereal dGetRefPressure() const override final { return pc; }
+
+          virtual ThermalType GetThermalType() const override final { return eType; }
+
+          virtual void GetSpecificHeat(const doublereal& p, const doublereal& T, const doublereal& rho, doublereal& cp, HeatCapacityType eHcType) const override final {
+               cp = GetSpecificHeatLiquid(p, T, eHcType);
+          }
+
+          virtual void GetSpecificHeat(const SpGradient& p, const SpGradient& T, const SpGradient& rho, SpGradient& cp, HeatCapacityType eHcType) const override final {
+               cp = GetSpecificHeatLiquid(p, T, eHcType);
+          }
+
+          virtual void GetSpecificHeat(const GpGradProd& p, const GpGradProd& T, const GpGradProd& rho, GpGradProd& cp, HeatCapacityType eHcType) const override final {
+               cp = GetSpecificHeatLiquid(p, T, eHcType);
+          }
+
+          virtual void GetThermalConductivity(const doublereal& p, const doublereal& T, const doublereal& rho, doublereal& lambda) const override final {
+               lambda = GetThermalConductivityMixture(p, T, rho);
+          }
+
+          virtual void GetThermalConductivity(const SpGradient& p, const SpGradient& T, const SpGradient& rho, SpGradient& lambda) const override final {
+               lambda = GetThermalConductivityMixture(p, T, rho);
+          }
+
+          virtual void GetThermalConductivity(const GpGradProd& p, const GpGradProd& T, const GpGradProd& rho, GpGradProd& lambda) const override final {
+               lambda = GetThermalConductivityMixture(p, T, rho);
           }
 
      protected:
+          template <typename U>
+          inline void GetViscosityLiquid(const U& p, const U& T, U& eta) const;
+
+          template <typename U>
+          inline U GetSpecHeatPerVolume(const U& p, const U& T, HeatCapacityType eType) const;
+
+          template <typename U>
+          inline U GetDensityLiquid(const U& p, const U& T, U* drho_dp = nullptr, U* drho_dT = nullptr) const;
+
+          template <typename U>
+          inline U GetThermalConductivityLiquid(const U& T) const;
+
+          template <typename U>
+          U GetThermalConductivityMixture(const U& p, const U& T, const U& rho) const;
+
+          template <typename U>
+          inline U GetSpecificHeatLiquid(const U& p, const U& T, HeatCapacityType eType) const;
+     private:
+          bool bValid() const;
+
+          ThermalType eType;
+          doublereal T0;
+          doublereal cp0;
+          const doublereal rho0;
           const doublereal pc;
-          ThermalFluidModel oThermModel;
+          const doublereal eta0;
+          doublereal alphap;
+          doublereal beta;
+          doublereal Arho1;
+          doublereal Arho2;
+          doublereal lambda0;
+          doublereal alphalambda;
+          doublereal Aeta2_Aeta3;
+          doublereal Aeta3;
+          doublereal Ac1;
+          doublereal Ac2;
+          doublereal Ac3;
+          doublereal Ac4;
+          doublereal Ac5;
+          doublereal Alambda;
      };
 
-     class HydroIncompressibleFluid: public HydroFluid {
+     class HydroIncompressibleFluid: public ThermalFluidModel {
      public:
-          HydroIncompressibleFluid(doublereal pc, const ThermalFluidModel& oThermModel);
+          HydroIncompressibleFluid(doublereal T0,
+                                   doublereal rho0,
+                                   doublereal pc,
+                                   doublereal eta0,
+                                   doublereal beta);
           virtual ~HydroIncompressibleFluid();
 
           virtual void GetDensity(const doublereal& p,
                                   const doublereal& T,
                                   doublereal& rho,
                                   doublereal* drho_dp = nullptr,
-                                  doublereal* drho_dT = nullptr) const;
+                                  doublereal* drho_dT = nullptr) const override;
 
           virtual void GetDensity(const SpGradient& p,
                                   const SpGradient& T,
                                   SpGradient& rho,
                                   SpGradient* drho_dp = nullptr,
-                                  SpGradient* drho_dT = nullptr) const;
+                                  SpGradient* drho_dT = nullptr) const override;
 
           virtual void GetDensity(const GpGradProd& p,
                                   const GpGradProd& T,
                                   GpGradProd& rho,
                                   GpGradProd* drho_dp = nullptr,
-                                  GpGradProd* drho_dT = nullptr) const;
+                                  GpGradProd* drho_dT = nullptr) const override;
 
           virtual void GetPressure(const doublereal& rho,
                                    const doublereal& T,
                                    doublereal& p,
                                    doublereal* dp_drho = nullptr,
-                                   doublereal* dp_dT = nullptr) const;
+                                   doublereal* dp_dT = nullptr) const override;
 
           virtual void GetPressure(const SpGradient& rho,
                                    const SpGradient& T,
                                    SpGradient& p,
                                    SpGradient* dp_drho = nullptr,
-                                   SpGradient* dp_dT = nullptr) const;
+                                   SpGradient* dp_dT = nullptr) const override;
 
           virtual void GetPressure(const GpGradProd& rho,
                                    const GpGradProd& T,
                                    GpGradProd& p,
                                    GpGradProd* dp_drho = nullptr,
-                                   GpGradProd* dp_dT = nullptr) const;
+                                   GpGradProd* dp_dT = nullptr) const override;
 
-          virtual void GetViscosity(const doublereal& rho,
+          virtual void GetViscosity(const doublereal& p,
+                                    const doublereal& rho,
                                     const doublereal& T,
-                                    doublereal& eta) const;
+                                    doublereal& eta) const override;
 
-          virtual void GetViscosity(const SpGradient& rho,
+          virtual void GetViscosity(const SpGradient& p,
+                                    const SpGradient& rho,
                                     const SpGradient& T,
-                                    SpGradient& eta) const;
+                                    SpGradient& eta) const override;
 
-          virtual void GetViscosity(const GpGradProd& rho,
+          virtual void GetViscosity(const GpGradProd& p,
+                                    const GpGradProd& rho,
                                     const GpGradProd& T,
-                                    GpGradProd& eta) const;
+                                    GpGradProd& eta) const override;
 
           virtual void
           ThetaToPhysical(const std::array<doublereal, iNumDof>& Theta,
@@ -891,7 +919,7 @@ namespace {
                           doublereal& p,
                           doublereal& dp_dt,
                           doublereal& rho,
-                          doublereal& drho_dt) const;
+                          doublereal& drho_dt) const override;
 
           virtual void
           ThetaToPhysical(const std::array<SpGradient, iNumDof>& Theta,
@@ -901,7 +929,7 @@ namespace {
                           SpGradient& p,
                           SpGradient& dp_dt,
                           SpGradient& rho,
-                          SpGradient& drho_dt) const;
+                          SpGradient& drho_dt) const override;
 
           virtual void
           ThetaToPhysical(const std::array<GpGradProd, iNumDof>& Theta,
@@ -911,13 +939,13 @@ namespace {
                           GpGradProd& p,
                           GpGradProd& dp_dt,
                           GpGradProd& rho,
-                          GpGradProd& drho_dt) const;
+                          GpGradProd& drho_dt) const override;
 
-          virtual doublereal GetTheta0(index_type iDofIndex) const;
-          virtual CavitationState Cavitation(doublereal& p, doublereal* dp_dt=0) const;
-          virtual CavitationState Cavitation(SpGradient& p, SpGradient* dp_dt=0) const;
-          virtual CavitationState Cavitation(GpGradProd& p, GpGradProd* dp_dt=0) const;
-          virtual HydraulicType GetHydraulicType() const;
+          virtual doublereal GetTheta0(index_type iDofIndex) const override;
+          virtual CavitationState Cavitation(doublereal& p, doublereal* dp_dt=0) const override;
+          virtual CavitationState Cavitation(SpGradient& p, SpGradient* dp_dt=0) const override;
+          virtual CavitationState Cavitation(GpGradProd& p, GpGradProd* dp_dt=0) const override;
+          virtual HydraulicType GetHydraulicType() const override;
      private:
           template <typename G>
           inline void
@@ -941,7 +969,7 @@ namespace {
 
           template <typename G>
           inline void
-          GetViscosityTpl(const G& rho, const G& T, G& eta) const;
+          GetViscosityTpl(const G& p, const G& rho, const G& T, G& eta) const;
 
           template <typename G>
           inline void
@@ -955,61 +983,68 @@ namespace {
                              G& drho_dt) const;
      };
 
-     class LinearCompressibleFluid: public HydroFluid {
+     class LinearCompressibleFluid: public ThermalFluidModel {
      public:
-          LinearCompressibleFluid(doublereal etavap_etaliq,
+          LinearCompressibleFluid(doublereal T0,
+                                  doublereal rho0,
                                   doublereal pc,
-                                  HydraulicType type,
-                                  const ThermalFluidModel& oThermModel);
+                                  doublereal eta0,
+                                  doublereal beta,
+                                  HydraulicType type);
           virtual ~LinearCompressibleFluid();
+
+          virtual void ParseInput(DataManager* pDM, MBDynParser& HP, const HydroRootElement* pParent) override;
 
           virtual void GetDensity(const doublereal& p,
                                   const doublereal& T,
                                   doublereal& rho,
                                   doublereal* drho_dp = nullptr,
-                                  doublereal* drho_dT = nullptr) const;
+                                  doublereal* drho_dT = nullptr) const override;
 
           virtual void GetDensity(const SpGradient& p,
                                   const SpGradient& T,
                                   SpGradient& rho,
                                   SpGradient* drho_dp = nullptr,
-                                  SpGradient* drho_dT = nullptr) const;
+                                  SpGradient* drho_dT = nullptr) const override;
 
           virtual void GetDensity(const GpGradProd& p,
                                   const GpGradProd& T,
                                   GpGradProd& rho,
                                   GpGradProd* drho_dp = nullptr,
-                                  GpGradProd* drho_dT = nullptr) const;
+                                  GpGradProd* drho_dT = nullptr) const override;
 
           virtual void GetPressure(const doublereal& rho,
                                    const doublereal& T,
                                    doublereal& p,
                                    doublereal* dp_drho = nullptr,
-                                   doublereal* dp_dT = nullptr) const;
+                                   doublereal* dp_dT = nullptr) const override;
 
           virtual void GetPressure(const SpGradient& rho,
                                    const SpGradient& T,
                                    SpGradient& p,
                                    SpGradient* dp_drho = nullptr,
-                                   SpGradient* dp_dT = nullptr) const;
+                                   SpGradient* dp_dT = nullptr) const override;
 
           virtual void GetPressure(const GpGradProd& rho,
                                    const GpGradProd& T,
                                    GpGradProd& p,
                                    GpGradProd* dp_drho = nullptr,
-                                   GpGradProd* dp_dT = nullptr) const;
+                                   GpGradProd* dp_dT = nullptr) const override;
 
-          virtual void GetViscosity(const doublereal& rho,
+          virtual void GetViscosity(const doublereal& p,
+                                    const doublereal& rho,
                                     const doublereal& T,
-                                    doublereal& eta) const;
+                                    doublereal& eta) const override;
 
-          virtual void GetViscosity(const SpGradient& rho,
+          virtual void GetViscosity(const SpGradient& p,
+                                    const SpGradient& rho,
                                     const SpGradient& T,
-                                    SpGradient& eta) const;
+                                    SpGradient& eta) const override;
 
-          virtual void GetViscosity(const GpGradProd& rho,
+          virtual void GetViscosity(const GpGradProd& p,
+                                    const GpGradProd& rho,
                                     const GpGradProd& T,
-                                    GpGradProd& eta) const;
+                                    GpGradProd& eta) const override;
 
           virtual void
           ThetaToPhysical(const std::array<doublereal, iNumDof>& Theta,
@@ -1019,7 +1054,7 @@ namespace {
                           doublereal& p,
                           doublereal& dp_dt,
                           doublereal& rho,
-                          doublereal& drho_dt) const;
+                          doublereal& drho_dt) const override;
           virtual void
           ThetaToPhysical(const std::array<SpGradient, iNumDof>& Theta,
                           const std::array<SpGradient, iNumDof>& dTheta_dt,
@@ -1028,7 +1063,7 @@ namespace {
                           SpGradient& p,
                           SpGradient& dp_dt,
                           SpGradient& rho,
-                          SpGradient& drho_dt) const;
+                          SpGradient& drho_dt) const override;
 
           virtual void
           ThetaToPhysical(const std::array<GpGradProd, iNumDof>& Theta,
@@ -1038,13 +1073,13 @@ namespace {
                           GpGradProd& p,
                           GpGradProd& dp_dt,
                           GpGradProd& rho,
-                          GpGradProd& drho_dt) const;
+                          GpGradProd& drho_dt) const override;
 
-          virtual doublereal GetTheta0(integer iDofIndex) const;
-          virtual CavitationState Cavitation(doublereal& p, doublereal* dp_dt = nullptr) const;
-          virtual CavitationState Cavitation(SpGradient& p, SpGradient* dp_dt = nullptr) const;
-          virtual CavitationState Cavitation(GpGradProd& p, GpGradProd* dp_dt = nullptr) const;
-          virtual HydraulicType GetHydraulicType() const;
+          virtual doublereal GetTheta0(integer iDofIndex) const override;
+          virtual CavitationState Cavitation(doublereal& p, doublereal* dp_dt = nullptr) const override;
+          virtual CavitationState Cavitation(SpGradient& p, SpGradient* dp_dt = nullptr) const override;
+          virtual CavitationState Cavitation(GpGradProd& p, GpGradProd* dp_dt = nullptr) const override;
+          virtual HydraulicType GetHydraulicType() const override;
      private:
           template <typename G>
           inline void
@@ -1068,7 +1103,7 @@ namespace {
 
           template <typename G>
           inline void
-          GetViscosityTpl(const G& rho, const G& T, G& eta) const;
+          GetViscosityTpl(const G& p, const G& rho, const G& T, G& eta) const;
 
           template <typename G>
           inline void
@@ -1082,7 +1117,7 @@ namespace {
                              G& drho_dt) const;
 
      private:
-          const doublereal etavap_etaliq;
+          doublereal etavap_etaliq;
           const HydraulicType type;
      };
 
@@ -2132,6 +2167,8 @@ namespace {
           }
      private:
           const PressureNodeAd* const pExtNode;
+          doublereal pext;
+          doublereal dpext_dt;
           doublereal pextY;
           sp_grad::SpFunctionCall eCurrFunc;
      };
@@ -4070,7 +4107,7 @@ namespace {
 
      class LinFD5CouplingElem: public LinFD5Elem {
      public:
-          explicit LinFD5CouplingElem(HydroMesh* pMesh);
+          explicit LinFD5CouplingElem(HydroMesh* pMesh, const FlowFactorModel* pFlowFactors);
           virtual ~LinFD5CouplingElem();
 
           virtual void
@@ -4112,6 +4149,8 @@ namespace {
                       const SpGradientVectorHandler<T>& XCurr,
                       const SpGradientVectorHandler<T>& XPrimeCurr,
                       SpFunctionCall func);
+     private:
+          const FlowFactorModel* const pFlowFactors;
      };
 
      class LinFD4FrictionElem: public LinFD4Elem {
@@ -6310,50 +6349,18 @@ namespace {
                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
           }
 
-          ThermalFluidModel oThermModel(T0, rhoc, eta, gamma);
-
-          oThermModel.ParseInput(pDM, HP, this);
-
-          doublereal etav = 0.;
-          bool bGotEtaVapor = false;
-
-          if (HP.IsKeyWord("viscosity" "vapor") ||  HP.IsKeyWord("viscosity" "vapour")) {
-               if (HP.IsKeyWord("factor")) {
-                    etav = HP.GetReal() * eta;
-               } else {
-                    etav = HP.GetReal();
-               }
-               bGotEtaVapor = true;
+          switch (fluidType) {
+          case HydroFluid::INCOMPRESSIBLE:
+               pFluid.reset(new HydroIncompressibleFluid(T0, rhoc, pc, eta, gamma));
+               break;
+          case HydroFluid::COMPRESSIBLE:
+               pFluid.reset(new LinearCompressibleFluid(T0, rhoc, pc, eta, gamma, fluidType));
+               break;
+          default:
+               throw ErrNotImplementedYet(MBDYN_EXCEPT_ARGS);
           }
 
-          if (drho_dp != 0) {
-               if (!bGotEtaVapor) {
-                    silent_cerr("hydrodynamic plain bearing2(" << GetLabel()
-                                << "): keyword \"viscosity vapor\" expected at line "
-                                << HP.GetLineData() << std::endl);
-                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-               }
-
-               if (etav <= 0) {
-                    silent_cerr("hydrodynamic plain bearing2(" << GetLabel()
-                                << "): viscosity vapor must be greater than zero at line "
-                                << HP.GetLineData() << std::endl);
-                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-               }
-          }
-
-          if (HP.IsKeyWord("bayada" "chupin")) {
-               silent_cerr("hydrodynamic plain bearing2(" << GetLabel()
-                           << "): fluid model \"bayada chupin\" is obsolete at line "
-                           << HP.GetLineData() << std::endl);
-               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-          }
-
-          if (drho_dp == 0.) {
-               pFluid.reset(new HydroIncompressibleFluid(pc, oThermModel));
-          } else {
-               pFluid.reset(new LinearCompressibleFluid(etav / eta, pc, fluidType, oThermModel));
-          }
+          pFluid->ParseInput(pDM, HP, this);
 
           if ( !HP.IsKeyWord("mesh")) {
                silent_cerr("hydrodynamic plain bearing2(" << GetLabel() << "): keyword \"mesh\" expected at line " << HP.GetLineData() << std::endl);
@@ -9956,19 +9963,19 @@ namespace {
 
                          oDofMap.MapAssign(dU, U1 - U2);
 
-                         doublereal beta = 0.;
+                         G beta{0.};
 
                          if (rgNDH[iNodeUp].p > pGetFluid()->dGetRefPressure() &&
                              rgNDH[iNodeDown].p > pGetFluid()->dGetRefPressure()) {
-                              doublereal rhoc, drhoc_dT;
+                              G rhoc, drhoc_dT;
 
-                              pGetFluid()->GetDensity(pGetFluid()->dGetRefPressure(),
-                                                      pGetFluid()->dGetRefTemperature(),
+                              pGetFluid()->GetDensity(0.5 * (rgNDH[iNodeUp].p + rgNDH[iNodeDown].p),
+                                                      0.5 * (rgNDH[iNodeUp].T + rgNDH[iNodeDown].T),
                                                       rhoc,
                                                       nullptr,
                                                       &drhoc_dT);
 
-                              beta = -drhoc_dT / rhoc;
+                              beta = -drhoc_dT / pGetFluid()->dGetRefDensity();
                          }
 
                          G cp;
@@ -10045,12 +10052,13 @@ namespace {
      template <typename G>
      void HydroNode::GetViscosity(G& eta, doublereal dCoef) const
      {
-          G rho, T;
+          G p, rho, T;
 
+          GetPressure(p, dCoef);
           GetDensity(rho, dCoef);
           GetTemperature(T, dCoef);
 
-          pGetFluid()->GetViscosity(rho, T, eta);
+          pGetFluid()->GetViscosity(p, rho, T, eta);
      }
 
      bool
@@ -11081,13 +11089,15 @@ namespace {
      inline void
      HydroIncompressibleNode::UpdateState(FluidState<G>& oState_a, doublereal dCoef) const
      {
-          G p, T, dT_dt, drho_dp, drho_dT;
+          G p, dp_dt, T, dT_dt, drho_dp, drho_dT;
+          const G pc{pGetFluid()->dGetRefPressure()};
 
           GetPressure(p, dCoef);
+          GetPressureDerTime(dp_dt, dCoef);
           GetTemperature(T, dCoef);
           GetTemperatureDerTime(dT_dt, dCoef);
-          pGetFluid()->GetDensity(p, T, oState_a.rho, &drho_dp, &drho_dT);
-          oState_a.drho_dt = drho_dT * dT_dt;
+          pGetFluid()->GetDensity(std::max(p, pc), T, oState_a.rho, &drho_dp, &drho_dT);
+          oState_a.drho_dt = drho_dp * dp_dt + drho_dT * dT_dt;
 
           HYDRO_ASSERT(drho_dp == 0.);
      }
@@ -11105,6 +11115,8 @@ namespace {
                                    std::move(pFrictionModel_a),
                                    COUPLED_NODE),
            pExtNode(pNode),
+           pext(pNode->dGetX()),
+           dpext_dt(0.), // pNode->dGetXPrime() would throw an exception
            pextY(0.),
            eCurrFunc(SpFunctionCall::INITIAL_ASS_FLAG)
      {
@@ -11143,27 +11155,27 @@ namespace {
 
      void HydroCoupledNode::GetPressure(doublereal& p, doublereal) const
      {
-          p = pExtNode->dGetX();
+          p = pext;
      }
 
      void HydroCoupledNode::GetPressure(SpGradient& p, doublereal dCoef) const
      {
           if (eCurrFunc & SpFunctionCall::REGULAR_FLAG) {
-               pExtNode->GetX(p, dCoef, SpFunctionCall::REGULAR_JAC);
+               p.Reset(pext, iGetFirstDofIndex(eCurrFunc), -1.);
           } else {
                // ScalarNodes are inactive during initial assembly
-               p.ResizeReset(pExtNode->dGetX(), 0);
+               p.ResizeReset(pext, 0);
           }
      }
 
      void HydroCoupledNode::GetPressure(GpGradProd& p, doublereal dCoef) const
      {
-          pExtNode->GetX(p, dCoef, SpFunctionCall::REGULAR_JAC);
+          p.Reset(pext, -pextY);
      }
 
      void HydroCoupledNode::GetPressureDerTime(doublereal& dp_dt, doublereal) const
      {
-          dp_dt = pExtNode->dGetXPrime();
+          dp_dt = dpext_dt;
      }
 
      void HydroCoupledNode::GetPressureDerTime(SpGradient& dp_dt, doublereal dCoef) const
@@ -11171,16 +11183,19 @@ namespace {
           if (eCurrFunc & SpFunctionCall::REGULAR_FLAG) {
                // We assume that db0Algebraic == db0Differential
                // In case of the multistep and hope methods this is true only if algebraic and differential spectral radii are the same!
-               dp_dt.Reset(pExtNode->dGetXPrime(), iGetFirstDofIndex(sp_grad::UNKNOWN_FUNC), -dCoef);
+               // Do not call pExtNode->dGetXPrime() because it would throw an exception!
+               dp_dt.Reset(dpext_dt, iGetFirstDofIndex(eCurrFunc), -dCoef);
           } else {
                // ScalarNodes are inactive during initial assembly
-               dp_dt.ResizeReset(pExtNode->dGetXPrime(), 0);
+               // Do not call pExtNode->dGetXPrime() because it would throw an exception!
+               dp_dt.ResizeReset(dpext_dt, 0);
           }
      }
 
      void HydroCoupledNode::GetPressureDerTime(GpGradProd& dp_dt, doublereal dCoef) const
      {
-          dp_dt.Reset(pExtNode->dGetXPrime(), -dCoef * pextY);
+          // Do not call pExtNode->dGetXPrime() because it would throw an exception!
+          dp_dt.Reset(dpext_dt, -dCoef * pextY);
      }
 
      void
@@ -11191,6 +11206,12 @@ namespace {
      {
           if (func & SpFunctionCall::REGULAR_FLAG) {
                eCurrFunc = SpFunctionCall::REGULAR_FLAG;
+          }
+
+          pext = XCurr(iGetFirstDofIndex(func));
+
+          if (eCurrFunc == SpFunctionCall::REGULAR_FLAG) {
+               dpext_dt = XPrimeCurr(iGetFirstDofIndex(func));
           }
 
           HydroIncompressibleNode::Update(XCurr, XPrimeCurr, dCoef, func);
@@ -19499,8 +19520,8 @@ namespace {
           WorkVec.AddItem(iFirstIndex, Re);
      }
 
-     LinFD5CouplingElem::LinFD5CouplingElem(HydroMesh* pMesh_a)
-          :LinFD5Elem(pMesh_a, COUPLING_ELEM)
+     LinFD5CouplingElem::LinFD5CouplingElem(HydroMesh* pMesh_a, const FlowFactorModel* pFlowFactors_a)
+          :LinFD5Elem(pMesh_a, COUPLING_ELEM), pFlowFactors(pFlowFactors_a)
      {
 
      }
@@ -19603,9 +19624,12 @@ namespace {
           pGetMesh()->pGetGeometry()->GetNonNegativeClearance(h, h, &dh_dt, &dh_dt);
           rgHydroNodes[iNodeCenter]->GetDensityDerTime(drho_dt, dCoef);
 
+          const T hT = pFlowFactors->AverageClearance(h);
+          const T dhT_dt = pFlowFactors->AverageClearanceDeriv(h, dh_dt);
+
           const T dm_dt = EvalUnique((mdot[iNodeFlxEast] - mdot[iNodeFlxWest]) * dz
                                      + (mdot[iNodeFlzNorth] - mdot[iNodeFlzSouth]) * dx
-                                     + (drho_dt * h + rho * dh_dt) * dA);
+                                     + (drho_dt * hT + rho * dhT_dt) * dA);
 
           const integer iFirstIndex = rgHydroNodes[iNodeCenter]->iGetFirstEquationIndex(func);
 
@@ -20296,7 +20320,8 @@ namespace {
           WorkVec.AddItem(iFirstIndex, Re);
 
           if (func & SpFunctionCall::REGULAR_FLAG) {
-               G f, p, pc{pGetFluid()->dGetRefPressure()}; // Assume that pc is the cavitation pressure
+               G f, p;
+               const doublereal pc = pGetFluid()->dGetRefPressure();
 
                rgHydroNodes[iNodeCenter]->GetPressure(p, dCoef);
 
@@ -20494,17 +20519,14 @@ namespace {
           WorkVec.AddItem(iFirstIndex + bRegularFlag, Re);
 
           if (bRegularFlag) {
-               G pc{pGetFluid()->dGetRefPressure()}; // Assume that pc is the cavitation pressure
+               G p, T, rhoc, pc{pGetFluid()->dGetRefPressure()};
 
-               HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(pc)));
-
-               G T, rhoc;
-
+               rgHydroNodes[iNodeCenter]->GetPressure(p, dCoef);
                rgHydroNodes[iNodeCenter]->GetTemperature(T, dCoef);
 
                HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(T)));
 
-               pGetFluid()->GetDensity(pc, T, rhoc);
+               pGetFluid()->GetDensity(std::max(p, pc), T, rhoc);
 
                const doublereal rho_ref = pGetFluid()->dGetRefDensity();
 
@@ -20691,21 +20713,21 @@ namespace {
           rgThermNodes[iNodeCenter]->GetTemperatureDerTime(dT_dt, dCoef);
           rgHydroNodes[iNodeCenter]->GetPressureDerTime(dp_dt, dCoef);
           pGetFluid()->GetSpecificHeat(p, T[iNodeCenter], rho, cp, HydroFluid::SPEC_HEAT_TRUE);
-          pGetFluid()->GetThermalConductivity(T[iNodeCenter], rho, lambda);
+          pGetFluid()->GetThermalConductivity(p, T[iNodeCenter], rho, lambda);
           rgHydroNodes[iNodeCenter]->GetContactFrictionLossDens(Pfc);
 
-          doublereal beta = 0.;
+          G beta{0.};
 
           if (p > pGetFluid()->dGetRefPressure()) {
-               doublereal rhoc, drhoc_dT;
+               G rhoc, drhoc_dT;
 
-               pGetFluid()->GetDensity(pGetFluid()->dGetRefPressure(),
-                                       pGetFluid()->dGetRefTemperature(),
+               pGetFluid()->GetDensity(p,
+                                       T[iNodeCenter],
                                        rhoc,
                                        nullptr,
                                        &drhoc_dT);
 
-               beta = -drhoc_dT / rhoc;
+               beta = -drhoc_dT / pGetFluid()->dGetRefDensity();
           }
 
           const G dTE_dx = (T[iNodeEast] - T[iNodeCenter]) / (x[iNodeEast](1) - x[iNodeCenter](1));
@@ -22305,14 +22327,19 @@ namespace {
 
      ThermalFluidModel::ThermalFluidModel(doublereal T0_a,
                                           doublereal rho0_a,
+                                          doublereal pc_a,
                                           doublereal eta0_a,
                                           doublereal beta_a)
           :eType(ISOTHERMAL),
            T0(T0_a),
            cp0(0.),
            rho0(rho0_a),
+           pc(pc_a),
            eta0(eta0_a),
+           alphap(0.),
            beta(beta_a),
+           Arho1(0.),
+           Arho2(0.),
            lambda0(0.),
            alphalambda(1.),
            Aeta2_Aeta3(0.),
@@ -22323,6 +22350,10 @@ namespace {
            Ac4(0.),
            Ac5(0.),
            Alambda(0.) {
+     }
+
+     ThermalFluidModel::~ThermalFluidModel()
+     {
      }
 
      void ThermalFluidModel::ParseInput(DataManager* pDM, MBDynParser& HP, const HydroRootElement* pParent)
@@ -22354,6 +22385,42 @@ namespace {
 
                Aeta3 = HP.GetReal();
                Aeta2_Aeta3 = Aeta2 / Aeta3;
+          }
+
+          if (HP.IsKeyWord("alpha")) {
+               alphap = HP.GetReal();
+
+               if (alphap < 0.) {
+                    silent_cerr("hydrodynamic plain bearing2("
+                                << pParent->GetLabel()
+                                << "): alpha must be greater than zero at line "
+                                << HP.GetLineData() << std::endl);
+                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+               }
+          }
+
+          if (HP.IsKeyWord("Arho1")) {
+               Arho1 = HP.GetReal();
+
+               if (Arho1 < 0.) {
+                    silent_cerr("hydrodynamic plain bearing2("
+                                << pParent->GetLabel()
+                                << "): Arho1 must be greater than zero at line "
+                                << HP.GetLineData() << std::endl);
+                    throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+               }
+
+               if (HP.IsKeyWord("Arho2")) {
+                    Arho2 = HP.GetReal();
+
+                    if (Arho2 < 0.) {
+                         silent_cerr("hydrodynamic plain bearing2("
+                                     << pParent->GetLabel()
+                                     << "): Arho2 must be greater than zero at line "
+                                     << HP.GetLineData() << std::endl);
+                         throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                    }
+               }
           }
 
           if (HP.IsKeyWord("specific" "heat" "capacity") || HP.IsKeyWord("reference" "specific" "heat" "capacity")) {
@@ -22408,10 +22475,10 @@ namespace {
      }
 
      template <typename U>
-     void ThermalFluidModel::GetViscosityLiquid(const U& T, U& eta) const
+     void ThermalFluidModel::GetViscosityLiquid(const U& p, const U& T, U& eta) const
      {
           // Dirk Bartel 2009 equation (6-11)
-          eta = eta0 * exp(Aeta2_Aeta3 * (T0 - T) / (Aeta3 + T - T0));
+          eta = eta0 * exp(Aeta2_Aeta3 * (T0 - T) / (Aeta3 + T - T0) + alphap * (p - pc));
      }
 
      template <typename U>
@@ -22430,14 +22497,18 @@ namespace {
      }
 
      template <typename U>
-     U ThermalFluidModel::GetDensityLiquid(const U& T, U* drho_dT) const
+     U ThermalFluidModel::GetDensityLiquid(const U& p, const U& T, U* drho_dp, U* drho_dT) const
      {
-          // Dirk Bartel 2009 equation (6-1)
-          if (drho_dT) {
-               SpGradientTraits<U>::ResizeReset(*drho_dT, -rho0 * beta, 0);
+          if (drho_dp) {
+               *drho_dp = rho0 * (1 - beta * (T - T0)) * (Arho1 / (1. + Arho2 * (p - pc)) - Arho1 * (p - pc) / pow(1. + Arho2 * (p - pc), 2) * Arho2);
           }
 
-          return rho0 * (1 - beta * (T - T0));
+          if (drho_dT) {
+               *drho_dT = -rho0 * beta * (1. + Arho1 * (p - pc) / (1. + Arho2 * (p - pc)));
+          }
+
+          // Dirk Bartel 2009 equation (6-1), (6-2)
+          return rho0 * (1 - beta * (T - T0)) * (1. + (Arho1 * (p - pc)) / (1. + Arho2 * (p - pc)));
      }
 
      template <typename U>
@@ -22449,12 +22520,12 @@ namespace {
 
      template <typename U>
      U ThermalFluidModel::GetSpecificHeatLiquid(const U& p, const U& T, HeatCapacityType eHcType) const {
-          return GetSpecHeatPerVolume(p, T, eHcType) / GetDensityLiquid(T);
+          return GetSpecHeatPerVolume(p, T, eHcType) / GetDensityLiquid(p, T);
      }
 
      template <typename U>
-     U ThermalFluidModel::GetThermalConductivityMixture(const U& T, const U& rho) const {
-          const U rholiq = GetDensityLiquid(T);
+     U ThermalFluidModel::GetThermalConductivityMixture(const U& p, const U& T, const U& rho) const {
+          const U rholiq = GetDensityLiquid(p, T);
           const U lambdaliq = GetThermalConductivityLiquid(T);
 
           return lambdaliq * (alphalambda + (1. - alphalambda) * rho / rholiq);
@@ -22470,9 +22541,7 @@ namespace {
                std::isfinite(Aeta2_Aeta3);
      }
 
-     HydroFluid::HydroFluid(doublereal pc_a, const ThermalFluidModel& oThermModel_a)
-          :pc(pc_a),
-           oThermModel(oThermModel_a)
+     HydroFluid::HydroFluid()
      {
 
      }
@@ -22482,18 +22551,12 @@ namespace {
 
      }
 
-     doublereal HydroFluid::dGetRefPressure() const
-     {
-          return pc;
-     }
-
-     doublereal HydroFluid::dGetRefDensity() const
-     {
-          return oThermModel.dGetRefDensity();
-     }
-
-     HydroIncompressibleFluid::HydroIncompressibleFluid(doublereal pc_a, const ThermalFluidModel& oThermModel_a)
-          :HydroFluid(pc_a, oThermModel_a)
+     HydroIncompressibleFluid::HydroIncompressibleFluid(doublereal T0_a,
+                                                        doublereal rho0_a,
+                                                        doublereal pc_a,
+                                                        doublereal eta0_a,
+                                                        doublereal beta_a)
+          :ThermalFluidModel(T0_a, rho0_a, pc_a, eta0_a, beta_a)
      {
 
      }
@@ -22533,19 +22596,19 @@ namespace {
           GetPressureTpl(rho, T, p, dp_drho, dp_dT);
      }
 
-     void HydroIncompressibleFluid::GetViscosity(const doublereal& rho, const doublereal& T, doublereal& eta) const
+     void HydroIncompressibleFluid::GetViscosity(const doublereal& p, const doublereal& rho, const doublereal& T, doublereal& eta) const
      {
-          GetViscosityTpl(rho, T, eta);
+          GetViscosityTpl(p, rho, T, eta);
      }
 
-     void HydroIncompressibleFluid::GetViscosity(const SpGradient& rho, const SpGradient& T, SpGradient& eta) const
+     void HydroIncompressibleFluid::GetViscosity(const SpGradient& p, const SpGradient& rho, const SpGradient& T, SpGradient& eta) const
      {
-          GetViscosityTpl(rho, T, eta);
+          GetViscosityTpl(p, rho, T, eta);
      }
 
-     void HydroIncompressibleFluid::GetViscosity(const GpGradProd& rho, const GpGradProd& T, GpGradProd& eta) const
+     void HydroIncompressibleFluid::GetViscosity(const GpGradProd& p, const GpGradProd& rho, const GpGradProd& T, GpGradProd& eta) const
      {
-          GetViscosityTpl(rho, T, eta);
+          GetViscosityTpl(p, rho, T, eta);
      }
 
      void
@@ -22598,18 +22661,19 @@ namespace {
                                                   G& rho,
                                                   G& drho_dt) const
      {
-          G drho_dT;
-          rho = oThermModel.GetDensityLiquid(T, &drho_dT);
-          drho_dt = drho_dT * dT_dt;
+          G drho_dp, drho_dT;
           p = Theta;
           dp_dt = dTheta_dt;
+
+          rho = GetDensityLiquid(p, T, &drho_dp, &drho_dT);
+          drho_dt = drho_dp * dp_dt + drho_dT * dT_dt;
      }
 
      doublereal HydroIncompressibleFluid::GetTheta0(index_type iDofIndex) const
      {
           HYDRO_ASSERT(iDofIndex == 0);
 
-          return pc;
+          return dGetRefPressure();
      }
 
      HydroFluid::CavitationState HydroIncompressibleFluid::Cavitation(doublereal& p, doublereal* dp_dt) const
@@ -22630,11 +22694,7 @@ namespace {
      template <typename G> inline void
      HydroIncompressibleFluid::GetDensityTpl(const G& p, const G& T, G& rho, G* drho_dp, G* drho_dT) const
      {
-          rho = oThermModel.GetDensityLiquid(T, drho_dT);
-
-          if (drho_dp) {
-               SpGradientTraits<G>::ResizeReset(*drho_dp, 0., 0);
-          }
+          rho = GetDensityLiquid(p, T, drho_dp, drho_dT);
      }
 
      template <typename G> inline void
@@ -22644,16 +22704,16 @@ namespace {
      }
 
      template <typename G> inline void
-     HydroIncompressibleFluid::GetViscosityTpl(const G& rho, const G& T, G& eta) const
+     HydroIncompressibleFluid::GetViscosityTpl(const G& p, const G& rho, const G& T, G& eta) const
      {
-          oThermModel.GetViscosityLiquid(T, eta);
+          GetViscosityLiquid(p, T, eta);
      }
 
      template <typename T> inline HydroFluid::CavitationState
      HydroIncompressibleFluid::CavitationTpl(T& p, T* dp_dt) const
      {
-          if (p < pc) {
-               SpGradientTraits<T>::ResizeReset(p, pc, 0);
+          if (p < dGetRefPressure()) {
+               SpGradientTraits<T>::ResizeReset(p, dGetRefPressure(), 0);
 
                if (dp_dt) {
                     SpGradientTraits<T>::ResizeReset(*dp_dt, 0., 0);
@@ -22670,10 +22730,15 @@ namespace {
           return INCOMPRESSIBLE;
      }
 
-     LinearCompressibleFluid::LinearCompressibleFluid(doublereal etavap_etaliq_a, const doublereal pc_a, HydraulicType type_a, const ThermalFluidModel& oThermModel_a)
-          :HydroFluid(pc_a, oThermModel_a),
-           etavap_etaliq(etavap_etaliq_a),
-           type(type_a)
+     LinearCompressibleFluid::LinearCompressibleFluid(doublereal T0_a,
+                                                      doublereal rho0_a,
+                                                      doublereal pc_a,
+                                                      doublereal eta0_a,
+                                                      doublereal beta_a,
+                                                      HydraulicType type_a)
+     :ThermalFluidModel(T0_a, rho0_a, pc_a, eta0_a, beta_a),
+      etavap_etaliq(0.),
+      type(type_a)
      {
 
      }
@@ -22681,6 +22746,31 @@ namespace {
      LinearCompressibleFluid::~LinearCompressibleFluid()
      {
 
+     }
+
+     void LinearCompressibleFluid::ParseInput(DataManager* pDM, MBDynParser& HP, const HydroRootElement* pParent)
+     {
+          ThermalFluidModel::ParseInput(pDM, HP, pParent);
+
+          if (HP.IsKeyWord("viscosity" "vapor") ||  HP.IsKeyWord("viscosity" "vapour")) {
+               if (HP.IsKeyWord("factor")) {
+                    etavap_etaliq = HP.GetReal();
+               } else {
+                    etavap_etaliq = HP.GetReal() / dGetRefViscosity();
+               }
+          } else {
+               silent_cerr("hydrodynamic plain bearing2(" << pParent->GetLabel()
+                           << "): keyword \"viscosity vapor\" expected at line "
+                           << HP.GetLineData() << std::endl);
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
+
+          if (etavap_etaliq <= 0) {
+               silent_cerr("hydrodynamic plain bearing2(" << pParent->GetLabel()
+                           << "): viscosity vapor must be greater than zero at line "
+                           << HP.GetLineData() << std::endl);
+               throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+          }
      }
 
      void LinearCompressibleFluid::GetDensity(const doublereal& p, const doublereal& T, doublereal& rho, doublereal* drho_dp, doublereal* drho_dT) const
@@ -22713,19 +22803,19 @@ namespace {
           GetPressureTpl(rho, T, p, dp_drho, dp_dT);
      }
 
-     void LinearCompressibleFluid::GetViscosity(const doublereal& rho, const doublereal& T, doublereal& eta) const
+     void LinearCompressibleFluid::GetViscosity(const doublereal& p, const doublereal& rho, const doublereal& T, doublereal& eta) const
      {
-          GetViscosityTpl(rho, T, eta);
+          GetViscosityTpl(p, rho, T, eta);
      }
 
-     void LinearCompressibleFluid::GetViscosity(const SpGradient& rho, const SpGradient& T, SpGradient& eta) const
+     void LinearCompressibleFluid::GetViscosity(const SpGradient& p, const SpGradient& rho, const SpGradient& T, SpGradient& eta) const
      {
-          GetViscosityTpl(rho, T, eta);
+          GetViscosityTpl(p, rho, T, eta);
      }
 
-     void LinearCompressibleFluid::GetViscosity(const GpGradProd& rho, const GpGradProd& T, GpGradProd& eta) const
+     void LinearCompressibleFluid::GetViscosity(const GpGradProd& p, const GpGradProd& rho, const GpGradProd& T, GpGradProd& eta) const
      {
-          GetViscosityTpl(rho, T, eta);
+          GetViscosityTpl(p, rho, T, eta);
      }
 
      void
@@ -22780,13 +22870,15 @@ namespace {
      {
           static_assert(iNumDof >= 2, "number of degrees of freedom does not match");
 
-          G drhoc_dT;
-          const G rhoc = oThermModel.GetDensityLiquid(T, &drhoc_dT);
+          G drhoc_dp, drhoc_dT;
 
-          p = pc + Theta[0];
+          p = dGetRefPressure() + Theta[0];
           dp_dt = dTheta_dt[0];
+
+          const G rhoc = GetDensityLiquid(p, T, &drhoc_dp, &drhoc_dT);
+
           rho = rhoc * Theta[1];
-          drho_dt = drhoc_dT * dT_dt * Theta[1] + rhoc * dTheta_dt[1];
+          drho_dt = (drhoc_dp * dp_dt + drhoc_dT * dT_dt) * Theta[1] + rhoc * dTheta_dt[1];
 
           HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(p)));
           HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(dp_dt)));
@@ -22827,26 +22919,23 @@ namespace {
      template <typename G> inline void
      LinearCompressibleFluid::GetDensityTpl(const G& p, const G& T, G& rho, G* drho_dp, G* drho_dT) const
      {
-          const G rhoc = oThermModel.GetDensityLiquid(T, drho_dT);
+          const G rhoc = GetDensityLiquid(p, T, drho_dp, drho_dT);
 
-          if (p >= pc) {
-               // incompressible fluid
+          if (p >= dGetRefPressure()) {
+               // compressible fluid
                rho = rhoc;
-
-               if (drho_dp) {
-                    SpGradientTraits<G>::ResizeReset(*drho_dp, 0., 0);
-               }
           } else {
                // Since pressure below the cavity pressure is not possible,
                // the pressure boundary condition will be interpreted as density boundary condition
-               rho = p / pc * rhoc;
+               rho = p / dGetRefPressure() * rhoc;
 
                if (drho_dp) {
-                    *drho_dp = rhoc / pc;
+                    *drho_dp *= p / dGetRefPressure();
+                    *drho_dp += rhoc / dGetRefPressure();
                }
 
                if (drho_dT) {
-                    *drho_dT *= p / pc;
+                    *drho_dT *= p / dGetRefPressure();
                }
           }
      }
@@ -22855,7 +22944,7 @@ namespace {
      LinearCompressibleFluid::GetPressureTpl(const G& rho, const G& T, G& p, G* dp_drho, G* dp_dT) const
      {
 
-          SpGradientTraits<G>::ResizeReset(p, pc, 0);
+          SpGradientTraits<G>::ResizeReset(p, dGetRefPressure(), 0);
 
           if (dp_drho) {
                SpGradientTraits<G>::ResizeReset(*dp_drho, 0., 0);
@@ -22867,11 +22956,11 @@ namespace {
      }
 
      template <typename G> inline void
-     LinearCompressibleFluid::GetViscosityTpl(const G& rho, const G& T, G& eta) const
+     LinearCompressibleFluid::GetViscosityTpl(const G& p, const G& rho, const G& T, G& eta) const
      {
-          const G rholiq = oThermModel.GetDensityLiquid(T);
+          const G rholiq = GetDensityLiquid(p, T);
 
-          oThermModel.GetViscosityLiquid(T, eta);
+          GetViscosityLiquid(p, T, eta);
 
           if (rho >= 0. && rho < rholiq) {
                eta *= ((1. - etavap_etaliq) * rho / rholiq + etavap_etaliq);
@@ -22883,8 +22972,8 @@ namespace {
      template <typename T> inline HydroFluid::CavitationState
      LinearCompressibleFluid::CavitationTpl(T& p, T* dp_dt) const
      {
-          if (p < pc) {
-               SpGradientTraits<T>::ResizeReset(p, pc, 0);
+          if (p < dGetRefPressure()) {
+               SpGradientTraits<T>::ResizeReset(p, dGetRefPressure(), 0);
 
                if (dp_dt) {
                     SpGradientTraits<T>::ResizeReset(*dp_dt, 0., 0);
@@ -25050,7 +25139,7 @@ namespace {
 #endif
                               pElement.reset(new LinFD5ThermalCouplingElem(this, bInitAssThermal));
                          } else {
-                              pElement.reset(new LinFD5CouplingElem(this));
+                              pElement.reset(new LinFD5CouplingElem(this, pFlowFactors.get()));
                          }
                     } else {
                          HYDRO_ASSERT(typeid(*pCenterNode) == typeid(HydroPassiveNode)
