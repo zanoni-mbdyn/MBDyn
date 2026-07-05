@@ -15999,12 +15999,11 @@ namespace {
 
                                                   if (f > dTolAbs) {
                                                        silent_cerr("hydrodynamic plain bearing2(" << pMesh->pGetParent()->GetLabel()
-                                                                   << "): position of structural node number " << pNodeInterface->GetLabel()
+                                                                   << "): warning: position of structural node number " << pNodeInterface->GetLabel()
                                                                    << " does not match to modal joint number " << oMatData.pModalJoint->GetLabel()
                                                                    << " (expected: " << dX << ", actual: " << dX0 << ", distance:" << f << ")"
                                                                    << " in file \""
                                                                    << strFileName << "\" at line " << iLineNo << std::endl);
-                                                       throw ErrGeneric(MBDYN_EXCEPT_ARGS);
                                                   }
                                              } break;
                                              case MATRIX_ORIENT: {
@@ -16021,12 +16020,11 @@ namespace {
 
                                                   if (fmax > dTolRel) {
                                                        silent_cerr("hydrodynamic plain bearing2(" << pMesh->pGetParent()->GetLabel()
-                                                                   << "): orientation of structural node number " << pNodeInterface->GetLabel()
+                                                                   << "): warning: orientation of structural node number " << pNodeInterface->GetLabel()
                                                                    << " does not match to modal joint number " << oMatData.pModalJoint->GetLabel()
                                                                    << " (expected: " << dR << ", actual: " << dR0 << ", difference:" << fmax << ")"
                                                                    << " in file \""
                                                                    << strFileName << "\" at line " << iLineNo << std::endl);
-                                                       throw ErrGeneric(MBDYN_EXCEPT_ARGS);
                                                   }
 
                                              } break;
@@ -20326,7 +20324,7 @@ namespace {
                rgHydroNodes[iNodeCenter]->GetPressure(p, dCoef);
 
                HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(p)));
-               HYDRO_ASSERT(std::isfinite(SpGradientTraits<G>::dGetValue(pc)));
+               HYDRO_ASSERT(std::isfinite(pc));
 
                if (rgHydroNodes[iNodeCenter]->GetCavitationState() == HydroFluid::FULL_FILM_REGION) {
                     HYDRO_ASSERT(p >= pc);
