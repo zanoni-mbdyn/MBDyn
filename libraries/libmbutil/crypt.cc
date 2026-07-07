@@ -39,36 +39,41 @@
 char *
 mbdyn_make_salt(char *salt, size_t saltlen, const char *salt_format)
 {
-	static char salt_charset[] =
+	static const char salt_charset[] =
 		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
 
-	ASSERT(strlen(salt_charset) == 64);
+	ASSERT(STRLENOF(salt_charset) == 64);
 	ASSERT(salt);
 	ASSERT(saltlen > 2);
 
 	char	buf[34];
+	bool	got_random = false;
 
 #if defined(HAVE_DEV_RANDOM) || defined(HAVE_DEV_URANDOM)
 	FILE *fin = NULL;
 
 #if defined(HAVE_DEV_RANDOM)
-	fin = fopen("/dev/random");
+	fin = fopen("/dev/random", "rb");
 #elif defined(HAVE_DEV_URANDOM)
-	fin = fopen("/dev/urandom");
+	fin = fopen("/dev/urandom", "rb");
 #endif /* HAVE_DEV_RANDOM || HAVE_DEV_URANDOM */
 
-	fread(buf, STRLENOF(buf), 1, fin);
-	buf[STRLENOF(buf)] = '\0';
-	fclose(fin);
+	if (fin != NULL) {
+		got_random = (fread(buf, STRLENOF(buf), 1, fin) == 1);
+		fclose(fin);
+	}
+#endif /* HAVE_DEV_RANDOM || HAVE_DEV_URANDOM */
+
+	if (!got_random) {
+		for (unsigned int i = 0; i < STRLENOF(buf); i++) {
+			buf[i] = char(rand());
+		}
+	}
 
 	for (unsigned int i = 0; i < STRLENOF(buf); i++) {
-		buf[i] = salt_charset[buf[i] % STRLENOF(salt_charset)];
+		buf[i] = salt_charset[(unsigned char)buf[i] % STRLENOF(salt_charset)];
 	}
-#else
-	for (unsigned int i = 0; i < STRLENOF(buf); i++) {
-		buf[i] = salt_charset[rand() % STRLENOF(salt_charset)];
-	}
-#endif
+	buf[STRLENOF(buf)] = '\0';
 
 	if (salt_format) {
 		snprintf(salt, saltlen, salt_format, buf);

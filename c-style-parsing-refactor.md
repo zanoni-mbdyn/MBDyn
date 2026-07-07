@@ -96,7 +96,48 @@ string instead of stale buffer contents.
   `set:` statement is visible in the symbol table afterwards — all pass,
   clean under AddressSanitizer + UBSan.
 
-## Possible follow-ups (out of scope)
+## Follow-up: remaining C-style string code in libmbutil
 
-`fn_UNIX.cc`, `crypt.cc`, `mbstrbuf.cc` and the `SAFESTRDUP` macros in
-`mynewmem.h` still use C-style copying, though they are not parsing code.
+A second pass converted the non-parsing C-style string code flagged above.
+
+### Sources of error identified
+
+8. **`FileName`** (`filename.h`/`fn_UNIX.cc`) — raw `sName`/`sExt` buffers
+   with manual `strcpy`/reallocation logic and an interior `sRef` pointer:
+   - `iMaxSize`/`iCurSize` were never initialized by the constructor when
+     built with a `NULL` name (the `OutputHandler(void)` path);
+   - on buffer reuse with a shorter name, `iCurSize = iMaxSize -
+     strlen(sExt)` mixed the allocation size with the string length;
+   - `_sPutExt()` with an empty stored extension returned the buffer with
+     the *previous* call's extension still appended (stale content).
+9. **`mbdyn_make_salt()`** (`crypt.cc`) — in the default (`rand()`) path the
+   34-byte scratch buffer was **never NUL-terminated**, so a `%s`-style
+   `salt_format` (as used by `auth.cc`) read past the buffer into
+   uninitialized stack memory. The `/dev/random` branch called `fopen()`
+   with one argument (**did not compile** when `HAVE_DEV_RANDOM`/`URANDOM`
+   was defined — verified), never checked for `fopen`/`fread` failure, and
+   indexed the salt charset with a possibly negative `signed char`.
+10. **`mbstrbuf`** (`mbstrbuf.h`/`.cc`) — hand-rolled growable char buffer
+    with `memcpy`/`strlen` arithmetic, **no destructor** (leak) and default
+    copy semantics on a raw pointer. The class has no users in the tree.
+
+### Changes
+
+- `FileName` reimplemented on `std::string` base/extension members; the
+  `const char*` public API (`iInit`, `_sPutExt`, `sGet`) is unchanged.
+  Behavior verified byte-identical against the old implementation over a
+  matrix of names × `iExtSepNum` values (including buffer-reuse sequences),
+  except that `_sPutExt()`/`sGet()` with an empty stored extension now
+  return the plain base name instead of stale buffer contents — the only
+  user (`OutputHandler::Open`) strips the last extension of the returned
+  name itself, so it is unaffected.
+- `mbstrbuf` reimplemented on `std::string` (no leak, sane copies);
+  `get_len()` now returns the string length rather than the allocation
+  size (class is unused in-tree).
+- `mbdyn_make_salt()` (C API unchanged): scratch buffer always
+  NUL-terminated, `fopen` mode fixed with fallback to `rand()` on
+  open/read failure, charset indexed through `unsigned char`.
+
+The `SAFESTRDUP` macros in `mynewmem.h` are left as is: they are part of
+the memory-manager facility used throughout the tree, and after this pass
+no parsing code uses them any more.

@@ -33,20 +33,17 @@
 #define MBSTRBUF_H
 
 #include <iostream>
+#include <string>
 
 class mbstrbuf {
 	friend std::ostream& operator << (std::ostream&, const mbstrbuf&);
 
 private:
-	unsigned len;
-	unsigned cursor;
-	char *buf;
+	std::string buf;
 
 public:
-	mbstrbuf(unsigned l = 0) : len(l), cursor(0), buf(0) {
-		if (len > 0) {
-			buf = new char[len];
-		}
+	mbstrbuf(unsigned l = 0) {
+		buf.reserve(l);
 	};
 
 	std::ostream& stats(std::ostream& out);

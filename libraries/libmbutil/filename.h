@@ -58,6 +58,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 
 const char EXT_SEP = '.';
@@ -90,12 +91,10 @@ const char DIR_SEP = '/';
 
 class FileName {
  private:
-   mutable char* sName;
-   mutable char* sExt;
-   mutable char* sRef;
-   mutable unsigned int iMaxSize;
-   mutable unsigned int iCurSize;
-   
+   std::string sBase;		// file name without the extension
+   std::string sExt;		// extension, including the leading EXT_SEP
+   std::string sName;		// composed name returned by _sPutExt()/sGet()
+
  public:
    FileName(const char* n = NULL, int i = 0);
    virtual ~FileName(void);
