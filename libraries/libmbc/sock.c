@@ -228,73 +228,70 @@ mbdyn_make_inet_socket_type(SOCKET* sock, struct sockaddr_in *name, const char *
 
 
 
-char* sock_err_string (int err)
+const char* sock_err_string (int err)
 {
-#ifdef _win32
-    char msg[100];
-    winsock_err_string (err, msg);
+#ifdef _WIN32
+    return winsock_err_string (err);
 #else
-    char* msg = strerror(err);
-#endif /* _win32 */
-
-    return msg;
+    return strerror(err);
+#endif /* _WIN32 */
 }
 
 #ifdef _WIN32
-void winsock_err_string (int err, char* msg)
+const char* winsock_err_string (int err)
 {
     switch (err) {
-    case 0:                  strcpy (msg, "No error"); break;
-    case WSAEINTR:           strcpy (msg, "Interrupted system call"); break;
-    case WSAEBADF:           strcpy (msg, "Bad file number"); break;
-    case WSAEACCES:          strcpy (msg, "Permission denied"); break;
-    case WSAEFAULT:          strcpy (msg, "Bad address"); break;
-    case WSAEINVAL:          strcpy (msg, "Invalid argument"); break;
-    case WSAEMFILE:          strcpy (msg, "Too many open sockets"); break;
-    case WSAEWOULDBLOCK:     strcpy (msg, "Operation would block"); break;
-    case WSAEINPROGRESS:     strcpy (msg, "Operation now in progress"); break;
-    case WSAEALREADY:        strcpy (msg, "Operation already in progress"); break;
-    case WSAENOTSOCK:        strcpy (msg, "Socket operation on non-socket"); break;
-    case WSAEDESTADDRREQ:    strcpy (msg, "Destination address required"); break;
-    case WSAEMSGSIZE:        strcpy (msg, "Message too long"); break;
-    case WSAEPROTOTYPE:      strcpy (msg, "Protocol wrong type for socket"); break;
-    case WSAENOPROTOOPT:     strcpy (msg, "Bad protocol option"); break;
-    case WSAEPROTONOSUPPORT: strcpy (msg, "Protocol not supported"); break;
-    case WSAESOCKTNOSUPPORT: strcpy (msg, "Socket type not supported"); break;
-    case WSAEOPNOTSUPP:      strcpy (msg, "Operation not supported on socket"); break;
-    case WSAEPFNOSUPPORT:    strcpy (msg, "Protocol family not supported"); break;
-    case WSAEAFNOSUPPORT:    strcpy (msg, "Address family not supported"); break;
-    case WSAEADDRINUSE:      strcpy (msg, "Address already in use"); break;
-    case WSAEADDRNOTAVAIL:   strcpy (msg, "Can't assign requested address"); break;
-    case WSAENETDOWN:        strcpy (msg, "Network is down"); break;
-    case WSAENETUNREACH:     strcpy (msg, "Network is unreachable"); break;
-    case WSAENETRESET:       strcpy (msg, "Net connection reset"); break;
-    case WSAECONNABORTED:    strcpy (msg, "Software caused connection abort"); break;
-    case WSAECONNRESET:      strcpy (msg, "Connection reset by peer"); break;
-    case WSAENOBUFS:         strcpy (msg, "No buffer space available"); break;
-    case WSAEISCONN:         strcpy (msg, "Socket is already connected"); break;
-    case WSAENOTCONN:        strcpy (msg, "Socket is not connected"); break;
-    case WSAESHUTDOWN:       strcpy (msg, "Can't send after socket shutdown"); break;
-    case WSAETOOMANYREFS:    strcpy (msg, "Too many references, can't splice"); break;
-    case WSAETIMEDOUT:       strcpy (msg, "Connection timed out"); break;
-    case WSAECONNREFUSED:    strcpy (msg, "Connection refused"); break;
-    case WSAELOOP:           strcpy (msg, "Too many levels of symbolic links"); break;
-    case WSAENAMETOOLONG:    strcpy (msg, "File name too long"); break;
-    case WSAEHOSTDOWN:       strcpy (msg, "Host is down"); break;
-    case WSAEHOSTUNREACH:    strcpy (msg, "No route to host"); break;
-    case WSAENOTEMPTY:       strcpy (msg, "Directory not empty"); break;
-    case WSAEPROCLIM:        strcpy (msg, "Too many processes"); break;
-    case WSAEUSERS:          strcpy (msg, "Too many users"); break;
-    case WSAEDQUOT:          strcpy (msg, "Disc quota exceeded"); break;
-    case WSAESTALE:          strcpy (msg, "Stale NFS file handle"); break;
-    case WSAEREMOTE:         strcpy (msg, "Too many levels of remote in path"); break;
-    case WSASYSNOTREADY:     strcpy (msg, "Network system is unavailable"); break;
-    case WSAVERNOTSUPPORTED: strcpy (msg, "Winsock version out of range"); break;
-    case WSANOTINITIALISED:  strcpy (msg, "WSAStartup not yet called"); break;
-    case WSAEDISCON:         strcpy (msg, "Graceful shutdown in progress"); break;
-    case WSAHOST_NOT_FOUND:  strcpy (msg, "Host not found"); break;
-    case WSANO_DATA:         strcpy (msg, "No host data of that type was found"); break;
-
+    case 0:                  return "No error";
+    case WSAEINTR:           return "Interrupted system call";
+    case WSAEBADF:           return "Bad file number";
+    case WSAEACCES:          return "Permission denied";
+    case WSAEFAULT:          return "Bad address";
+    case WSAEINVAL:          return "Invalid argument";
+    case WSAEMFILE:          return "Too many open sockets";
+    case WSAEWOULDBLOCK:     return "Operation would block";
+    case WSAEINPROGRESS:     return "Operation now in progress";
+    case WSAEALREADY:        return "Operation already in progress";
+    case WSAENOTSOCK:        return "Socket operation on non-socket";
+    case WSAEDESTADDRREQ:    return "Destination address required";
+    case WSAEMSGSIZE:        return "Message too long";
+    case WSAEPROTOTYPE:      return "Protocol wrong type for socket";
+    case WSAENOPROTOOPT:     return "Bad protocol option";
+    case WSAEPROTONOSUPPORT: return "Protocol not supported";
+    case WSAESOCKTNOSUPPORT: return "Socket type not supported";
+    case WSAEOPNOTSUPP:      return "Operation not supported on socket";
+    case WSAEPFNOSUPPORT:    return "Protocol family not supported";
+    case WSAEAFNOSUPPORT:    return "Address family not supported";
+    case WSAEADDRINUSE:      return "Address already in use";
+    case WSAEADDRNOTAVAIL:   return "Can't assign requested address";
+    case WSAENETDOWN:        return "Network is down";
+    case WSAENETUNREACH:     return "Network is unreachable";
+    case WSAENETRESET:       return "Net connection reset";
+    case WSAECONNABORTED:    return "Software caused connection abort";
+    case WSAECONNRESET:      return "Connection reset by peer";
+    case WSAENOBUFS:         return "No buffer space available";
+    case WSAEISCONN:         return "Socket is already connected";
+    case WSAENOTCONN:        return "Socket is not connected";
+    case WSAESHUTDOWN:       return "Can't send after socket shutdown";
+    case WSAETOOMANYREFS:    return "Too many references, can't splice";
+    case WSAETIMEDOUT:       return "Connection timed out";
+    case WSAECONNREFUSED:    return "Connection refused";
+    case WSAELOOP:           return "Too many levels of symbolic links";
+    case WSAENAMETOOLONG:    return "File name too long";
+    case WSAEHOSTDOWN:       return "Host is down";
+    case WSAEHOSTUNREACH:    return "No route to host";
+    case WSAENOTEMPTY:       return "Directory not empty";
+    case WSAEPROCLIM:        return "Too many processes";
+    case WSAEUSERS:          return "Too many users";
+    case WSAEDQUOT:          return "Disc quota exceeded";
+    case WSAESTALE:          return "Stale NFS file handle";
+    case WSAEREMOTE:         return "Too many levels of remote in path";
+    case WSASYSNOTREADY:     return "Network system is unavailable";
+    case WSAVERNOTSUPPORTED: return "Winsock version out of range";
+    case WSANOTINITIALISED:  return "WSAStartup not yet called";
+    case WSAEDISCON:         return "Graceful shutdown in progress";
+    case WSAHOST_NOT_FOUND:  return "Host not found";
+    case WSANO_DATA:         return "No host data of that type was found";
+    default:                 return "Unknown winsock error";
     }
 }
 

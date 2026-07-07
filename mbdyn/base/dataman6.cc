@@ -136,7 +136,7 @@ do_timeout:;
 		switch (a) {
 		case SOCKET_ERROR: {
 			int save_errno = WSAGetLastError();
-			char *msg = sock_err_string(save_errno);
+			const char *msg = sock_err_string(save_errno);
 
 			silent_cerr("select() failed: " << save_errno << " "
 				"(" << msg << ")" << std::endl);
@@ -184,7 +184,7 @@ do_timeout:;
 
 				if (sock == INVALID_SOCKET) {
 					int save_errno = WSAGetLastError();
-					char *msg = sock_err_string(save_errno);
+					const char *msg = sock_err_string(save_errno);
 
 					silent_cerr("accept() failed: "
 							<< save_errno << " "

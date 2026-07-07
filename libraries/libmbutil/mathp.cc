@@ -1912,23 +1912,19 @@ Var::Cast(const TypedValue& v, bool bErr)
 }
 
 void
-MathParser::trim_arg(char *const s)
+MathParser::trim_arg(std::string& s)
 {
-	int i, l;
+	std::string::size_type b = 0, e = s.size();
 
-	for (i = 0; isspace(s[i]); ++i) {
-		NO_OP;
+	while (b < e && isspace((unsigned char)s[b])) {
+		++b;
 	}
 
-	l = strlen(&s[i]);
-	if (i > 0) {
-		memmove(s, &s[i], l + 1);
+	while (e > b && isspace((unsigned char)s[e - 1])) {
+		--e;
 	}
 
-	for (i = l - 1; isspace(s[i]); --i) {
-		NO_OP;
-	}
-	s[i + 1] = '\0';
+	s = s.substr(b, e - b);
 }
 
 MathParser::PlugInVar::PlugInVar(const char *const s, MathParser::PlugIn *p)
@@ -3101,23 +3097,19 @@ start_parsing:;
 
 	/* number? */
 	if (cIn == '.' || isdigit(cIn)) {
-		// lot of space...
-		char s[BUFSIZ];
+		std::string s;
 		bool f = false;
-		unsigned i = 0;
 
-		// FIXME: need to check for overflow
-
-		s[i++] = cIn;
+		s += cIn;
 
 		if (cIn == '.') {
 			f = true;
 		}
 
-		// need to use an int because strchr() wants an int... 
+		// need to use an int because strchr() wants an int...
 		int iIn;
 		for (;;) {
-			// need to read an int because strchr() wants an int... 
+			// need to read an int because strchr() wants an int...
 			iIn = in->get();
 			if (in->eof()) {
 				currtoken = ENDOFFILE;
@@ -3127,7 +3119,7 @@ start_parsing:;
 			if (cIn != '.' && !isdigit(cIn)) {
 				break;
 			}
-			s[i++] = cIn;
+			s += cIn;
 			if (cIn == '.') {
 				// multiple '.' in float!
 				if (f) {
@@ -3135,30 +3127,18 @@ start_parsing:;
 				}
 				f = true;
 			}
-			if (i >= sizeof(s)) {
-				// buffer about to overflow
-				throw ErrGeneric(this, MBDYN_EXCEPT_ARGS, "value too long");
-			}
 		}
 		if (std::strchr("efdgEFDG", iIn) != 0) {
 			f = true;
 			// use 'e' because strtod only understands 'e' or 'E'
-			s[i++] = 'e';
-			if (i >= sizeof(s)) {
-				// buffer about to overflow
-				throw ErrGeneric(this, MBDYN_EXCEPT_ARGS, "value too long");
-			}
+			s += 'e';
 			in->get(cIn);
 			if (in->eof()) {
 				currtoken = ENDOFFILE;
 				goto check_eof_num;
 			}
 			if (cIn == '-' || cIn == '+') {
-				s[i++] = cIn;
-				if (i >= sizeof(s)) {
-					// buffer about to overflow
-					throw ErrGeneric(this, MBDYN_EXCEPT_ARGS, "value too long");
-				}
+				s += cIn;
 				in->get(cIn);
 				if (in->eof()) {
 					currtoken = ENDOFFILE;
@@ -3166,11 +3146,7 @@ start_parsing:;
 				}
 			}
 			if (isdigit(cIn)) {
-				s[i++] = cIn;
-				if (i >= sizeof(s)) {
-					// buffer about to overflow
-					throw ErrGeneric(this, MBDYN_EXCEPT_ARGS, "value too long");
-				}
+				s += cIn;
 
 			} else {
 				return (currtoken = UNKNOWNTOKEN);
@@ -3184,16 +3160,11 @@ start_parsing:;
 				if (!isdigit(cIn)) {
 					break;
 				}
-				s[i++] = cIn;
-				if (i >= sizeof(s)) {
-					// buffer about to overflow
-					throw ErrGeneric(this, MBDYN_EXCEPT_ARGS, "value too long");
-				}
+				s += cIn;
 			}
 		}
 
 check_eof_num:;
-		s[i] = '\0';
 		if (in->eof()) {
 			// force EOF because on some archs (e.g. arm) char is unsigned,
 			// thus putback won't restore EOF
@@ -3207,9 +3178,9 @@ check_eof_num:;
 			value.SetType(TypedValue::VAR_INT);
 #ifdef HAVE_STRTOL
 			errno = 0;
-			long l = strtol(s, &endptr, 10);
+			long l = strtol(s.c_str(), &endptr, 10);
 			int save_errno = errno;
-			if (endptr == s || endptr[0] != '\0') {
+			if (endptr == s.c_str() || endptr[0] != '\0') {
 				silent_cerr(" MathParser - unable to parse \"" << s << "\" as integer"
 					<< " at line " << GetLineNumber() << std::endl);
 				return (currtoken = UNKNOWNTOKEN);
@@ -3220,31 +3191,31 @@ check_eof_num:;
 				if (l == LONG_MIN) {
 					throw ErrGeneric(this,
 						MBDYN_EXCEPT_ARGS,
-						std::string("integer value ") + std::string(s, endptr - s) + " underflow");
+						std::string("integer value ") + s + " underflow");
 				}
 
 				if (l == LONG_MAX) {
 					throw ErrGeneric(this,
 						MBDYN_EXCEPT_ARGS,
-						std::string("integer value ") + std::string(s, endptr - s) + " overflow");
+						std::string("integer value ") + s + " overflow");
 				}
 
 				throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 			}
 			value.Set(Int(l));
 #else /* !HAVE_STRTOL */
-			value.Set(Int(atoi(s)));
+			value.Set(Int(atoi(s.c_str())));
 #endif /* !HAVE_STRTOL */
 			// check for undeflow or overflow.
-			// this is required because 
+			// this is required because
 			//   1) Int is not a long, thus we can have underflow/overflow with Int(l)
 			//      even if the return value of atol is checked
 			//   2) if atol is not available we fallback to atoi
 			std::string check_string = std::to_string(value.GetInt());
-			if (check_string.compare(std::string(s, endptr - s))) {
+			if (check_string.compare(s)) {
 				throw ErrGeneric(this,
 					MBDYN_EXCEPT_ARGS,
-					std::string("integer value ") + std::string(s, endptr - s) + " underflow or overflow " +
+					std::string("integer value ") + s + " underflow or overflow " +
 					 " leading to " + check_string
 				);
 			}
@@ -3252,9 +3223,9 @@ check_eof_num:;
 			value.SetType(TypedValue::VAR_REAL);
 #ifdef HAVE_STRTOD
 			errno = 0;
-			double d = strtod(s, &endptr);
+			double d = strtod(s.c_str(), &endptr);
 			int save_errno = errno;
-			if (endptr == s || endptr[0] != '\0') {
+			if (endptr == s.c_str() || endptr[0] != '\0') {
 				silent_cerr(" MathParser - unable to parse \"" << s << "\" as real"
 					<< " at line " << GetLineNumber() << std::endl);
 				return (currtoken = UNKNOWNTOKEN);
@@ -3265,20 +3236,20 @@ check_eof_num:;
 				if (std::abs(d) == HUGE_VAL) {
 					throw ErrGeneric(this,
 						MBDYN_EXCEPT_ARGS,
-						std::string("real value ") + std::string(s, endptr - s) + " overflow");
+						std::string("real value ") + s + " overflow");
 				}
 
 				if (d == 0.) {
 					throw ErrGeneric(this,
 						MBDYN_EXCEPT_ARGS,
-						std::string("real value ") + std::string(s, endptr - s) + " underflow");
+						std::string("real value ") + s + " underflow");
 				}
 
 				throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 			}
 			value.Set(Real(d));
 #else /* !HAVE_STRTOD */
-			value.Set(Real(atof(s)));
+			value.Set(Real(atof(s.c_str())));
 #endif /* !HAVE_STRTOD */
 		}
 
@@ -4386,16 +4357,10 @@ MathParser::readplugin(void)
 	 * 	- arg[1]: nome variabile
 	 * 	- arg[2]->arg[n]: dati da passare al costrutture
 	 */
-	std::vector<char *> argv(1);
+	std::vector<std::string> argv;
 	char cIn;
-	char buf[BUFSIZ];
-	int argc = 0;
-	unsigned int i = 0, in_quotes = 0;
-
-	/*
-	 * inizializzo l'array degli argomenti
-	 */
-	argv[0] = NULL;
+	std::string buf;
+	unsigned int in_quotes = 0;
 
 	/*
 	 * parserizzo la stringa:
@@ -4430,7 +4395,7 @@ MathParser::readplugin(void)
 					break;
 				}
 			}
-			buf[i++] = cIn;
+			buf += cIn;
 			break;
 
 		case '"':
@@ -4460,32 +4425,20 @@ MathParser::readplugin(void)
 		case ',':
 		case ']':
 			if (in_quotes) {
-				buf[i++] = c;
+				buf += cIn;
 				break;
 			}
-			buf[i] = '\0';
-			argv.resize(argc + 2);
 			trim_arg(buf);
-			SAFESTRDUP(argv[argc], buf);
-			++argc;
-			argv[argc] = NULL;
-			if (c == ']') {
+			argv.push_back(buf);
+			if (cIn == ']') {
 				goto last_arg;
 			}
-			i = 0;
+			buf.clear();
 			break;
 
 		default:
-			buf[i++] = cIn;
+			buf += cIn;
 			break;
-		}
-
-		/*
-		 * FIXME: rendere dinamico il buffer ...
-		 */
-		if (i >= sizeof(buf)) {
-			silent_cerr("MathParser::readplugin(): buffer overflow" << std::endl);
-			throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 		}
 	}
 
@@ -4500,29 +4453,26 @@ last_arg:
 	 * put the close plugin token back
 	 */
 	in->putback(cIn);
-	buf[i] = '\0';
-
-	/*
-	 * argomenti comuni a tutti i plugin
-	 */
-	char *pginname = argv[0];
-	char *varname = argv[1];
-	trim_arg(pginname);
-	trim_arg(varname);
 
 	/*
 	 * verifiche di validita' argomenti
 	 */
-	if (pginname == NULL || *pginname == '\0') {
+	if (argv.empty() || argv[0].empty()) {
 		silent_cerr("illegal or missing plugin name" << std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
-	if (varname == NULL || *varname == '\0') {
+	if (argv.size() < 2 || argv[1].empty()) {
 		silent_cerr("illegal or missing plugin variable name"
 			<< std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
+
+	/*
+	 * argomenti comuni a tutti i plugin
+	 */
+	const std::string& pginname = argv[0];
+	const std::string& varname = argv[1];
 
 	/*
 	 * verifica esistenza nome
@@ -4538,12 +4488,12 @@ last_arg:
 	 * ricerca registrazione plugin
 	 */
 	for (struct PlugInRegister *p = PlugIns; p != NULL; p = p->next) {
-		if (strcasecmp(p->name, pginname) != 0) {
+		if (strcasecmp(p->name, pginname.c_str()) != 0) {
 			continue;
 		}
 #ifdef DEBUG
-		for (int i = 0; argv[i] != NULL; i++) {
-			silent_cout("argv[" << i << "]=" << argv[i]
+		for (std::vector<std::string>::size_type ii = 0; ii < argv.size(); ii++) {
+			silent_cout("argv[" << ii << "]=" << argv[ii]
 					<< std::endl);
 		}
 #endif // DEBUG
@@ -4552,7 +4502,15 @@ last_arg:
 		 * costruisce il plugin e gli fa interpretare gli argomenti
 		 */
 		MathParser::PlugIn *pgin = (*p->constructor)(*this, p->arg);
-		pgin->Read(argc - 2, &argv[2]);
+
+		/* pass the remaining args to the legacy NULL-terminated
+		 * PlugIn::Read(argc, argv) interface */
+		std::vector<char *> av(argv.size() - 1);
+		for (std::vector<std::string>::size_type ii = 2; ii < argv.size(); ii++) {
+			av[ii - 2] = &argv[ii][0];
+		}
+		av[argv.size() - 2] = NULL;
+		pgin->Read(argv.size() - 2, &av[0]);
 
 		/*
 		 * riporta il parser nello stato corretto
@@ -4564,15 +4522,8 @@ last_arg:
 		 * e ne ritorna il valore (prima esecuzione)
 		 */
 		SAFENEWWITHCONSTRUCTOR(v, PlugInVar,
-				PlugInVar(varname, pgin));
+				PlugInVar(varname.c_str(), pgin));
 		table.Put(v);
-
-		/*
-		 * pulizia ...
-		 */
-		for (int i = 0; argv[i] != NULL; i++) {
-			SAFEDELETEARR(argv[i]);
-		}
 
 		return v->GetVal();
 	}
@@ -5755,16 +5706,10 @@ MathParser::readplugin(void)
 	 * 	- arg[1]: nome variabile
 	 * 	- arg[2]->arg[n]: dati da passare al costrutture
 	 */
-	std::vector<char *> argv(1);
+	std::vector<std::string> argv;
 	char cIn;
-	char buf[BUFSIZ];
-	int argc = 0;
-	unsigned int i = 0, in_quotes = 0;
-
-	/*
-	 * inizializzo l'array degli argomenti
-	 */
-	argv[0] = NULL;
+	std::string buf;
+	unsigned int in_quotes = 0;
 
 	/*
 	 * parserizzo la stringa:
@@ -5797,7 +5742,7 @@ MathParser::readplugin(void)
 					break;
 				}
 			}
-			buf[i++] = cIn;
+			buf += cIn;
 			break;
 
 		case '"':
@@ -5826,32 +5771,20 @@ MathParser::readplugin(void)
 		case ',':
 		case ']':
 			if (in_quotes) {
-				buf[i++] = cIn;
+				buf += cIn;
 				break;
 			}
-			buf[i] = '\0';
-			argv.resize(argc + 2);
 			trim_arg(buf);
-			SAFESTRDUP(argv[argc], buf);
-			++argc;
-			argv[argc] = NULL;
+			argv.push_back(buf);
 			if (cIn == ']') {
 				goto last_arg;
 			}
-			i = 0;
+			buf.clear();
 			break;
 
 		default:
-			buf[i++] = cIn;
+			buf += cIn;
 			break;
-		}
-
-		/*
-		 * FIXME: rendere dinamico il buffer ...
-		 */
-		if (i >= sizeof(buf)) {
-			silent_cerr("MathParser::readplugin(): buffer overflow" << std::endl);
-			throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 		}
 	}
 
@@ -5866,29 +5799,26 @@ last_arg:
 	 * put the close plugin token back
 	 */
 	in->putback(cIn);
-	buf[i] = '\0';
-
-	/*
-	 * argomenti comuni a tutti i plugin
-	 */
-	char *pginname = argv[0];
-	char *varname = argv[1];
-	trim_arg(pginname);
-	trim_arg(varname);
 
 	/*
 	 * verifiche di validita' argomenti
 	 */
-	if (pginname == NULL || *pginname == '\0') {
+	if (argv.empty() || argv[0].empty()) {
 		silent_cerr("illegal or missing plugin name" << std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
 
-	if (varname == NULL || *varname == '\0') {
+	if (argv.size() < 2 || argv[1].empty()) {
 		silent_cerr("illegal or missing plugin variable name"
 			<< std::endl);
 		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
 	}
+
+	/*
+	 * argomenti comuni a tutti i plugin
+	 */
+	const std::string& pginname = argv[0];
+	const std::string& varname = argv[1];
 
 	/*
 	 * verifica esistenza nome
@@ -5905,7 +5835,7 @@ last_arg:
 	 */
 	struct PlugInRegister *p = 0;
 	for (p = PlugIns; p != 0; p = p->next) {
-		if (strcasecmp(p->name, pginname) == 0) {
+		if (strcasecmp(p->name, pginname.c_str()) == 0) {
 			break;
 		}
 	}
@@ -5916,7 +5846,7 @@ last_arg:
 	}
 
 #ifdef DEBUG
-	for (int ii = 0; argv[ii] != NULL; ii++) {
+	for (std::vector<std::string>::size_type ii = 0; ii < argv.size(); ii++) {
 		silent_cout("argv[" << ii << "]=" << argv[ii]
 				<< std::endl);
 	}
@@ -5926,7 +5856,15 @@ last_arg:
 	 * costruisce il plugin e gli fa interpretare gli argomenti
 	 */
 	MathParser::PlugIn *pgin = (*p->constructor)(*this, p->arg);
-	pgin->Read(argc - 2, &argv[2]);
+
+	/* pass the remaining args to the legacy NULL-terminated
+	 * PlugIn::Read(argc, argv) interface */
+	std::vector<char *> av(argv.size() - 1);
+	for (std::vector<std::string>::size_type ii = 2; ii < argv.size(); ii++) {
+		av[ii - 2] = &argv[ii][0];
+	}
+	av[argv.size() - 2] = NULL;
+	pgin->Read(argv.size() - 2, &av[0]);
 
 	/*
 	 * riporta il parser nello stato corretto
@@ -5938,15 +5876,8 @@ last_arg:
 	 * e ne ritorna il valore (prima esecuzione)
 	 */
 	SAFENEWWITHCONSTRUCTOR(v, PlugInVar,
-			PlugInVar(varname, pgin));
+			PlugInVar(varname.c_str(), pgin));
 	table.Put(v);
-
-	/*
-	 * pulizia ...
-	 */
-	for (int ii = 0; argv[ii] != NULL; ii++) {
-		SAFEDELETEARR(argv[ii]);
-	}
 
 	return new EE_Var(v, defaultNameSpace);
 }

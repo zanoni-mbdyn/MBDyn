@@ -138,23 +138,22 @@ end_of_comment:;
 }
 
 LowParser::LowParser(HighParser& hp)
-: HP(hp), sCurrWordBuf(0), iBufSize(iDefaultBufSize)
+: HP(hp)
 {
-        SAFENEWARR(sCurrWordBuf, char, iBufSize);
+        NO_OP;
 }
 
 LowParser::~LowParser(void)
 {
-        if (sCurrWordBuf) {
-                SAFEDELETEARR(sCurrWordBuf);
-        }
+        NO_OP;
 }
 
 void
 LowParser::PackWords(InputStream& In)
 {
-        unsigned iCur = 0;
        	char cIn;
+
+        sCurrWord.clear();
 
         /* note: no remarks allowed inside words */
         for (;;) {
@@ -170,20 +169,7 @@ LowParser::PackWords(InputStream& In)
 
                 default:
                         if (!isspace(cIn)) {
-                                sCurrWordBuf[iCur] = cIn;
-                                iCur++;
-                                 if (iCur == iBufSize - 1) {
-                                         char *s = NULL;
-                                         unsigned i = 2*iBufSize;
-
-                                         // FIXME: no limit on max size?
-
-                                         SAFENEWARR(s, char, i);
-                                         memcpy(s, sCurrWordBuf, iBufSize);
-                                         SAFEDELETEARR(sCurrWordBuf);
-                                         sCurrWordBuf = s;
-                                         iBufSize = i;
-                                 }
+                                sCurrWord += cIn;
                         }
                 }
         }
@@ -192,7 +178,6 @@ LowParser::PackWords(InputStream& In)
 
 end_of_word:;
 
-        sCurrWordBuf[iCur] = '\0';
         In.putback(cIn);
 }
 
@@ -251,10 +236,10 @@ LowParser::iGetInt(void) const
 }
 
 
-char*
+const char*
 LowParser::sGetWord(void)
 {
-        return sCurrWordBuf;
+        return sCurrWord.c_str();
 }
 
 /* LowParser - end */
@@ -774,7 +759,7 @@ restart_parsing:;
         }
 
         /* Description corrente */
-        char* s = LowP.sGetWord();
+        const char* s = LowP.sGetWord();
 
         if (ReadDescription(*this, s)) {
                 goto restart_parsing;
@@ -863,8 +848,8 @@ HighParser::NextToken(const char* sFuncName)
 int
 HighParser::ParseWord(unsigned flags)
 {
-        char* sBuf = sStringBuf;
-        char* sBufWithSpaces = sStringBufWithSpaces;
+        sStringBuf.clear();
+        sStringBufWithSpaces.clear();
 
         char cIn;
         if (skip_remarks(*this, *pIn, cIn)) {
@@ -876,16 +861,16 @@ HighParser::ParseWord(unsigned flags)
                 return -1;
         }
 
-        *sBufWithSpaces++ = cIn;
+        sStringBufWithSpaces += cIn;
 
         if (flags & LOWER) {
-                *sBuf++ = tolower(cIn);
+                sStringBuf += tolower(cIn);
 
         } else if (flags & UPPER) {
-                *sBuf++ = toupper(cIn);
+                sStringBuf += toupper(cIn);
 
         } else {
-                *sBuf++ = cIn;
+                sStringBuf += cIn;
         }
 
 	for (;;) {
@@ -898,10 +883,7 @@ HighParser::ParseWord(unsigned flags)
 			break;
 		}
 
-                *sBufWithSpaces++ = cIn;
-                if (sBufWithSpaces >= sStringBufWithSpaces + iDefaultBufSize - 1) {
-                        break;
-                }
+                sStringBufWithSpaces += cIn;
 
                 if (isspace(cIn)) {
                         continue;
@@ -915,13 +897,10 @@ HighParser::ParseWord(unsigned flags)
                         c = toupper(c);
 		}
 
-                *sBuf++ = c;
+                sStringBuf += c;
         }
 
         pIn->putback(cIn);
-
-        *sBuf = '\0';
-        *sBufWithSpaces = '\0';
 
         return 0;
 }
@@ -929,11 +908,10 @@ HighParser::ParseWord(unsigned flags)
 void
 HighParser::PutbackWord(void)
 {
-        char* sBufWithSpaces = sStringBufWithSpaces + strlen(sStringBufWithSpaces);
-
-
-        while (sBufWithSpaces > sStringBufWithSpaces) {
-                pIn->putback(*--sBufWithSpaces);
+        for (std::string::reverse_iterator i = sStringBufWithSpaces.rbegin();
+                i != sStringBufWithSpaces.rend(); ++i)
+        {
+                pIn->putback(*i);
         }
 }
 
@@ -957,7 +935,7 @@ HighParser::IsKeyWord(const char* sKeyWord)
                 return false;
         }
 
-        if (!strcasecmp(sStringBuf, sKeyWord)) {
+        if (!strcasecmp(sStringBuf.c_str(), sKeyWord)) {
                 NextToken(sFuncName);
                 return true;
         }
@@ -990,7 +968,7 @@ HighParser::IsKeyWord(void)
         int iKW = -1;
 
         if (KeyT) {
-                iKW = KeyT->Find(sStringBuf);
+                iKW = KeyT->Find(sStringBuf.c_str());
         }
 
         if (iKW >= 0) {
@@ -1021,9 +999,9 @@ HighParser::IsWord(const HighParser::WordSet& ws)
                 return 0;
         }
 
-        if (ws.IsWord(std::string(sStringBuf))) {
+        if (ws.IsWord(sStringBuf)) {
                 NextToken(sFuncName);
-                return sStringBuf;
+                return sStringBuf.c_str();
         }
 
         PutbackWord();
@@ -1155,8 +1133,7 @@ HighParser::GetString(unsigned flags)
                 throw HighParser::ErrStringExpected(MBDYN_EXCEPT_ARGS);
         }
 
-        char* s = sStringBuf;
-        char* sTmp = s;
+        sStringBuf.clear();
 
         char cIn = '\0';
 	for (;;) {
@@ -1176,35 +1153,31 @@ HighParser::GetString(unsigned flags)
 		pIn->get(cIn);
 		if (pIn->eof()) {
                         CurrToken = HighParser::ENDOFFILE;
-                        *sTmp = '\0';
-                        return s;
+                        return sStringBuf.c_str();
 		}
 
 		if (!(cIn != ',' && cIn != ';')) {
 			break;
 		}
 
-                if (sTmp < s + iDefaultBufSize - 1) {
-                        if (!(flags & HighParser::EATSPACES) || !isspace(cIn)) {
-				char c = cIn;
-                                if (flags & HighParser::LOWER) {
-                                        c = tolower(c);
+                if (!(flags & HighParser::EATSPACES) || !isspace(cIn)) {
+			char c = cIn;
+                        if (flags & HighParser::LOWER) {
+                                c = tolower(c);
 
-                                } else if (flags & HighParser::UPPER) {
-                                        c = toupper(c);
-                                }
-
-                                *sTmp++ = c;
+                        } else if (flags & HighParser::UPPER) {
+                                c = toupper(c);
                         }
+
+                        sStringBuf += c;
                 }
         }
 
         pIn->putback(cIn);
-        *sTmp = '\0';
 
         NextToken(sFuncName);
 
-        return s;
+        return sStringBuf.c_str();
 }
 
 void
@@ -1274,8 +1247,7 @@ HighParser::GetStringWithDelims(enum Delims Del, bool escape)
                 throw HighParser::ErrStringExpected(MBDYN_EXCEPT_ARGS);
         }
 
-        char* s = sStringBuf;
-        char* sTmp = s;
+        sStringBuf.clear();
 
         char cLdelim, cRdelim;
         SetDelims(Del, cLdelim, cRdelim);
@@ -1291,8 +1263,7 @@ HighParser::GetStringWithDelims(enum Delims Del, bool escape)
 			pIn->get(cIn);
                         if (pIn->eof()) {
                                 // FIXME: this should be an error ...
-				silent_cerr("End-of-file encountered in " << sFuncName << " while looking for right string delimiter '" << cRdelim << "' after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                                sTmp[0] = '\0';
+				silent_cerr("End-of-file encountered in " << sFuncName << " while looking for right string delimiter '" << cRdelim << "' after " << unsigned(sStringBuf.size()) << " characters at line " << GetLineData() << std::endl);
                 		throw EndOfFile(MBDYN_EXCEPT_ARGS);
 			}
 
@@ -1300,135 +1271,118 @@ HighParser::GetStringWithDelims(enum Delims Del, bool escape)
 				break;
 			}
 
-                        // Attenzione! cosi' la legge tutta,
-                        // ma ne tiene solo iBufSize-1 caratteri
-                        if (sTmp >= s + iDefaultBufSize - 1) {
-				silent_cerr("End-of-buffer encountered in " << sFuncName << " while looking for right string delimiter '" << cRdelim << "' after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                		throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                        if (cIn == ESCAPE_CHAR) {
+                                pIn->get(cIn);
+                		if (pIn->eof()) {
+                		        // FIXME: this should be an error ...
+					silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a char after " << unsigned(sStringBuf.size()) << " characters at line " << GetLineData() << std::endl);
+        				throw EndOfFile(MBDYN_EXCEPT_ARGS);
+				}
 
-			} else {
-                                if (cIn == ESCAPE_CHAR) {
+                                if (cIn == '\n') {
+
+                                        /*
+                                         * eat the newline as well, so that
+
+                                                "first line\
+                                                second line"
+
+                                         * actually results in "first linesecond line"
+                                         */
+
                                         pIn->get(cIn);
-                        		if (pIn->eof()) {
-                        		        // FIXME: this should be an error ...
-						silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a char after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                        		        sTmp[0] = '\0';
-                				throw EndOfFile(MBDYN_EXCEPT_ARGS);
+        				if (pIn->eof()) {
+        		       			// FIXME: this should be an error ...
+						silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a newline ('\\n') after " << unsigned(sStringBuf.size()) << " characters at line " << GetLineData() << std::endl);
+        					throw EndOfFile(MBDYN_EXCEPT_ARGS);
 					}
 
-                                        if (cIn == '\n') {
+                                } else if (cIn == '\r') {
+                                        pIn->get(cIn);
+        				if (pIn->eof()) {
+        		       			// FIXME: this should be an error ...
+						silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a 'carriage return' ('\\r') after " << unsigned(sStringBuf.size()) << " characters at line " << GetLineData() << std::endl);
+        					throw EndOfFile(MBDYN_EXCEPT_ARGS);
+					}
+
+                                        if (cIn != '\n') {
+                                                pIn->putback(cIn);
+                                                goto escaped_generic;
+                                        }
+
+                                        pIn->get(cIn);
+        				if (pIn->eof()) {
+        		       			// FIXME: this should be an error ...
+						silent_cerr("End-of-file encountered in " << sFuncName << " after escaping a 'carriage return' ('\\r') after " << unsigned(sStringBuf.size()) << " characters at line " << GetLineData() << std::endl);
+        					throw EndOfFile(MBDYN_EXCEPT_ARGS);
+					}
+
+                                } else if ((cIn == ESCAPE_CHAR) || (cIn == cRdelim)) {
+                                        if (!escape) {
+                                                sStringBuf += ESCAPE_CHAR;
+                                        }
+
+                                } else {
+escaped_generic:;
+                                        if (escape) {
+                                                int i, c = 0;
+                                                char hex[3];
 
                                                 /*
-                                                 * eat the newline as well, so that
-
-                                                        "first line\
-                                                        second line"
-
-                                                 * actually results in "first linesecond line"
+                                                 * allow non-printable chars in the form "\<hexpair>",
+                                                 * so that "\78" is equivalent to "x";
+                                                 * "\<non-hexpair>" is treated as an error.
                                                  */
 
-                                                pIn->get(cIn);
-                        			if (pIn->eof()) {
-                        		       		// FIXME: this should be an error ...
-							silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a newline ('\\n') after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                        		        	sTmp[0] = '\0';
-                					throw EndOfFile(MBDYN_EXCEPT_ARGS);
+                                                hex[0] = cIn;
+						pIn->get(cIn);
+        					if (pIn->eof()) {
+        		       				// FIXME: this should be an error ...
+							silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a hexpair char ('\\dd', where 'dd' are two hex digits) after " << unsigned(sStringBuf.size()) << " characters at line " << GetLineData() << std::endl);
+        						throw EndOfFile(MBDYN_EXCEPT_ARGS);
 						}
+                                                hex[1] = cIn;
+                                                hex[2] = '\0';
 
-                                        } else if (cIn == '\r') {
-                                                pIn->get(cIn);
-                        			if (pIn->eof()) {
-                        		       		// FIXME: this should be an error ...
-							silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a 'carriage return' ('\\r') after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                        		        	sTmp[0] = '\0';
-                					throw EndOfFile(MBDYN_EXCEPT_ARGS);
-						}
+                                                for (i = 0; i < 2; i++) {
+                                                        int shift = 4*(1 - i), h = 0;
 
-                                                if (cIn != '\n') {
-                                                        pIn->putback(cIn);
-                                                        goto escaped_generic;
+                                                        /* NOTE: this conversion relies
+                                                         * on 0-9, a-f, A-F being consecutive,
+                                                         * which is true for ASCII, but might
+                                                         * not be for other encodings;
+                                                         * bah, not critical right now */
+                                                        if (hex[i] >= '0' && hex[i]  <= '9') {
+                                                                h = hex[i] - '0';
+                                                        } else if (hex[i] >= 'a' && hex[i] <= 'f') {
+                                                                h = hex[i] - 'a';
+                                                        } else if (hex[i] >= 'A' && hex[i] <= 'F') {
+                                                                h = hex[i] - 'A';
+                                                        } else {
+                                                                silent_cerr("invalid escape sequence "
+                                                                        "\"\\" << hex << "\" "
+                                                                        "at line " << GetLineData()
+                                                                        << std::endl);
+                                                                throw ErrGeneric(MBDYN_EXCEPT_ARGS);
+                                                        }
+
+                                                        c += (h << shift);
                                                 }
-
-                                                pIn->get(cIn);
-                        			if (pIn->eof()) {
-                        		       		// FIXME: this should be an error ...
-							silent_cerr("End-of-file encountered in " << sFuncName << " after escaping a 'carriage return' ('\\r') after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                        		        	sTmp[0] = '\0';
-                					throw EndOfFile(MBDYN_EXCEPT_ARGS);
-						}
-
-                                        } else if ((cIn == ESCAPE_CHAR) || (cIn == cRdelim)) {
-                                                if (!escape) {
-                                                        sTmp[0] = ESCAPE_CHAR;
-                                                        ++sTmp;
-                                                }
+                                                cIn = c;
 
                                         } else {
-escaped_generic:;
-                                                if (escape) {
-                                                        int i, c = 0;
-                                                        char hex[3];
-
-                                                        /*
-                                                         * allow non-printable chars in the form "\<hexpair>",
-                                                         * so that "\78" is equivalent to "x";
-                                                         * "\<non-hexpair>" is treated as an error.
-                                                         */
-
-                                                        hex[0] = cIn;
-							pIn->get(cIn);
-                        				if (pIn->eof()) {
-                        		       			// FIXME: this should be an error ...
-								silent_cerr("End-of-file encountered in " << sFuncName << " while escaping a hexpair char ('\\dd', where 'dd' are two hex digits) after " << unsigned(sTmp - s) << " characters at line " << GetLineData() << std::endl);
-                        		        		sTmp[0] = '\0';
-                						throw EndOfFile(MBDYN_EXCEPT_ARGS);
-							}
-                                                        hex[1] = cIn;
-                                                        hex[2] = '\0';
-
-                                                        for (i = 0; i < 2; i++) {
-                                                                int shift = 4*(1 - i), h = 0;
-
-                                                                /* NOTE: this conversion relies
-                                                                 * on 0-9, a-f, A-F being consecutive,
-                                                                 * which is true for ASCII, but might
-                                                                 * not be for other encodings;
-                                                                 * bah, not critical right now */
-                                                                if (hex[i] >= '0' && hex[i]  <= '9') {
-                                                                        h = hex[i] - '0';
-                                                                } else if (hex[i] >= 'a' && hex[i] <= 'f') {
-                                                                        h = hex[i] - 'a';
-                                                                } else if (hex[i] >= 'A' && hex[i] <= 'F') {
-                                                                        h = hex[i] - 'A';
-                                                                } else {
-                                                                        silent_cerr("invalid escape sequence "
-                                                                                "\"\\" << hex << "\" "
-                                                                                "at line " << GetLineData()
-                                                                                << std::endl);
-                                                                        throw ErrGeneric(MBDYN_EXCEPT_ARGS);
-                                                                }
-
-                                                                c += (h << shift);
-                                                        }
-                                                        cIn = c;
-
-                                                } else {
-                                                        sTmp[0] = ESCAPE_CHAR;
-                                                        ++sTmp;
-                                                }
+                                                sStringBuf += ESCAPE_CHAR;
                                         }
                                 }
-                                sTmp[0] = cIn;
-                                ++sTmp;
                         }
+                        sStringBuf += cIn;
                 }
 
                 /* Se trova una virgola o un punto e virgola, le rimette nello stream
-                 * e passa oltre, restituendo un puntatore nullo. Il chiamante deve
+                 * e passa oltre, restituendo una stringa vuota. Il chiamante deve
                  * occuparsi della gestione del valore di default */
         } else if (cIn == ',' || cIn == ';') {
                 pIn->putback(cIn);
-                goto nullstring;
 
                 /* Altrimenti c'e' qualcosa senza delimitatore. Adesso da' errore,
                  * forse e' piu' corretto fargli ritornare lo stream intatto */
@@ -1441,12 +1395,8 @@ escaped_generic:;
                 throw HighParser::ErrIllegalDelimiter(MBDYN_EXCEPT_ARGS);
         }
 
-        /* Mette zero al termine della stringa */
-        *sTmp = '\0';
-
-nullstring:;
         NextToken(sFuncName);
-        return s;
+        return sStringBuf.c_str();
 }
 
 /* Returns the current input stream */

@@ -104,6 +104,7 @@
 
 #include <fstream>
 #include <stack>
+#include <string>
 
 #include "parser.h"
 
@@ -123,11 +124,12 @@ protected:
 		InputStream* pis;
 
 #ifdef USE_INCLUDE_PARSER
-		char* sPath;
-		char* sFile;
+		std::string sPath;
+		std::string sFile;
 
 		MyInput(std::ifstream* pf = NULL, InputStream* pi = NULL,
-			char* sp = NULL, char* sfile = NULL)
+			const std::string& sp = std::string(),
+			const std::string& sfile = std::string())
 		: pfile(pf), pis(pi), sPath(sp), sFile(sfile) {
 			NO_OP;
 		};
@@ -141,9 +143,9 @@ protected:
 	};
 
 	std::stack<MyInput *> myinput;
-	char* sCurrPath;
-	char* sInitialPath;
-	char* sCurrFile;
+	std::string sCurrPath;
+	std::string sInitialPath;
+	std::string sCurrFile;
 
 	flag fCheckStack(void);
 	bool Include_int(void);

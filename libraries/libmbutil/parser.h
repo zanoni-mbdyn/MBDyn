@@ -105,6 +105,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <string>
 #include <ac/f2c.h>
 
 #include <string.h>
@@ -161,8 +162,7 @@ public:
 private:
         HighParser& HP;
         enum Token CurrToken;
-        char *sCurrWordBuf;
-        unsigned iBufSize;
+        std::string sCurrWord;
         doublereal dCurrNumber;
 
         void PackWords(InputStream& In);
@@ -173,7 +173,7 @@ public:
         Token GetToken(InputStream& In);
         doublereal dGetReal(void) const;
         integer iGetInt(void) const;
-        char* sGetWord(void);
+        const char* sGetWord(void);
 };
 
 /* LowParser - end */
@@ -421,8 +421,8 @@ protected:
         std::ifstream* pf;
 
         /* Buffer per le stringhe */
-        char sStringBuf[iDefaultBufSize];
-        char sStringBufWithSpaces[iDefaultBufSize];
+        std::string sStringBuf;
+        std::string sStringBufWithSpaces;
 
         /* Parser delle espressioni matematiche,
          * usato per acquisire valori sicuramente numerici */
