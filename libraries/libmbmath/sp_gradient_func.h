@@ -573,7 +573,8 @@ namespace sp_grad {
           }
 
           static constexpr doublereal df_du(doublereal u) {
-               return 2. * exp(-u * u) / sqrt(M_PI);
+               constexpr double M_PI_SQRT = 1.772453850905516;
+               return 2. * exp(-u * u) / M_PI_SQRT;
           }
 
 #ifdef SP_GRAD_DEBUG
