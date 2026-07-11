@@ -209,6 +209,8 @@ namespace {
 
           enum PrivateDataType {
                PD_CLEARANCE,
+               PD_CLEARANCE_LOC_X,
+               PD_CLEARANCE_LOC_Z,
                PD_TOTAL_DEFORMATION,
                PD_PRESSURE,
                PD_PRESSURE_LOC_X,
@@ -6205,7 +6207,7 @@ namespace {
           static const Node2D::NodeType rgNodeOutLoc[iNumNodeOutLoc];
           static const int iNumFrictionLoss = 2;
           static const int iNumReactionForce = 12;
-          static const int iNumPrivData = 19 + iNumFrictionLoss + iNumReactionForce;
+          static const int iNumPrivData = 21 + iNumFrictionLoss + iNumReactionForce;
 
           union PrivDataU {
                PrivDataVal a[iNumPrivData];
@@ -6219,6 +6221,7 @@ namespace {
                     PrivDataVal Maxptot;
                     PrivDataVal Maxptotloc[2];
                     PrivDataVal Minh;
+                    PrivDataVal Minhloc[2];
                     PrivDataVal Minwtot;
                     PrivDataVal Maxwtot;
                     PrivDataVal Minrho;
@@ -6278,6 +6281,8 @@ namespace {
           {"max" "ptot" "loc" "x", -std::numeric_limits<doublereal>::max()},
           {"max" "ptot" "loc" "z", -std::numeric_limits<doublereal>::max()},
           {"min" "h",    std::numeric_limits<doublereal>::max()},
+          {"min" "h" "loc" "x",    -std::numeric_limits<doublereal>::max()},
+          {"min" "h" "loc" "z",    -std::numeric_limits<doublereal>::max()},
           {"min" "wtot", std::numeric_limits<doublereal>::max()},
           {"max" "wtot", -std::numeric_limits<doublereal>::max()},
           {"min" "rho",  std::numeric_limits<doublereal>::max()},
@@ -7073,6 +7078,10 @@ namespace {
 
                     if ((*i)->bGetPrivateData(PD_CLEARANCE, h) && h < PrivData.s.Minh.dCurr) {
                          PrivData.s.Minh.dCurr = h;
+
+                         for (index_type j = 0; j < 2; ++j) {
+                              PrivData.s.Minhloc[j].dCurr = (*i)->GetPosition2D()(j + 1);
+                         }
                     }
 
                     doublereal p;

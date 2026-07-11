@@ -822,6 +822,14 @@ begin: elements;
         element, (7001), loadable, string, "minh", direct,
         output trace, yes;
 
+    drive caller: (8022), name, "minhlocx",
+        element, (7001), loadable, string, "minhlocx", direct,
+        output trace, yes;
+
+    drive caller: (8023), name, "minhlocz",
+        element, (7001), loadable, string, "minhlocz", direct,
+        output trace, yes;
+
     drive caller: (8010), name, "minrho",
         element, (7001), loadable, string, "minrho", direct,
         output trace, yes;
