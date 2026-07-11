@@ -211,7 +211,14 @@ namespace {
                PD_CLEARANCE,
                PD_TOTAL_DEFORMATION,
                PD_PRESSURE,
+               PD_PRESSURE_LOC_X,
+               PD_PRESSURE_LOC_Z,
                PD_CONT_PRESSURE,
+               PD_CONT_PRESSURE_LOC_X,
+               PD_CONT_PRESSURE_LOC_Z,
+               PD_TOT_PRESSURE,
+               PD_TOT_PRESSURE_LOC_X,
+               PD_TOT_PRESSURE_LOC_Z,
                PD_DENSITY,
                PD_TEMPERATURE,
                PD_F1x,
@@ -6198,7 +6205,7 @@ namespace {
           static const Node2D::NodeType rgNodeOutLoc[iNumNodeOutLoc];
           static const int iNumFrictionLoss = 2;
           static const int iNumReactionForce = 12;
-          static const int iNumPrivData = 12 + iNumFrictionLoss + iNumReactionForce;
+          static const int iNumPrivData = 19 + iNumFrictionLoss + iNumReactionForce;
 
           union PrivDataU {
                PrivDataVal a[iNumPrivData];
@@ -6206,7 +6213,11 @@ namespace {
                     PrivDataVal MaxTimeStep;
                     PrivDataVal rgPf[iNumFrictionLoss];
                     PrivDataVal Maxp;
+                    PrivDataVal Maxploc[2];
                     PrivDataVal Maxpc;
+                    PrivDataVal Maxpcloc[2];
+                    PrivDataVal Maxptot;
+                    PrivDataVal Maxptotloc[2];
                     PrivDataVal Minh;
                     PrivDataVal Minwtot;
                     PrivDataVal Maxwtot;
@@ -6222,7 +6233,7 @@ namespace {
           mutable bool bUpdatePrivData;
 
           static const struct PrivateData {
-               char szName[8];
+               char szName[12];
                doublereal dDefault;
           } rgPrivData[iNumPrivData];
 
@@ -6258,7 +6269,14 @@ namespace {
           {"Pff",           0.},
           {"Pfc",           0.},
           {"max" "p",   -std::numeric_limits<doublereal>::max()},
+          {"max" "p" "loc" "x", -std::numeric_limits<doublereal>::max()},
+          {"max" "p" "loc" "z", -std::numeric_limits<doublereal>::max()},
           {"max" "pc",  -std::numeric_limits<doublereal>::max()},
+          {"max" "pc" "loc" "x", -std::numeric_limits<doublereal>::max()},
+          {"max" "pc" "loc" "z", -std::numeric_limits<doublereal>::max()},
+          {"max" "ptot", -std::numeric_limits<doublereal>::max()},
+          {"max" "ptot" "loc" "x", -std::numeric_limits<doublereal>::max()},
+          {"max" "ptot" "loc" "z", -std::numeric_limits<doublereal>::max()},
           {"min" "h",    std::numeric_limits<doublereal>::max()},
           {"min" "wtot", std::numeric_limits<doublereal>::max()},
           {"max" "wtot", -std::numeric_limits<doublereal>::max()},
@@ -7061,12 +7079,30 @@ namespace {
 
                     if ((*i)->bGetPrivateData(PD_PRESSURE, p) && p > PrivData.s.Maxp.dCurr) {
                          PrivData.s.Maxp.dCurr = p;
+
+                         for (index_type j = 0; j < 2; ++j) {
+                              PrivData.s.Maxploc[j].dCurr = (*i)->GetPosition2D()(j + 1);
+                         }
                     }
 
                     doublereal pc;
 
                     if ((*i)->bGetPrivateData(PD_CONT_PRESSURE, pc) &&  pc > PrivData.s.Maxpc.dCurr) {
                          PrivData.s.Maxpc.dCurr = pc;
+
+                         for (index_type j = 0; j < 2; ++j) {
+                              PrivData.s.Maxpcloc[j].dCurr = (*i)->GetPosition2D()(j + 1);
+                         }
+                    }
+
+                    doublereal ptot;
+
+                    if ((*i)->bGetPrivateData(PD_TOT_PRESSURE, ptot) &&  ptot > PrivData.s.Maxptot.dCurr) {
+                         PrivData.s.Maxptot.dCurr = ptot;
+
+                         for (index_type j = 0; j < 2; ++j) {
+                              PrivData.s.Maxptotloc[j].dCurr = (*i)->GetPosition2D()(j + 1);
+                         }
                     }
 
                     doublereal rho;
@@ -10082,6 +10118,13 @@ namespace {
           case HydroRootBase::PD_CONT_PRESSURE:
                GetContactPressure(dPrivData);
                return true;
+
+          case HydroRootBase::PD_TOT_PRESSURE: {
+               doublereal pc;
+               pGetMesh()->GetPressure(this, dPrivData);
+               GetContactPressure(pc);
+               dPrivData += pc;
+          } return true;
 
           case HydroRootBase::PD_DENSITY:
                GetDensity(dPrivData);
