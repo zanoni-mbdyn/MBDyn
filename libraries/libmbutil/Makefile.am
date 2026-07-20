@@ -64,7 +64,9 @@ withlab.h \
 restart_data.h \
 restart_data.cc \
 binary_conversion.h \
-binary_conversion.cc
+binary_conversion.cc \
+stacktrace.h \
+stacktrace.cc
 
 libmbutil_la_LIBADD = @LIBS@ @GTEST_LIBS@
 libmbutil_la_LDFLAGS =

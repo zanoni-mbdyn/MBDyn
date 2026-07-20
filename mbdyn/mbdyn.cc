@@ -135,6 +135,7 @@ const char sDefaultOutputFileName[] = "MBDyn";
 #include "legalese.h"
 
 #include "cleanup.h"
+#include "stacktrace.h"
 
 enum InputFormat {
 	MBDYN,
@@ -246,7 +247,8 @@ mbdyn_usage(const char *sShortOpts)
 		   "                                any" << std::endl);
 #endif /* DEBUG */
 	silent_cout(
-		   "  -e, --exceptions          don't trap exceptions to ease debugging" << std::endl
+		   "  -D,                       print stacktrace and abort immediately when receiving terminating signal" << std::endl
+		<< "  -e, --exceptions          don't trap exceptions to ease debugging" << std::endl
 		<< "  -E, --fp-mask[=...]       enable some floating point checks" << std::endl
 		<< "  -h, --help                prints this message" << std::endl
 		<< "  -H, --show-table          print symbol table and exit" << std::endl
@@ -306,12 +308,13 @@ mbdyn_welcome(void)
 }
 
 /* Dati di getopt */
-static char sShortOpts[] = "Cd:eE::f:GhHlN:o:pPrRsS:tTvwW:a:F";
+static char sShortOpts[] = "Cd:DeE::f:GhHlN:o:pPrRsS:tTvwW:a:F";
 
 #ifdef HAVE_GETOPT_LONG
 static struct option LongOpts[] = {
 	{ "solver-time",    no_argument,       NULL,           int('C') },     
 	{ "debug",          required_argument, NULL,           int('d') },
+	{ "debug-stacktrace",   no_argument, NULL,                 int('D') },
 	{ "exceptions",     no_argument,       NULL,           int('e') },
 	{ "fp-mask",        optional_argument, NULL,           int('E') },
 	{ "input-file",     required_argument, NULL,           int('f') },
@@ -414,7 +417,9 @@ mbdyn_parse_arguments(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
 				" to use debug features" << std::endl);
 #endif /* !DEBUG */
 			break;
-
+		case int('D'):
+				set_stacktrace_callback();
+			break;
 		case int('e'):
 			mbp.bException = true;
 #ifdef USE_GTEST
