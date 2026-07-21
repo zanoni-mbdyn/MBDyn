@@ -65,7 +65,7 @@ void segfault_handler(int signal) {
 
 void set_stacktrace_callback() {
     std::signal(SIGABRT, segfault_handler);
-    std::signal(SIGFPE, segfault_handler);
+    // std::signal(SIGFPE, segfault_handler);
     std::signal(SIGSEGV, segfault_handler);
     std::signal(SIGTERM, segfault_handler);
 }
