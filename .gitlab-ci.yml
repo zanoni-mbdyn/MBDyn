@@ -196,7 +196,9 @@ variables:
     description: "Additional arguments which should be passed to mbdyn (See also `man mbdyn` or `mbdyn --help`)"
 
   ## Compiler flags for MBDyn and mboct-*-pkg
-  MBD_COMPILER_FLAGS: "-Ofast -Wall -march=native -mtune=native -Wno-unused-variable"
+  MBD_COMPILER_FLAGS: 
+    value: "-Ofast -Wall -march=native -mtune=native -Wno-unused-variable"
+    description: "Compiler flags for MBDyn and mboct-*-pkg"
 
   ## NOTE: We should compile without any optimization in order to get accurate profile information
   MBD_COMPILER_FLAGS_GCOV: "-Og -Wall -march=native -mtune=native -Wno-unused-variable"
