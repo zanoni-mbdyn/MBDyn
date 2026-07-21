@@ -38,9 +38,9 @@
 #include "mynewmem.h"
 
 
-FileName::FileName(const char *sFName, int iExtSepNum)
+FileName::FileName(const std::string sFName, int iExtSepNum)
 {
-   	if (sFName != NULL) {
+   	if (sFName != "") {
       		iInit(sFName, iExtSepNum);
    	}
 }
@@ -51,11 +51,10 @@ FileName::~FileName(void)
 }
 
 int
-FileName::iInit(const char *sFName, int iExtSepNum)
+FileName::iInit(const  std::string sFName, int iExtSepNum)
 {
-   	ASSERT(sFName != NULL);
 
-   	if (sFName == NULL) {
+   	if (sFName == "") {
       		return 0;
    	}
 
@@ -104,11 +103,11 @@ FileName::iInit(const char *sFName, int iExtSepNum)
 	return int(sBase.size());
 }
 
-const char *const
-FileName::_sPutExt(const char *sEName)
+const std::string
+FileName::_sPutExt(std::string sEName)
 {
-   	if (sEName == NULL) {
-      		sEName = sExt.c_str();
+   	if (sEName == "") {
+      		sEName = sExt;
    	}
 
 	sName = sBase;
@@ -119,13 +118,14 @@ FileName::_sPutExt(const char *sEName)
       		sName += sEName;
    	}
 
-   	return sName.c_str();
+   	return sName;
 }
 
-const char *const
+const std::string
 FileName::sGet(void) const
 {
-   	return const_cast<FileName *>(this)->_sPutExt(0);
+	std::string tmps("");
+   	return const_cast<FileName *>(this)->_sPutExt(tmps);
 }
 
 int

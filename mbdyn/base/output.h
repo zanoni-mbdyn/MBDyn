@@ -303,9 +303,9 @@ private:
 public:
         OutputHandler(void);
 
-        OutputHandler(const char* sFName, int iExtNum = -1);
+        OutputHandler(const std::string sFName, int iExtNum = -1);
 
-        void Init(const char* sFName, int iExtNum = -1);
+        void Init(const std::string sFName, int iExtNum = -1);
 
         virtual ~OutputHandler(void);
 

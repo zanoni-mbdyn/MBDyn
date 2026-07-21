@@ -96,11 +96,11 @@ class FileName {
    std::string sName;		// composed name returned by _sPutExt()/sGet()
 
  public:
-   FileName(const char* n = NULL, int i = 0);
+   FileName(const std::string = "", int i = 0);
    virtual ~FileName(void);
-   int iInit(const char* n, int i = 0);
-   const char *const _sPutExt(const char* n);
-   const char *const sGet(void) const;
+   int iInit(const std::string n, int i = 0);
+   const std::string _sPutExt(std::string n);
+   const std::string sGet(void) const;
 };
 
 extern int is_abs_path(const char *const p);
