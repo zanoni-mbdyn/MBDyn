@@ -71,7 +71,7 @@ class NotAllowed {};
 
 void
 DataManager::ReadControl(MBDynParser& HP,
-	const char* sInputFileName)
+	const std::string sInputFileName)
 {
 	DEBUGCOUTFNAME("DataManager::ReadControl");
 
@@ -1443,9 +1443,10 @@ EndOfUse:
                 } break;
 
 		case READSOLUTIONARRAY:{
-			int len = strlen(sInputFileName) + sizeof(".X");
-			SAFENEWARR(solArrFileName, char, len);
-			snprintf(solArrFileName, len, "%s.X", sInputFileName);
+			solArrFileName = sInputFileName + ".X";
+			// int len = strlen(sInputFileName) + sizeof(".X");
+			// SAFENEWARR(solArrFileName, char, len);
+			// snprintf(solArrFileName, len, "%s.X", sInputFileName);
 		} break;
 
 		case SELECTTIMEOUT:

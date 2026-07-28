@@ -184,7 +184,7 @@ protected:
 	mutable doublereal dLastRestartTime;
 
 	bool saveXSol;
-	char * solArrFileName;
+	std::string solArrFileName;
 
 	/* raw output stuff */
 	DriveCaller *pOutputMeter;
@@ -238,7 +238,7 @@ public:
 
 protected:
 	/* chiamate dal costruttore per leggere i relativi articoli */
-	void ReadControl(MBDynParser& HP, const char* sInputFileName);
+	void ReadControl(MBDynParser& HP, const std::string sInputFileName);
 	void ReadNodes(MBDynParser& HP);
 	void ReadDrivers(MBDynParser& HP);
 	void ReadElems(MBDynParser& HP);
@@ -279,8 +279,8 @@ public:
 		unsigned OF,
 		Solver* pS,
 		doublereal dInitialTime,
-		const char* sOutputFileName,
-		const char* sInputFileName,
+		const std::string sOutputFileName,
+		const std::string sInputFileName,
 		bool bAbortAfterInput);
 
 	/* distruttore */
