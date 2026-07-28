@@ -500,8 +500,8 @@ Solver::Prepare(void)
 				OutputFlags,
 				this,
 				dInitialTime,
-				sOutputFileName.c_str(),
-				sInputFileName.c_str(),
+				sOutputFileName,
+				sInputFileName,
 				eAbortAfter == AFTER_INPUT));
 
 		pDM = pSDM;
@@ -547,8 +547,8 @@ Solver::Prepare(void)
 						OutputFlags,
 						this,
 						dInitialTime,
-						sOutputFileName.c_str(),
-						sInputFileName.c_str(),
+						sOutputFileName,
+						sInputFileName,
 						eAbortAfter == AFTER_INPUT,
 						nThreads));
 
@@ -570,8 +570,8 @@ Solver::Prepare(void)
 						OutputFlags,
 						this,
 						dInitialTime,
-						sOutputFileName.c_str(),
-						sInputFileName.c_str(),
+						sOutputFileName,
+						sInputFileName,
 						eAbortAfter == AFTER_INPUT));
 		}
 	}
