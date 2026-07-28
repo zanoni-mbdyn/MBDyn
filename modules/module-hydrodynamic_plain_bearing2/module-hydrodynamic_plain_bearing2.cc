@@ -288,7 +288,7 @@ namespace {
 
      class Rectangle2D: public Geometry2D {
      public:
-          Rectangle2D(const SpColVector<doublereal, 2>& x, doublereal w, doublereal h);
+          Rectangle2D(const SpColVector<doublereal, 2>& x, doublereal w, doublereal h, doublereal Phi);
           virtual std::unique_ptr<Geometry2D> Clone(const SpColVector<doublereal, 2>& x) const override;
           virtual bool bPointIsInside(const SpColVector<doublereal, 2>& p1) const override;
           virtual bool bPointIsInside(const SpColVector<SpGradient, 2>& p1) const override;
@@ -296,7 +296,7 @@ namespace {
      private:
           template <typename T>
           inline bool bPointIsInsideTpl(const SpColVector<T, 2>& p1) const;
-          const doublereal w, h;
+	  const doublereal w, h, Phi;
      };
 
      class CompleteSurface2D: public Geometry2D {
@@ -7770,7 +7770,9 @@ namespace {
 
                const doublereal h = HP.GetReal();
 
-               return std::unique_ptr<Geometry2D>{new Rectangle2D{xc, w, h}};
+	       const doublereal Phi = HP.IsKeyWord("angle") ? HP.GetReal() : 0.;
+
+               return std::unique_ptr<Geometry2D>{new Rectangle2D{xc, w, h, Phi}};
           } else if (HP.IsKeyWord("complete" "surface")) {
                return std::unique_ptr<Geometry2D>{new CompleteSurface2D{xc}};
           } else if (HP.IsKeyWord("surface" "grid")) {
@@ -7938,15 +7940,15 @@ namespace {
           return sqrt(dx * dx + dz * dz) <= r;
      }
 
-     Rectangle2D::Rectangle2D(const SpColVector<doublereal, 2>& x_a, doublereal w_a, doublereal h_a)
-          :Geometry2D(x_a), w(w_a), h(h_a)
+     Rectangle2D::Rectangle2D(const SpColVector<doublereal, 2>& x_a, doublereal w_a, doublereal h_a, doublereal Phi_a)
+          :Geometry2D(x_a), w(w_a), h(h_a), Phi(Phi_a)
      {
 
      }
 
      std::unique_ptr<Geometry2D> Rectangle2D::Clone(const SpColVector<doublereal, 2>& x_a) const
      {
-          return std::unique_ptr<Geometry2D>{new Rectangle2D(x_a, w, h)};
+          return std::unique_ptr<Geometry2D>{new Rectangle2D(x_a, w, h, Phi)};
      }
 
      bool Rectangle2D::bPointIsInside(const SpColVector<doublereal, 2>& p1) const
@@ -7967,13 +7969,14 @@ namespace {
      template <typename T>
      bool Rectangle2D::bPointIsInsideTpl(const SpColVector<T, 2>& p1) const
      {
-          const doublereal p1x = SpGradientTraits<T>::dGetValue(p1(1));
-          const doublereal p1z = SpGradientTraits<T>::dGetValue(p1(2));
-          const bool bInside = std::abs(p1x - x(1)) <= 0.5 * w
-                            && std::abs(p1z - x(2)) <= 0.5 * h;
+	  const SpMatrix<doublereal, 2, 2> R{cos(Phi), sin(Phi), -sin(Phi), cos(Phi)};
+	  const SpColVector<T, 2> dx = Transpose(R) * (p1 - x);
+	  
+          const bool bInside = fabs(dx(1)) <= 0.5 * w
+                            && fabs(dx(2)) <= 0.5 * h;
 
           HYDRO_TRACE("point p1(" << p1 << ") is " << (bInside ? "inside" : "outside")
-                      << " rectangle " << w << "x" << h << " at x(" << x << ")" << std::endl);
+                      << " rectangle " << w << "x" << h << " / " << Phi << " at x(" << x << ")" << std::endl);
 
           return bInside;
      }
