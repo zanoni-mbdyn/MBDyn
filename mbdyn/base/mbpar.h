@@ -295,7 +295,7 @@ private:
 
 public:
 	MBDynParser(MathParser& MP, InputStream& streamIn,
-			const char *initial_file);
+			const std::string initial_file);
 	~MBDynParser(void);
 
 	void SetDataManager(DataManager *pdm);

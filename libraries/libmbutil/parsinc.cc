@@ -119,7 +119,7 @@ InitDescData(void)
 
 IncludeParser::IncludeParser(MathParser& MP,
 			     InputStream& streamIn,
-			     const char *sInitialFile)
+			     const std::string sInitialFile)
 : HighParser(MP, streamIn)
 {
 	ASSERT(sInitialFile != NULL);

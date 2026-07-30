@@ -153,7 +153,7 @@ protected:
 
 public:
 	IncludeParser(MathParser& MP, InputStream& streamIn,
-		const char *initial_file = "initial file");
+		const  std::string initial_file = "initial file");
 	virtual ~IncludeParser(void);
 
 	virtual void Close(void);                  /* "Chiude" i flussi */
