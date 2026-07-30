@@ -253,11 +253,9 @@ public:
 				return 0;
 			}
 
-			// char *sStr = new char[len + 1];
-			// memcpy(sStr, s, len + 1);
-			// sStr[len - 1] = ';';
-			std::string sStr(s);
-			sStr += ";";
+			char *sStr = new char[len + 1];
+			memcpy(sStr, s, len + 1);
+			sStr[len - 1] = ';';
 
 			return new TplVecHint<T>(sStr);
 
@@ -270,11 +268,9 @@ public:
 				return 0;
 			}
 
-			// char *sStr = new char[len + 1];
-			// memcpy(sStr, s, len + 1);
-			// sStr[len - 1] = ';';
-			std::string sStr(s);
-			sStr += ";";
+			char *sStr = new char[len + 1];
+			memcpy(sStr, s, len + 1);
+			sStr[len - 1] = ';';
 
 			return new TplDriveHint<T>(sStr);
 		}

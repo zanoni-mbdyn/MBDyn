@@ -34,56 +34,50 @@
 #include "hint_impl.h"
 
 Hint *
-ParseHint(DataManager *pDM, std::string s)
+ParseHint(DataManager *pDM, const char *s)
 {
-	if (strncasecmp(s.c_str(), "drive{", STRLENOF("drive{")) == 0) {
-		s += "drive{";
+	if (strncasecmp(s, "drive{", STRLENOF("drive{")) == 0) {
+		s += STRLENOF("drive{");
 		
-		size_t	len = strlen(s.c_str());
+		size_t	len = strlen(s);
 
-		if (s.c_str()[len - 1] != '}') {
+		if (s[len - 1] != '}') {
 			return 0;
 		}
 
-		// char *sDriveStr = new char[len + 1];
-		// memcpy(sDriveStr, s, len + 1);
-		// sDriveStr[len - 1] = ';';
-		std::string sDriveStr(s);
-		s += ";";
+		char *sDriveStr = new char[len + 1];
+		memcpy(sDriveStr, s, len + 1);
+		sDriveStr[len - 1] = ';';
 
 		return new DriveHint(sDriveStr);
 
-	} else if (strncasecmp(s.c_str(), "drive3{", STRLENOF("drive3{")) == 0) {
-		s += "drive3{";
+	} else if (strncasecmp(s, "drive3{", STRLENOF("drive3{")) == 0) {
+		s += STRLENOF("drive3{");
 		
-		size_t	len = strlen(s.c_str());
+		size_t	len = strlen(s);
 
-		if (s.c_str()[len - 1] != '}') {
+		if (s[len - 1] != '}') {
 			return 0;
 		}
 
-		// char *sDriveStr = new char[len + 1];
-		// memcpy(sDriveStr, s, len + 1);
-		// sDriveStr[len - 1] = ';';
-		std::string sDriveStr(s);
-		s += ";";
+		char *sDriveStr = new char[len + 1];
+		memcpy(sDriveStr, s, len + 1);
+		sDriveStr[len - 1] = ';';
 
 		return new TplDriveHint<Vec3>(sDriveStr);
 
-	} else if (strncasecmp(s.c_str(), "drive6{", STRLENOF("drive6{")) == 0) {
+	} else if (strncasecmp(s, "drive6{", STRLENOF("drive6{")) == 0) {
 		s += STRLENOF("drive6{");
 		
-		size_t	len = strlen(s.c_str());
+		size_t	len = strlen(s);
 
-		if (s.c_str()[len - 1] != '}') {
+		if (s[len - 1] != '}') {
 			return 0;
 		}
 
-		// char *sDriveStr = new char[len + 1];
-		// memcpy(sDriveStr, s, len + 1);
-		// sDriveStr[len - 1] = ';';
-		std::string sDriveStr(s);
-		s += ";";
+		char *sDriveStr = new char[len + 1];
+		memcpy(sDriveStr, s, len + 1);
+		sDriveStr[len - 1] = ';';
 
 		return new TplDriveHint<Vec6>(sDriveStr);
 	} 
@@ -93,22 +87,22 @@ ParseHint(DataManager *pDM, std::string s)
 
 /* ParsableHint - start */
 
-ParsableHint::ParsableHint(const std::string s)
-: sHint(s)
+ParsableHint::ParsableHint(const char *s)
+: sHint((char *)s)
 {
 	NO_OP;
 }
 
 ParsableHint::~ParsableHint(void)
 {
-	// if (sHint != 0) {
-	// 	SAFEDELETEARR(sHint);
-	// }
+	if (sHint != 0) {
+		SAFEDELETEARR(sHint);
+	}
 }
 
 /* DriveHint - start */
 
-DriveHint::DriveHint(const std::string s)
+DriveHint::DriveHint(const char *s)
 : ParsableHint(s)
 {
 	NO_OP;

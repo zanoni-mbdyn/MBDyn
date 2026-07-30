@@ -38,20 +38,20 @@
 #include "tpldrive_impl.h"
 
 extern Hint *
-ParseHint(DataManager *pDM, std::string s);
+ParseHint(DataManager *pDM, const char *s);
 
 class ParsableHint : public Hint {
 protected:
-	std::string	sHint;
+	char	*sHint;
 
 public:
-	ParsableHint(const std::string s);
+	ParsableHint(const char *s);
 	virtual ~ParsableHint(void);
 };
 
 class DriveHint : public ParsableHint {
 public:
-	DriveHint(const std::string s);
+	DriveHint(const char *s);
 	virtual ~DriveHint(void);
 
 	DriveCaller *pCreateDrive(DataManager *pDM) const;
@@ -60,14 +60,14 @@ public:
 template <class T>
 class TplVecHint : public ParsableHint {
 public:
-	TplVecHint(const std::string s);
+	TplVecHint(const char *s);
 	virtual ~TplVecHint(void);
 
 	T pCreateVec(DataManager *pDM) const;
 };
 
 template <class T>
-TplVecHint<T>::TplVecHint(const std::string s)
+TplVecHint<T>::TplVecHint(const char *s)
 : ParsableHint(s)
 {
 	NO_OP;
@@ -86,7 +86,7 @@ TplVecHint<T>::pCreateVec(DataManager *pDM) const
 	std::istringstream in(sHint);
 	InputStream In(in);
 
-	MBDynParser HP(pDM->GetMathParser(), In, std::string("TplVecHint::pCreateVec"));
+	MBDynParser HP(pDM->GetMathParser(), In, "TplVecHint::pCreateVec");
 	HP.ExpectArg();
 
 	T vec(mb_zero<T>());
@@ -101,13 +101,13 @@ typedef TplVecHint<Vec6> TplVecHint6;
 template <class T>
 class TplDriveHint : public DriveHint {
 public:
-	TplDriveHint(const std::string s);
+	TplDriveHint(const char *s);
 	virtual ~TplDriveHint(void);
 	TplDriveCaller<T> *pCreateDrive(DataManager *pDM) const;
 };
 
 template <class T>
-TplDriveHint<T>::TplDriveHint(const std::string s)
+TplDriveHint<T>::TplDriveHint(const char *s)
 : DriveHint(s)
 {
 	NO_OP;
