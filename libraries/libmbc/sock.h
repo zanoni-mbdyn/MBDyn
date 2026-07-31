@@ -88,7 +88,9 @@ extern int
 mbdyn_make_inet_socket_type(SOCKET* sock, struct sockaddr_in *name, const char *hostname,
 	unsigned short int port, int socket_type, int dobind, int *perror);
 
-char* sock_err_string (int err);
+/* returns a static, read-only string describing the error;
+ * the string must not be modified or freed */
+const char* sock_err_string (int err);
 
 #ifdef _WIN32
 
@@ -98,7 +100,9 @@ char* sock_err_string (int err);
 #define h_errno WSAGetLastError()
 
 
-void winsock_err_string (int err, char* msg);
+/* returns a static, read-only string describing the winsock error;
+ * the string must not be modified or freed */
+const char* winsock_err_string (int err);
 
 #else
 

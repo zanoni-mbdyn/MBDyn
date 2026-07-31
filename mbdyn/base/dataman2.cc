@@ -1489,7 +1489,7 @@ DataManager::SetValue(VectorHandler& X, VectorHandler& XP)
         DEBUGCERR("Solution XP after SetValue():\n");
         PrintSolution(XP, -1);
 #endif
-	if (solArrFileName != NULL) {
+	if (solArrFileName != "") {
 		std::ifstream fp(solArrFileName);
 #ifdef HAVE_ISOPEN
    		if (!fp.is_open()) {
@@ -1513,7 +1513,7 @@ DataManager::SetValue(VectorHandler& X, VectorHandler& XP)
 				<< std::endl);
 			throw DataManager::ErrGeneric(MBDYN_EXCEPT_ARGS);
 		}
-		SAFEDELETEARR(solArrFileName);
+		solArrFileName = "";
 		fp.close();
 	}
 } /* End of SetValue */

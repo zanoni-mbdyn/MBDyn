@@ -50,7 +50,7 @@ const int iDefaultWidth = OUTPUT_PRECISION + 6;
 const int iDefaultPrecision = OUTPUT_PRECISION;
 
 const char* psExt[] = {
-        ".out",		//  0
+        ".out",		//  0char
         ".mov",
         ".ele",
         ".abs",
@@ -165,7 +165,7 @@ ncCount1x3x3(3,1)
 }
 
 /* Costruttore con inizializzazione */
-OutputHandler::OutputHandler(const char* sFName, int iExtNum)
+OutputHandler::OutputHandler(const std::string sFName, int iExtNum)
 : FileName(sFName, iExtNum),
 #ifdef USE_NETCDF
 m_pBinFile(0),
@@ -559,7 +559,7 @@ OutputHandler::OutputHandler_int(void)
 
 /* Inizializzazione */
 void
-OutputHandler::Init(const char* sFName, int iExtNum)
+OutputHandler::Init(const std::string sFName, int iExtNum)
 {
         FileName::iInit(sFName, iExtNum);
 
@@ -602,7 +602,7 @@ OutputHandler::Open(const OutputHandler::OutFiles out)
         }
 #endif /* USE_NETCDF */
         if (UseText(out) && !IsOpen(out)) {
-                const char *fname = _sPutExt(psExt[out]);
+                const std::string fname = _sPutExt(psExt[out]);
 
                 // Open stream
                 OutData[out].pof->open(fname);

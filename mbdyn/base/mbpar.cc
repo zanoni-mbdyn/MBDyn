@@ -215,7 +215,7 @@ InitDescData(void)
 
 MBDynParser::MBDynParser(MathParser& MP, 
 		InputStream& streamIn,
-		const char *initial_file)
+		const std::string initial_file)
 : IncludeParser(MP, streamIn, initial_file),
 moduleInitialized(false),
 pDM(0)

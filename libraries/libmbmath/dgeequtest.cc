@@ -457,9 +457,9 @@ void ReportMatScale(const char* title, bool fOK, const MatrixScaleBase& matScale
                << std::endl;
      }
 
-     std::cout << "matrix after scaling:\n";
-
-     mh.Print(std::cout, MatrixHandler::MAT_PRINT_TRIPLET);
+     // std::cout << "matrix after scaling:\n";
+     // 
+     // mh.Print(std::cout, MatrixHandler::MAT_PRINT_TRIPLET);
 
      std::cout << "\n------------------------------------------------------------\n";
 }

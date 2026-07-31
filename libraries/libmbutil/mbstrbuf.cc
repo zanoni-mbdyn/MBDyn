@@ -39,72 +39,53 @@
 std::ostream&
 mbstrbuf::stats(std::ostream& out)
 {
-	return out << "len=" << len << "; cursor=" << cursor << std::endl;
+	return out << "len=" << buf.capacity() << "; cursor=" << buf.size() << std::endl;
 }
 
 
 void
 mbstrbuf::make_room(unsigned newlen)
 {
-	newlen = std::max(cursor + 2*newlen, 2*len);
-	char *ptr = new char[newlen];
-	memcpy(ptr, buf, cursor);
-	delete[] buf;
-	buf = ptr;
-	len = newlen;
+	buf.reserve(buf.size() + newlen);
 }
 
-void 
+void
 mbstrbuf::return_cursor(unsigned newcursor)
 {
-	cursor = newcursor;
+	buf.resize(newcursor);
 }
 
 
 void
 mbstrbuf::print_str(const char *str)
 {
-	int slen, buflen;
-
-retry:;
-	buflen = len - cursor;
-	slen = strlen(str);
-	if (slen >= buflen) {
-		make_room(slen);
-		goto retry;
-	}
-
-	memcpy(&buf[cursor], str, slen);
-	cursor += slen;
-	buf[cursor] = '\0';
+	buf += str;
 }
 
 void
 mbstrbuf::print_double(const char *fmt, double d)
 {
-	int dlen, buflen;
-
-retry:;
-	buflen = len - cursor;
-	dlen = snprintf(&buf[cursor], buflen, fmt, d);
-	if (dlen >= buflen) {
-		make_room(dlen);
-		goto retry;
+	int dlen = snprintf(NULL, 0, fmt, d);
+	if (dlen <= 0) {
+		return;
 	}
 
-	cursor += dlen;
+	std::string::size_type oldlen = buf.size();
+	buf.resize(oldlen + dlen + 1);
+	snprintf(&buf[oldlen], dlen + 1, fmt, d);
+	buf.resize(oldlen + dlen);
 }
 
 const char *
 mbstrbuf::get_buf(void) const
 {
-	return buf;
+	return buf.c_str();
 }
 
 unsigned
 mbstrbuf::get_len(void) const
 {
-	return len;
+	return unsigned(buf.size());
 }
 
 std::ostream&

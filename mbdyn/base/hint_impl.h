@@ -86,7 +86,7 @@ TplVecHint<T>::pCreateVec(DataManager *pDM) const
 	std::istringstream in(sHint);
 	InputStream In(in);
 
-	MBDynParser HP(pDM->GetMathParser(), In, "TplVecHint::pCreateVec");
+	MBDynParser HP(pDM->GetMathParser(), In, std::string("TplVecHint::pCreateVec"));
 	HP.ExpectArg();
 
 	T vec(mb_zero<T>());

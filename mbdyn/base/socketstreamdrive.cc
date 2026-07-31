@@ -188,7 +188,7 @@ SocketStreamDrive::ServePending(const doublereal& t)
 		switch (rc) {
 		case SOCKET_ERROR: {
 			int save_errno = WSAGetLastError();
-			char *err_msg = sock_err_string(save_errno);
+			const char *err_msg = sock_err_string(save_errno);
 
 			silent_cout("SocketStreamDrive"
 				"(" << sFileName << "): select failed"
@@ -258,7 +258,7 @@ do_abandon:;
 #endif /* _WIN32 */
 		}
 
-		char *err_msg = sock_err_string(save_errno);
+		const char *err_msg = sock_err_string(save_errno);
 		silent_cout("SocketStreamDrive(" << sFileName << ") failed "
 				"(" << save_errno << ": " << err_msg << ")"
 				<< std::endl);

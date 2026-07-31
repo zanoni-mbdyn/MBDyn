@@ -180,8 +180,8 @@ public:
                         unsigned OF,
                         Solver* pS,
                         doublereal dInitialTime,
-                        const char* sOutputFileName,
-                        const char* sInputFileName,
+                        const std::string sOutputFileName,
+                        const std::string sInputFileName,
                         bool bAbortAfterInput,
                         unsigned nt);
 

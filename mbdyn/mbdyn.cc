@@ -135,6 +135,7 @@ const char sDefaultOutputFileName[] = "MBDyn";
 #include "legalese.h"
 
 #include "cleanup.h"
+#include "stacktrace.h"
 
 enum InputFormat {
 	MBDYN,
@@ -246,7 +247,8 @@ mbdyn_usage(const char *sShortOpts)
 		   "                                any" << std::endl);
 #endif /* DEBUG */
 	silent_cout(
-		   "  -e, --exceptions          don't trap exceptions to ease debugging" << std::endl
+		   "  -D,                       print stacktrace and abort immediately when receiving terminating signal" << std::endl
+		<< "  -e, --exceptions          don't trap exceptions to ease debugging" << std::endl
 		<< "  -E, --fp-mask[=...]       enable some floating point checks" << std::endl
 		<< "  -h, --help                prints this message" << std::endl
 		<< "  -H, --show-table          print symbol table and exit" << std::endl
@@ -306,12 +308,13 @@ mbdyn_welcome(void)
 }
 
 /* Dati di getopt */
-static char sShortOpts[] = "Cd:eE::f:GhHlN:o:pPrRsS:tTvwW:a:F";
+static char sShortOpts[] = "Cd:DeE::f:GhHlN:o:pPrRsS:tTvwW:a:F";
 
 #ifdef HAVE_GETOPT_LONG
 static struct option LongOpts[] = {
 	{ "solver-time",    no_argument,       NULL,           int('C') },     
 	{ "debug",          required_argument, NULL,           int('d') },
+	{ "debug-stacktrace",   no_argument, NULL,                 int('D') },
 	{ "exceptions",     no_argument,       NULL,           int('e') },
 	{ "fp-mask",        optional_argument, NULL,           int('E') },
 	{ "input-file",     required_argument, NULL,           int('f') },
@@ -414,7 +417,9 @@ mbdyn_parse_arguments(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
 				" to use debug features" << std::endl);
 #endif /* !DEBUG */
 			break;
-
+		case int('D'):
+				set_stacktrace_callback();
+			break;
 		case int('e'):
 			mbp.bException = true;
 #ifdef USE_GTEST
@@ -470,9 +475,9 @@ mbdyn_parse_arguments(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
  			mbp.sInputFileName = optarg;
 #ifdef _WIN32
 			// open the file in non translated mode in order not to break seek operations
-			mbp.FileStreamIn.open(mbp.sInputFileName.c_str(), std::ios::binary);
+			mbp.FileStreamIn.open(mbp.sInputFileName, std::ios::binary);
 #else
-			mbp.FileStreamIn.open(mbp.sInputFileName.c_str());
+			mbp.FileStreamIn.open(mbp.sInputFileName);
 #endif
 			if (!mbp.FileStreamIn) {
 				int save_errno = errno;
@@ -839,7 +844,7 @@ mbdyn_prepare_files(const std::string& sInputFileName, std::string& sOutputFileN
 			throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
 		}
 #else // !HAVE_CHDIR
-		silent_cerr("warning: chdir(2) not available; chdir(" << sInputDir.c_str() << ") not performed" << std::endl);
+		silent_cerr("warning: chdir(2) not available; chdir(" << sInputDir << ") not performed" << std::endl);
 #endif // !HAVE_CHDIR
 	}
 
@@ -930,9 +935,9 @@ mbdyn_program(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
 				mbp.CurrInputFormat = MBDYN;
 #ifdef _WIN32
 				// open the file in non translated mode in order not to break seek operations
-				mbp.FileStreamIn.open(mbp.sInputFileName.c_str(), std::ios::binary);
+				mbp.FileStreamIn.open(mbp.sInputFileName, std::ios::binary);
 #else
-				mbp.FileStreamIn.open(mbp.sInputFileName.c_str());
+				mbp.FileStreamIn.open(mbp.sInputFileName);
 #endif
 				if (!mbp.FileStreamIn) {
 					int save_errno = errno;
@@ -977,7 +982,7 @@ mbdyn_program(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
 			/* stream in ingresso */
 			InputStream In(*mbp.pIn);
 			MBDynParser HP(*mbp.pMP, In,
-				mbp.sInputFileName == sDefaultInputFileName ? "initial file" : mbp.sInputFileName.c_str());
+				mbp.sInputFileName == sDefaultInputFileName ? "initial file" : mbp.sInputFileName);
 
 			pSolv = RunMBDyn(HP, mbp.sInputFileName,
 				sOutputFileName,
@@ -988,7 +993,7 @@ mbdyn_program(mbdyn_proc_t& mbp, int argc, char *argv[], int& currarg)
 #if defined(HAVE_GETCWD) && defined(HAVE_CHDIR)
 			if (chdir(sOrigCWD.c_str())) {
 				int save_errno = errno;
-				silent_cerr("chdir(" << sOrigCWD.c_str() << ") failed (" << save_errno << ": " << strerror(save_errno) << ")" << std::endl);
+				silent_cerr("chdir(" << sOrigCWD << ") failed (" << save_errno << ": " << strerror(save_errno) << ")" << std::endl);
 				throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
 			}
 #endif // HAVE_GETCWD && HAVE_CHDIR

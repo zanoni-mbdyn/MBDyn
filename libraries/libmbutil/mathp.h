@@ -385,7 +385,7 @@ protected:
 	/* lexer */
 	enum Token GetToken(void);
 
-	void trim_arg(char *const s);
+	void trim_arg(std::string& s);
 
 	/*
 	 * functions whose recursive invocation expresses

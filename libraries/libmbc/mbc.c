@@ -121,8 +121,7 @@ mbc_get_cmd(mbc_t *mbc)
 	int ioctlresult = ioctlsocket(mbc->sock, FIONBIO, &mode);
 	if (ioctlresult != NO_ERROR) {
 		long int errcode = WSAGetLastError();
-		char msg[100];
-		winsock_err_string(errcode, msg);
+		const char *msg = winsock_err_string(errcode);
 		fprintf(stderr, "ioctlsocket set to blocking failed with error: %ld, msg: %s\n", errcode, msg);
 	}
 #endif /* _WIN32 */
@@ -132,12 +131,11 @@ mbc_get_cmd(mbc_t *mbc)
 
 	if (rc == SOCKET_ERROR) {
 		int err = WSAGetLastError();
-		char msg[100];
 
 #ifdef _WIN32
-		winsock_err_string(err, msg);
+		const char *msg = winsock_err_string(err);
 #else
-		msg[0] = '\0';
+		const char *msg = "";
 #endif /* _WIN32 */
 
 		fprintf(stderr, "recv(cmd=%lu) failed, rc: %d, sizeof(mbc->cmd): %d, errno: %d, err msg: %s\n",
@@ -150,8 +148,7 @@ mbc_get_cmd(mbc_t *mbc)
     ioctlresult = ioctlsocket(mbc->sock, FIONBIO, &mode);
     if (ioctlresult != NO_ERROR) {
         long int errcode = WSAGetLastError();
-        char msg[100];
-        winsock_err_string(errcode, msg);
+        const char *msg = winsock_err_string(errcode);
         fprintf(stderr, "ioctlsocket set back to blocking failed with error: %ld, msg: %s\n", errcode, msg);
     }
 #endif /* _WIN32 */
@@ -246,8 +243,7 @@ mbc_init(mbc_t *mbc, struct sockaddr *addr, socklen_t socklen)
 
 			/* Connect failed */
 #ifdef _WIN32
-			char msg[100];
-			winsock_err_string (save_errno, msg);
+			const char *msg = winsock_err_string (save_errno);
 #else
 			const char *msg;
 			msg = strerror(save_errno);
@@ -518,7 +514,7 @@ mbc_nodal_get_motion(mbc_nodal_t *mbc)
 
 			if (rc == SOCKET_ERROR){
 				int save_errno = WSAGetLastError();
-				char* msg = sock_err_string(save_errno);
+				const char* msg = sock_err_string(save_errno);
 				fprintf(stderr, "recv(%lu) reference node failed with error code %d, msg: \"%s\"\n",
 					(unsigned long)MBC_R_KINEMATICS_SIZE(mbc), save_errno, msg);
 				return -1;
@@ -547,7 +543,7 @@ mbc_nodal_get_motion(mbc_nodal_t *mbc)
 				MBC_N_KINEMATICS_SIZE(mbc), mbc->mbc.recv_flags);
 			if (rc == SOCKET_ERROR){
 				int save_errno = WSAGetLastError();
-				char* msg = sock_err_string(save_errno);
+				const char* msg = sock_err_string(save_errno);
 				fprintf(stderr, "recv(%lu) x, theta, xP, omega failed with error code %d, msg: \"%s\"\n",
 					(unsigned long)MBC_N_KINEMATICS_SIZE(mbc), save_errno, msg);
 				return -1;

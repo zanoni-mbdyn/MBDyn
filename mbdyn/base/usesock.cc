@@ -353,12 +353,7 @@ UseSocket::recv(void *buf, size_t len, int flags, bool bMsgDontWait)
 
 	if (result == SOCKET_ERROR) {
 		int err = WSAGetLastError();
-#ifdef _WIN32
-		char msg[100] = "";
-		winsock_err_string (err, msg);
-#else
-		char* msg = strerror(err);
-#endif /* _WIN32 */
+		const char* msg = sock_err_string(err);
 		silent_cout("UseSocket: recv() failed"
 			<< "(" << result
 			<< ": message was: "

@@ -319,7 +319,7 @@ StructExtForce::Prepare(ExtFileHandlerBase *pEFH_a)
 
 			if (rc == SOCKET_ERROR) {
 				int save_errno = WSAGetLastError();
-				char *err_msg = sock_err_string(save_errno);
+				const char *err_msg = sock_err_string(save_errno);
 				silent_cerr("StructExtForce(" << GetLabel() << "): "
 					"negotiation request send() failed "
 					"(" << save_errno << ": " << err_msg << ")"
@@ -359,7 +359,7 @@ StructExtForce::Prepare(ExtFileHandlerBase *pEFH_a)
 				pEFH_a->GetRecvFlags());
 			if (rc == SOCKET_ERROR) {
 				int save_errno = WSAGetLastError();
-				char *err_msg = sock_err_string(save_errno);
+				const char *err_msg = sock_err_string(save_errno);
 				silent_cerr("StructExtForce(" << GetLabel() << "): "
 					"negotiation response recv() failed "
 					"(" << save_errno << ": " << err_msg << ")"

@@ -76,10 +76,11 @@ GALLERY_LIB_DIR="${GALLERY_LIB_DIR:-${GALLERY_INSTALL_PREFIX}/lib}"
 
 
 for libdir in ${LIBDIR64}; do
-    NUMPY_INC_DIR="${NUMPY_INC_DIR:-/usr/${libdir}/python3.11/site-packages/numpy/core/include}"
-    if ! test -d "${NUMPY_INC_DIR}"; then
-        NUMPY_INC_DIR=
-    fi
+    NUMPY_INC_DIR="`numpy-config --cflags`"
+    # NUMPY_INC_DIR="${NUMPY_INC_DIR:-/usr/${libdir}/python3.11/site-packages/numpy/core/include}"
+    # if ! test -d "${NUMPY_INC_DIR}"; then
+    #     NUMPY_INC_DIR=
+    # fi
 done
 PYTHON_INC_DIR="${PYTHON_INC_DIR:-`python3-config --includes`}"
 PYTHON_LDFLAGS="${PYTHON_LDFLAGS:-`python3-config --ldflags`}"
@@ -312,9 +313,9 @@ if test -d "${TRILINOS_INSTALL_PREFIX}"; then
     fi
 fi
 
-if test -d "${NUMPY_INC_DIR}"; then
-    CPPFLAGS="-I${NUMPY_INC_DIR} ${CPPFLAGS}"
-fi
+# if test -d "${NUMPY_INC_DIR}"; then
+    CPPFLAGS="${NUMPY_INC_DIR} ${CPPFLAGS}"
+# fi
 
 if test -d "${PYTHON_INC_DIR}"; then
     CPPFLAGS="${PYTHON_INC_DIR} ${CPPFLAGS}"

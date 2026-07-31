@@ -16,8 +16,8 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation (version 2 of the License).
- * 
+ * the Free Software Foundation; either version 2 of the License, or
+ * any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,33 +29,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MBSTRBUF_H
-#define MBSTRBUF_H
+#ifndef STACKTRACE_H
+#define STACKTRACE_H
 
-#include <iostream>
-#include <string>
+void set_stacktrace_callback();
 
-class mbstrbuf {
-	friend std::ostream& operator << (std::ostream&, const mbstrbuf&);
-
-private:
-	std::string buf;
-
-public:
-	mbstrbuf(unsigned l = 0) {
-		buf.reserve(l);
-	};
-
-	std::ostream& stats(std::ostream& out);
-
-	void make_room(unsigned newlen);
-	void return_cursor(unsigned newcursor = 0);
-	void print_str(const char *str);
-	void print_double(const char *fmt, double d);
-	const char *get_buf(void) const;
-	unsigned get_len(void) const;
-};
-
-std::ostream& operator << (std::ostream& out, const mbstrbuf& buf);
-
-#endif // MBSTRBUF_H
+#endif /* STACKTRACE_H */

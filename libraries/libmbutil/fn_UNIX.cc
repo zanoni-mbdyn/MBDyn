@@ -38,168 +38,94 @@
 #include "mynewmem.h"
 
 
-FileName::FileName(const char *sFName, int iExtSepNum)
-: sName(NULL), sExt(NULL), sRef(NULL)
-{ 
-   	if (sFName != NULL) { 
-      		iInit(sFName, iExtSepNum); 
-   	} 
+FileName::FileName(const std::string sFName, int iExtSepNum)
+{
+   	if (sFName != "") {
+      		iInit(sFName, iExtSepNum);
+   	}
 }
 
 FileName::~FileName(void)
 {
-   	if (sName != NULL) { 
-      		/* delete []sName; */
-      		SAFEDELETEARR(sName);
-   	} 
-
-   	if (sExt != NULL) { 
-      		/* delete []sExt; */
-      		SAFEDELETEARR(sExt);
-   	} 
+	NO_OP;
 }
 
-int 
-FileName::iInit(const char *sFName, int iExtSepNum)
+int
+FileName::iInit(const  std::string sFName, int iExtSepNum)
 {
-   	ASSERT(sFName != NULL);
 
-   	if (sFName == NULL) { 
-      		return 0; 
+   	if (sFName == "") {
+      		return 0;
    	}
-   
-   	unsigned int iNewSize = strlen(sFName);
-   	if ((sName == NULL) || (iNewSize > iMaxSize)) {
-      		if (sName != NULL) {      
-	 		SAFEDELETEARR(sName);
-			sName = NULL;
-      		}
-      		iMaxSize = iNewSize;
-      		SAFENEWARR(sName, char, iMaxSize + 1);
-   	}
-   
-   	strcpy(sName, sFName); 
-   	sRef = (char *)sName + strlen(sName);
-   	ASSERT(sRef[0] == '\0');
-   
-   	if (iExtSepNum > 0) {  /* se si parte dall'inizio */     
-      		while (--sRef > sName) {  /* cerca il simbolo "/" */	  
-	 		if (sRef[0] == DIR_SEP) {	    
-	    			break;  
-	 		}
-      		}
-	
-      		int iCnt = 0;
-      		while (sRef[0] != '\0') {  /* cerca il "." n. iExtSepNum */
-	 		if (sRef[0] == EXT_SEP) {
-	    			iCnt++; 
-	    			if (iCnt == iExtSepNum) {	       
-	       				goto label;
-	    			}
-	 		}
-	 		sRef++;
-      		}
-	
-label:
-      		iNewSize = strlen(sRef);
-      		if (sExt == NULL || strlen(sExt) < iNewSize) {  
-			/* se c'e' gia' sExt lo cancella */
-	 		if (sExt != NULL) {	    
-	    			SAFEDELETEARR(sExt);
-	 		}
-	 		SAFENEWARR(sExt, char, iNewSize+1);
-      		}
 
-      		ASSERT(sRef != NULL);
-      		strcpy(sExt, sRef);
-      		sRef[0] = '\0';
-   	} else if (iExtSepNum < 0) {  /* se si parte dalla fine */   
-      		iExtSepNum = -iExtSepNum;
-      		while (--sRef > sName) {  /* cerca il simbolo "/" */	 
-	 		if (sRef[0] == DIR_SEP) {	    
-	    			break;
-	 		}
-      		}
-	
-      		int iCnt = 0;
-      		char *sLim = sRef;
-      		sRef = (char *)sName + strlen(sName);
-      		while (--sRef > sLim) {  /* cerca il "." n. iExtSepNum */	  
-	 		if (sRef[0] == EXT_SEP) {	    	       
-	    			iCnt++; 
-	    			if (iCnt == iExtSepNum) {	       
-	       				goto label2; 
-	    			}
-	 		}
-      		}
-      		sRef = (char *)sName + strlen(sName);
-	
-label2:
-      		iNewSize = strlen(sRef);
-      		if (sExt == NULL || strlen(sExt) < iNewSize) { 
-	 		if (sExt != NULL) {	    
-	    			SAFEDELETEARR(sExt);
-	 		}
-	 		SAFENEWARR(sExt, char, iNewSize + 1);
-      		}
-	
-      		ASSERT(sRef != NULL);
-      		strcpy(sExt, sRef);
-      		sRef[0] = '\0';
-   	} else { 
-		if (sExt == 0) {
-      			SAFENEWARR(sExt, char, 1);
+	std::string s(sFName);
+	std::string::size_type pos = std::string::npos;
+
+	/* the extension separator is looked for
+	 * after the last directory separator, if any */
+	std::string::size_type lim = s.find_last_of(DIR_SEP);
+	if (lim == std::string::npos) {
+		lim = 0;
+	}
+
+	if (iExtSepNum > 0) {
+		/* iExtSepNum-th extension separator, from the beginning */
+		int iCnt = 0;
+		for (std::string::size_type i = lim; i < s.size(); i++) {
+			if (s[i] == EXT_SEP && ++iCnt == iExtSepNum) {
+				pos = i;
+				break;
+			}
 		}
-      		sExt[0] = '\0'; 
-   	}
-   
-   	iCurSize = iMaxSize - strlen(sExt);
-   	return iCurSize;
+
+	} else if (iExtSepNum < 0) {
+		/* |iExtSepNum|-th extension separator, from the end;
+		 * a leading extension separator (e.g. ".profile")
+		 * is not treated as such */
+		int iCnt = 0;
+		for (std::string::size_type i = s.size(); i-- > lim + 1; ) {
+			if (s[i] == EXT_SEP && ++iCnt == -iExtSepNum) {
+				pos = i;
+				break;
+			}
+		}
+	}
+
+	if (pos == std::string::npos) {
+		sBase = s;
+		sExt.clear();
+
+	} else {
+		sBase = s.substr(0, pos);
+		sExt = s.substr(pos);
+	}
+
+	return int(sBase.size());
 }
 
-const char *const
-FileName::_sPutExt(const char *sEName)
+const std::string
+FileName::_sPutExt(std::string sEName)
 {
-   	if (sEName == NULL) {
-      		sEName = sExt; 
+   	if (sEName == "") {
+      		sEName = sExt;
    	}
- 
-   	unsigned int uExtLen = strlen(sEName);
-   	if (sEName[0] != '\0' && sEName[0] != EXT_SEP) {      
-     		uExtLen++;
-   	}
-   
-   	if (iCurSize + uExtLen > iMaxSize) {
-      		char *sTmp = NULL;
-      		SAFENEWARR(sTmp, char, iCurSize + uExtLen + 1);
-      
-      		ASSERT(sName != NULL);
-      		strcpy(sTmp, sName);
-      		sRef = sTmp + (sRef - sName);
-      		SAFEDELETEARR(sName);
-      		sName = sTmp;
-		iMaxSize = iCurSize + uExtLen;
-   	}
-   
-   	ASSERT(sRef != NULL);
-   	ASSERT(sEName != NULL);
 
+	sName = sBase;
    	if (sEName[0] != '\0') {
-      		char *sTmp = sRef;
       		if (sEName[0] != EXT_SEP) {
-	 		sTmp[0] = EXT_SEP;
-			sTmp++;
-      		} 
-      		strcpy(sTmp, sEName);
+			sName += EXT_SEP;
+      		}
+      		sName += sEName;
    	}
-   
+
    	return sName;
 }
 
-const char *const
+const std::string
 FileName::sGet(void) const
-{ 
-   	return const_cast<FileName *>(this)->_sPutExt(0); 
+{
+	std::string tmps("");
+   	return const_cast<FileName *>(this)->_sPutExt(tmps);
 }
 
 int

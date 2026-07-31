@@ -488,6 +488,7 @@ AC_CHECK_HEADERS(sys/ioctl.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(values.h)
+AC_CHECK_HEADERS(execinfo.h)
 dnl termios.h used in utils autopilot.c, we don't build if we don't have it (e.g. on windows)
 AC_CHECK_HEADER(termios.h, [have_termios=yes], [have_termios=no])
 
@@ -503,6 +504,7 @@ AC_LANG([C++])
 
 AC_CHECK_HEADERS(exception)
 AC_CHECK_HEADERS(stdexcept)
+AC_CHECK_HEADERS(stacktrace)
 AC_LANG([C])
 
 dnl ----------------------------------------------------------------

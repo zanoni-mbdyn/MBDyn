@@ -117,14 +117,11 @@ InitDescData(void)
 
 /* IncludeParser - begin */
 
-IncludeParser::IncludeParser(MathParser& MP, 
+IncludeParser::IncludeParser(MathParser& MP,
 			     InputStream& streamIn,
-			     const char *sInitialFile)
-: HighParser(MP, streamIn),
-sCurrPath(NULL),
-sInitialPath(NULL),
-sCurrFile(NULL)
-{   
+			     const std::string sInitialFile)
+: HighParser(MP, streamIn)
+{
 	ASSERT(sInitialFile != NULL);
 #ifdef USE_INCLUDE_PARSER
    	char s[PATH_MAX];
@@ -132,11 +129,11 @@ sCurrFile(NULL)
 		silent_cerr("Error in getcwd()" << std::endl);
       		throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
    	}
-	SAFESTRDUP(sCurrPath, s);
+	sCurrPath = s;
 	sInitialPath = sCurrPath;
    	DEBUGCOUT("Current directory is \"" << sCurrPath << "\"" << std::endl);
-   
-   	SAFESTRDUP(sCurrFile, sInitialFile);
+
+   	sCurrFile = sInitialFile;
 #else /* !USE_INCLUDE_PARSER */
    	NO_OP;
 #endif /* !USE_INCLUDE_PARSER */
@@ -163,8 +160,8 @@ void IncludeParser::Close(void)
       		ASSERT(pIn != NULL);
 
 #ifdef USE_INCLUDE_PARSER
-      		ASSERT(sCurrPath != NULL);
-      		ASSERT(sCurrFile != NULL);
+      		ASSERT(!sCurrPath.empty());
+      		ASSERT(!sCurrFile.empty());
 #endif /* USE_INCLUDE_PARSER */
 
       		if (pf != NULL) {
@@ -175,49 +172,34 @@ void IncludeParser::Close(void)
       		}
 
 #ifdef USE_INCLUDE_PARSER
-      		DEBUGCOUT("Leaving directory <" << sCurrPath 
+      		DEBUGCOUT("Leaving directory <" << sCurrPath
 			<< ">, file <" << sCurrFile << '>' << std::endl);
-      		if (sCurrPath != NULL) {
-	 		SAFEDELETEARR(sCurrPath);
-	 		sCurrPath = NULL;
-      		}
-      		if (sCurrFile != NULL) {
-	 		SAFEDELETEARR(sCurrFile);
-	 		sCurrFile = NULL;
-      		}
 #endif /* USE_INCLUDE_PARSER */
-      
+
       		pf = pmi->pfile;
       		pIn = pmi->pis;
 
 #ifdef USE_INCLUDE_PARSER
       		sCurrPath = pmi->sPath;
       		sCurrFile = pmi->sFile;
-      		DEBUGCOUT("Entering directory \"" << sCurrPath 
+      		DEBUGCOUT("Entering directory \"" << sCurrPath
 			<< "\", file \"" << sCurrFile << "\"" << std::endl);
-      		if (chdir(sCurrPath)) {
-			silent_cerr("Error in chdir, path=\"" 
+      		if (chdir(sCurrPath.c_str())) {
+			silent_cerr("Error in chdir, path=\""
 				<< sCurrPath << "\"" << std::endl);
 	 		throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
       		}
 #endif /* USE_INCLUDE_PARSER */
 
       		/* pmi must be non NULL */
-      		SAFEDELETE(pmi);     
+      		SAFEDELETE(pmi);
 
 		myinput.pop();
    	}
-   
-   	/* sCurrPath can be NULL if Close() has been already called */
+
 #ifdef USE_INCLUDE_PARSER
-   	if (sCurrPath != NULL) {
-      		SAFEDELETEARR(sCurrPath);
-      		sCurrPath = NULL;
-   	}
-   	if (sCurrFile != NULL) {
-      		SAFEDELETEARR(sCurrFile);
-      		sCurrFile = NULL;
-   	}
+   	sCurrPath.clear();
+   	sCurrFile.clear();
 #endif /* USE_INCLUDE_PARSER */
 }
 
@@ -237,30 +219,26 @@ IncludeParser::fCheckStack(void)
       		ASSERT(pf != NULL);
       		ASSERT(pIn != NULL);
 #ifdef USE_INCLUDE_PARSER
-      		ASSERT(sCurrPath != NULL);
-      		ASSERT(sCurrFile != NULL);
+      		ASSERT(!sCurrPath.empty());
+      		ASSERT(!sCurrFile.empty());
 #endif /* USE_INCLUDE_PARSER */
-      
-      		SAFEDELETE(pf); 
+
+      		SAFEDELETE(pf);
       		SAFEDELETE(pIn);
 #ifdef USE_INCLUDE_PARSER
-      		DEBUGCOUT("Leaving directory <" << sCurrPath 
+      		DEBUGCOUT("Leaving directory <" << sCurrPath
 			<< ">, file <" << sCurrFile << '>' << std::endl);
-      		SAFEDELETEARR(sCurrPath);
-      		sCurrPath = NULL;
-      		SAFEDELETEARR(sCurrFile);
-      		sCurrFile = NULL;
 #endif /* USE_INCLUDE_PARSER */
-      
+
       		pf = pmi->pfile;
       		pIn = pmi->pis;
 #ifdef USE_INCLUDE_PARSER
       		sCurrPath = pmi->sPath;
       		sCurrFile = pmi->sFile;
-      		DEBUGCOUT("Entering directory \"" << sCurrPath 
+      		DEBUGCOUT("Entering directory \"" << sCurrPath
 			<< "\", file \"" << sCurrFile << "\"" << std::endl);
-      		if (chdir(sCurrPath)) {
-			silent_cerr("Error in chdir, path=\"" 
+      		if (chdir(sCurrPath.c_str())) {
+			silent_cerr("Error in chdir, path=\""
 				<< sCurrPath << "\"" << std::endl);
 	 		throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
       		}
@@ -322,10 +300,15 @@ IncludeParser::Include_int()
 		throw ErrFile(MBDYN_EXCEPT_ARGS);
 	}
 
+	/* NOTE: GetFileName() returns a pointer into sStringBuf; copy it
+	 * before any further parsing overwrites the buffer */
+	std::string sfn(sfname);
+	sfname = sfn.c_str();
+
 	std::ifstream *pf_old = pf;
 	InputStream *pIn_old = pIn;
-	char *sOldPath = sCurrPath;
-	char *sOldFile = sCurrFile;
+	std::string sOldPath = sCurrPath;
+	std::string sOldFile = sCurrFile;
 
    	pf = NULL;
    	pIn = NULL;
@@ -361,48 +344,41 @@ IncludeParser::Include_int()
 
    	/* Cambio di directory */
 #ifdef USE_INCLUDE_PARSER
-   	sCurrPath = NULL;
-   	sCurrFile = NULL;
-   	char* stmp = NULL;
-   	SAFESTRDUP(stmp, sfname);
-   	char* s = (char*)stmp + strlen(sfname);
-   	while (--s >= stmp) {
-      		if (s[0] == DIR_SEP) {
-	 		char c = s[1];
-	 		s[1] = '\0';
-	 		if (chdir(stmp)) {
-				silent_cerr("Error in chdir, path=" 
-					<< stmp << std::endl);
-	    			throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
-	 		}
-	 		char p[PATH_MAX];
-	 		if (getcwd(p, sizeof(p)) == NULL) {
-				silent_cerr("Error in getcwd()" << std::endl);
-	    			SAFEDELETEARR(stmp);
-	    			throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
-	 		}
-			SAFESTRDUP(sCurrPath, p);
-	 		DEBUGCOUT("Current directory is \"" << sCurrPath 
-				<< "\"" << std::endl);
-	 
-	 		s[1] = c;
-	 		break;
-      		}
-   	}
-   	s++;
-   	SAFESTRDUP(sCurrFile, s);
+   	sCurrPath.clear();
+   	sCurrFile.clear();
+
+	std::string::size_type sep = sfn.find_last_of(DIR_SEP);
+	if (sep != std::string::npos) {
+		std::string sDir(sfn, 0, sep + 1);
+ 		if (chdir(sDir.c_str())) {
+			silent_cerr("Error in chdir, path="
+				<< sDir << std::endl);
+    			throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
+ 		}
+ 		char p[PATH_MAX];
+ 		if (getcwd(p, sizeof(p)) == NULL) {
+			silent_cerr("Error in getcwd()" << std::endl);
+    			throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
+ 		}
+		sCurrPath = p;
+ 		DEBUGCOUT("Current directory is \"" << sCurrPath
+			<< "\"" << std::endl);
+
+		sCurrFile = sfn.substr(sep + 1);
+
+	} else {
+		sCurrFile = sfn;
+	}
    	DEBUGCOUT("Opening file <" << sCurrFile << '>' << std::endl);
-      
-   	SAFEDELETEARR(stmp);
-   
-   	if (sCurrPath == NULL) {
+
+   	if (sCurrPath.empty()) {
       		char ss[PATH_MAX];
       		if (getcwd(ss, sizeof(ss)) == NULL) {
 			silent_cerr("Error in getcwd()" << std::endl);
 	 		throw ErrFileSystem(MBDYN_EXCEPT_ARGS);
       		}
-		SAFESTRDUP(sCurrPath, ss);
-      		DEBUGCOUT("Current directory is \"" << sCurrPath 
+		sCurrPath = ss;
+      		DEBUGCOUT("Current directory is \"" << sCurrPath
 			<< "\"" << std::endl);
    	}
 #endif /* USE_INCLUDE_PARSER */
@@ -433,230 +409,146 @@ IncludeParser::Eof(void)
 }
 
 /*
- * returns a dynamically allocated string with environment variables expanded
+ * expands environment variables in "in" into "out";
+ * returns false (leaving "out" in an undefined state) on failure
  */
-static char *
-expand_environment(const char *in)
+static bool
+expand_environment(const char *in, std::string& out)
 {
-	char		*out = NULL;
-#define MAXSUBST		10
-	struct {
-		unsigned	start;
-		unsigned	end;
-		const char	*value;
-		unsigned	length;
-	} 		subst[MAXSUBST];
-	unsigned	cnt = 0, c;
-
 	DEBUGCOUT(">> expand_environment: " << in << std::endl);
 
-	subst[cnt].start = 0;
-	subst[cnt].end = 0;
-	subst[cnt].value = NULL;
-	subst[cnt].length = 0;
-	for (c = 0; in[c]; c++) {
-		if (in[c] == '$') {
-			if (cnt >= MAXSUBST - 2) {
-				silent_cerr("too many substitutions in \""
-						<< in << "\"" << std::endl);
-				return NULL;
-			}
+	out.clear();
+	for (unsigned c = 0; in[c]; c++) {
+		if (in[c] != '$') {
+			out += in[c];
+			continue;
+		}
 
-			subst[cnt].end = c;
-			if (in[c + 1] == '$') {
-				c++;
-				subst[cnt].start = c;
-				subst[cnt].value = "";
-				subst[cnt].length = 0;
-				continue;
-			}
-
+		/* "$$" is a literal '$' */
+		if (in[c + 1] == '$') {
+			out += '$';
 			c++;
-			unsigned namepos = c;
-			if (in[c] == '{') {
-				const char *end = std::strchr(&in[c], '}');
+			continue;
+		}
 
-				if (end == NULL) {
-					silent_cerr("missing trailing \"}\" "
-							"in \"" << in << "\""
-							<< std::endl);
-					return NULL;
-				}
+		c++;
+		unsigned namepos = c;
+		const char *value = NULL;
+		if (in[c] == '{') {
+			const char *end = std::strchr(&in[c], '}');
 
-				namepos++;
-                                std::string buf(in + namepos, end);
-				subst[cnt].value = getenv(buf.c_str());
-				if (subst[cnt].value == NULL) {
-					silent_cerr("unable to find "
-							"environment "
-							"variable \""
-							<< buf << "\""
-							<< std::endl);
-					return NULL;
-				}
+			if (end == NULL) {
+				silent_cerr("missing trailing \"}\" "
+						"in \"" << in << "\""
+						<< std::endl);
+				return false;
+			}
 
-				c = end - &in[0] + 1;
+			namepos++;
+			std::string buf(in + namepos, end);
+			value = getenv(buf.c_str());
+			if (value == NULL) {
+				silent_cerr("unable to find "
+						"environment "
+						"variable \""
+						<< buf << "\""
+						<< std::endl);
+				return false;
+			}
 
-			} else {
-				if (in[c] != '_' && !isalpha(in[c])) {
-					silent_cerr("illegal leading char "
-							"in environment "
-							"variable name in \""
-							<< in << "\""
-							<< std::endl);
-					return NULL;
-				}
+			/* skip past the closing brace ('}';
+			 * the for loop increments c) */
+			c = end - &in[0];
 
-				for (c++; in[c]; c++) {
-					if (in[c] != '_' && !isalnum(in[c])) {
-						break;
-					}
-				}
+		} else {
+			if (in[c] != '_' && !isalpha(in[c])) {
+				silent_cerr("illegal leading char "
+						"in environment "
+						"variable name in \""
+						<< in << "\""
+						<< std::endl);
+				return false;
+			}
 
-                                std::string buf(in + namepos, in + c);
-				subst[cnt].value = getenv(buf.c_str());
-				if (subst[cnt].value == NULL) {
-					silent_cerr("unable to find "
-							"environment "
-							"variable \""
-							<< buf << "\""
-							<< std::endl);
-					return NULL;
+			for (c++; in[c]; c++) {
+				if (in[c] != '_' && !isalnum(in[c])) {
+					break;
 				}
 			}
 
-			/* can't be NULL */
-			subst[cnt].length = strlen(subst[cnt].value);
-
-			cnt++;
-			subst[cnt].start = c;
+			std::string buf(in + namepos, in + c);
+			value = getenv(buf.c_str());
+			if (value == NULL) {
+				silent_cerr("unable to find "
+						"environment "
+						"variable \""
+						<< buf << "\""
+						<< std::endl);
+				return false;
+			}
 
 			/* because it's incremented again by "for" */
 			c--;
 		}
-	}
-	subst[cnt].end = c;
-	subst[cnt].value = NULL;
-	subst[cnt].length = 0;
 
-	unsigned len = 0;
-	for (c = 0; c < cnt; c++) {
-		len += (subst[c].end - subst[c].start) + subst[c].length;
+		out += value;
 	}
-	len += subst[c].end - subst[c].start;
-
-	SAFENEWARR(out, char, len + 1);
-
-	unsigned p = 0;
-	for (c = 0; c < cnt; c++) {
-		unsigned l = subst[c].end - subst[c].start;
-		if (l > 0) {
-			memcpy(&out[p], &in[subst[c].start], l);
-			p += l;
-		}
-		if (subst[c].length > 0) {
-			memcpy(&out[p], subst[c].value, subst[c].length);
-			p += subst[c].length;
-		}
-	}
-	unsigned l = subst[c].end - subst[c].start;
-	if (l > 0) {
-		memcpy(&out[p], &in[subst[c].start], l);
-		p += l;
-	}
-	out[p] = '\0';
 
 	DEBUGCOUT("<< expand_environment: " << out << std::endl);
 
-	return out;
+	return true;
 }
 
-static char *
-resolve_filename(const char *filename_in)
+/*
+ * resolves environment variables and "~" prefixes in "filename_in";
+ * returns false (leaving "res" in an undefined state) on failure
+ */
+static bool
+resolve_filename(const char *filename_in, std::string& res)
 {
-        char	*res = NULL,
-                *filename = NULL;;
+        std::string filename;
 
-        if (strchr(filename_in, '$')) {
-                filename = expand_environment(filename_in);
-                if (filename == NULL) {
-                        goto error_return;
+        if (std::strchr(filename_in, '$')) {
+                if (!expand_environment(filename_in, filename)) {
+                        return false;
                 }
+
         } else {
-                filename = (char *)filename_in;
+                filename = filename_in;
         }
 
-        if (filename[0] == '~') {
-                if (filename[1] == DIR_SEP) {
+        if (!filename.empty() && filename[0] == '~') {
+                if (filename.length() > 1 && filename[1] == DIR_SEP) {
                         /* do environment stuff */
-                        char *home;
-
-                        home = getenv("HOME");
-                        if (home == NULL) {
-                                goto error_return;
+                        const char *home = getenv("HOME");
+                        if (home != NULL) {
+                                res = home + filename.substr(1);
+                                return true;
                         }
-
-                        char *s = NULL;
-                        int l, ll;
-
-                        l = strlen(home);
-                        ll = l + strlen(filename + 1) + 1;
-                        SAFENEWARR(s, char, ll);
-
-                        strcpy(s, home);
-                        strcpy(s + l, filename + 1);
-
-                        res = s;
-                        goto error_return;
 
 #if defined(HAVE_PWD_H)
                 } else {
-                        char *p;
+                        std::string::size_type p = filename.find(DIR_SEP, 1);
+                        if (p != std::string::npos) {
+                                std::string buf = filename.substr(1, p - 1);
 
-                        p = std::strchr(filename + 1, DIR_SEP);
-                        if (p == NULL) {
-                                goto error_return;
+                                /* do passwd stuff */
+                                struct passwd *pw = getpwnam(buf.c_str());
+                                if (pw != NULL) {
+                                        res = pw->pw_dir + filename.substr(p);
+                                        return true;
+                                }
                         }
-
-                        std::string buf(filename + 1, p);
-
-                        /* do passwd stuff */
-                        struct passwd *pw;
-
-                        pw = getpwnam(buf.c_str());
-
-                        if (pw == NULL ) {
-                                goto error_return;
-                        }
-
-                        size_t l = strlen(pw->pw_dir);
-                        int ll = l + strlen(p) + 1;
-                        char *s = NULL;
-                        SAFENEWARR(s, char, ll);
-                        strcpy(s, pw->pw_dir);
-                        strcpy(s + l, p);
-
-                        res = s;
-                        goto error_return;
 #endif /* HAVE_PWD_H */
                 }
         }
 
-error_return:;
-        if (filename != NULL) {
-                if (res == NULL) {
-                        SAFESTRDUP(res, filename);
-                }
+        res = filename;
 
-                if (!(filename >=  filename_in && filename <= filename_in + strlen(filename_in))) {
-                        SAFEDELETEARR(filename);
-                }
-        }
-
-        return res;
+        return true;
 }
 
-const char* 
+const char*
 IncludeParser::GetFileName(enum Delims Del)
 {
    	const char *s = GetStringWithDelims(Del);
@@ -664,28 +556,23 @@ IncludeParser::GetFileName(enum Delims Del)
 		return 0;
 	}
 
-   	const char *stmp = resolve_filename(s);
-   	if (stmp == NULL) {
+   	std::string stmp;
+   	if (!resolve_filename(s, stmp)) {
       		return 0;
-
-   	} else {
-      		if (strlen(stmp) >= iDefaultBufSize) {
-      			SAFEDELETEARR(stmp);
-			return 0;
-      		}
-	 	strcpy(sStringBuf, stmp);
-      		SAFEDELETEARR(stmp);
    	}
-	
-   	return sStringBuf;
+
+	sStringBuf = stmp;
+
+   	return sStringBuf.c_str();
 }
 
 HighParser::ErrOut
 IncludeParser::GetLineData(void) const
-{      
+{
    	ErrOut LineData;
-   	LineData.sFileName = sCurrFile;
-   	LineData.sPathName = (strcmp(sCurrPath, sInitialPath) == 0) ? 0 : sCurrPath;
+   	LineData.sFileName = sCurrFile.empty() ? 0 : sCurrFile.c_str();
+   	LineData.sPathName = (sCurrPath.empty() || sCurrPath == sInitialPath)
+		? 0 : sCurrPath.c_str();
    	LineData.iLineNumber = GetLineNumber();
    	return LineData;
 }

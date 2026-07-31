@@ -3669,13 +3669,13 @@ namespace sp_grad_test {
                }
           }
 
-          std::cout.precision(4);
-          std::cout.setf(std::ios::fixed | std::ios::dec);
-          std::cout << "gradient matrix handler:\n" << oSpMatHd << std::endl;
-          std::cout << "full matrix handler:\n" << oFullMatHd << std::endl;
-#ifdef USE_TRILINOS
-          std::cout << "epetra matrix handler:\n" << oEpMatHd << std::endl;
-#endif
+//           std::cout.precision(4);
+//           std::cout.setf(std::ios::fixed | std::ios::dec);
+//           std::cout << "gradient matrix handler:\n" << oSpMatHd << std::endl;
+//           std::cout << "full matrix handler:\n" << oFullMatHd << std::endl;
+// #ifdef USE_TRILINOS
+//           std::cout << "epetra matrix handler:\n" << oEpMatHd << std::endl;
+// #endif
      }
 
      void test18(index_type inumloops, index_type inumnz, index_type inumdof)
