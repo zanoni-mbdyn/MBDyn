@@ -640,19 +640,6 @@ class StaticDisplacementNode(DisplacementNode):
     def __str__(self):
         return super().__str__() + ';\n'
 
-class PointMass(MBEntity):
-    idx: Union[int, MBVar]
-    node: Node
-    mass: Union[float, MBVar]
-    output: Optional[Union[Literal['yes', 'no'], int, bool]] = 'yes'
-    
-    def __str__(self):
-        s = f"body: {self.idx}, {self.node}, {self.mass}"
-        if self.output != 'yes':
-            s += f", output, {self.output}"
-        s += ";\n"
-        return s
-    
 class Element(MBEntity):
     """
     Abstract base class for all elements
@@ -687,22 +674,92 @@ class Element(MBEntity):
             raise ValueError("relative_direction must be a unit vector (magnitude = 1)")
 
 class Body(Element):
-    node: Node
-    mass: Union[float, MBVar]
-    position: Position
-    inertial_matrix: Position 
-    inertial: Optional[Position] = None
+    """
+    Implements MBDyn's `body:` element. Covers the `<one_body>` case (a
+    single rigid body attached to a structural node), the `<one_pointmass>`
+    case (triggered automatically when `node` is a `DisplacementNode`, which
+    has no orientation and therefore no center of mass or inertia matrix),
+    and `condense` (multiple sub-masses lumped onto a single node, triggered
+    by passing lists to `mass`/`relative_center_of_mass`/`inertia_matrix`).
+
+    `<one_vm_body>` (`variable mass`) currentely not supported: it requires
+    `TplDriveCaller<Vec3>`/`TplDriveCaller<Mat3x3>`, which aren't implemented
+    yet (see `TplDriveCaller` and the `force_drive`/`moment_drive` TODOs on
+    `StructuralForce`/`StructuralCouple`).
+    """
+    node: Union[Node, DisplacementNode]
+    mass: Union[float, MBVar, List[Union[float, MBVar]]]
+    relative_center_of_mass: Optional[Union[Position, List[Optional[Position]]]] = None
+    inertia_matrix: Optional[Union[Position, List[Optional[Position]]]] = None
+    orientation: Optional[Union[Position, List[Optional[Position]]]] = None
+    allow_negative_mass: Optional[bool] = None
 
     def element_type(self):
         return 'body'
-    
+
+    def _is_pointmass(self) -> bool:
+        return isinstance(self.node, DisplacementNode)
+
+    def _num_masses(self) -> int:
+        return len(self.mass) if isinstance(self.mass, list) else 1
+
+    @staticmethod
+    def _as_list(value, num_masses: int) -> list:
+        if isinstance(value, list):
+            return value
+        return [value] * num_masses if value is not None else [None] * num_masses
+
+    @model_validator(mode='after')
+    def validate_fields(self) -> 'Body':
+        num_masses = self._num_masses()
+        masses = self._as_list(self.mass, num_masses)
+        centers = self._as_list(self.relative_center_of_mass, num_masses)
+        inertias = self._as_list(self.inertia_matrix, num_masses)
+        orientations = self._as_list(self.orientation, num_masses)
+
+        if not (len(masses) == len(centers) == len(inertias) == len(orientations) == num_masses):
+            raise ValueError(
+                'Body: mass, relative_center_of_mass, inertia_matrix and orientation '
+                'must all be lists of the same length when more than one mass is condensed.'
+            )
+
+        if self._is_pointmass():
+            if any(c is not None for c in centers) or any(i is not None for i in inertias):
+                raise ValueError(
+                    'Body: relative_center_of_mass and inertia_matrix must not be set '
+                    'when node is a DisplacementNode (one_pointmass case).'
+                )
+        else:
+            if any(c is None for c in centers) or any(i is None for i in inertias):
+                raise ValueError(
+                    'Body: relative_center_of_mass and inertia_matrix are required '
+                    'when node is a full structural node (one_body case).'
+                )
+
+        return self
+
     def __str__(self):
+        num_masses = self._num_masses()
+        masses = self._as_list(self.mass, num_masses)
+        centers = self._as_list(self.relative_center_of_mass, num_masses)
+        inertias = self._as_list(self.inertia_matrix, num_masses)
+        orientations = self._as_list(self.orientation, num_masses)
+        is_pointmass = self._is_pointmass()
+
         s = f'{self.element_header()}, {self.node.idx}'
-        s += f',\n\t{self.mass}'
-        s += f',\n\t{self.position}'
-        s += f',\n\t{self.inertial_matrix}'
-        if self.inertial is not None:
-            s += f',\n\t{self.inertial}'
+        if num_masses > 1:
+            s += f',\n\tcondense, {num_masses}'
+            if self.allow_negative_mass:
+                s += f',\n\tallow negative mass'
+        elif self.allow_negative_mass:
+            s += f',\n\tallow negative mass'
+        for mass, center, inertia, orient in zip(masses, centers, inertias, orientations):
+            s += f',\n\t{mass}'
+            if not is_pointmass:
+                s += f',\n\t{center}'
+                s += f',\n\t{inertia}'
+                if orient is not None:
+                    s += f',\n\t\torientation, {orient}'
         s += self.element_footer()
         return s
 

@@ -186,40 +186,6 @@ class TestNodeClasses(unittest.TestCase):
         
         self.assertEqual(str(node), expected_str)
 
-class TestPointMass(unittest.TestCase):
-    def setUp(self):
-        # Create Position instances for testing
-        self.pos = l.Position(relative_position=[1.0, 2.0, 3.0], reference='global')
-        self.orient = l.Position(relative_position=[l.eye()], reference='')
-        self.vel = l.Position(relative_position=[0.1, 0.2, 0.3], reference='global')
-        self.ang_vel = l.Position(relative_position=[l.null()], reference='')
-    
-    def test_point_mass_with_dynamic_node(self):
-        """Test PointMass with a DynamicNode"""
-        # Create a dynamic node to use with the point mass
-        node = l.DynamicNode(idx=1, pos=self.pos, orient=self.orient, 
-                            vel=self.vel, angular_vel=self.ang_vel)
-        # Create a point mass with default output
-        mass = l.PointMass(idx=10, node=node, mass=5.0)
-        self.assertEqual(mass.idx, 10)
-        self.assertEqual(mass.node, node)
-        self.assertEqual(mass.mass, 5.0)
-        self.assertEqual(mass.output, 'yes')  # Default value
-        # Test string representation
-        expected_str = f"body: 10, {node}, 5.0;\n"
-        self.assertEqual(str(mass), expected_str)
-
-    def test_point_mass_with_static_node(self):
-        """Test PointMass with a StaticNode"""
-        node = l.StaticNode(idx=2, pos=self.pos, orient=self.orient, 
-                           vel=self.vel, angular_vel=self.ang_vel)
-        # Create a point mass with non-default output
-        mass = l.PointMass(idx=11, node=node, mass=7.5, output='no')
-        self.assertEqual(mass.output, 'no')
-        # Test string representation with output option
-        expected_str = f"body: 11, {node}, 7.5, output, no;\n"
-        self.assertEqual(str(mass), expected_str)
-
 class TestNodeDof(unittest.TestCase):
     def test_node_dof_creation_valid(self):
         """Test creating a NodeDof instance with valid data"""
@@ -6555,10 +6521,10 @@ class TestBody(unittest.TestCase):
     def setUp(self):
         self.node = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
 
     def test_basic_body(self):
@@ -6566,32 +6532,85 @@ class TestBody(unittest.TestCase):
             idx=1,
             node=self.node,
             mass=10.0,
-            position=l.Position(relative_position=[0, 0, 0], reference=''),
-            inertial_matrix=l.Position(relative_position=[1, 1, 1], reference='')
+            relative_center_of_mass=l.Position(relative_position=[0, 0, 0], reference=None),
+            inertia_matrix=l.Position(relative_position=[1, 1, 1], reference=None)
         )
         self.assertEqual(body.mass, 10.0)
         self.assertEqual(body.node.idx, 1)
 
-    def test_body_with_inertial(self):
+    def test_body_with_orientation(self):
         body = l.Body(
             idx=1,
             node=self.node,
             mass=10.0,
-            position=l.Position(relative_position=[0, 0, 0], reference=''),
-            inertial_matrix=l.Position(relative_position=[1, 1, 1], reference=''),
-            inertial=l.Position(relative_position=[0.1, 0.1, 0.1], reference='')
+            relative_center_of_mass=l.Position(relative_position=[0, 0, 0], reference=None),
+            inertia_matrix=l.Position(relative_position=[1, 1, 1], reference=None),
+            orientation=l.Position(relative_position=[0.1, 0.1, 0.1], reference=None)
         )
-        self.assertIsNotNone(body.inertial)
+        self.assertIsNotNone(body.orientation)
+        self.assertIn('orientation, 0.1, 0.1, 0.1', str(body))
 
     def test_body_str_representation(self):
         body = l.Body(
             idx=1,
             node=self.node,
             mass=10.0,
-            position=l.Position(relative_position=[0, 0, 0], reference=''),
-            inertial_matrix=l.Position(relative_position=[1, 1, 1], reference='')
+            relative_center_of_mass=l.Position(relative_position=[0, 0, 0], reference=None),
+            inertia_matrix=l.Position(relative_position=[1, 1, 1], reference=None)
         )
         expected = "body: 1, 1,\n\t10.0,\n\t0.0, 0.0, 0.0,\n\t1.0, 1.0, 1.0;\n"
+        self.assertEqual(str(body), expected)
+
+    def test_body_one_pointmass(self):
+        """A body attached to a DisplacementNode is the <one_pointmass> case: no center of mass or inertia."""
+        disp_node = l.DynamicDisplacementNode(
+            idx=2,
+            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
+            vel=l.Position(relative_position=[0, 0, 0], reference='')
+        )
+        body = l.Body(idx=2, node=disp_node, mass=5.0)
+        expected = "body: 2, 2,\n\t5.0;\n"
+        self.assertEqual(str(body), expected)
+
+    def test_body_one_pointmass_rejects_inertia(self):
+        disp_node = l.DynamicDisplacementNode(
+            idx=2,
+            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
+            vel=l.Position(relative_position=[0, 0, 0], reference='')
+        )
+        with self.assertRaises(ValueError):
+            l.Body(
+                idx=2,
+                node=disp_node,
+                mass=5.0,
+                inertia_matrix=l.Position(relative_position=[1, 1, 1], reference=None)
+            )
+
+    def test_body_one_body_requires_inertia(self):
+        with self.assertRaises(ValueError):
+            l.Body(idx=1, node=self.node, mass=10.0)
+
+    def test_body_condense(self):
+        """Multiple sub-masses lumped onto a single node use the `condense` form."""
+        body = l.Body(
+            idx=3,
+            node=self.node,
+            mass=[1.0, 2.0],
+            relative_center_of_mass=[
+                l.Position(relative_position=[0, 0, 0], reference=None),
+                l.Position(relative_position=[1, 0, 0], reference=None),
+            ],
+            inertia_matrix=[
+                l.Position(relative_position=[1, 1, 1], reference=None),
+                l.Position(relative_position=[2, 2, 2], reference=None),
+            ],
+            allow_negative_mass=True,
+        )
+        expected = (
+            "body: 3, 1,\n\tcondense, 2,\n\tallow negative mass"
+            ",\n\t1.0,\n\t0.0, 0.0, 0.0,\n\t1.0, 1.0, 1.0"
+            ",\n\t2.0,\n\t1.0, 0.0, 0.0,\n\t2.0, 2.0, 2.0;\n"
+        )
         self.assertEqual(str(body), expected)
 
 class TestStructuralForce(unittest.TestCase):
