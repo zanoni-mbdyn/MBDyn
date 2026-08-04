@@ -2743,6 +2743,9 @@ class ConstDriveCaller(DriveCaller):
     const_value: Union[Numeric, int]
     """Value that will be output by the drive"""
 
+    def __init__(self, const_value: Union[Numeric, int], idx: Optional[Union[MBVar, PositiveInt]] = None):
+        super().__init__(const_value=const_value, idx=idx)
+
     def __str__(self):
         return f'''{self.drive_header()}, {self.const_value}'''
     
@@ -5065,6 +5068,9 @@ class MaxIterations(MBEntity):
     max_iterations: int = 0
     optional_keywords: Optional[Literal['at most']] = None
 
+    def __init__(self, max_iterations: int = 0, optional_keywords: Optional[Literal['at most']] = None):
+        super().__init__(max_iterations=max_iterations, optional_keywords=optional_keywords)
+
     def __str__(self):
         s = f'max iterations: {self.max_iterations}'
         if self.optional_keywords is not None:
@@ -5763,8 +5769,8 @@ class ControlData(MBEntity):
     output_frequency: Optional[Union[int, MBVar]] = None
     output_meter: Optional[DriveCaller] = None
     output_results: Optional[OutputResults] = None
-    default_orientation: Union[Literal["euler123", "euler313", "euler321", "orientation vector", "orientation matrix"]] = "euler123"
-    model: Literal["static"] = "static"
+    default_orientation: Optional[Literal["euler123", "euler313", "euler321", "orientation vector", "orientation matrix"]] = None
+    model: Optional[Literal["static"]] = None
     rbk_data: Optional[Union[ConstRBK, DriveRBK]] = None
 
     ## Model Counter Cards
@@ -5844,8 +5850,10 @@ class ControlData(MBEntity):
         if self.output_results:
             s += f'\t{self.output_results};\n'
 
-        s += f'\tdefault orientation: {self.default_orientation};\n'
-        s += f'\tmodel: {self.model};\n'
+        if self.default_orientation is not None:
+            s += f'\tdefault orientation: {self.default_orientation};\n'
+        if self.model is not None:
+            s += f'\tmodel: {self.model};\n'
 
         if self.rbk_data:
             s += f'\trigid body kinematics: {self.rbk_data};\n'

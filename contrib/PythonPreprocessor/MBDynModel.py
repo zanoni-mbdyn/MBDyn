@@ -29,11 +29,11 @@ class MBDynModel(MBEntity):
     """
     
     data: Data
-    problem: InitialValue  
+    problem: InitialValue
     control_data: ControlData
-    nodes: List[Node]
+    nodes: List[Node] = []
     drivers: Optional[List[FileDriver]] = []
-    elements: List[Element]
+    elements: List[Element] = []
     
     def add_node(self, node: Node) -> None:
         self.nodes.append(node)
@@ -61,6 +61,9 @@ class MBDynModel(MBEntity):
         output.append("")
 
         # Nodes block
+        if len(self.nodes) == 0:
+            raise ValueError("Nodes block is required, add some in the constructor or using add_node")
+
         output.append("begin: nodes;")
         for node in self.nodes:
             output.append(str(node))
@@ -74,6 +77,9 @@ class MBDynModel(MBEntity):
             output.append("end: drivers;\n")
 
         # Elements block
+        if len(self.elements) == 0:
+            raise ValueError("Elements block is required, add some in the constructor or using add_element")
+
         output.append("begin: elements;")
         for element in self.elements:
             output.append(str(element))

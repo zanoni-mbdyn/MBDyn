@@ -592,11 +592,10 @@ class TestConstDrive(unittest.TestCase):
         self.assertEqual(cdc.const_value, 42)
         self.assertEqual(str(cdc), 'drive caller: 1, const, 42')
 
-        # can't use positional arguments, arguably better
-        with self.assertRaises(TypeError):
-            cdc = l.ConstDriveCaller(42, 1)
-            self.assertEqual(cdc.idx, 1)
-            self.assertEqual(cdc.const_value, 42)
+        # positional arguments are supported (#23/#21): const_value, then idx
+        cdc = l.ConstDriveCaller(42, 1)
+        self.assertEqual(cdc.idx, 1)
+        self.assertEqual(cdc.const_value, 42)
 
     @unittest.skipIf(pydantic is None, "depends on library, since it doesn't prevent correct models from running")
     def test_missing_arguments(self):
@@ -6317,6 +6316,24 @@ class TestUnitDriveCaller(unittest.TestCase):
             l.UnitDriveCaller(idx=0)
         with self.assertRaises(pydantic.ValidationError):
             l.UnitDriveCaller(idx=-1)
+
+class TestPositionalArgs(unittest.TestCase):
+    """Regression tests for #23/#21: some commonly used entities should accept positional args."""
+
+    def test_max_iterations_positional(self):
+        self.assertEqual(str(l.MaxIterations(10)), 'max iterations: 10')
+        self.assertEqual(str(l.MaxIterations(10, 'at most')), 'max iterations: 10, at most')
+        self.assertEqual(str(l.MaxIterations()), 'max iterations: 0')
+        self.assertEqual(str(l.MaxIterations(max_iterations=5)), 'max iterations: 5')
+
+    def test_const_drive_caller_positional(self):
+        cdc = l.ConstDriveCaller(5.0)
+        self.assertEqual(cdc.const_value, 5.0)
+        self.assertEqual(str(cdc), 'const, 5.0')
+
+        cdc_with_idx = l.ConstDriveCaller(7.0, 3)
+        self.assertEqual(cdc_with_idx.idx, 3)
+        self.assertEqual(str(cdc_with_idx), 'drive caller: 3, const, 7.0')
 
 class TestLinearElastic(unittest.TestCase):
     def setUp(self):
@@ -13097,6 +13114,22 @@ class TestAerodynamicBeam(unittest.TestCase):
                 twist=self.twist,
                 integration_points=-5
             )
+
+class TestControlData(unittest.TestCase):
+    def test_defaults_are_omitted_from_output(self):
+        """default_orientation and model must not appear unless explicitly set (#28)."""
+        cd = l.ControlData()
+        self.assertIsNone(cd.default_orientation)
+        self.assertIsNone(cd.model)
+        s = str(cd)
+        self.assertNotIn('default orientation', s)
+        self.assertNotIn('\tmodel:', s)
+
+    def test_explicit_values_are_emitted(self):
+        cd = l.ControlData(default_orientation='euler321', model='static')
+        s = str(cd)
+        self.assertIn('default orientation: euler321;', s)
+        self.assertIn('model: static;', s)
 
 if __name__ == '__main__':
     unittest.main()

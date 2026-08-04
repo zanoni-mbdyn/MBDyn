@@ -25,26 +25,28 @@ class TestMBDynModel(unittest.TestCase):
         )
         
         # Create sample nodes
-        self.node1 = Node(
+        self.node1 = DynamicNode(
             idx=1,
-            pos=Position('', [0.0, 0.0, 0.0]),
-            orient=Position('', [1.0, 0.0, 0.0]),
-            vel=Position('', [0.0, 0.0, 0.0]),
-            angular_vel=Position('', [0.0, 0.0, 0.0])
+            position=Position(reference='', relative_position=[0.0, 0.0, 0.0]),
+            orientation=Position(reference='', relative_position=[1.0, 0.0, 0.0]),
+            velocity=Position(reference='', relative_position=[0.0, 0.0, 0.0]),
+            angular_velocity=Position(reference='', relative_position=[0.0, 0.0, 0.0])
         )
-        
-        self.node2 = Node(
+
+        self.node2 = DynamicNode(
             idx=2,
-            pos=Position('', [1.0, 0.0, 0.0]),
-            orient=Position('', [1.0, 0.0, 0.0]),
-            vel=Position('', [0.0, 0.0, 0.0]),
-            angular_vel=Position('', [0.0, 0.0, 0.0])
+            position=Position(reference='', relative_position=[1.0, 0.0, 0.0]),
+            orientation=Position(reference='', relative_position=[1.0, 0.0, 0.0]),
+            velocity=Position(reference='', relative_position=[0.0, 0.0, 0.0]),
+            angular_velocity=Position(reference='', relative_position=[0.0, 0.0, 0.0])
         )
         
         # Create a sample element
         self.element = Clamp(
             idx=1,
-            node=1
+            node=self.node1,
+            position='node',
+            orientation_mat='node'
         )
 
         # Create a sample file driver using FixedStep class from MBDynLib.py
@@ -123,18 +125,36 @@ class TestMBDynModel(unittest.TestCase):
         self.assertEqual(len(model.elements), initial_element_count + 1)
         self.assertEqual(model.elements[-1], self.element)
 
-    @unittest.skipIf(not imported_pydantic, "Pydantic not available")
-    def test_model_validation(self):
-        """Test model validation with missing required components."""
-        with self.assertRaises(Exception):
-            # Missing required nodes
-            model = MBDynModel(
-                data=self.data,
-                problem=self.initial_value,
-                control_data=self.control_data,
-                # No Nodes
-                elements=[self.element]
-            )
+    def test_model_can_be_constructed_without_nodes_or_elements(self):
+        """MBDynModel() must be constructible before nodes/elements are added (#27)."""
+        model = MBDynModel(
+            data=self.data,
+            problem=self.initial_value,
+            control_data=self.control_data,
+        )
+        self.assertEqual(model.nodes, [])
+        self.assertEqual(model.elements, [])
+
+    def test_str_raises_if_nodes_empty(self):
+        """Generating output with no nodes should fail with a clear error, not invalid syntax."""
+        model = MBDynModel(
+            data=self.data,
+            problem=self.initial_value,
+            control_data=self.control_data,
+            elements=[self.element],
+        )
+        with self.assertRaises(ValueError):
+            str(model)
+
+    def test_str_raises_if_elements_empty(self):
+        model = MBDynModel(
+            data=self.data,
+            problem=self.initial_value,
+            control_data=self.control_data,
+            nodes=[self.node1],
+        )
+        with self.assertRaises(ValueError):
+            str(model)
 
     def test_str_representation(self):
         """Test string representation of the model."""
