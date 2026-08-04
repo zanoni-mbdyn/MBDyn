@@ -120,9 +120,9 @@ class TestNodeClasses(unittest.TestCase):
     def setUp(self):
         # Create Position instances for testing correctly
         self.pos = l.Position(relative_position=[1.0, 2.0, 3.0], reference='global')
-        self.orient = l.Position(relative_position=[l.eye()], reference='')
+        self.orient = l.Position(relative_position=l.eye(), reference='')
         self.vel = l.Position(relative_position=[0.1, 0.2, 0.3], reference='global')
-        self.ang_vel = l.Position(relative_position=[l.null()], reference='')
+        self.ang_vel = l.Position(relative_position=l.null(), reference='')
     
     def test_node_initialization(self):
         """Test that Node initializes correctly with default values"""
@@ -140,8 +140,8 @@ class TestNodeClasses(unittest.TestCase):
     
     def test_dynamic_node(self):
         """Test DynamicNode initialization and string representation"""
-        node = l.DynamicNode(idx=2, pos=self.pos, orient=self.orient, 
-                          vel=self.vel, angular_vel=self.ang_vel, 
+        node = l.DynamicNode(idx=2, position=self.pos, orientation=self.orient, 
+                          velocity=self.vel, angular_velocity=self.ang_vel, 
                           accelerations='yes')
         
         expected_str = (f"structural: 2, dynamic,\n"
@@ -155,8 +155,8 @@ class TestNodeClasses(unittest.TestCase):
     
     def test_static_node(self):
         """Test StaticNode initialization and string representation"""
-        node = l.StaticNode(idx=3, pos=self.pos, orient=self.orient, 
-                         vel=self.vel, angular_vel=self.ang_vel)
+        node = l.StaticNode(idx=3, position=self.pos, orientation=self.orient, 
+                         velocity=self.vel, angular_velocity=self.ang_vel)
         
         expected_str = (f"structural: 3, static,\n"
                        f"\treference, global, 1.0, 2.0, 3.0,\n"
@@ -168,8 +168,8 @@ class TestNodeClasses(unittest.TestCase):
     
     def test_modal_node(self):
         """Test ModalNode initialization and string representation"""
-        node = l.ModalNode(idx=4, pos=self.pos, orient=self.orient, 
-                       vel=self.vel, angular_vel=self.ang_vel)
+        node = l.ModalNode(idx=4, position=self.pos, orientation=self.orient, 
+                       velocity=self.vel, angular_velocity=self.ang_vel)
         
         expected_str = (f"structural: 4, modal,\n"
                        f"\treference, global, 1.0, 2.0, 3.0,\n"
@@ -4242,23 +4242,23 @@ class TestNodeDriveCaller(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
         # Create position object for nodes
-        self.null_position = l.Position(relative_position=[l.null()], reference='')
+        self.null_position = l.Position(relative_position=l.null(), reference='')
         
         # Create different types of nodes
         self.dynamic_node = l.DynamicNode(
             idx=1,
-            pos=self.null_position,
-            orient=self.null_position,
-            vel=self.null_position,
-            angular_vel=self.null_position
+            position=self.null_position,
+            orientation=self.null_position,
+            velocity=self.null_position,
+            angular_velocity=self.null_position
         )
         
         self.static_node = l.StaticNode(
             idx=2,
-            pos=self.null_position,
-            orient=self.null_position,
-            vel=self.null_position,
-            angular_vel=self.null_position
+            position=self.null_position,
+            orientation=self.null_position,
+            velocity=self.null_position,
+            angular_velocity=self.null_position
         )
         
         # Create drive callers to use with node drive caller
@@ -6471,15 +6471,22 @@ class TestLinearViscousGeneric(unittest.TestCase):
         self.assertEqual(str(zero_viscosity), f'{zero_viscosity.const_law_header()}, 0.0')
 
     def test_const_law_footer(self):
-        # Test with prestress and prestrain
+        # linear viscous generic only supports prestress: MBDyn's parser
+        # (LinearViscousGenericCLR::Read) has no prestrain clause for it,
+        # since a purely rate-dependent law has no meaningful rest-strain.
         law = l.LinearViscousGeneric(
-            law_type=l.ConstitutiveLaw.LawType.SCALAR_ISOTROPIC_LAW, 
+            law_type=l.ConstitutiveLaw.LawType.SCALAR_ISOTROPIC_LAW,
             viscosity=1e9,
             prestress=[1.0, 2.0, 3.0],
-            prestrain=[0.1, 0.2, 0.3]
         )
-        self.assertEqual(str(law), f'{law.const_law_header()}, 1000000000.0,\n\tprestress, 1.0, 2.0, 3.0,\n\tprestrain, 0.1, 0.2, 0.3')
-        print(law)
+        self.assertEqual(str(law), f'{law.const_law_header()}, 1000000000.0,\n\tprestress, 1.0, 2.0, 3.0')
+
+        with self.assertRaises(pydantic.ValidationError):
+            l.LinearViscousGeneric(
+                law_type=l.ConstitutiveLaw.LawType.SCALAR_ISOTROPIC_LAW,
+                viscosity=1e9,
+                prestrain=[0.1, 0.2, 0.3]
+            )
 
 class TestLinearViscoelasticGeneric(unittest.TestCase):
     def test_valid_initialization_with_viscosity(self):
@@ -6665,10 +6672,10 @@ class TestStructuralForce(unittest.TestCase):
     def setUp(self):
         self.node = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
 
     def test_absolute_force(self):
@@ -6709,17 +6716,17 @@ class TestStructuralInternalForce(unittest.TestCase):
     def setUp(self):
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
         self.node2 = l.DynamicNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[1, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
 
     def test_absolute_internal_force(self):
@@ -6764,10 +6771,10 @@ class TestStructuralCouple(unittest.TestCase):
     def setUp(self):
         self.node = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
 
     def test_absolute_couple(self):
@@ -6805,17 +6812,17 @@ class TestStructuralInternalCouple(unittest.TestCase):
     def setUp(self):
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
         self.node2 = l.DynamicNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[1, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
 
     def test_basic_internal_couple(self):
@@ -7212,9 +7219,9 @@ class TestBeamSlider(unittest.TestCase):
 
         # create Nodes
         self.pos = l.Position(relative_position=[1.0, 2.0, 3.0], reference='global')
-        self.orient = l.Position(relative_position=[l.eye()], reference='')
+        self.orient = l.Position(relative_position=l.eye(), reference='')
         self.vel = l.Position(relative_position=[0.1, 0.2, 0.3], reference='global')
-        self.ang_vel = l.Position(relative_position=[l.null()], reference='')
+        self.ang_vel = l.Position(relative_position=l.null(), reference='')
         self.node1 = l.Node(idx=1, position=self.pos, orientation=self.orient, 
                     velocity=self.vel, angular_velocity=self.ang_vel)
         self.node2 = l.Node(idx=2, position=self.pos, orientation=self.orient, 
@@ -7561,12 +7568,12 @@ class TestCardanoPin(unittest.TestCase):
 
     def test_isnull_function(self):
         # Test if the `isnull()` function works correctly in Position
-        null_position = l.Position(relative_position=[l.null()], reference='')
+        null_position = l.Position(relative_position=l.null(), reference='')
         self.assertTrue(null_position.isnull())
 
     def test_iseye_function(self):
         # Test if the `iseye()` function works correctly in Position
-        eye_position = l.Position(relative_position=[l.eye()], reference='')
+        eye_position = l.Position(relative_position=l.eye(), reference='')
         self.assertTrue(eye_position.iseye())
 
 class TestCardanoRotation(unittest.TestCase):
@@ -7987,17 +7994,17 @@ class TestDriveDisplacement(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -8135,10 +8142,10 @@ class TestDriveDisplacementPin(unittest.TestCase):
         # Create nodes for testing
         self.node = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -8266,17 +8273,17 @@ class TestDriveHinge(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create orientations for testing
@@ -11014,10 +11021,10 @@ class TestClamp(unittest.TestCase):
     def setUp(self):
         self.node = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[l.null()], reference=''),
-            vel=l.Position(relative_position=[0, 0, 0], reference=''),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=l.null(), reference=''),
+            velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
         )
 
     def test_basic_clamp(self):
@@ -11102,10 +11109,10 @@ class TestShell(unittest.TestCase):
         self.nodes = [
             l.DynamicNode(
                 idx=i,
-                pos=l.Position(relative_position=[i, 0, 0], reference='global'),
-                orient=l.Position(relative_position=[ l.null()], reference=''),
-                vel=l.Position(relative_position=[0, 0, 0], reference=''),
-                angular_vel=l.Position(relative_position=[0, 0, 0], reference='')
+                position=l.Position(relative_position=[i, 0, 0], reference='global'),
+                orientation=l.Position(relative_position=l.null(), reference=''),
+                velocity=l.Position(relative_position=[0, 0, 0], reference=''),
+                angular_velocity=l.Position(relative_position=[0, 0, 0], reference='')
             ) for i in range(1, 5)
         ]
 
@@ -11174,17 +11181,17 @@ class TestTotalJoint(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -11344,10 +11351,10 @@ class TestTotalPinJoint(unittest.TestCase):
         # Create node for testing
         self.node = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -11532,17 +11539,17 @@ class TestCardanoHinge(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -11628,17 +11635,17 @@ class TestRod(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -11879,17 +11886,17 @@ class TestDeformableHinge(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -12117,17 +12124,17 @@ class TestDeformableDisplacement(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.StaticNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         # Create positions for testing
@@ -12421,17 +12428,17 @@ class TestSphericalHinge(unittest.TestCase):
         # Create nodes for testing
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.DynamicNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         self.pos1 = l.Position(relative_position=[0.5, 0, 0], reference='node')
@@ -12481,16 +12488,16 @@ class TestDeformableJoint(unittest.TestCase):
     def setUp(self):
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.DynamicNode(idx=2,
-            pos=l.Position(relative_position=[1, 1, 1], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 1, 1], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         self.pos1 = l.Position(relative_position=[0.5, 0, 0], reference='node')
@@ -12531,17 +12538,17 @@ class TestBeam(unittest.TestCase):
     def setUp(self):
         self.node1 = l.DynamicNode(
             idx=1,
-            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[0, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         self.node2 = l.DynamicNode(
             idx=2,
-            pos=l.Position(relative_position=[1, 0, 0], reference='global'),
-            orient=l.Position(relative_position=[1, 0, 0], reference='global'),
-            vel=l.Position(relative_position=[0, 0, 0], reference='global'),
-            angular_vel=l.Position(relative_position=[0, 0, 0], reference='global')
+            position=l.Position(relative_position=[1, 0, 0], reference='global'),
+            orientation=l.Position(relative_position=[1, 0, 0], reference='global'),
+            velocity=l.Position(relative_position=[0, 0, 0], reference='global'),
+            angular_velocity=l.Position(relative_position=[0, 0, 0], reference='global')
         )
         
         self.pos = l.Position(relative_position=[0, 0, 0], reference='global')
@@ -12600,10 +12607,10 @@ class TestAerodynamicBody(unittest.TestCase):
         
         self.node = l.DynamicNode(
             idx=1, 
-            pos=position, 
-            orient=orientation, 
-            vel=velocity, 
-            angular_vel=angular_velocity
+            position=position, 
+            orientation=orientation, 
+            velocity=velocity, 
+            angular_velocity=angular_velocity
         )
         
         # Create basic parameters for AerodynamicBody
@@ -12837,18 +12844,18 @@ class TestAerodynamicBeam(unittest.TestCase):
         
         node1 = l.DynamicNode(
             idx=1, 
-            pos=position, 
-            orient=orientation, 
-            vel=velocity, 
-            angular_vel=angular_velocity
+            position=position, 
+            orientation=orientation, 
+            velocity=velocity, 
+            angular_velocity=angular_velocity
         )
         
         node2 = l.DynamicNode(
             idx=2, 
-            pos=position, 
-            orient=orientation, 
-            vel=velocity, 
-            angular_vel=angular_velocity
+            position=position, 
+            orientation=orientation, 
+            velocity=velocity, 
+            angular_velocity=angular_velocity
         )
         
         # Create a beam using a NamedConstitutiveLaw for simplicity

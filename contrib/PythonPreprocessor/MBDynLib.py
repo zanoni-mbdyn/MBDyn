@@ -407,12 +407,15 @@ class MBVar(MBEntity, terminal_expression):
     expression: Any
 
     var_types: ClassVar[Tuple[str]] = tuple([t.value for t in MBVarType] +\
-                                  [f'{MBVarModifiers.CONST} {t.value}' for t in MBVarType] +\
-                                  [f'{MBVarModifiers.DEFINE} {t.value}' for t in MBVarType])
+                                  [f'{MBVarModifiers.CONST.value} {t.value}' for t in MBVarType] +\
+                                  [f'{MBVarModifiers.DEFINE.value} {t.value}' for t in MBVarType])
 
     @field_validator('var_type')
     def validate_var_type(cls, v):
-        assert v.strip('const ') in cls.var_types, (
+        # var_types already includes bare, "const "- and "ifndef const "-prefixed
+        # forms; do not strip(), which removes a *set* of characters (not the
+        # substring "const ") and corrupts values like "string" into "ring".
+        assert v in cls.var_types, (
             f'\n-------------------\nERROR: MBVar: unknown variable type {v}\n\t' +
             '\n-------------------\n'
         )
@@ -523,9 +526,17 @@ class eye(MBEntity):
     def __str__(self):
         return 'eye'
 
-class Position(MBEntity):        
+class Position(MBEntity):
     relative_position: Union[null, eye, List[Numeric]]
     reference: Optional[Union[str, MBVar]] = None
+
+    @field_validator('reference', mode='after')
+    def normalize_empty_reference(cls, v):
+        # An empty reference name is never valid MBDyn syntax; treat it the
+        # same as "no reference" instead of silently emitting `reference, , ...`.
+        if isinstance(v, str) and v == '':
+            return None
+        return v
 
     def __str__(self):
         s = ''
@@ -4253,8 +4264,17 @@ class IsotropicHardeningElastic(ConstitutiveLaw):
         return s
         
 class LinearViscous(ConstitutiveLaw):
-    viscosity: Numeric    
-    
+    viscosity: Numeric
+
+    @field_validator('prestrain')
+    def reject_prestrain(cls, v):
+        # MBDyn's parser for this law (constltp_impl.cc, LinearViscousCLR::Read)
+        # only reads a prestress; there is no prestrain clause in its grammar
+        # (a purely rate-dependent law has no meaningful rest-strain offset).
+        if v is not None:
+            raise ValueError(f'{cls.__name__} does not support prestrain (only prestress); MBDyn has no such clause for this law.')
+        return v
+
     def const_law_name(self) -> str:
         if self.dim == 1:
             return 'linear viscous'
@@ -4263,7 +4283,6 @@ class LinearViscous(ConstitutiveLaw):
 
     def __str__(self):
         s = f'{self.const_law_header()}, {self.viscosity}'
-        # this constitutive law does not require any prestrain template drive caller.
         if self.prestress is not None:
             s += f',\n\tprestress, {", ".join(str(i) for i in self.prestress)}'
         return s
@@ -4275,6 +4294,14 @@ class LinearViscousGeneric(ConstitutiveLaw):
     def validate_viscosity(cls, v):
         if isinstance(v, list):
             cls.validate_matrix(v, 'viscosity', supported_dims={1, 3, 6})
+        return v
+
+    @field_validator('prestrain')
+    def reject_prestrain(cls, v):
+        # See LinearViscous.reject_prestrain: this law's MBDyn parser
+        # (LinearViscousGenericCLR::Read) has no prestrain clause.
+        if v is not None:
+            raise ValueError(f'{cls.__name__} does not support prestrain (only prestress); MBDyn has no such clause for this law.')
         return v
 
     def const_law_name(self) -> str:
