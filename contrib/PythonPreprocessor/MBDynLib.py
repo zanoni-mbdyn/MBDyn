@@ -706,20 +706,32 @@ class Body(Element):
     and `condense` (multiple sub-masses lumped onto a single node, triggered
     by passing lists to `mass`/`relative_center_of_mass`/`inertia_matrix`).
 
-    `<one_vm_body>` (`variable mass`) currentely not supported: it requires
-    `TplDriveCaller<Vec3>`/`TplDriveCaller<Mat3x3>`, which aren't implemented
-    yet (see `TplDriveCaller` and the `force_drive`/`moment_drive` TODOs on
-    `StructuralForce`/`StructuralCouple`).
+    `<one_vm_body>` (`variable mass`) is triggered by setting `variable_mass`,
+    and is mutually exclusive with `mass`/`relative_center_of_mass`/
+    `inertia_matrix`/`orientation`/`allow_negative_mass`/`condense`.
     """
     node: Union[Node, DisplacementNode]
-    mass: Union[Numeric, List[Numeric]]
+    mass: Optional[Union[Numeric, List[Numeric]]] = None
     relative_center_of_mass: Optional[Union[Position, List[Optional[Position]]]] = None
     inertia_matrix: Optional[Union[Position, List[Optional[Position]]]] = None
     orientation: Optional[Union[Position, List[Optional[Position]]]] = None
     allow_negative_mass: Optional[bool] = None
 
+    # <one_vm_body> ("variable mass") fields.
+    variable_mass: Optional[DriveCaller] = None
+    """Mass of the variable-mass body; setting this triggers the one_vm_body case."""
+    variable_relative_center_of_mass: Optional['TplDriveCaller'] = None
+    """TplDriveCaller<Vec3>; required (and only allowed) when variable_mass is set."""
+    variable_mass_inertia_matrix: Optional['TplDriveCaller'] = None
+    """TplDriveCaller<Mat3x3>; required (and only allowed) when variable_mass is set."""
+    variable_geometry_inertia_matrix: Optional['TplDriveCaller'] = None
+    """TplDriveCaller<Mat3x3>; required (and only allowed) when variable_mass is set."""
+
     def element_type(self):
         return 'body'
+
+    def _is_variable_mass(self) -> bool:
+        return self.variable_mass is not None
 
     def _is_pointmass(self) -> bool:
         return isinstance(self.node, DisplacementNode)
@@ -735,6 +747,42 @@ class Body(Element):
 
     @model_validator(mode='after')
     def validate_fields(self) -> 'Body':
+        variable_fields_set = (
+            self.variable_relative_center_of_mass is not None or
+            self.variable_mass_inertia_matrix is not None or
+            self.variable_geometry_inertia_matrix is not None
+        )
+
+        if self._is_variable_mass():
+            if self._is_pointmass():
+                raise ValueError(
+                    'Body: variable_mass (one_vm_body) requires a full structural node, not a DisplacementNode.'
+                )
+            if (self.mass is not None or self.relative_center_of_mass is not None or
+                    self.inertia_matrix is not None or self.orientation is not None or
+                    self.allow_negative_mass is not None):
+                raise ValueError(
+                    'Body: variable_mass (one_vm_body) is mutually exclusive with '
+                    'mass/relative_center_of_mass/inertia_matrix/orientation/allow_negative_mass/condense.'
+                )
+            if (self.variable_relative_center_of_mass is None or
+                    self.variable_mass_inertia_matrix is None or
+                    self.variable_geometry_inertia_matrix is None):
+                raise ValueError(
+                    'Body: variable_relative_center_of_mass, variable_mass_inertia_matrix and '
+                    'variable_geometry_inertia_matrix are required when variable_mass is set.'
+                )
+            return self
+
+        if variable_fields_set:
+            raise ValueError(
+                'Body: variable_relative_center_of_mass/variable_mass_inertia_matrix/'
+                'variable_geometry_inertia_matrix require variable_mass to be set.'
+            )
+
+        if self.mass is None:
+            raise ValueError('Body: mass is required, unless variable_mass (one_vm_body) is set.')
+
         num_masses = self._num_masses()
         masses = self._as_list(self.mass, num_masses)
         centers = self._as_list(self.relative_center_of_mass, num_masses)
@@ -763,6 +811,16 @@ class Body(Element):
         return self
 
     def __str__(self):
+        if self._is_variable_mass():
+            s = f'{self.element_header()}, {self.node.idx}'
+            s += f',\n\tvariable mass'
+            s += f',\n\t{self.variable_mass}'
+            s += f',\n\t{self.variable_relative_center_of_mass}'
+            s += f',\n\t{self.variable_mass_inertia_matrix}'
+            s += f',\n\t{self.variable_geometry_inertia_matrix}'
+            s += self.element_footer()
+            return s
+
         num_masses = self._num_masses()
         masses = self._as_list(self.mass, num_masses)
         centers = self._as_list(self.relative_center_of_mass, num_masses)
@@ -792,11 +850,11 @@ class StructuralForce(Element):
     node: Node
     ftype: Literal['absolute', 'follower', 'total']
     position: Optional[Position] = None
-    force_drive: Optional[List] = None # TODO: Needs TplDriveCaller
+    force_drive: Optional['TplDriveCaller'] = None
     force_orientation: Optional[Position] = None
     moment_orientation: Optional[Position] = None
-    moment_drive: Optional[List] = None # TODO: Needs TplDriveCaller
-    
+    moment_drive: Optional['TplDriveCaller'] = None
+
     @model_validator(mode='after')
     def validate_fields_based_on_ftype(self):
         if self.ftype in ['absolute', 'follower']:
@@ -805,18 +863,17 @@ class StructuralForce(Element):
                 raise ValueError(f"{self.__class__.__name__}: position is required when ftype is {self.ftype}")
             if self.force_drive is None:
                 raise ValueError(f"{self.__class__.__name__}: force_drive is required when ftype is {self.ftype}")
-        return self    
+        return self
 
     def element_type(self):
         return 'force'
-    
+
     def __str__(self):
         s = f'{self.element_header()}, {self.ftype}'
         s += f',\n\t{self.node.idx}'
         if self.ftype == 'absolute' or self.ftype == 'follower':
             s += f',\n\t\tposition, {self.position}'
-            s += f',\n\t\t'
-            s += ', '.join(str(i) for i in self.force_drive)
+            s += f',\n\t\t{self.force_drive}'
         elif self.ftype == 'total':
             if self.position is not None:
                 s += f',\n\t\tposition, {self.position}'
@@ -825,11 +882,9 @@ class StructuralForce(Element):
             if self.moment_orientation is not None:
                 s += f',\n\t\tmoment orientation, {self.moment_orientation}'
             if self.force_drive is not None:
-                s += f',\n\t\tforce, '
-                s += ', '.join(str(i) for i in self.force_drive)
+                s += f',\n\t\tforce, {self.force_drive}'
             if self.moment_drive is not None:
-                s += f',\n\t\tmoment, '
-                s += ', '.join(str(i) for i in self.moment_drive)
+                s += f',\n\t\tmoment, {self.moment_drive}'
         s += self.element_footer()
         return s
 
@@ -837,10 +892,10 @@ class StructuralInternalForce(Element):
     nodes: List[Node]
     ftype: Literal['absolute', 'follower', 'total']
     positions: Optional[List[Position]] = None
-    force_drive: Optional[List] = None  # TODO: Needs TplDriveCaller
+    force_drive: Optional['TplDriveCaller'] = None
     force_orientation: Optional[List[Position]] = None
     moment_orientation: Optional[List[Position]] = None
-    moment_drive: Optional[List] = None  # TODO: Needs TplDriveCaller
+    moment_drive: Optional['TplDriveCaller'] = None
 
     @model_validator(mode='after')
     def validate_fields_based_on_ftype(self):
@@ -868,7 +923,7 @@ class StructuralInternalForce(Element):
 
     def element_type(self):
         return 'force'
-    
+
     def __str__(self):
         s = f'{self.element_header()}, {self.ftype} internal'
         s += f',\n\t{self.nodes[0].idx}'
@@ -888,14 +943,11 @@ class StructuralInternalForce(Element):
             if self.moment_orientation:
                 s += f',\n\t\tmoment orientation, {self.moment_orientation[1]}'
             if self.force_drive:
-                s += f',\n\t\tforce, '
-                s += ', '.join(str(i) for i in self.force_drive)
+                s += f',\n\t\tforce, {self.force_drive}'
             if self.moment_drive:
-                s += f',\n\t\tmoment, '
-                s += ', '.join(str(i) for i in self.moment_drive)
+                s += f',\n\t\tmoment, {self.moment_drive}'
         else:  # ftype = { absolute|follower }
-            s += f',\n\t\t'
-            s += ', '.join(str(i) for i in self.force_drive)
+            s += f',\n\t\t{self.force_drive}'
         s += self.element_footer()
         return s
 
@@ -903,7 +955,7 @@ class StructuralCouple(Element):
     node: Node
     ctype: Literal['absolute', 'follower']
     position: Optional[Position] = None
-    couple_drive: List # TODO: Needs TplDriveCaller
+    couple_drive: 'TplDriveCaller'
 
     def element_type(self):
         return 'couple'
@@ -913,8 +965,7 @@ class StructuralCouple(Element):
         s += f',\n\t{self.node.idx}'
         if self.position:
             s += f',\n\t\tposition, {self.position}'
-        s += f',\n\t\t'
-        s += ', '.join(str(i) for i in self.couple_drive)
+        s += f',\n\t\t{self.couple_drive}'
         s += self.element_footer()
         return s
 
@@ -922,11 +973,11 @@ class StructuralInternalCouple(Element):
     nodes: List[Node]
     ctype: Literal['absolute', 'follower']
     positions: Optional[List[Position]] = None
-    couple_drive: List # TODO: Needs TplDriveCaller
+    couple_drive: 'TplDriveCaller'
 
     def element_type(self):
         return 'couple'
-    
+
     @model_validator(mode='after')
     def validate_length_of_lists(self):
         if len(self.nodes) != 2:
@@ -934,7 +985,7 @@ class StructuralInternalCouple(Element):
         if self.positions is not None and len(self.positions) != 2:
             raise ValueError(f"{self.__class__.__name__}: positions must have length 2")
         return self
-    
+
     def __str__(self):
         s = f'{self.element_header()}, {self.ctype} internal'
         s += f',\n\t{self.nodes[0].idx}'
@@ -943,8 +994,7 @@ class StructuralInternalCouple(Element):
         s += f',\n\t{self.nodes[1].idx}'
         if self.positions:
             s += f',\n\t\tposition, {self.positions[1]}'
-        s += f',\n\t\t'
-        s += ', '.join(str(i) for i in self.couple_drive)
+        s += f',\n\t\t{self.couple_drive}'
         s += self.element_footer()
         return s
 
@@ -3963,8 +4013,131 @@ class UnitDriveCaller(DriveCaller):
     def __str__(self):
         return f'{self.drive_header()}'
                 
-class TplDriveCaller(DriveCaller):
-    pass
+class TplDriveCaller(MBEntity):
+    """
+    Abstract class for C++ template class `TplDriveCaller<T>`. Unlike the
+    scalar `DriveCaller`, this produces a value of type T (e.g. Vec3,
+    Mat3x3) by combining one or more scalar `DriveCaller`s according to one
+    of a few patterns (null/single/component/array), or by referencing a
+    previously declared template drive caller of the same T.
+
+    The reference-frame-qualified form of `single` (only usable for Vec3,
+    per the manual's "Known issues") is not implemented.
+    """
+
+    idx: Optional[Union[MBVar, PositiveInt]] = None
+    """Index of this template drive caller, to declare it for reuse via `reference`"""
+
+    @abstractmethod
+    def tpl_drive_type(self) -> str:
+        """Every template drive caller class must define this to return its MBDyn syntax name"""
+        raise NotImplementedError("called tpl_drive_type of abstract TplDriveCaller")
+
+    def tpl_drive_header(self) -> str:
+        """common syntax for start of any template drive caller"""
+        if self.idx is not None:
+            return f'template drive caller: {self.idx}, {self.tpl_drive_type()}'
+        return self.tpl_drive_type()
+
+class NullTplDriveCaller(TplDriveCaller):
+    """Always the null (zero) value of T."""
+
+    def tpl_drive_type(self) -> str:
+        return 'null'
+
+    def __str__(self):
+        return self.tpl_drive_header()
+
+class SingleTplDriveCaller(TplDriveCaller):
+    """
+    `single, [<entity>,] <DriveCaller>`: a value of type T equal to a
+    constant `entity` (e.g. a Vec3/Mat3x3 literal) scaled by a single scalar
+    `DriveCaller`. `entity` may be omitted only when T is scalar (implicit 1).
+    """
+
+    entity: Optional[List[Numeric]] = None
+    drive: DriveCaller
+
+    def tpl_drive_type(self) -> str:
+        return 'single'
+
+    def __str__(self):
+        s = self.tpl_drive_header()
+        if self.entity is not None:
+            s += ', ' + ', '.join(str(i) for i in self.entity)
+        s += f', {self.drive}'
+        return s
+
+class ComponentTplDriveCaller(TplDriveCaller):
+    """
+    `component, [{sym|diag},] <component_drive_caller>, ...`: one scalar
+    `DriveCaller` (or the literal `inactive`, meaning held at 0) per
+    component of T; `sym`/`diag` select the upper-triangular or diagonal
+    entries of a matrix T instead of all of them.
+    """
+
+    components: List[Union[DriveCaller, Literal['inactive']]]
+    matrix_form: Optional[Literal['sym', 'diag']] = None
+
+    @model_validator(mode='after')
+    def validate_components(self) -> 'ComponentTplDriveCaller':
+        if len(self.components) < 1:
+            raise ValueError('ComponentTplDriveCaller: components must contain at least one entry')
+        return self
+
+    def tpl_drive_type(self) -> str:
+        return 'component'
+
+    def __str__(self):
+        s = self.tpl_drive_header()
+        if self.matrix_form is not None:
+            s += f', {self.matrix_form}'
+        s += ', ' + ', '.join(str(c) for c in self.components)
+        return s
+
+class ArrayTplDriveCaller(TplDriveCaller):
+    """
+    `array, <N>, <tpl_drive_caller>, ...`: linear combination (sum) of N
+    template drive callers of the same type T. Combine this with
+    `ReferenceTplDriveCaller` to sum previously declared, reusable drives.
+    """
+
+    drives: List[TplDriveCaller]
+
+    @model_validator(mode='after')
+    def validate_drives(self) -> 'ArrayTplDriveCaller':
+        if len(self.drives) < 1:
+            raise ValueError('ArrayTplDriveCaller: drives must contain at least one entry')
+        return self
+
+    def tpl_drive_type(self) -> str:
+        return 'array'
+
+    def __str__(self):
+        s = self.tpl_drive_header()
+        s += f', {len(self.drives)}'
+        for d in self.drives:
+            s += f', {d}'
+        return s
+
+class ReferenceTplDriveCaller(TplDriveCaller):
+    """`reference, <label>`: reuse a previously declared template drive caller of the same type T."""
+
+    reference_idx: Union[MBVar, PositiveInt]
+
+    @field_validator('idx')
+    def reject_idx(cls, v):
+        # `reference, <label>` is an alternative to declaring a new
+        # tpl_drive_caller_type, not something you declare with its own idx.
+        if v is not None:
+            raise ValueError('ReferenceTplDriveCaller cannot itself have an idx; set it on the drive it references instead.')
+        return v
+
+    def tpl_drive_type(self) -> str:
+        return 'reference'
+
+    def __str__(self):
+        return f'reference, {self.reference_idx}'
 
 if imported_pydantic:
     DriveDisplacement.model_rebuild()
@@ -3977,6 +4150,12 @@ if imported_pydantic:
     Brake.model_rebuild()
     ImposedDisplacement.model_rebuild()
     ImposedDisplacement.model_rebuild()
+
+    StructuralForce.model_rebuild()
+    StructuralInternalForce.model_rebuild()
+    StructuralCouple.model_rebuild()
+    StructuralInternalCouple.model_rebuild()
+    Body.model_rebuild()
 
 class ConstitutiveLaw(MBEntity):
     """

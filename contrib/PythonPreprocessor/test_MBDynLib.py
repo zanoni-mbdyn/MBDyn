@@ -6317,6 +6317,67 @@ class TestUnitDriveCaller(unittest.TestCase):
         with self.assertRaises(pydantic.ValidationError):
             l.UnitDriveCaller(idx=-1)
 
+class TestTplDriveCaller(unittest.TestCase):
+    def test_abstract_class(self):
+        with self.assertRaises(TypeError):
+            l.TplDriveCaller()
+
+    def test_null(self):
+        self.assertEqual(str(l.NullTplDriveCaller()), 'null')
+
+    def test_single_scalar(self):
+        """entity may be omitted when T is scalar (implicit 1)."""
+        drive = l.SingleTplDriveCaller(drive=l.ConstDriveCaller(5.0))
+        self.assertEqual(str(drive), 'single, const, 5.0')
+
+    def test_single_with_entity(self):
+        drive = l.SingleTplDriveCaller(entity=[1.0, 0.0, 0.0], drive=l.ConstDriveCaller(5.0))
+        self.assertEqual(str(drive), 'single, 1.0, 0.0, 0.0, const, 5.0')
+
+    def test_component(self):
+        drive = l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(1.0), 'inactive', l.ConstDriveCaller(3.0)])
+        self.assertEqual(str(drive), 'component, const, 1.0, inactive, const, 3.0')
+
+    def test_component_requires_at_least_one_entry(self):
+        with self.assertRaises(pydantic.ValidationError):
+            l.ComponentTplDriveCaller(components=[])
+
+    def test_component_matrix_form(self):
+        drive = l.ComponentTplDriveCaller(
+            components=[l.ConstDriveCaller(1.0)] * 6,
+            matrix_form='sym'
+        )
+        self.assertTrue(str(drive).startswith('component, sym, '))
+
+    def test_array(self):
+        drive = l.ArrayTplDriveCaller(drives=[l.NullTplDriveCaller(), l.SingleTplDriveCaller(drive=l.ConstDriveCaller(2.0))])
+        self.assertEqual(str(drive), 'array, 2, null, single, const, 2.0')
+
+    def test_array_requires_at_least_one_drive(self):
+        with self.assertRaises(pydantic.ValidationError):
+            l.ArrayTplDriveCaller(drives=[])
+
+    def test_reference(self):
+        ref = l.ReferenceTplDriveCaller(reference_idx=7)
+        self.assertEqual(str(ref), 'reference, 7')
+
+    def test_reference_rejects_idx(self):
+        """`reference, <label>` is an alternative to declaring a new drive, not something declared itself."""
+        with self.assertRaises(pydantic.ValidationError):
+            l.ReferenceTplDriveCaller(reference_idx=7, idx=1)
+
+    def test_array_of_references(self):
+        drive = l.ArrayTplDriveCaller(drives=[
+            l.ReferenceTplDriveCaller(reference_idx=1),
+            l.ReferenceTplDriveCaller(reference_idx=2),
+        ])
+        self.assertEqual(str(drive), 'array, 2, reference, 1, reference, 2')
+
+    def test_declaration_with_idx(self):
+        """Setting idx declares the drive for later reuse via `reference, <idx>`."""
+        drive = l.SingleTplDriveCaller(idx=3, entity=[0.0, 0.0, 1.0], drive=l.ConstDriveCaller(1.0))
+        self.assertEqual(str(drive), 'template drive caller: 3, single, 0.0, 0.0, 1.0, const, 1.0')
+
 class TestPositionalArgs(unittest.TestCase):
     """Regression tests for #23/#21: some commonly used entities should accept positional args."""
 
@@ -6668,6 +6729,73 @@ class TestBody(unittest.TestCase):
         )
         self.assertEqual(str(body), expected)
 
+    def test_body_one_vm_body(self):
+        body = l.Body(
+            idx=5,
+            node=self.node,
+            variable_mass=l.ConstDriveCaller(10.0),
+            variable_relative_center_of_mass=l.NullTplDriveCaller(),
+            variable_mass_inertia_matrix=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(1.0)] * 6, matrix_form='sym'),
+            variable_geometry_inertia_matrix=l.NullTplDriveCaller(),
+        )
+        expected = (
+            "body: 5, 1,\n\tvariable mass"
+            ",\n\tconst, 10.0"
+            ",\n\tnull"
+            ",\n\tcomponent, sym, const, 1.0, const, 1.0, const, 1.0, const, 1.0, const, 1.0, const, 1.0"
+            ",\n\tnull;\n"
+        )
+        self.assertEqual(str(body), expected)
+
+    def test_body_one_vm_body_requires_all_variable_fields(self):
+        with self.assertRaises(ValueError):
+            l.Body(
+                idx=5,
+                node=self.node,
+                variable_mass=l.ConstDriveCaller(10.0),
+                variable_relative_center_of_mass=l.NullTplDriveCaller(),
+                # missing variable_mass_inertia_matrix / variable_geometry_inertia_matrix
+            )
+
+    def test_body_one_vm_body_rejects_one_body_fields(self):
+        with self.assertRaises(ValueError):
+            l.Body(
+                idx=5,
+                node=self.node,
+                variable_mass=l.ConstDriveCaller(10.0),
+                mass=10.0,
+                variable_relative_center_of_mass=l.NullTplDriveCaller(),
+                variable_mass_inertia_matrix=l.NullTplDriveCaller(),
+                variable_geometry_inertia_matrix=l.NullTplDriveCaller(),
+            )
+
+    def test_body_one_vm_body_rejects_displacement_node(self):
+        disp_node = l.DynamicDisplacementNode(
+            idx=2,
+            pos=l.Position(relative_position=[0, 0, 0], reference='global'),
+            vel=l.Position(relative_position=[0, 0, 0], reference='')
+        )
+        with self.assertRaises(ValueError):
+            l.Body(
+                idx=5,
+                node=disp_node,
+                variable_mass=l.ConstDriveCaller(10.0),
+                variable_relative_center_of_mass=l.NullTplDriveCaller(),
+                variable_mass_inertia_matrix=l.NullTplDriveCaller(),
+                variable_geometry_inertia_matrix=l.NullTplDriveCaller(),
+            )
+
+    def test_body_variable_fields_require_variable_mass(self):
+        with self.assertRaises(ValueError):
+            l.Body(
+                idx=5,
+                node=self.node,
+                mass=10.0,
+                relative_center_of_mass=l.Position(relative_position=[0, 0, 0], reference=None),
+                inertia_matrix=l.Position(relative_position=[1, 1, 1], reference=None),
+                variable_relative_center_of_mass=l.NullTplDriveCaller(),
+            )
+
 class TestStructuralForce(unittest.TestCase):
     def setUp(self):
         self.node = l.DynamicNode(
@@ -6679,15 +6807,16 @@ class TestStructuralForce(unittest.TestCase):
         )
 
     def test_absolute_force(self):
+        drive = l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(10), l.ConstDriveCaller(0), l.ConstDriveCaller(0)])
         force = l.StructuralForce(
             idx=1,
             node=self.node,
             ftype='absolute',
             position=l.Position(relative_position=[0, 0, 0], reference=''),
-            force_drive=[10, 0, 0]
+            force_drive=drive
         )
         self.assertEqual(force.ftype, 'absolute')
-        self.assertEqual(force.force_drive, [10, 0, 0])
+        self.assertIs(force.force_drive, drive)
 
     def test_total_force(self):
         force = l.StructuralForce(
@@ -6696,8 +6825,8 @@ class TestStructuralForce(unittest.TestCase):
             ftype='total',
             force_orientation=l.Position(relative_position=[1, 0, 0], reference=''),
             moment_orientation=l.Position(relative_position=[0, 1, 0], reference=''),
-            force_drive=[10, 0, 0],
-            moment_drive=[0, 10, 0]
+            force_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(10), l.ConstDriveCaller(0), l.ConstDriveCaller(0)]),
+            moment_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(10), l.ConstDriveCaller(0)])
         )
         self.assertEqual(force.ftype, 'total')
 
@@ -6707,9 +6836,9 @@ class TestStructuralForce(unittest.TestCase):
             node=self.node,
             ftype='absolute',
             position=l.Position(relative_position=[0, 0, 0], reference=''),
-            force_drive=[10, 0, 0]
+            force_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(10), l.ConstDriveCaller(0), l.ConstDriveCaller(0)])
         )
-        expected = "force: 1, absolute,\n\t1,\n\t\tposition, 0.0, 0.0, 0.0,\n\t\t10, 0, 0;\n"
+        expected = "force: 1, absolute,\n\t1,\n\t\tposition, 0.0, 0.0, 0.0,\n\t\tcomponent, const, 10, const, 0, const, 0;\n"
         self.assertEqual(str(force), expected)
 
 class TestStructuralInternalForce(unittest.TestCase):
@@ -6738,7 +6867,7 @@ class TestStructuralInternalForce(unittest.TestCase):
                 l.Position(relative_position=[0, 0, 0], reference=''),
                 l.Position(relative_position=[1, 0, 0], reference='')
             ],
-            force_drive=[100, 0, 0]
+            force_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(100), l.ConstDriveCaller(0), l.ConstDriveCaller(0)])
         )
         self.assertEqual(len(force.nodes), 2)
         self.assertEqual(force.ftype, 'absolute')
@@ -6750,7 +6879,7 @@ class TestStructuralInternalForce(unittest.TestCase):
                 nodes=[self.node1],
                 ftype='absolute',
                 positions=[l.Position(relative_position=[0, 0, 0], reference='')],
-                force_drive=[100, 0, 0]
+                force_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(100), l.ConstDriveCaller(0), l.ConstDriveCaller(0)])
             )
 
     def test_internal_force_str_representation(self):
@@ -6762,9 +6891,9 @@ class TestStructuralInternalForce(unittest.TestCase):
                 l.Position(relative_position=[0, 0, 0], reference=''),
                 l.Position(relative_position=[1, 0, 0], reference='')
             ],
-            force_drive=[100, 0, 0]
+            force_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(100), l.ConstDriveCaller(0), l.ConstDriveCaller(0)])
         )
-        expected = "force: 1, absolute internal,\n\t1,\n\t\tposition, 0.0, 0.0, 0.0,\n\t2,\n\t\tposition, 1.0, 0.0, 0.0,\n\t\t100, 0, 0;\n"
+        expected = "force: 1, absolute internal,\n\t1,\n\t\tposition, 0.0, 0.0, 0.0,\n\t2,\n\t\tposition, 1.0, 0.0, 0.0,\n\t\tcomponent, const, 100, const, 0, const, 0;\n"
         self.assertEqual(str(force), expected)
 
 class TestStructuralCouple(unittest.TestCase):
@@ -6778,14 +6907,15 @@ class TestStructuralCouple(unittest.TestCase):
         )
 
     def test_absolute_couple(self):
+        drive = l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(0), l.ConstDriveCaller(10)])
         couple = l.StructuralCouple(
             idx=1,
             node=self.node,
             ctype='absolute',
-            couple_drive=[0, 0, 10]
+            couple_drive=drive
         )
         self.assertEqual(couple.ctype, 'absolute')
-        self.assertEqual(couple.couple_drive, [0, 0, 10])
+        self.assertIs(couple.couple_drive, drive)
 
     def test_couple_with_position(self):
         couple = l.StructuralCouple(
@@ -6793,7 +6923,7 @@ class TestStructuralCouple(unittest.TestCase):
             node=self.node,
             ctype='absolute',
             position=l.Position(relative_position=[1, 1, 1], reference=''),
-            couple_drive=[0, 0, 10]
+            couple_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(0), l.ConstDriveCaller(10)])
         )
         self.assertIsNotNone(couple.position)
 
@@ -6803,9 +6933,9 @@ class TestStructuralCouple(unittest.TestCase):
             node=self.node,
             ctype='absolute',
             position=l.Position(relative_position=[1, 1, 1], reference=''),
-            couple_drive=[0, 0, 10]
+            couple_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(0), l.ConstDriveCaller(10)])
         )
-        expected = "couple: 1, absolute,\n\t1,\n\t\tposition, 1.0, 1.0, 1.0,\n\t\t0, 0, 10;\n"
+        expected = "couple: 1, absolute,\n\t1,\n\t\tposition, 1.0, 1.0, 1.0,\n\t\tcomponent, const, 0, const, 0, const, 10;\n"
         self.assertEqual(str(couple), expected)
 
 class TestStructuralInternalCouple(unittest.TestCase):
@@ -6826,14 +6956,15 @@ class TestStructuralInternalCouple(unittest.TestCase):
         )
 
     def test_basic_internal_couple(self):
+        drive = l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(0), l.ConstDriveCaller(10)])
         couple = l.StructuralInternalCouple(
             idx=1,
             nodes=[self.node1, self.node2],
             ctype='absolute',
-            couple_drive=[0, 0, 10]
+            couple_drive=drive
         )
         self.assertEqual(len(couple.nodes), 2)
-        self.assertEqual(couple.couple_drive, [0, 0, 10])
+        self.assertIs(couple.couple_drive, drive)
 
     def test_internal_couple_with_positions(self):
         couple = l.StructuralInternalCouple(
@@ -6844,7 +6975,7 @@ class TestStructuralInternalCouple(unittest.TestCase):
                 l.Position(relative_position=[0, 0, 0], reference=''),
                 l.Position(relative_position=[1, 0, 0], reference='')
             ],
-            couple_drive=[0, 0, 10]
+            couple_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(0), l.ConstDriveCaller(10)])
         )
         self.assertEqual(len(couple.positions), 2)
 
@@ -6857,9 +6988,9 @@ class TestStructuralInternalCouple(unittest.TestCase):
                 l.Position(relative_position=[0, 0, 0], reference=''),
                 l.Position(relative_position=[1, 0, 0], reference='')
             ],
-            couple_drive=[0, 0, 10]
+            couple_drive=l.ComponentTplDriveCaller(components=[l.ConstDriveCaller(0), l.ConstDriveCaller(0), l.ConstDriveCaller(10)])
         )
-        expected = "couple: 1, absolute internal,\n\t1,\n\t\tposition, 0.0, 0.0, 0.0,\n\t2,\n\t\tposition, 1.0, 0.0, 0.0,\n\t\t0, 0, 10;\n"
+        expected = "couple: 1, absolute internal,\n\t1,\n\t\tposition, 0.0, 0.0, 0.0,\n\t2,\n\t\tposition, 1.0, 0.0, 0.0,\n\t\tcomponent, const, 0, const, 0, const, 10;\n"
         self.assertEqual(str(couple), expected)
 
 class TestAngularAcceleration(unittest.TestCase):
