@@ -92,6 +92,30 @@ class TestReference(unittest.TestCase):
     #     ref2 = l.Reference2(idx=1, position=pos2, orientation=orient2, velocity=vel2, angular_velocity=angvel2)
     #     self.assertEqual(str(ref), str(ref2))
 
+class TestExpressionPreservesSymbolicForm(unittest.TestCase):
+    """Regression test for issues #18 and #22: an MBVar arithmetic expression
+    (e.g. `Omega / 120`) must survive Pydantic validation as-is, not get
+    silently evaluated and frozen to a plain float."""
+
+    def setUp(self):
+        if 'Omega' not in l.declared_MBVars:
+            self.Omega = l.MBVar(name='Omega', var_type='real', expression=480.0)
+        else:
+            self.Omega = l.declared_MBVars['Omega']
+
+    def test_division_expression_in_position(self):
+        expr = self.Omega / 120.0
+        self.assertIsInstance(expr, l.division)
+        pos = l.Position(relative_position=[0, expr, 0], reference=None)
+        self.assertIs(pos.relative_position[1], expr)
+        self.assertEqual(str(pos), '0.0, Omega / 120.0, 0.0')
+
+    def test_mbvar_expression_field_stays_symbolic(self):
+        expr = self.Omega / 120.0
+        dt = l.MBVar(name='dt_test_expr', var_type='real', expression=expr)
+        self.assertIs(dt.expression, expr)
+        self.assertEqual(str(dt), 'dt_test_expr')
+
 class TestNodeClasses(unittest.TestCase):
     def setUp(self):
         # Create Position instances for testing correctly
@@ -6286,6 +6310,13 @@ class TestUnitDriveCaller(unittest.TestCase):
         self.assertEqual(unit_drive.idx, idx_var)
         expected_str = f"drive caller: {idx_var}, unit"
         self.assertEqual(str(unit_drive), expected_str)
+
+    def test_drive_caller_idx_must_be_positive(self):
+        """DriveCaller.idx must be a positive int, rejecting zero and negative values."""
+        with self.assertRaises(pydantic.ValidationError):
+            l.UnitDriveCaller(idx=0)
+        with self.assertRaises(pydantic.ValidationError):
+            l.UnitDriveCaller(idx=-1)
 
 class TestLinearElastic(unittest.TestCase):
     def setUp(self):

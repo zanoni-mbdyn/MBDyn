@@ -69,7 +69,7 @@ MBDynLib_simplify = True
 
 imported_pydantic = False
 try:
-    from pydantic import BaseModel, ConfigDict, field_validator, FieldValidationInfo, model_validator
+    from pydantic import BaseModel, ConfigDict, field_validator, FieldValidationInfo, model_validator, PositiveInt
     imported_pydantic = True
     class _EntityBase(BaseModel):
         """Configuration for Entity with pydantic available"""
@@ -159,6 +159,14 @@ def simplify_neutral_element(l, r, op, ne):
         return op(l, r)
 
 class expression:
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        # Validate by isinstance, not by coercing through __float__/__int__: an
+        # expression like `Omega / 120` must survive into the generated .mbd
+        # file as `Omega / 120.0`, not get evaluated to a frozen float here.
+        from pydantic_core import core_schema
+        return core_schema.is_instance_schema(cls)
+
     def __init__(self):
         pass
     def __float__(self):
@@ -501,6 +509,11 @@ class IfndefMBVar(MBVar):
         if name not in declared_MBVars:
             super().__init__(name=name, var_type=f'ifndef {var_type}', expression=value)
 
+# Type of any field that can hold a plain number, a named MBVar, or the
+# result of arithmetic on one (e.g. `Omega / 120`, a `division` instance).
+# Using this instead of `Union[float, MBVar]` keeps such expressions
+# symbolic in the generated .mbd file instead of freezing them to a float.
+Numeric = Union[float, MBVar, expression]
 
 class null(MBEntity):
     def __str__(self):
@@ -511,7 +524,7 @@ class eye(MBEntity):
         return 'eye'
 
 class Position(MBEntity):        
-    relative_position: Union[null, eye, List[Union[float, MBVar]]]
+    relative_position: Union[null, eye, List[Numeric]]
     reference: Optional[Union[str, MBVar]] = None
 
     def __str__(self):
@@ -557,7 +570,7 @@ class Node(MBEntity):
     velocity: Position
     angular_velocity: Position
     node_type: Literal['dynamic', 'static', 'modal'] = 'dynamic'
-    scale: Optional[Union[Literal['default'], float, MBVar]] = 'default'
+    scale: Optional[Union[Literal['default'], Numeric]] = 'default'
     output: Optional[Union[Literal['yes', 'no'], int, bool]] = 'yes'
     def __str__(self):
         s = f"structural: {self.idx}, {self.node_type},\n"
@@ -611,7 +624,7 @@ class DisplacementNode(MBEntity):
     position: Position
     velocity: Position
     node_type: Literal['dynamic', 'static'] = 'dynamic'
-    scale: Optional[Union[Literal['default'], float, MBVar]] = 'default'
+    scale: Optional[Union[Literal['default'], Numeric]] = 'default'
     output: Optional[Union[Literal['yes', 'no'], int, bool]] = 'yes'
     def __str__(self):
         s = f"structural: {self.idx}, {self.node_type} displacement,\n"
@@ -665,7 +678,7 @@ class Element(MBEntity):
         return s
 
     @staticmethod
-    def check_unit_vector3(value: List[Union[float, MBVar]]):
+    def check_unit_vector3(value: List[Numeric]):
         if not len(value) == 3:
             raise ValueError("relative_direction must be a 3-dimensional vector")
 
@@ -688,7 +701,7 @@ class Body(Element):
     `StructuralForce`/`StructuralCouple`).
     """
     node: Union[Node, DisplacementNode]
-    mass: Union[float, MBVar, List[Union[float, MBVar]]]
+    mass: Union[Numeric, List[Numeric]]
     relative_center_of_mass: Optional[Union[Position, List[Optional[Position]]]] = None
     inertia_matrix: Optional[Union[Position, List[Optional[Position]]]] = None
     orientation: Optional[Union[Position, List[Optional[Position]]]] = None
@@ -931,7 +944,7 @@ class AngularAcceleration(Element):
     """
 
     node_label: Union[int, MBVar] # TODO: Take input as Node and use it's idx
-    relative_direction: List[Union[float, MBVar]]
+    relative_direction: List[Numeric]
     acceleration: 'DriveCaller'
 
     def element_type(self):
@@ -955,7 +968,7 @@ class AngularVelocity(Element):
     """
 
     node_label: Union[int, MBVar]
-    relative_direction: List[Union[float, MBVar]]
+    relative_direction: List[Numeric]
     velocity: 'DriveCaller'
 
     def element_type(self):
@@ -1095,7 +1108,7 @@ class BeamSlider(Element):
     end_node_orientation: Optional[Union[str, Position]]
     initial_beam: Optional[Beam]
     initial_node: Optional[Node]
-    smearing_factor: Optional[Union[float, MBVar, int]]
+    smearing_factor: Optional[Union[Numeric, int]]
 
     def element_type(self):
         return 'joint'
@@ -1157,8 +1170,8 @@ class Brake(Element):
     node_2_label: Union[int, MBVar]
     position_2: Position
     orientation_mat_2: Optional[Position] = None
-    average_radius: Union[float, MBVar]
-    preload: Optional[Union[float, MBVar, int]] = None
+    average_radius: Numeric
+    preload: Optional[Union[Numeric, int]] = None
     friction_model: str  # TODO: Implement FrictionModel class
     shape_function: str  # TODO: Implement ShapeFunction class
     normal_force: 'DriveCaller'
@@ -1504,7 +1517,7 @@ class ImposedDisplacement(Element):
     position_1: Position
     node_2_label: Union[int, MBVar]
     position_2: Position
-    direction: List[Union[float, MBVar]]
+    direction: List[Numeric]
     relative_position: 'DriveCaller'
 
     @field_validator('direction')
@@ -1534,7 +1547,7 @@ class ImposedDisplacementPin(Element):
     node_label: Union[int, MBVar]
     node_offset: Position
     offset: Position
-    direction: List[Union[float, MBVar]]
+    direction: List[Numeric]
     position: 'DriveCaller'
 
     @field_validator('direction')
@@ -1591,7 +1604,7 @@ class InPlane(Element):
     
     node_1_label: Union[int, MBVar]
     position: Optional[Position] = None
-    relative_direction: List[Union[float, MBVar]]
+    relative_direction: List[Numeric]
     node_2_label: Union[int, MBVar]
     offset: Optional[Position] = None
 
@@ -1621,7 +1634,7 @@ class LinearAcceleration(Element):
     '''
     
     node_label: Union[int, MBVar]
-    relative_direction: List[Union[float, MBVar]]
+    relative_direction: List[Numeric]
     acceleration: 'DriveCaller'
 
     @field_validator('relative_direction')
@@ -1649,7 +1662,7 @@ class LinearVelocity(Element):
     '''
     
     node_label: Union[int, MBVar]
-    relative_direction: List[Union[float, MBVar]]
+    relative_direction: List[Numeric]
     velocity: 'DriveCaller'
 
     @field_validator('relative_direction')
@@ -1766,9 +1779,9 @@ class RevoluteHinge(Element):
     node_2_label: Union[int, MBVar]
     position_2: Position
     orientation_mat_2: Optional[Position] = None
-    initial_theta: Optional[Union[float, MBVar]] = None
-    friction: Optional[Union[float, MBVar]] = None
-    preload: Optional[Union[float, MBVar]] = None
+    initial_theta: Optional[Numeric] = None
+    friction: Optional[Numeric] = None
+    preload: Optional[Numeric] = None
     friction_model: Optional[str] = None # TODO: Define FrictionModel
     shape_function: Optional[str] = None # TODO: Define ShapeFunction
 
@@ -1819,7 +1832,7 @@ class RevolutePin(Element):
     relative_orientation_mat: Optional[Union[Position, list]] = None
     absolute_pin_position: Position
     absolute_pin_orientation_mat: Optional[Union[Position, list]] = None
-    initial_theta: Optional[Union[float, MBVar]] = None
+    initial_theta: Optional[Numeric] = None
 
     def element_type(self):
         return 'joint'
@@ -1881,7 +1894,7 @@ class Rod(Element):
     position_1: Optional[Position] = None
     node_2: Node
     position_2: Optional[Position] = None
-    rod_length: Union[float, MBVar, Literal['from nodes']]  # Can be a float or 'from nodes'
+    rod_length: Union[Numeric, Literal['from nodes']]  # Can be a float or 'from nodes'
     const_law: Union['ConstitutiveLaw', 'NamedConstitutiveLaw']
 
     def element_type(self):
@@ -1920,7 +1933,7 @@ class RodWithOffset(Element):
     position_1: Position  # Required
     node_2_label: Union[int, MBVar]
     position_2: Position  # Required
-    rod_length: Union[float, MBVar, str]  # Can be a float, MBVar or 'from nodes'
+    rod_length: Union[Numeric, str]  # Can be a float, MBVar or 'from nodes'
     const_law: Union['ConstitutiveLaw', 'NamedConstitutiveLaw']  # Should be a 1D constitutive law
 
     def element_type(self):
@@ -1984,7 +1997,7 @@ class RodBezier(Element):
     node_2_label: Union[int, MBVar]
     position_3: Position
     position_4: Position
-    rod_length: Union[float, MBVar, str]  # Can be a float or 'from nodes'
+    rod_length: Union[Numeric, str]  # Can be a float or 'from nodes'
     const_law: Union['ConstitutiveLaw', 'NamedConstitutiveLaw']  # Should be a 1D constitutive law
     integration_order: int = 2  # Defaults to 2
     integration_segments: int = 3  # Defaults to 3
@@ -2294,7 +2307,7 @@ class TotalPinJoint(Element):
         return s
 
 class JointRegularization(Element):
-    coefficients: Union[List[float], List[MBVar], float, MBVar]
+    coefficients: Union[List[Numeric], Numeric]
 
     def element_type(self):
         return 'joint regularization'
@@ -2449,7 +2462,7 @@ class AerodynamicBody(Element):
     node: Node
     position: Position
     orientation: Position
-    span: Union[float, MBVar]
+    span: Numeric
     chord: List 
     aero_center: List
     b_c_point: List
@@ -2629,7 +2642,7 @@ class DriveCaller(MBEntity):
 
     # model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    idx: Optional[Union[MBVar, int]] = None
+    idx: Optional[Union[MBVar, PositiveInt]] = None
     """Index of this drive to reuse with references"""
 
     @abstractmethod
@@ -2640,8 +2653,8 @@ class DriveCaller(MBEntity):
     def drive_header(self) -> str:
         """common syntax for start of any drive caller"""
         # it's not just `__str__` to still require overriding it in specific drives
-        if self.idx is not None and self.idx >= 0:
-            # The idx possibly being None communicates the intent more clearly than checking if it's >=0
+        if self.idx is not None:
+            # idx is validated to be positive (PositiveInt or MBVar); None means no idx
             return f'drive caller: {self.idx}, {self.drive_type()}'
         else:
             return self.drive_type()
@@ -2727,7 +2740,7 @@ class ConstDriveCaller(DriveCaller):
     def drive_type(self):
         return 'const'
 
-    const_value: Union[MBVar, float, int]
+    const_value: Union[Numeric, int]
     """Value that will be output by the drive"""
 
     def __str__(self):
@@ -2743,8 +2756,8 @@ class ClosestNextDriveCaller(DriveCaller):
     This drive caller is useful within the output meter statement
     '''
 
-    initial_time: Union[float, MBVar] = 0.
-    final_time: Union[float, MBVar, Literal['forever']]
+    initial_time: Numeric = 0.
+    final_time: Union[Numeric, Literal['forever']]
     increment: Union[DriveCaller]
     
     def drive_type(self) -> str:
@@ -2761,11 +2774,11 @@ class ClosestNextDriveCaller(DriveCaller):
         return s
 
 class CosineDriveCaller(DriveCaller):    
-    initial_time: Union[float, MBVar] = 0.0    
-    angular_velocity: Union[float, MBVar]    
-    amplitude: Union[float, MBVar]
-    number_of_cycles: Union[float, MBVar, Literal['half', 'one', 'forever']]    
-    initial_value: Union[float, MBVar] = 0.0
+    initial_time: Numeric = 0.0    
+    angular_velocity: Numeric    
+    amplitude: Numeric
+    number_of_cycles: Union[Numeric, Literal['half', 'one', 'forever']]    
+    initial_value: Numeric = 0.0
 
     def drive_type(self) -> str:
         return 'cosine'
@@ -2776,10 +2789,10 @@ class CosineDriveCaller(DriveCaller):
         return s
 
 class CubicDriveCaller(DriveCaller):
-    const_coef: Union[MBVar, float]
-    linear_coef: Union[MBVar, float]
-    parabolic_coef: Union[MBVar, float]
-    cubic_coef: Union[MBVar, float]
+    const_coef: Numeric
+    linear_coef: Numeric
+    parabolic_coef: Numeric
+    cubic_coef: Numeric
     
     def drive_type(self) -> str:
         return 'cubic'
@@ -2810,16 +2823,16 @@ class DiscreteFilterDriveCaller(DriveCaller):
     n_a: Union[int, MBVar]    
     """number of regression coeﬃcients"""
 
-    a: List[Union[float, MBVar]]    
+    a: List[Numeric]    
     """list of regression coeﬃcients"""
 
-    b_0: Union[float, MBVar]    
+    b_0: Numeric    
     """direct transmission coeﬃcient, must always be present; set to zero if not needed"""
 
     n_b: Union[int, MBVar]    
     """number of input coeﬃcients"""
 
-    b: List[Union[float, MBVar]]    
+    b: List[Numeric]    
     """list of input coeﬃcients"""
 
     input_drive: DriveCaller
@@ -2882,13 +2895,13 @@ class DofDriveCaller(DriveCaller):
         return s
 
 class DoubleRampDriveCaller(DriveCaller):
-    a_slope: Union[float, MBVar]    
-    a_initial_time: Union[float, MBVar]
-    a_final_time: Union[float, MBVar]    
-    d_slope: Union[float, MBVar]    
-    d_initial_time: Union[float, MBVar]    
-    d_final_time: Union[float, MBVar, Literal['forever']]    
-    initial_value: Union[float, MBVar]
+    a_slope: Numeric    
+    a_initial_time: Numeric
+    a_final_time: Numeric    
+    d_slope: Numeric    
+    d_initial_time: Numeric    
+    d_final_time: Union[Numeric, Literal['forever']]    
+    initial_value: Numeric
     
     def drive_type(self) -> str:
         return 'double ramp'
@@ -2911,10 +2924,10 @@ class DoubleRampDriveCaller(DriveCaller):
         return s
 
 class DoubleStepDriveCaller(DriveCaller):
-    initial_time: Union[float, MBVar]
-    final_time: Union[float, MBVar]
-    step_value: Union[float, MBVar]
-    initial_value: Union[float, MBVar]
+    initial_time: Numeric
+    final_time: Numeric
+    step_value: Numeric
+    initial_value: Numeric
 
     def drive_type(self) -> str:
         return 'double step'
@@ -2990,10 +3003,10 @@ class ExponentialDriveCaller(DriveCaller):
     initial_value+amplitude_value exponentially. The growth rate is governed by time_constant_value
     """
     
-    amplitude_value: Union[float, MBVar]    
-    time_constant_value: Union[float, MBVar]    
-    initial_time: Union[float, MBVar]    
-    initial_value: Union[float, MBVar]
+    amplitude_value: Numeric    
+    time_constant_value: Numeric    
+    initial_time: Numeric    
+    initial_value: Numeric
 
     def drive_type(self) -> str:
         return 'exponential'
@@ -3034,13 +3047,13 @@ class FourierSeriesDriveCaller(DriveCaller):
     f(t) = a_0/2 + ∑(a_k*cos(kω(t-t0)) + b_k*sin(kω(t-t0))) for k=1 to n
     """
     
-    initial_time: Union[float, MBVar]    
-    angular_velocity: Union[float, MBVar]    
+    initial_time: Numeric    
+    angular_velocity: Numeric    
     number_of_terms: Union[int, MBVar]    
-    a_0: Union[float, MBVar]
-    coefficients: List[Union[float, MBVar]]    
+    a_0: Numeric
+    coefficients: List[Numeric]    
     number_of_cycles: Union[int, MBVar, Literal['one', 'forever']]    
-    initial_value: Union[float, MBVar]
+    initial_value: Numeric
     
     @field_validator('initial_time', 'angular_velocity', 'a_0', 'initial_value')
     def validate_real_mbvar(cls, v):
@@ -3131,12 +3144,12 @@ class FrequencySweepDriveCaller(DriveCaller):
     oscillation
     """
     
-    initial_time: Union[float, MBVar]    
+    initial_time: Numeric    
     angular_velocity_drive: DriveCaller    
     amplitude_drive: DriveCaller    
-    initial_value: Union[float, MBVar]    
-    final_time: Union[float, MBVar, Literal['forever']]    
-    final_value: Union[float, MBVar]
+    initial_value: Numeric    
+    final_time: Union[Numeric, Literal['forever']]    
+    final_value: Numeric
     
     @field_validator('initial_time', 'initial_value', 'final_value')
     def validate_real_mbvar(cls, v):
@@ -3236,8 +3249,8 @@ class LinearDriveCaller(DriveCaller):
     f(t) = const_coef + slope_coef · t
     """
     
-    const_coef: Union[float, MBVar]    
-    slope_coef: Union[float, MBVar]
+    const_coef: Numeric    
+    slope_coef: Numeric
     
     @field_validator('const_coef', 'slope_coef')
     def validate_coefficients(cls, v):
@@ -3263,8 +3276,8 @@ class MeterDriveCaller(DriveCaller):
     where it assumes unit value.
     """
     
-    initial_time: Union[float, MBVar]    
-    final_time: Union[float, MBVar, Literal['forever']]    
+    initial_time: Numeric    
+    final_time: Union[Numeric, Literal['forever']]    
     steps_between_spikes: Optional[Union[int, MBVar]] = None
     
     @field_validator('initial_time', 'final_time')
@@ -3378,9 +3391,9 @@ class ParabolicDriveCaller(DriveCaller):
     f(t) = const_coef + linear_coef · t + parabolic_coef · t²
     """
     
-    const_coef: Union[float, MBVar]    
-    linear_coef: Union[float, MBVar]    
-    parabolic_coef: Union[float, MBVar]
+    const_coef: Numeric    
+    linear_coef: Numeric    
+    parabolic_coef: Numeric
     
     @field_validator('const_coef', 'linear_coef', 'parabolic_coef')
     def validate_coefficients(cls, v):
@@ -3406,8 +3419,8 @@ class PeriodicDriveCaller(DriveCaller):
     f(t) = func_drive(t - initial_time - period * floor((t - initial_time) / period)) for t ≥ initial_time.
     """
 
-    initial_time: Union[float, MBVar]
-    period: Union[float, MBVar]
+    initial_time: Numeric
+    period: Numeric
     func_drive: DriveCaller
     
     @field_validator('initial_time', 'period')
@@ -3449,7 +3462,7 @@ class PiecewiseLinearDriveCaller(DriveCaller):
     """
     
     num_points: Union[int, MBVar]    
-    points_values: List[Tuple[Union[float, MBVar], Union[float, MBVar]]]
+    points_values: List[Tuple[Numeric, Numeric]]
     """List of (point, value) coordinate pairs defining the piecewise linear function"""
 
     @field_validator('num_points')
@@ -3517,10 +3530,10 @@ class RampDriveCaller(DriveCaller):
            initial_value + slope·(final_time-initial_time)  if t > final_time
     """
     
-    slope: Union[float, MBVar]    
-    initial_time: Union[float, MBVar]  
-    final_time: Union[float, MBVar, Literal['forever']]    
-    initial_value: Union[float, MBVar]
+    slope: Numeric    
+    initial_time: Numeric  
+    final_time: Union[Numeric, Literal['forever']]    
+    initial_value: Numeric
     
     @field_validator('slope', 'initial_time', 'final_time', 'initial_value')
     def validate_real_mbvar(cls, v):
@@ -3566,10 +3579,10 @@ class RandomDriveCaller(DriveCaller):
     The output can be held for a specified number of steps, and the random seed can be specified.
     """
     
-    amplitude_value: Union[float, MBVar]    
-    mean_value: Union[float, MBVar]    
-    initial_time: Union[float, MBVar]  
-    final_time: Union[float, MBVar, Literal['forever']]    
+    amplitude_value: Numeric    
+    mean_value: Numeric    
+    initial_time: Numeric  
+    final_time: Union[Numeric, Literal['forever']]    
     steps_to_hold_value: Optional[Union[int, MBVar]] = None    
     seed_value: Optional[Union[int, MBVar, Literal['time']]] = None
     
@@ -3643,7 +3656,7 @@ class SampleAndHoldDriveCaller(DriveCaller):
     
     function: DriveCaller    
     trigger: DriveCaller    
-    initial_value: Optional[Union[float, MBVar]] = None
+    initial_value: Optional[Numeric] = None
     
     @field_validator('initial_value')
     def validate_real_mbvar(cls, v):
@@ -3681,11 +3694,11 @@ class SineDriveCaller(DriveCaller):
     f(t) = initial_value + amplitude · sin(angular_velocity · (t - initial_time))
     """
     
-    initial_time: Union[float, MBVar]  
-    angular_velocity: Union[float, MBVar]    
-    amplitude: Union[float, MBVar]    
+    initial_time: Numeric  
+    angular_velocity: Numeric    
+    amplitude: Numeric    
     number_of_cycles: Union[int, MBVar, Literal['half', 'one', 'forever']]    
-    initial_value: Union[float, MBVar]
+    initial_value: Numeric
     
     @field_validator('initial_time', 'initial_value', 'angular_velocity', 'amplitude')
     def validate_real_mbvar(cls, v):
@@ -3749,9 +3762,9 @@ class StepDriveCaller(DriveCaller):
            step_value     if t >= initial_time
     """
     
-    initial_time: Union[float, MBVar]
-    step_value: Union[float, MBVar]  
-    initial_value: Union[float, MBVar]
+    initial_time: Numeric
+    step_value: Numeric  
+    initial_value: Numeric
     
     @field_validator('initial_time', 'step_value', 'initial_value')
     def validate_real_mbvar(cls, v):
@@ -3791,10 +3804,10 @@ class StepDriveCaller(DriveCaller):
         return s
 
 class Step5DriveCaller(DriveCaller):
-    initial_time: Union[float, MBVar]
-    initial_value: Union[float, MBVar]
-    final_time: Union[float, MBVar]
-    final_value: Union[float, MBVar]
+    initial_time: Numeric
+    initial_value: Numeric
+    final_time: Numeric
+    final_value: Numeric
     
     @field_validator('initial_time', 'initial_value', 'final_time', 'final_value')
     def validate_real_mbvar(cls, v):
@@ -3862,10 +3875,10 @@ class TanhDriveCaller(DriveCaller):
     f(t) = initial_value + amplitude · tanh(nd_slope · (t - initial_time))
     """
     
-    initial_time: Union[float, MBVar]
-    amplitude: Union[float, MBVar]  
-    nd_slope: Union[float, MBVar]
-    initial_value: Union[float, MBVar]
+    initial_time: Numeric
+    amplitude: Numeric  
+    nd_slope: Numeric
+    initial_value: Numeric
     
     @field_validator('initial_time', 'amplitude', 'nd_slope', 'initial_value')
     def validate_real_mbvar(cls, v):
@@ -4018,7 +4031,7 @@ class ConstitutiveLaw(MBEntity):
     # TODO: Check if it can be used in other classes as well besides LinearViscoelasticGeneric (Probably it can be)
     def _format_property(self, prop: Any) -> str:
         """Helper to format a property that can be a scalar or a matrix."""
-        if isinstance(prop, (float, MBVar)):
+        if isinstance(prop, (float, MBVar, expression)):
             return f', {prop}'
         
         # It's a matrix (validated to be a list of lists)
@@ -4052,7 +4065,7 @@ class LinearElastic(ConstitutiveLaw):
         else:
             return 'linear elastic isotropic'
     
-    stiffness: Union[MBVar, float]
+    stiffness: Numeric
     """The isotropic stiffness coefficient"""
     
     def __str__(self):
@@ -4061,7 +4074,7 @@ class LinearElastic(ConstitutiveLaw):
         return s
 
 class LinearElasticGeneric(ConstitutiveLaw):
-    stiffness: Union[float, MBVar, List[List[Union[float, MBVar]]]]
+    stiffness: Union[Numeric, List[List[Numeric]]]
     
     def const_law_name(self) -> str:
         return 'linear elastic generic'
@@ -4077,7 +4090,7 @@ class LinearElasticGeneric(ConstitutiveLaw):
 
     def __str__(self):
         s = self.const_law_header()
-        if isinstance(self.stiffness, (float, MBVar)):
+        if isinstance(self.stiffness, (float, MBVar, expression)):
             s += f', {self.stiffness}'
         elif isinstance(self.stiffness, list):
             matrix_str = ''
@@ -4091,8 +4104,8 @@ class LinearElasticGeneric(ConstitutiveLaw):
         return s
 
 class LinearElasticGenericAxialTorsionCoupling(ConstitutiveLaw):
-    stiffness: List[Union[float, MBVar]]
-    coupling_coef: Union[float, MBVar]
+    stiffness: List[Numeric]
+    coupling_coef: Numeric
 
     @model_validator(mode='before')
     @classmethod
@@ -4116,9 +4129,9 @@ class LinearElasticGenericAxialTorsionCoupling(ConstitutiveLaw):
         return base_str
     
 class CubicElasticGeneric(ConstitutiveLaw):
-    stiffness_1: Union[float, MBVar, List[Union[float, MBVar]]]
-    stiffness_2: Union[float, MBVar, List[Union[float, MBVar]]]
-    stiffness_3: Union[float, MBVar, List[Union[float, MBVar]]]
+    stiffness_1: Union[Numeric, List[Numeric]]
+    stiffness_2: Union[Numeric, List[Numeric]]
+    stiffness_3: Union[Numeric, List[Numeric]]
 
     @model_validator(mode='before')
     @classmethod
@@ -4141,7 +4154,7 @@ class CubicElasticGeneric(ConstitutiveLaw):
 
     def __str__(self):
         base_str = f'{self.const_law_header()}'
-        if isinstance(self.stiffness_1, (float, MBVar)):
+        if isinstance(self.stiffness_1, (float, MBVar, expression)):
             # Scalar case
             base_str += f', {self.stiffness_1}, {self.stiffness_2}, {self.stiffness_3}'
         else:
@@ -4154,8 +4167,8 @@ class CubicElasticGeneric(ConstitutiveLaw):
         return base_str
 
 class InverseSquareElastic(ConstitutiveLaw):    
-    stiffness: Union[MBVar, float]
-    ref_length: Union[MBVar, float]
+    stiffness: Numeric
+    ref_length: Numeric
     
     def const_law_name(self) -> str:
         return 'inverse square elastic'
@@ -4166,7 +4179,7 @@ class InverseSquareElastic(ConstitutiveLaw):
         return s
     
 class LogElastic(ConstitutiveLaw):
-    stiffness: Union[float, MBVar]
+    stiffness: Numeric
 
     def const_law_name(self) -> str:
         return 'log elastic'
@@ -4177,7 +4190,7 @@ class LogElastic(ConstitutiveLaw):
         return s
 
 class LinearElasticBistop(ConstitutiveLaw):
-    stiffness: Union[float, MBVar]
+    stiffness: Numeric
     initial_status: Optional[Union[bool, str]]
     activating_condition: DriveCaller
     deactivating_condition: DriveCaller
@@ -4205,11 +4218,11 @@ class LinearElasticBistop(ConstitutiveLaw):
         return base_str
 
 class DoubleLinearElastic(ConstitutiveLaw):
-    stiffness_1: Union[MBVar, float]
-    upper_strain: Union[MBVar, float]
-    lower_strain: Union[MBVar, float]
-    stiffness_2: Union[MBVar, float]
-    stiffness_3: Optional[Union[MBVar, float]] = None
+    stiffness_1: Numeric
+    upper_strain: Numeric
+    lower_strain: Numeric
+    stiffness_2: Numeric
+    stiffness_3: Optional[Numeric] = None
     
     def const_law_name(self) -> str:
         return 'double linear elastic'
@@ -4222,9 +4235,9 @@ class DoubleLinearElastic(ConstitutiveLaw):
         return s
 
 class IsotropicHardeningElastic(ConstitutiveLaw):
-    stiffness: Union[MBVar, float]
-    reference_strain: Union[MBVar, float]
-    linear_stiffness: Optional[Union[MBVar, float]] = None
+    stiffness: Numeric
+    reference_strain: Numeric
+    linear_stiffness: Optional[Numeric] = None
     
     def const_law_name(self) -> str:
         return 'isotropic hardening elastic'
@@ -4237,7 +4250,7 @@ class IsotropicHardeningElastic(ConstitutiveLaw):
         return s
         
 class LinearViscous(ConstitutiveLaw):
-    viscosity: Union[MBVar, float]    
+    viscosity: Numeric    
     
     def const_law_name(self) -> str:
         if self.dim == 1:
@@ -4253,7 +4266,7 @@ class LinearViscous(ConstitutiveLaw):
         return s
 
 class LinearViscousGeneric(ConstitutiveLaw):
-    viscosity: Union[float, MBVar, List[List[Union[float, MBVar]]]]
+    viscosity: Union[Numeric, List[List[Numeric]]]
 
     @field_validator('viscosity')
     def validate_viscosity(cls, v):
@@ -4267,7 +4280,7 @@ class LinearViscousGeneric(ConstitutiveLaw):
     def __str__(self):
         s = self.const_law_header()
         
-        if isinstance(self.viscosity, (float, MBVar)):
+        if isinstance(self.viscosity, (float, MBVar, expression)):
             s += f', {self.viscosity}'
         else: # It's a list (matrix)
             matrix_str = ''
@@ -4283,9 +4296,9 @@ class LinearViscousGeneric(ConstitutiveLaw):
         return s
 
 class LinearViscoelastic(ConstitutiveLaw):
-    stiffness: Union[MBVar, float]
-    viscosity: Optional[Union[MBVar, float]] = None
-    factor: Optional[Union[MBVar, float]] = None
+    stiffness: Numeric
+    viscosity: Optional[Numeric] = None
+    factor: Optional[Numeric] = None
 
     @model_validator(mode='after')
     def check_viscosity_or_factor(self):
@@ -4310,9 +4323,9 @@ class LinearViscoelastic(ConstitutiveLaw):
         return s
 
 class LinearViscoelasticGeneric(ConstitutiveLaw):
-    stiffness: Union[float, MBVar, List[List[Union[float, MBVar]]]]
-    viscosity: Optional[Union[float, MBVar, List[List[Union[float, MBVar]]]]] = None
-    factor: Optional[Union[float, MBVar]] = None
+    stiffness: Union[Numeric, List[List[Numeric]]]
+    viscosity: Optional[Union[Numeric, List[List[Numeric]]]] = None
+    factor: Optional[Numeric] = None
 
     @model_validator(mode='after')
     def validate_fields(self) -> 'LinearViscoelasticGeneric':
@@ -4353,10 +4366,10 @@ class LinearViscoelasticGeneric(ConstitutiveLaw):
 
 
 class LinearTimeVariantViscoelasticGeneric(ConstitutiveLaw):
-    stiffness: Union[float, MBVar, List[List[Union[float, MBVar]]]]
+    stiffness: Union[Numeric, List[List[Numeric]]]
     stiffness_scale: DriveCaller
-    viscosity: Optional[Union[float, MBVar, List[List[Union[float, MBVar]]]]] = None
-    factor: Optional[Union[float, MBVar]] = None
+    viscosity: Optional[Union[Numeric, List[List[Numeric]]]] = None
+    factor: Optional[Numeric] = None
     
     # The viscosity scale can be a new DriveCaller, or the keyword 'same'
     # to reuse the stiffness_scale DriveCaller.
@@ -4413,10 +4426,10 @@ class LinearTimeVariantViscoelasticGeneric(ConstitutiveLaw):
         return s
 
 class LinearViscoelasticGenericAxialTorsionCoupling(ConstitutiveLaw):
-    stiffness: List[Union[float, MBVar]]
-    coupling_coef: Union[float, MBVar]
-    viscosity: Optional[List[Union[float, MBVar]]] = None
-    factor: Optional[Union[float, MBVar]] = None
+    stiffness: List[Numeric]
+    coupling_coef: Numeric
+    viscosity: Optional[List[Numeric]] = None
+    factor: Optional[Numeric] = None
 
     @model_validator(mode='after')
     def validate_fields(self) -> 'LinearViscoelasticGenericAxialTorsionCoupling':
@@ -4451,10 +4464,10 @@ class LinearViscoelasticGenericAxialTorsionCoupling(ConstitutiveLaw):
         return s
 
 class CubicViscoelasticGeneric(ConstitutiveLaw):
-    stiffness_1: Union[float, MBVar, List[Union[float, MBVar]]]
-    stiffness_2: Union[float, MBVar, List[Union[float, MBVar]]]
-    stiffness_3: Union[float, MBVar, List[Union[float, MBVar]]]
-    viscosity: Union[float, MBVar, List[Union[float, MBVar]]]
+    stiffness_1: Union[Numeric, List[Numeric]]
+    stiffness_2: Union[Numeric, List[Numeric]]
+    stiffness_3: Union[Numeric, List[Numeric]]
+    viscosity: Union[Numeric, List[Numeric]]
 
     @model_validator(mode='after')
     def validate_fields(self) -> 'CubicViscoelasticGeneric':
@@ -4478,7 +4491,7 @@ class CubicViscoelasticGeneric(ConstitutiveLaw):
 
     def __str__(self) -> str:
         s = self.const_law_header()
-        if isinstance(self.stiffness_1, (float, MBVar)):
+        if isinstance(self.stiffness_1, (float, MBVar, expression)):
             # Scalar case
             s += f', {self.stiffness_1}, {self.stiffness_2}, {self.stiffness_3}, {self.viscosity}'
         else:
@@ -4495,12 +4508,12 @@ class DoubleLinearViscoelastic(ConstitutiveLaw):
     """
     Analogous to double linear elastic, but with an isotropic viscosity term.
     """
-    stiffness_1: Union[MBVar, float]
-    upper_strain: Union[MBVar, float]
-    lower_strain: Union[MBVar, float]
-    stiffness_2: Union[MBVar, float]
-    viscosity: Union[MBVar, float]
-    viscosity_2: Optional[Union[MBVar, float]] = None
+    stiffness_1: Numeric
+    upper_strain: Numeric
+    lower_strain: Numeric
+    stiffness_2: Numeric
+    viscosity: Numeric
+    viscosity_2: Optional[Numeric] = None
 
     @model_validator(mode='after')
     def validate_strain_range(self) -> 'DoubleLinearViscoelastic':
@@ -4526,10 +4539,10 @@ class DoubleLinearViscoelastic(ConstitutiveLaw):
         return s
 
 class TurbulentViscoelastic(ConstitutiveLaw):
-    stiffness: Union[MBVar, float]
-    parabolic_viscosity: Union[MBVar, float]
-    threshold: Optional[Union[MBVar, float]] = None
-    linear_viscosity: Optional[Union[MBVar, float]] = None
+    stiffness: Numeric
+    parabolic_viscosity: Numeric
+    threshold: Optional[Numeric] = None
+    linear_viscosity: Optional[Numeric] = None
 
     @model_validator(mode='after')
     def validate_fields(self) -> 'TurbulentViscoelastic':
@@ -4550,8 +4563,8 @@ class TurbulentViscoelastic(ConstitutiveLaw):
         return s
 
 class LinearViscoelasticBistop(ConstitutiveLaw):
-    stiffness: Union[float, MBVar]
-    viscosity: Union[float, MBVar]
+    stiffness: Numeric
+    viscosity: Numeric
     initial_status: Optional[Union[bool, Literal['inactive', 'active']]] = None
     activating_condition: DriveCaller
     deactivating_condition: DriveCaller
@@ -4809,7 +4822,7 @@ class InvariantAngularWrapper(ConstitutiveLaw):
     Invariant angular wrapper for 3D constitutive laws used within the "attached" variant of the deformable hinge joint.
     """
 
-    xi: Union[float, int, MBVar]
+    xi: Union[Numeric, int]
     wrapped_const_law: ConstitutiveLaw
 
     def const_law_name(self) -> str:
@@ -4903,8 +4916,8 @@ class FixedStep(FileDriver):
     
     steps_number: Union[int, MBVar, str]  # 'count' or specific number of steps
     columns_number: Union[int, MBVar]
-    initial_time: Union[float, MBVar, str]  # 'from file' or specific initial time
-    time_step: Union[float, MBVar, str]  # 'from file' or specific time step
+    initial_time: Union[Numeric, str]  # 'from file' or specific initial time
+    time_step: Union[Numeric, str]  # 'from file' or specific time step
     interpolation: Optional[InterpolationType]
     pad_zeroes: Optional[PadZeroesType]
     bailout: Optional[BailoutType]
@@ -4985,9 +4998,9 @@ class Strategy(MBEntity):
         return f'stratefy: {self.strategy_type()}'
 
 class StrategyFactor(Strategy):
-    reduction_factor: Union[float, MBVar]
+    reduction_factor: Numeric
     steps_before_reduction: Union[int, MBVar]
-    raise_factor: Union[float, MBVar]
+    raise_factor: Numeric
     steps_before_raise: Union[int, MBVar]
     min_iterations: Union[int, MBVar]
     max_iterations: Optional[Union[int, MBVar]] = None
@@ -5012,10 +5025,10 @@ class StrategyNoChange(Strategy):
         return s
     
 class Tolerance(MBEntity):
-    residual_tolerance: Union[Literal['null'], float, MBVar]
+    residual_tolerance: Union[Literal['null'], Numeric]
     residual_test: Optional[Literal['none', 'norm', 'minmax']] = None
     scaling: Optional[str] = None
-    solution_tolerance: Optional[Union[Literal['null'], float, MBVar]] = None
+    solution_tolerance: Optional[Union[Literal['null'], Numeric]] = None
     solution_test: Optional[Literal['none', 'norm', 'minmax']] = None
 
     @field_validator('scaling')
@@ -5071,12 +5084,12 @@ class CrankNicolson(Method):
         return 'method: crank nicolson'
 
 class MethodWithRadius(Method):
-    differential_radius: Union[int, float, MBVar, DriveCaller]
-    algebraic_radius: Optional[Union[int, float, MBVar, DriveCaller]] = None
+    differential_radius: Union[int, Numeric, DriveCaller]
+    algebraic_radius: Optional[Union[int, Numeric, DriveCaller]] = None
 
     def __str__(self):
         def to_drive_str(value):
-            if isinstance(value, (int, float, MBVar)):
+            if isinstance(value, (int, float, MBVar, expression)):
                 return str(ConstDriveCaller(const_value=value))
             return str(value)
 
@@ -5206,7 +5219,7 @@ class UseLapack(MethodforEigenanalysis):
 class UseArpack(MethodforEigenanalysis):
     nev: Union[int, MBVar]
     ncv: Union[int, MBVar]
-    tol: Union[float, MBVar]
+    tol: Numeric
     max_iter: Optional[Union[int, MBVar]] = 300
 
     @field_validator('tol')
@@ -5224,7 +5237,7 @@ class UseArpack(MethodforEigenanalysis):
 class UseJdqz(MethodforEigenanalysis):
     nev: Union[int, MBVar]
     ncv: Union[int, MBVar]
-    tol: Union[float, MBVar]
+    tol: Numeric
 
     @field_validator('tol')
     def check_tolerance(cls, v):
@@ -5259,19 +5272,19 @@ class Eigenanalysis(MBEntity):
         SMALLEST_IMAGINARY_PART = "smallest imaginary part"
 
     num_times: Optional[Union[int, MBVar]] = None
-    when: Union[float, MBVar, List[Union[float, MBVar]]]
-    suffix_width: Optional[Union[float, MBVar, Literal['compute']]] = None
+    when: Union[Numeric, List[Numeric]]
+    suffix_width: Optional[Union[Numeric, Literal['compute']]] = None
     suffix_format: Optional[str] = None
     output_full_matrices: Optional[bool] = None
     output_sparse_matrices: Optional[bool] = None
     output_eigenvectors: Optional[bool] = None
     output_geometry: Optional[bool] = None
-    matrix_precision: Optional[Union[float, MBVar]] = None
-    results_precision: Optional[Union[float, MBVar]] = None
-    parameter: Optional[Union[float, MBVar]] = None
+    matrix_precision: Optional[Numeric] = None
+    results_precision: Optional[Numeric] = None
+    parameter: Optional[Numeric] = None
     mode_options: Optional[ModeOptions] = None
-    lower_frequency_limit: Optional[Union[float, MBVar]] = None
-    upper_frequency_limit: Optional[Union[float, MBVar]] = None
+    lower_frequency_limit: Optional[Numeric] = None
+    upper_frequency_limit: Optional[Numeric] = None
     method: Optional[MethodforEigenanalysis] = None
 
     @model_validator(mode='after')
@@ -5361,8 +5374,8 @@ class LinearSolver(MBEntity):
     
     # Solver-specific parameters
     workspace_size: Optional[Union[int, MBVar]] = None
-    pivot_factor: Optional[Union[float, MBVar]] = None
-    drop_tolerance: Optional[Union[float, MBVar]] = None
+    pivot_factor: Optional[Numeric] = None
+    drop_tolerance: Optional[Numeric] = None
     block_size: Optional[Union[int, MBVar]] = None
     
     # Scaling options
@@ -5370,11 +5383,11 @@ class LinearSolver(MBEntity):
         'no', 'always', 'once', 'row max', 'row sum', 'column max', 
         'column sum', 'lapack', 'iterative', 'row max column max'
     ]] = None
-    scale_tolerance: Optional[Union[float, MBVar]] = None
+    scale_tolerance: Optional[Numeric] = None
     scale_max_iter: Optional[Union[int, MBVar]] = None
     
     # Refinement and tolerance settings
-    refine_tolerance: Optional[Union[float, MBVar]] = None
+    refine_tolerance: Optional[Numeric] = None
     refine_max_iter: Optional[Union[int, MBVar]] = None
 
     # Preconditioner options
@@ -5506,10 +5519,10 @@ class Threads(MBEntity):
         return s
 
 class DerivativesCoefficient(MBEntity):
-    coefficient: Optional[Union[float, MBVar]] = None
+    coefficient: Optional[Numeric] = None
     is_auto: Optional[bool] = False
     max_iterations: Optional[Union[int, MBVar]] = None
-    factor: Optional[Union[float, MBVar]] = None
+    factor: Optional[Numeric] = None
 
     @model_validator(mode='before')
     @classmethod
@@ -5567,12 +5580,12 @@ class InitialValue(MBEntity):
     Kutta-like schemes
     '''
 
-    initial_time: Union[float, MBVar]
-    final_time: Union[float, MBVar, Literal["forever"]]
+    initial_time: Numeric
+    final_time: Union[Numeric, Literal["forever"]]
     strategy: Optional[Union[StrategyChange, StrategyFactor, StrategyNoChange]] = None
-    min_time_step: Optional[Union[float, MBVar]] = None
-    max_time_step: Optional[Union[float, MBVar, Literal["unlimited"]]] = None
-    time_step: Union[float, MBVar]
+    min_time_step: Optional[Numeric] = None
+    max_time_step: Optional[Union[Numeric, Literal["unlimited"]]] = None
+    time_step: Numeric
     tolerance: Tolerance
     max_iterations: MaxIterations
     modify_residual_test: Optional[Union[bool, int]] = False    # 0 / 1 / True / False
@@ -5580,7 +5593,7 @@ class InitialValue(MBEntity):
     eigenanalysis: Optional[Eigenanalysis] = None
     linear_solver: Optional[LinearSolver] = None
     threads: Optional[Threads] = None
-    derivatives_tolerance: Optional[Union[float, MBVar]] = None
+    derivatives_tolerance: Optional[Numeric] = None
     derivatives_max_iterations: Optional[Union[int, MBVar]] = None
     derivatives_coefficient: Optional[DerivativesCoefficient] = None
     output_settings: Optional[OutputSettings] = None
